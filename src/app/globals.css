@@ -51,7 +51,7 @@
 }
 
 :root {
-  /* Palette Afrique Marketplace : indigo (wax/bogolan), terracotta, ocre/or (kente), vert kente, ecru */
+  /* Palette E póm ta’ : indigo (wax/bogolan), terracotta, ocre/or (kente), vert kente, ecru */
   --background: oklch(0.975 0.012 85);
   --foreground: oklch(0.22 0.02 50);
   --card: oklch(0.99 0.008 85);

@@ -1,6 +1,6 @@
 # Instructions Copilot — Marketplace d'art et de couture africaine
 
-POC d'une marketplace premium d'art et de couture africaine (« Farfetch de l'Afrique »). Voir `docs/PRD.md`, `docs/BACKLOG.md`, `docs/HISTORY.md`.
+POC « E póm ta’ » (anciennement Afrique Marketplace) : galerie en ligne d'artistes plasticiens afrodescendants, démonstration privée. Voir `docs/PRD.md`, `docs/BACKLOG.md`, `docs/HISTORY.md`.
 
 ## Stack
 - Next.js (App Router) + TypeScript strict

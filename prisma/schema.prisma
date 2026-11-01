@@ -21,14 +21,13 @@ model Category {
 model Creator {
   slug        String    @id
   name        String
-  country     String
-  countryEn   String
-  city        String
   specialty   String
   specialtyEn String
   bio         String
   bioEn       String
   image       String
+  /// Article source de la biographie (G3A)
+  sourceUrl   String
   products    Product[]
 }
 
@@ -46,16 +45,11 @@ model Product {
   creator       Creator     @relation(fields: [creatorSlug], references: [slug])
   /// Prix en centimes d'EUR
   priceCents    Int
-  localCurrency String
-  localAmount   Int
   /// [{ fr, en }]
   materials     Json
   /// string[] ; vide si pièce sans taille
   sizes         Json
   dimensions    String?
-  country       String
-  countryEn     String
-  city          String
   stock         Int
   /// string[] de chemins publics
   images        Json

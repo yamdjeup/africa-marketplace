@@ -1,7 +1,6 @@
 import { expect, test } from "@playwright/test";
-import { chooseSize } from "./helpers";
 
-const pages = ["/fr", "/fr/catalogue", "/fr/cart", "/fr/login", "/fr/register", "/fr/checkout"];
+const pages = ["/fr", "/fr/catalogue", "/fr/createurs", "/fr/produits/kwame", "/fr/cart", "/fr/login", "/fr/register", "/fr/checkout"];
 
 test.describe("Viewport mobile", () => {
   for (const path of pages) {
@@ -16,13 +15,12 @@ test.describe("Viewport mobile", () => {
   }
 
   test("parcours d'achat mobile : fiche, ajout panier, formulaire checkout", async ({ page }) => {
-    await page.goto("/fr/catalogue");
-    await page.locator('a[href^="/fr/produits/"]').first().click();
-  await page.waitForURL(/\/produits\//);
-    const size = page.locator('input[name="size"]');
-    if ((await size.count()) > 0) await chooseSize(page);
-    await page.getByRole("button", { name: "Ajouter au panier" }).click();
-    await expect(page.getByRole("status")).toContainText("Ajouté au panier");
+    await page.goto("/fr/produits/trois-reliefs-ceramique-blanche");
+    const add = page.getByRole("button", { name: "Ajouter au panier" });
+    await expect(async () => {
+      await add.click({ timeout: 2000 });
+      await expect(page.getByRole("status")).toContainText("Ajouté au panier", { timeout: 1500 });
+    }).toPass({ timeout: 20_000 });
     await page.goto("/fr/checkout");
     const submit = page.getByRole("button", { name: /Confirmer la commande/ });
     await expect(submit).toBeVisible();

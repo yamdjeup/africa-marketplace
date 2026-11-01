@@ -25,14 +25,9 @@ async function main() {
       categorySlug: p.category,
       creatorSlug: p.creatorSlug,
       priceCents: p.priceCents,
-      localCurrency: p.localPrice.currency,
-      localAmount: p.localPrice.amount,
       materials: p.materials,
       sizes: p.sizes,
       dimensions: p.dimensions ?? null,
-      country: p.origin.country,
-      countryEn: p.origin.countryEn,
-      city: p.origin.city,
       stock: p.stock,
       images: p.images,
       createdAt: new Date(base - i * 86_400_000),
@@ -40,7 +35,14 @@ async function main() {
     await prisma.product.upsert({ where: { slug: p.slug }, update: data, create: { slug: p.slug, ...data } });
   }
 
-  console.log(`Seed OK : ${categories.length} catégories, ${creators.length} créateurs, ${products.length} produits`);
+  // Retire les anciennes données (couture) absentes du jeu actuel ; les commandes qui y renvoient sont supprimées.
+  const keep = products.map((p) => p.slug);
+  await prisma.orderItem.deleteMany({ where: { productSlug: { notIn: keep } } });
+  await prisma.product.deleteMany({ where: { slug: { notIn: keep } } });
+  await prisma.creator.deleteMany({ where: { slug: { notIn: creators.map((c) => c.slug) } } });
+  await prisma.category.deleteMany({ where: { slug: { notIn: categories.map((c) => c.slug) } } });
+
+  console.log(`Seed OK : ${categories.length} catégories, ${creators.length} artistes, ${products.length} œuvres`);
 }
 
 main()

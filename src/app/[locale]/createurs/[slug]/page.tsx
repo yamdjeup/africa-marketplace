@@ -36,10 +36,13 @@ export default async function CreatorPage({ params }: Props) {
         <div className="space-y-2">
           <h1 className="font-heading text-3xl text-primary">{c.name}</h1>
           <p className="text-xs uppercase tracking-wide text-terracotta">{c.specialty}</p>
-          <p className="text-sm text-muted-foreground">
-            {t.from} {c.city}, {c.country}
-          </p>
           <p className="max-w-prose pt-2">{c.bio}</p>
+          <p className="text-xs text-muted-foreground">
+            {t.bioSource}.{" "}
+            <a href={c.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">
+              {t.readSource}
+            </a>
+          </p>
         </div>
       </header>
       <section aria-labelledby="pieces" className="space-y-4">

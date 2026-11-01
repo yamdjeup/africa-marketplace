@@ -39,7 +39,6 @@ export function CartView({ locale }: { locale: Locale }) {
                 </Link>
                 <p className="text-xs text-muted-foreground">
                   {l.creatorName}
-                  {l.size ? ` · ${getDict(locale).product.size} ${l.size}` : ""}
                 </p>
                 <p className="text-sm font-semibold">{formatEur(l.priceCents, locale)}</p>
                 <div className="mt-auto flex items-center justify-between gap-2">

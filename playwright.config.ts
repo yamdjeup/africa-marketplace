@@ -11,7 +11,7 @@ export default defineConfig({
   reporter: [["list"]],
   use: { baseURL: `http://localhost:${port}`, trace: "retain-on-failure" },
   webServer: {
-    command: `npm run build && npx next start -p ${port}`,
+    command: `npm run db:seed && npm run build && npx next start -p ${port}`,
     env: { AUTH_SECRET: "e2e-only-secret-not-for-production" },
     url: `http://localhost:${port}/fr`,
     reuseExistingServer: !process.env.CI,

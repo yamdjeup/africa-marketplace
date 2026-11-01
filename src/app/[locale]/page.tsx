@@ -19,16 +19,20 @@ export default async function HomePage({ params }: { params: Promise<{ locale: L
     <div className="space-y-12 md:space-y-16">
       <section className="grid items-center gap-6 md:grid-cols-2 md:gap-10">
         <div className="space-y-4">
+          <p className="text-xs uppercase tracking-widest text-terracotta">{t.home.heroKicker}</p>
           <h1 className="font-heading text-3xl leading-tight text-primary md:text-5xl">{t.home.heroTitle}</h1>
           <p className="max-w-prose text-muted-foreground">{t.home.heroText}</p>
           <Link href={`/${locale}/catalogue`} className={buttonVariants({ size: "lg" })}>
             {t.home.heroCta}
           </Link>
         </div>
-        <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-muted">
+        <Link
+          href={`/${locale}/produits/${products[0].slug}`}
+          className="relative block aspect-[4/3] overflow-hidden rounded-lg bg-muted"
+        >
           <Image
             src={products[0].images[0]}
-            alt={products[0].name}
+            alt={`${products[0].name} — ${products[0].creatorName}`}
             fill
             unoptimized
             priority
@@ -36,7 +40,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: L
             className="object-cover"
           />
           <div className="kente-band absolute inset-x-0 bottom-0 h-2" />
-        </div>
+        </Link>
       </section>
 
       <section aria-labelledby="cats" className="space-y-4">
@@ -91,6 +95,13 @@ export default async function HomePage({ params }: { params: Promise<{ locale: L
             </li>
           ))}
         </ul>
+      </section>
+
+      <section aria-labelledby="about" className="max-w-prose space-y-2 border-t pt-8">
+        <h2 id="about" className="font-heading text-2xl text-primary">
+        {t.home.aboutTitle}
+        </h2>
+        <p className="text-muted-foreground">{t.home.aboutText}</p>
       </section>
     </div>
   );

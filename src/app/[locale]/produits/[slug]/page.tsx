@@ -27,7 +27,7 @@ export default async function ProductPage({ params }: Props) {
 
   return (
     <div className="space-y-12">
-      <div className="grid gap-6 md:grid-cols-2 md:gap-10">
+      <div className="grid gap-6 md:grid-cols-[3fr_2fr] md:gap-10">
         <ProductGallery images={p.images} name={p.name} label={t.gallery} />
         <div className="space-y-5">
           <div className="space-y-2">
@@ -42,13 +42,11 @@ export default async function ProductPage({ params }: Props) {
           </div>
           <div>
             <p className="text-2xl font-semibold">{formatEur(p.priceCents, locale)}</p>
-            <p className="text-xs text-muted-foreground">
-              {t.localPrice} : {p.localPrice}
-            </p>
+            <p className="text-xs text-muted-foreground">{t.fictitiousPrice}</p>
           </div>
           <p>{p.description}</p>
           <p className={`text-sm ${p.stock === 0 ? "text-destructive" : "text-kente"}`}>
-            {p.stock === 0 ? t.outOfStock : t.inStock(p.stock)}
+            {p.stock === 0 ? t.outOfStock : t.inStock()}
           </p>
           <AddToCart
             key={p.slug}
@@ -58,7 +56,6 @@ export default async function ProductPage({ params }: Props) {
             creatorName={p.creatorName}
             image={p.images[0]}
             priceCents={p.priceCents}
-            sizes={p.sizes}
             stock={p.stock}
           />
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 border-t pt-4 text-sm">
@@ -70,10 +67,6 @@ export default async function ProductPage({ params }: Props) {
                 <dd>{p.dimensions}</dd>
               </>
             )}
-            <dt className="font-medium">{t.origin}</dt>
-            <dd>
-              {p.city}, {p.country}
-            </dd>
           </dl>
         </div>
       </div>

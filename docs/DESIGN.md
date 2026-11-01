@@ -1,7 +1,7 @@
-# Design — Afrique Marketplace (POC)
+# Design — E póm ta’ (POC)
 
 ## 1. Identité de marque
-Marketplace premium d'art et de couture africaine. Ton : élégant, éditorial, chaleureux, authentique. Les motifs (wax, kente, bogolan) servent d'accents — jamais de fond saturé — pour garder un rendu « luxe » et laisser vivre les photos produit. Storytelling créateur au centre de l'expérience.
+Galerie en ligne d'artistes plasticiens afrodescendants ; marque **E póm ta’** (« tu es très belle » en ghomálá’ ; accent aigu sur le o et apostrophe typographique ’ à respecter exactement). Playfair Display et Inter (sous-ensemble latin) affichent ó et ’ correctement (vérifié par tests e2e sur le titre de page et l'en-tête). La signification apparaît en sous-titre du logo et dans la section « E póm ta’ » de l'accueil (FR/EN). Un bandeau « Démonstration privée » discret surmonte l'en-tête. Les œuvres sont présentées en grand format, avec crédit artiste, prix fictif signalé et pièce unique (quantité 1). Ton : élégant, éditorial, chaleureux, authentique. Les motifs (wax, kente, bogolan) servent d'accents — jamais de fond saturé — pour laisser vivre les œuvres.
 
 ## 2. Palette
 Définie dans `src/app/globals.css` (variables CSS shadcn + tokens Tailwind).

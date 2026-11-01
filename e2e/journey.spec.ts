@@ -1,19 +1,19 @@
 import { expect, test, type Page } from "@playwright/test";
-import { chooseSize } from "./helpers";
 
 const unique = Date.now().toString(36);
 const email = `qa-${unique}@example.test`;
 const password = "motdepasse-qa-123";
 
-async function addFirstProductToCart(page: Page, locale = "fr") {
-  await page.goto(`/${locale}/catalogue`);
-  await page.locator(`a[href^="/${locale}/produits/"]`).first().click();
-  await page.waitForURL(/\/produits\//);
+// Pièces uniques : chaque commande aboutie épuise l'œuvre, d'où un slug distinct par parcours.
+async function addArtworkToCart(page: Page, slug: string, locale = "fr") {
+  await page.goto(`/${locale}/produits/${slug}`);
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-  const size = page.locator('input[name="size"]');
-  if ((await size.count()) > 0) await chooseSize(page);
-  await page.getByRole("button", { name: /Ajouter au panier|Add to cart/ }).click();
-  await expect(page.getByRole("status")).toContainText(/Ajouté au panier|Added to cart/);
+  const add = page.getByRole("button", { name: /Ajouter au panier|Add to cart/ });
+  // Un clic avant l'hydratation React est perdu : on réessaie jusqu'à voir la confirmation.
+  await expect(async () => {
+    await add.click({ timeout: 2000 });
+    await expect(page.getByRole("status")).toContainText(/Ajouté au panier|Added to cart/, { timeout: 1500 });
+  }).toPass({ timeout: 20_000 });
 }
 
 async function login(page: Page) {
@@ -28,50 +28,73 @@ test.describe.serial("Parcours client", () => {
   test("accueil et bascule FR/EN", async ({ page }) => {
     await page.goto("/");
     await expect(page).toHaveURL(/\/fr$/);
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("L'art et la couture");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Artistes plasticiens afrodescendants");
+    await expect(page.getByText("Démonstration privée").first()).toBeVisible();
+    await expect(page.getByRole("link", { name: /E póm ta’/ }).first()).toBeVisible();
+    await expect(page).toHaveTitle(/E póm ta’/);
     await page.getByRole("link", { name: "English" }).click();
     await expect(page).toHaveURL(/\/en$/);
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("African art and tailoring");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Afro-descendant visual artists");
+    await expect(page.getByText("Private demo").first()).toBeVisible();
     await page.getByRole("link", { name: "Français" }).click();
     await expect(page).toHaveURL(/\/fr$/);
   });
 
-  test("catalogue : recherche, filtres, tri et fiche produit", async ({ page }) => {
+  test("galerie : 12 œuvres, filtres artiste/catégorie/prix/recherche", async ({ page }) => {
     await page.goto("/fr/catalogue");
     const cards = page.locator('a[href^="/fr/produits/"]');
-    expect(await cards.count()).toBeGreaterThan(3);
+    await expect(cards).toHaveCount(12);
 
-    await page.locator("#header-search").fill("wax");
+    await page.locator("#header-search").fill("kenof");
     await page.locator("#header-search").press("Enter");
-    await expect(page).toHaveURL(/q=wax/);
-    expect(await cards.count()).toBeGreaterThan(0);
+    await expect(page).toHaveURL(/q=kenof/);
+    await expect(cards).toHaveCount(1);
+
+    await page.goto("/fr/catalogue?artist=cruzz-taylor");
+    await expect(cards).toHaveCount(3);
+    await page.goto("/fr/catalogue?category=photographie");
+    await expect(cards).toHaveCount(3);
+    await page.goto("/fr/catalogue?min=5000");
+    await expect(cards).toHaveCount(1);
 
     await page.goto("/fr/catalogue?q=zzzintrouvable");
-    await expect(page.getByText("Aucune pièce ne correspond")).toBeVisible();
+    await expect(page.getByText("Aucune œuvre ne correspond")).toBeVisible();
 
     await page.goto("/fr/catalogue");
-    const category = page.locator("select[name=category]:visible");
-    await category.selectOption({ index: 1 });
+    await page.locator("select[name=category]:visible").selectOption({ index: 1 });
     await page.getByRole("button", { name: "Appliquer" }).click();
     await expect(page).toHaveURL(/catalogue\?.+/);
     expect(await cards.count()).toBeGreaterThan(0);
 
-    await cards.first().click();
-    await expect(page).toHaveURL(/\/fr\/produits\//);
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await page.goto("/fr/produits/inexistant");
     await expect(page.getByText("Page introuvable").first()).toBeVisible();
   });
 
-  test("panier : ajout, quantité, suppression", async ({ page }) => {
+  test("fiche œuvre : crédit artiste, prix fictif, pièce unique", async ({ page }) => {
+    await page.goto("/fr/produits/kwame");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Kwame");
+    await expect(page.getByRole("link", { name: "Aurélie-Victoire Célanie" }).first()).toBeVisible();
+    await expect(page.getByText("Prix fictif de démonstration")).toBeVisible();
+    await expect(page.getByText("Pièce unique").first()).toBeVisible();
+  });
+
+  test("fiche artiste : biographie G3A et lien source", async ({ page }) => {
+    await page.goto("/fr/createurs/kenof");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("KeNoF");
+    await expect(page.getByText("bamiléké").first()).toBeVisible();
+    await expect(page.getByRole("link", { name: /article source/ })).toHaveAttribute("href", /g3a\.org/);
+    await page.goto("/en/createurs/kenof");
+    await expect(page.getByText("Bamileke heritage").first()).toBeVisible();
+  });
+
+  test("panier : ajout, quantité limitée à 1, suppression", async ({ page }) => {
     await page.goto("/fr/cart");
     await expect(page.getByText("Votre panier est vide.")).toBeVisible();
-    await addFirstProductToCart(page);
+    await addArtworkToCart(page, "grande-toile-masques-et-arbre");
     await expect(page.getByRole("link", { name: "Panier (1)" })).toBeVisible();
     await page.getByRole("link", { name: "Voir le panier" }).click();
     await expect(page).toHaveURL(/\/fr\/cart/);
-    await page.getByRole("button", { name: "Augmenter la quantité" }).first().click();
-    await expect(page.getByRole("link", { name: "Panier (2)" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Augmenter la quantité" }).first()).toBeDisabled();
     await page.getByRole("button", { name: /Retirer/ }).first().click();
     await expect(page.getByText("Votre panier est vide.")).toBeVisible();
   });
@@ -114,7 +137,7 @@ test.describe.serial("Parcours client", () => {
 
   test("checkout simulé connecté : commande visible dans Mes commandes (FR/EN)", async ({ page }) => {
     await login(page);
-    await addFirstProductToCart(page);
+    await addArtworkToCart(page, "kwame");
     await page.goto("/fr/checkout");
     await expect(page.getByLabel("E-mail")).toHaveValue(email);
     await page.getByLabel("Adresse").fill("12 rue des Tests");
@@ -139,7 +162,7 @@ test.describe.serial("Parcours client", () => {
   });
 
   test("checkout invité en anglais", async ({ page }) => {
-    await addFirstProductToCart(page, "en");
+    await addArtworkToCart(page, "figure-aux-palmiers", "en");
     await page.goto("/en/checkout");
     await page.getByLabel("Email").fill("invite@example.test");
     await page.getByLabel("Full name").fill("Guest QA");

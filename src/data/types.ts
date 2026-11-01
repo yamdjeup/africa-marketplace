@@ -1,18 +1,10 @@
 /**
- * Types des données fictives du POC. Ils reflètent le futur schéma Prisma
- * (Creator, Product, Category) : champs bilingues FR/EN, prix en centimes EUR.
- * Toutes les données sont 100 % fictives.
+ * Types des données de la galerie (démonstration privée). Ils reflètent le schéma
+ * Prisma (Creator = artiste, Product = œuvre) : champs bilingues FR/EN, prix en
+ * centimes d'EUR. Les prix sont fictifs ; les biographies sont celles de G3A.
  */
 
-export type CategorySlug =
-  | "couture"
-  | "bijoux"
-  | "sculpture"
-  | "peinture"
-  | "textile"
-  | "decoration";
-
-export type CurrencyCode = "XOF" | "XAF" | "GHS" | "NGN" | "KES";
+export type CategorySlug = "peinture" | "photographie" | "sculpture-ceramique" | "dessin";
 
 export type Bilingual = { fr: string; en: string };
 
@@ -24,23 +16,17 @@ export type Category = {
 
 export type Creator = {
   slug: string;
-  /** Nom de l'atelier (fictif). */
+  /** Nom de l'artiste. */
   name: string;
-  country: string;
-  countryEn: string;
-  city: string;
   specialty: string;
   specialtyEn: string;
+  /** Biographie officielle G3A (texte repris tel quel) et sa traduction. */
   bio: string;
   bioEn: string;
-  /** Chemin public d'un placeholder SVG généré localement. */
+  /** Chemin public d'une de ses œuvres, utilisée comme visuel d'artiste. */
   image: string;
-};
-
-export type LocalPrice = {
-  currency: CurrencyCode;
-  /** Montant indicatif (non contractuel), en unités entières de la devise. */
-  amount: number;
+  /** Article G3A dont provient la biographie. */
+  sourceUrl: string;
 };
 
 export type Product = {
@@ -49,22 +35,20 @@ export type Product = {
   nameEn: string;
   description: string;
   descriptionEn: string;
-  /** Histoire de la pièce. */
+  /** Contexte de l'œuvre (série, démarche). */
   story: string;
   storyEn: string;
   category: CategorySlug;
-  /** Prix en centimes d'EUR (devise de facturation du POC). */
+  /** Prix fictif de démonstration, en centimes d'EUR. */
   priceCents: number;
-  /** Équivalent indicatif en devise locale, affiché à titre informatif. */
-  localPrice: LocalPrice;
+  /** Technique(s) : ex. « Acrylique, café, graphite sur papier Arches ». */
   materials: Bilingual[];
-  /** Tailles disponibles ; vide pour les pièces sans taille. */
+  /** Toujours vide : œuvres sans déclinaison de taille. */
   sizes: string[];
-  /** Dimensions pour les pièces d'art et de décoration. */
   dimensions?: string;
-  origin: { country: string; countryEn: string; city: string };
+  /** Pièce unique : stock = 1. */
   stock: number;
-  /** Chemins publics de placeholders SVG générés localement. */
+  /** Chemins publics des photos de l'œuvre. */
   images: string[];
   creatorSlug: string;
 };

@@ -1,6 +1,6 @@
-# Afrique Marketplace (POC)
+# E póm ta’ (POC)
 
-Marketplace premium d'art et de couture africaine — données fictives, aucun paiement réel. Voir `docs/`.
+Galerie en ligne d'artistes plasticiens afrodescendants (démonstration privée) — données fictives, aucun paiement réel. Voir `docs/`.
 
 ## Démarrage
 

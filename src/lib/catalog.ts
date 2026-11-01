@@ -13,10 +13,7 @@ export type ProductView = {
   categorySlug: string;
   creatorSlug: string;
   creatorName: string;
-  country: string;
-  city: string;
   priceCents: number;
-  localPrice: string;
   sizes: string[];
   images: string[];
   materials: string[];
@@ -27,11 +24,10 @@ export type ProductView = {
 export type CreatorView = {
   slug: string;
   name: string;
-  country: string;
-  city: string;
   specialty: string;
   bio: string;
   image: string;
+  sourceUrl: string;
 };
 
 type ProductRow = Product & { creator: Pick<Creator, "name"> };
@@ -48,10 +44,7 @@ export function toProductView(p: ProductRow, locale: Locale): ProductView {
     categorySlug: p.categorySlug,
     creatorSlug: p.creatorSlug,
     creatorName: p.creator.name,
-    country: pick(locale, p.country, p.countryEn),
-    city: p.city,
     priceCents: p.priceCents,
-    localPrice: `${new Intl.NumberFormat(locale === "en" ? "en-GB" : "fr-FR").format(p.localAmount)} ${p.localCurrency}`,
     sizes: strings(p.sizes),
     images: strings(p.images),
     materials: materials.map((m) => pick(locale, m.fr, m.en)),
@@ -64,11 +57,10 @@ export function toCreatorView(c: Creator, locale: Locale): CreatorView {
   return {
     slug: c.slug,
     name: c.name,
-    country: pick(locale, c.country, c.countryEn),
-    city: c.city,
     specialty: pick(locale, c.specialty, c.specialtyEn),
     bio: pick(locale, c.bio, c.bioEn),
     image: c.image,
+    sourceUrl: c.sourceUrl,
   };
 }
 
@@ -80,7 +72,7 @@ const normalize = (s: string) =>
 export type CatalogParams = {
   q?: string;
   category?: string;
-  country?: string;
+  artist?: string;
   min?: number;
   max?: number;
   sort?: "new" | "price-asc" | "price-desc";
@@ -91,7 +83,7 @@ export async function searchProducts(params: CatalogParams, locale: Locale) {
   const rows = await db.product.findMany({
     where: {
       ...(params.category ? { categorySlug: params.category } : {}),
-      ...(params.country ? { country: params.country } : {}),
+      ...(params.artist ? { creatorSlug: params.artist } : {}),
       priceCents: {
         ...(params.min !== undefined ? { gte: Math.round(params.min * 100) } : {}),
         ...(params.max !== undefined ? { lte: Math.round(params.max * 100) } : {}),
@@ -123,15 +115,13 @@ export async function searchProducts(params: CatalogParams, locale: Locale) {
 }
 
 export async function getFilterOptions(locale: Locale) {
-  const [categories, countries] = await Promise.all([
+  const [categories, artists] = await Promise.all([
     db.category.findMany({ orderBy: { name: "asc" } }),
-    db.product.findMany({ distinct: ["country"], select: { country: true, countryEn: true } }),
+    db.creator.findMany({ orderBy: { name: "asc" }, select: { slug: true, name: true } }),
   ]);
   return {
     categories: categories.map((c) => ({ value: c.slug, label: pick(locale, c.name, c.nameEn) })),
-    countries: countries
-      .map((c) => ({ value: c.country, label: pick(locale, c.country, c.countryEn) }))
-      .sort((a, b) => a.label.localeCompare(b.label)),
+    artists: artists.map((a) => ({ value: a.slug, label: a.name })),
   };
 }
 

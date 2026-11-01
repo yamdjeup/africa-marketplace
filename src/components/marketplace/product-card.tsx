@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import type { ProductView } from "@/lib/catalog";
 import { formatEur, type Locale } from "@/lib/i18n";
@@ -19,7 +18,6 @@ export function ProductCard({ product, locale, soldOut }: { product: ProductView
         />
       </div>
       <CardContent className="space-y-1.5">
-        <Badge variant="secondary">{product.country}</Badge>
         <h3 className="font-heading text-base leading-tight md:text-lg">
           <Link href={`/${locale}/produits/${product.slug}`} className="after:absolute after:inset-0">
             {product.name}

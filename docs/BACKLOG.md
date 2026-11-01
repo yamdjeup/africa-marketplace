@@ -1,8 +1,10 @@
-# Backlog — Afrique Marketplace (POC)
+# Backlog — E póm ta’ (POC)
 
 Ordre = priorité d'exécution. Statut initial : À faire. Chaque story est autonome et livrable ; « DoD » commun : lint + typecheck + build OK, aucun secret commité.
 
 > **Mise à jour du périmètre (2026-11-01)** : le POC inclut aussi les comptes utilisateurs (inscription, connexion, profil — US-27) et le suivi de commande (page Mes commandes, statuts simulés — US-28). Sont exclus : vrai paiement Stripe (US-14 devient un checkout simulé sans Stripe), back-office vendeur (US-15 à US-17 abandonnées), avis et liste de souhaits. Partie 1 développée : US-06 (hors table Variant), US-07 (seed), US-08, US-09 à US-14 (version simulée) ; comptes et suivi = partie 2 (faite, voir HISTORY).
+
+> **Pivot galerie (2026-11)** : le POC devient « E póm ta’ », galerie d'artistes plasticiens afrodescendants en démonstration privée (voir HISTORY). Fait : 5 artistes, 12 œuvres, bios G3A, pièce unique, filtres artiste/catégorie/prix/recherche. À faire (BACKLOG galerie) : **GAL-01** protéger le déploiement Vercel par mot de passe avant tout partage (images non publiques) ; **GAL-02** valider titres/dimensions/années des œuvres (dont « Kwame ») ; **GAL-03** compléter pays/ville des artistes si fournis ; **GAL-04** page « À propos » dédiée (sens de E póm ta’, G3A) ; **GAL-05** vrais prix et conditions de vente si le projet dépasse la démo ; **GAL-06** manifest PWA aux nouveaux nom/identité (aucun n'existe aujourd'hui).
 
 **US-27 Comptes utilisateurs** — Je veux m'inscrire, me connecter et gérer mon profil. (Partie 2, fait : Auth.js credentials, e-mail + mot de passe hashé bcrypt, profil modifiable ; checkout invité ou lié au compte)
 

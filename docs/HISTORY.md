@@ -29,3 +29,18 @@ Format : date — décision — raison. Ajouter les entrées en bas.
 - **Bug corrigé** : après une erreur (mot de passe incorrect, e-mail déjà utilisé, champ manquant, stock…), React 19 réinitialise les formulaires pilotés par server action et efface e-mail/nom/adresse saisis. Les actions `login`, `register` et `placeOrder` renvoient désormais les valeurs saisies (hors mot de passe) réinjectées en `defaultValue`.
 - **Constats sans changement de code** : `next start` en production sans `AUTH_SECRET` échoue (`MissingSecret`, comportement voulu, secret obligatoire en production) ; les tests posent donc un secret jetable. Un clic sur un choix de taille avant l'hydratation React est perdu (test rendu robuste par attente de l'hydratation ; effet marginal pour l'utilisateur).
 - **Non couvert** : modification du profil, changement de mot de passe, cas de stock insuffisant, accessibilité automatisée.
+
+## 2026-11 — Pivot : galerie en ligne d'artistes plasticiens afrodescendants (démo privée G3A)
+- **Objectif** : démonstration PRIVÉE au créateur de G3A (g3a.org). Les créateurs/produits de couture fictifs sont remplacés par 5 artistes (Célanie, Cruzz Taylor, Morère, KeNoF, Paula Padua Nogueira) et 12 œuvres réelles issues des photos de l'utilisateur (rattachement validé par l'utilisateur ; images dans `public/images/artworks/`, JPG =w1600 de 220–640 Ko). Biographies = textes officiels G3A tels quels (traduction EN fidèle) avec lien vers l'article source. Prix fictifs en EUR, signalés « Prix fictif de démonstration ». Catégories : Peinture, Photographie, Sculpture/Céramique, Dessin.
+- **⚠ Déploiement** : les images ne doivent PAS être publiques. Le déploiement Vercel doit être protégé par mot de passe (Deployment Protection) avant tout partage de lien.
+- **Modèle** : pièce unique (stock 1, quantité plafonnée à 1 au panier ; plus de tailles). Migration `0003_gallery` : retire pays/ville/prix local, ajoute `Creator.sourceUrl` et **supprime les données de démo existantes (commandes comprises)**. Le seed supprime aussi les anciennes lignes couture.
+- **Noms internes conservés** : modèles `Creator`/`Product` et routes `/createurs`, `/produits`, `/catalogue` inchangés ; seuls les textes visibles deviennent « artistes » / « œuvres ». Le filtre pays devient un filtre artiste.
+- **UI** : bandeau « Démonstration privée », accueil éditorial (hero œuvre, sélection, artistes), fiche œuvre grand format (image `object-contain`), crédit artiste sur chaque carte.
+- **Tests** : 21 Playwright verts (desktop + mobile), lint et build OK. Les commandes épuisant une pièce unique, les parcours de commande utilisent des œuvres distinctes et le serveur de test relance `db:seed` (stock remis à 1).
+- **Hypothèses à valider** : titre « Kwame » attribué à la photo celanie-3 (cartel 20, Carte d'identité, 56×76 cm, 2026) ; titres des autres œuvres descriptifs ; dimensions/années omises quand incertaines (ex. cartel de Morère « La Harpie » non repris).
+
+## 2026-11 — Renommage de la marque : « E póm ta’ »
+- **Décision** : « Afrique Marketplace » devient « E póm ta’ » (« tu es très belle » en ghomálá’) partout : en-tête, titres/métadonnées (`siteName`), textes FR/EN, tests, docs. Caractères exacts : ó (accent aigu) et ’ (apostrophe typographique U+2019).
+- **Inchangés** : nom du dépôt, nom du package npm (`afrique-marketplace`) et clé localStorage du panier. Aucun manifest PWA n'existe dans le projet (rien à renommer).
+- **Signification** : sous-titre du logo (« Tu es très belle » en ghomálá’) et section « E póm ta’ » de l'accueil, FR/EN.
+- **Police** : Playfair Display et Inter (sous-ensemble latin) contiennent ó et ’ ; contrôlé par test e2e sur le titre et l'en-tête.

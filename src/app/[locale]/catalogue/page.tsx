@@ -35,7 +35,7 @@ export default async function CatalogPage({
   const query: CatalogParams = {
     q: first(sp.q),
     category: first(sp.category),
-    country: first(sp.country),
+    artist: first(sp.artist),
     min: num(first(sp.min)),
     max: num(first(sp.max)),
     sort: sortRaw === "price-asc" || sortRaw === "price-desc" ? sortRaw : "new",
@@ -56,7 +56,7 @@ export default async function CatalogPage({
     return `/${locale}/catalogue${s ? `?${s}` : ""}`;
   };
 
-  const filtersActive = Boolean(query.q || query.category || query.country || query.min !== undefined || query.max !== undefined);
+  const filtersActive = Boolean(query.q || query.category || query.artist || query.min !== undefined || query.max !== undefined);
 
   return (
     <div className="space-y-6">
@@ -131,7 +131,7 @@ function Filters({
 }) {
   const t = getDict(locale).catalog;
   const id = (name: string) => `f-${prefix}-${name}`;
-  const ids = { q: id("q"), cat: id("cat"), country: id("country"), min: id("min"), max: id("max"), sort: id("sort") };
+  const ids = { q: id("q"), cat: id("cat"), artist: id("artist"), min: id("min"), max: id("max"), sort: id("sort") };
   return (
     <form method="get" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
       <div className="space-y-1 lg:col-span-2">
@@ -148,10 +148,10 @@ function Filters({
         </select>
       </div>
       <div className="space-y-1">
-        <label htmlFor={ids.country} className="text-xs font-medium">{t.country}</label>
-        <select id={ids.country} name="country" defaultValue={query.country ?? ""} className={fieldClass}>
+        <label htmlFor={ids.artist} className="text-xs font-medium">{t.country}</label>
+        <select id={ids.artist} name="artist" defaultValue={query.artist ?? ""} className={fieldClass}>
           <option value="">{t.all}</option>
-          {options.countries.map((c) => (
+          {options.artists.map((c) => (
             <option key={c.value} value={c.value}>{c.label}</option>
           ))}
         </select>

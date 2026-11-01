@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 
-export const metadata: Metadata = { title: "Design system - Afrique Marketplace" };
+export const metadata: Metadata = { title: "Design system - E póm ta’" };
 
 const swatches = [
   ["primary (indigo)", "bg-primary"],

@@ -23,7 +23,7 @@ export function CreatorCard({ creator, locale }: { creator: CreatorView; locale:
           </Link>
         </h3>
         <p className="text-xs uppercase tracking-wide text-terracotta">
-          {creator.specialty} — {creator.country}
+          {creator.specialty}
         </p>
         <p className="line-clamp-3 text-sm text-muted-foreground">{creator.bio}</p>
         <span className="sr-only">{t.creator.visit}</span>

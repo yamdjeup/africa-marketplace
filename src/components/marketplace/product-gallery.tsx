@@ -7,15 +7,15 @@ export function ProductGallery({ images, name, label }: { images: string[]; name
   const [index, setIndex] = useState(0);
   return (
     <div className="space-y-3" aria-label={label}>
-      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-lg bg-muted">
+      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-lg bg-muted md:aspect-[4/3]">
         <Image
           src={images[index]}
           alt={`${name} (${index + 1}/${images.length})`}
           fill
           unoptimized
           priority
-          sizes="(min-width: 768px) 50vw, 100vw"
-          className="object-cover"
+          sizes="(min-width: 768px) 60vw, 100vw"
+          className="object-contain"
         />
       </div>
       {images.length > 1 && (

@@ -1,4 +1,4 @@
-# PRD — Afrique Marketplace (POC)
+# PRD — E póm ta’ (POC)
 
 ## 1. Vision
 Marketplace premium d'art et de couture africaine, « Farfetch de l'Afrique » : mettre en relation des créateurs et artisans du continent avec une clientèle internationale exigeante, avec une expérience haut de gamme (éditorial, storytelling créateur, authenticité).

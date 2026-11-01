@@ -1,25 +1,40 @@
-﻿import Link from "next/link";
+import Link from "next/link";
+import { CartLink } from "@/components/marketplace/cart-link";
+import { LanguageSwitcher } from "@/components/marketplace/language-switcher";
+import { getDict, type Locale } from "@/lib/i18n";
 
-const nav = ["Femme", "Homme", "Art", "Deco", "Createurs"];
-
-export function SiteHeader() {
+export function SiteHeader({ locale }: { locale: Locale }) {
+  const t = getDict(locale);
   return (
     <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur">
       <div className="kente-band h-1" />
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-        <Link href="/" className="font-heading text-xl font-semibold text-primary">
-          Afrique Marketplace
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-2">
+        <Link href={`/${locale}`} className="font-heading text-lg font-semibold text-primary md:text-xl">
+          {t.siteName}
         </Link>
-        <nav aria-label="Principale" className="hidden gap-6 text-sm md:flex">
-          {nav.map((n) => (
-            <Link key={n} href="#" className="hover:text-terracotta">
-              {n}
-            </Link>
-          ))}
+        <nav aria-label={t.nav.main} className="order-3 flex w-full items-center gap-4 text-sm md:order-none md:w-auto md:gap-6">
+          <Link href={`/${locale}/catalogue`} className="inline-flex min-h-11 items-center hover:text-terracotta">
+            {t.nav.catalog}
+          </Link>
+          <Link href={`/${locale}/createurs`} className="inline-flex min-h-11 items-center hover:text-terracotta">
+            {t.nav.creators}
+          </Link>
+          <form action={`/${locale}/catalogue`} role="search" className="ml-auto flex md:ml-0">
+            <label htmlFor="header-search" className="sr-only">
+              {t.nav.search}
+            </label>
+            <input
+              id="header-search"
+              name="q"
+              type="search"
+              placeholder={t.nav.search}
+              className="h-11 w-32 rounded-md border bg-background px-3 text-sm sm:w-44"
+            />
+          </form>
         </nav>
-        <div className="flex gap-3 text-sm">
-          <Link href="#">Recherche</Link>
-          <Link href="#">Panier (0)</Link>
+        <div className="flex items-center">
+          <LanguageSwitcher locale={locale} />
+          <CartLink locale={locale} />
         </div>
       </div>
     </header>

@@ -1,0 +1,99 @@
+// Schéma canonique (PostgreSQL / Neon). En développement sans DATABASE_URL,
+// scripts/db.mjs en dérive automatiquement une variante SQLite (prisma/.dev/).
+// Rester compatible SQLite : pas d'enum ni de tableaux natifs.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  slug     String    @id
+  name     String
+  nameEn   String
+  products Product[]
+}
+
+model Creator {
+  slug        String    @id
+  name        String
+  country     String
+  countryEn   String
+  city        String
+  specialty   String
+  specialtyEn String
+  bio         String
+  bioEn       String
+  image       String
+  products    Product[]
+}
+
+model Product {
+  slug          String      @id
+  name          String
+  nameEn        String
+  description   String
+  descriptionEn String
+  story         String
+  storyEn       String
+  categorySlug  String
+  category      Category    @relation(fields: [categorySlug], references: [slug])
+  creatorSlug   String
+  creator       Creator     @relation(fields: [creatorSlug], references: [slug])
+  /// Prix en centimes d'EUR
+  priceCents    Int
+  localCurrency String
+  localAmount   Int
+  /// [{ fr, en }]
+  materials     Json
+  /// string[] ; vide si pièce sans taille
+  sizes         Json
+  dimensions    String?
+  country       String
+  countryEn     String
+  city          String
+  stock         Int
+  /// string[] de chemins publics
+  images        Json
+  createdAt     DateTime    @default(now())
+  orderItems    OrderItem[]
+
+  @@index([categorySlug])
+  @@index([creatorSlug])
+}
+
+model Order {
+  id         String      @id @default(cuid())
+  /// Référence lisible affichée au client
+  number     String      @unique
+  locale     String
+  email      String
+  fullName   String
+  address    String
+  postalCode String
+  city       String
+  country    String
+  totalCents Int
+  /// Statut simulé ; étendu en partie 2 (suivi de commande)
+  status     String      @default("PLACED")
+  createdAt  DateTime    @default(now())
+  items      OrderItem[]
+}
+
+model OrderItem {
+  id             String  @id @default(cuid())
+  orderId        String
+  order          Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productSlug    String
+  product        Product @relation(fields: [productSlug], references: [slug])
+  name           String
+  size           String?
+  quantity       Int
+  unitPriceCents Int
+
+  @@index([orderId])
+}

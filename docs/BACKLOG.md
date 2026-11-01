@@ -2,6 +2,12 @@
 
 Ordre = priorité d'exécution. Statut initial : À faire. Chaque story est autonome et livrable ; « DoD » commun : lint + typecheck + build OK, aucun secret commité.
 
+> **Mise à jour du périmètre (2026-11-01)** : le POC inclut aussi les comptes utilisateurs (inscription, connexion, profil — US-27) et le suivi de commande (page Mes commandes, statuts simulés — US-28). Sont exclus : vrai paiement Stripe (US-14 devient un checkout simulé sans Stripe), back-office vendeur (US-15 à US-17 abandonnées), avis et liste de souhaits. Partie 1 développée : US-06 (hors table Variant), US-07 (seed), US-08, US-09 à US-14 (version simulée) ; comptes et suivi = partie 2.
+
+**US-27 Comptes utilisateurs** — Je veux m'inscrire, me connecter et gérer mon profil. (Partie 2, à faire)
+
+**US-28 Suivi de commande** — Je veux voir mes commandes et leur statut simulé dans « Mes commandes ». (Partie 2, à faire)
+
 ## Phase 0 — Fondations
 
 **US-01 Initialiser le projet** — En tant qu'équipe, je veux un squelette Next.js TS prêt à développer.

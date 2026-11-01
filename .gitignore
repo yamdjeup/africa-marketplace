@@ -32,6 +32,10 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+
+# base SQLite locale et schéma dérivé (dev sans DATABASE_URL)
+/prisma/.dev/
 
 # vercel
 .vercel

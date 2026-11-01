@@ -1,0 +1,104 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { AddToCart } from "@/components/marketplace/add-to-cart";
+import { ProductCard } from "@/components/marketplace/product-card";
+import { ProductGallery } from "@/components/marketplace/product-gallery";
+import { Badge } from "@/components/ui/badge";
+import { getCreatorWithProducts, getProduct } from "@/lib/catalog";
+import { formatEur, getDict, type Locale } from "@/lib/i18n";
+
+type Props = { params: Promise<{ locale: Locale; slug: string }> };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { locale, slug } = await params;
+  const data = await getProduct(slug, locale);
+  if (!data) return { title: getDict(locale).product.notFound };
+  return { title: data.product.name, description: data.product.description };
+}
+
+export default async function ProductPage({ params }: Props) {
+  const { locale, slug } = await params;
+  const data = await getProduct(slug, locale);
+  if (!data) notFound();
+  const { product: p, creator, categoryLabel } = data;
+  const t = getDict(locale).product;
+  const more = (await getCreatorWithProducts(creator.slug, locale))?.products.filter((x) => x.slug !== p.slug).slice(0, 4) ?? [];
+
+  return (
+    <div className="space-y-12">
+      <div className="grid gap-6 md:grid-cols-2 md:gap-10">
+        <ProductGallery images={p.images} name={p.name} label={t.gallery} />
+        <div className="space-y-5">
+          <div className="space-y-2">
+            <Badge variant="secondary">{categoryLabel}</Badge>
+            <h1 className="font-heading text-3xl leading-tight text-primary">{p.name}</h1>
+            <p className="text-sm text-muted-foreground">
+              {t.by}{" "}
+              <Link href={`/${locale}/createurs/${creator.slug}`} className="underline underline-offset-4">
+                {creator.name}
+              </Link>
+            </p>
+          </div>
+          <div>
+            <p className="text-2xl font-semibold">{formatEur(p.priceCents, locale)}</p>
+            <p className="text-xs text-muted-foreground">
+              {t.localPrice} : {p.localPrice}
+            </p>
+          </div>
+          <p>{p.description}</p>
+          <p className={`text-sm ${p.stock === 0 ? "text-destructive" : "text-kente"}`}>
+            {p.stock === 0 ? t.outOfStock : t.inStock(p.stock)}
+          </p>
+          <AddToCart
+            key={p.slug}
+            locale={locale}
+            slug={p.slug}
+            name={p.name}
+            creatorName={p.creatorName}
+            image={p.images[0]}
+            priceCents={p.priceCents}
+            sizes={p.sizes}
+            stock={p.stock}
+          />
+          <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 border-t pt-4 text-sm">
+            <dt className="font-medium">{t.materials}</dt>
+            <dd>{p.materials.join(", ")}</dd>
+            {p.dimensions && (
+              <>
+                <dt className="font-medium">{t.dimensions}</dt>
+                <dd>{p.dimensions}</dd>
+              </>
+            )}
+            <dt className="font-medium">{t.origin}</dt>
+            <dd>
+              {p.city}, {p.country}
+            </dd>
+          </dl>
+        </div>
+      </div>
+
+      <section aria-labelledby="story" className="max-w-prose space-y-2">
+        <h2 id="story" className="font-heading text-2xl text-primary">
+          {t.story}
+        </h2>
+        <p className="text-muted-foreground">{p.story}</p>
+      </section>
+
+      {more.length > 0 && (
+        <section aria-labelledby="more" className="space-y-4">
+          <h2 id="more" className="font-heading text-2xl text-primary">
+            {t.more}
+          </h2>
+          <ul className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+            {more.map((m) => (
+              <li key={m.slug}>
+                <ProductCard product={m} locale={locale} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </div>
+  );
+}

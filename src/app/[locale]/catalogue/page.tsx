@@ -1,0 +1,182 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { ProductCard } from "@/components/marketplace/product-card";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { getFilterOptions, searchProducts, type CatalogParams } from "@/lib/catalog";
+import { getDict, type Locale } from "@/lib/i18n";
+
+type SearchParams = Record<string, string | string[] | undefined>;
+
+const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) || undefined;
+const num = (v: string | undefined) => {
+  const n = v === undefined ? NaN : Number(v);
+  return Number.isFinite(n) && n >= 0 ? n : undefined;
+};
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: Locale }> }): Promise<Metadata> {
+  const { locale } = await params;
+  return { title: getDict(locale).catalog.title };
+}
+
+const fieldClass = "h-11 w-full rounded-md border bg-background px-3 text-sm";
+
+export default async function CatalogPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: Locale }>;
+  searchParams: Promise<SearchParams>;
+}) {
+  const { locale } = await params;
+  const sp = await searchParams;
+  const t = getDict(locale).catalog;
+
+  const sortRaw = first(sp.sort);
+  const query: CatalogParams = {
+    q: first(sp.q),
+    category: first(sp.category),
+    country: first(sp.country),
+    min: num(first(sp.min)),
+    max: num(first(sp.max)),
+    sort: sortRaw === "price-asc" || sortRaw === "price-desc" ? sortRaw : "new",
+    page: num(first(sp.page)),
+  };
+
+  const [{ items, total, page, pages }, options] = await Promise.all([
+    searchProducts(query, locale),
+    getFilterOptions(locale),
+  ]);
+
+  const hrefFor = (p: number) => {
+    const qs = new URLSearchParams();
+    for (const [k, v] of Object.entries({ ...query, page: p > 1 ? p : undefined })) {
+      if (v !== undefined && v !== "" && !(k === "sort" && v === "new")) qs.set(k, String(v));
+    }
+    const s = qs.toString();
+    return `/${locale}/catalogue${s ? `?${s}` : ""}`;
+  };
+
+  const filtersActive = Boolean(query.q || query.category || query.country || query.min !== undefined || query.max !== undefined);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-end justify-between gap-4">
+        <h1 className="font-heading text-3xl text-primary">{t.title}</h1>
+        <p className="text-sm text-muted-foreground" aria-live="polite">
+          {t.results(total)}
+        </p>
+      </div>
+
+      <details className="rounded-lg border md:hidden" open={filtersActive}>
+        <summary className="flex min-h-11 cursor-pointer items-center px-4 text-sm font-medium">{t.filters}</summary>
+        <div className="border-t p-4">
+          <Filters prefix="m" locale={locale} query={query} options={options} />
+        </div>
+      </details>
+      <div className="hidden rounded-lg border p-4 md:block">
+        <Filters prefix="d" locale={locale} query={query} options={options} />
+      </div>
+
+      {items.length === 0 ? (
+        <div className="rounded-lg border border-dashed p-10 text-center">
+          <p className="font-heading text-xl">{t.empty}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t.emptyHint}</p>
+          <Link href={`/${locale}/catalogue`} className={buttonVariants({ variant: "outline", className: "mt-4" })}>
+            {t.reset}
+          </Link>
+        </div>
+      ) : (
+        <ul className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4">
+          {items.map((p) => (
+            <li key={p.slug}>
+              <ProductCard product={p} locale={locale} soldOut={getDict(locale).product.outOfStock} />
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {pages > 1 && (
+        <nav aria-label="Pagination" className="flex items-center justify-between gap-4">
+          {page > 1 ? (
+            <Link href={hrefFor(page - 1)} className={buttonVariants({ variant: "outline" })}>
+              {t.prev}
+            </Link>
+          ) : (
+            <span />
+          )}
+          <span className="text-sm text-muted-foreground">{t.page(page, pages)}</span>
+          {page < pages ? (
+            <Link href={hrefFor(page + 1)} className={buttonVariants({ variant: "outline" })}>
+              {t.next}
+            </Link>
+          ) : (
+            <span />
+          )}
+        </nav>
+      )}
+    </div>
+  );
+}
+
+function Filters({
+  locale,
+  query,
+  options,
+  prefix,
+}: {
+  prefix: string;
+  locale: Locale;
+  query: CatalogParams;
+  options: Awaited<ReturnType<typeof getFilterOptions>>;
+}) {
+  const t = getDict(locale).catalog;
+  const id = (name: string) => `f-${prefix}-${name}`;
+  const ids = { q: id("q"), cat: id("cat"), country: id("country"), min: id("min"), max: id("max"), sort: id("sort") };
+  return (
+    <form method="get" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+      <div className="space-y-1 lg:col-span-2">
+        <label htmlFor={ids.q} className="text-xs font-medium">{t.search}</label>
+        <input id={ids.q} name="q" type="search" defaultValue={query.q} placeholder={t.searchPlaceholder} className={fieldClass} />
+      </div>
+      <div className="space-y-1">
+        <label htmlFor={ids.cat} className="text-xs font-medium">{t.category}</label>
+        <select id={ids.cat} name="category" defaultValue={query.category ?? ""} className={fieldClass}>
+          <option value="">{t.allF}</option>
+          {options.categories.map((c) => (
+            <option key={c.value} value={c.value}>{c.label}</option>
+          ))}
+        </select>
+      </div>
+      <div className="space-y-1">
+        <label htmlFor={ids.country} className="text-xs font-medium">{t.country}</label>
+        <select id={ids.country} name="country" defaultValue={query.country ?? ""} className={fieldClass}>
+          <option value="">{t.all}</option>
+          {options.countries.map((c) => (
+            <option key={c.value} value={c.value}>{c.label}</option>
+          ))}
+        </select>
+      </div>
+      <fieldset className="space-y-1">
+        <legend className="text-xs font-medium">{t.price}</legend>
+        <div className="flex gap-2">
+          <input id={ids.min} name="min" type="number" min={0} inputMode="numeric" defaultValue={query.min} placeholder={t.priceMin} aria-label={`${t.price} ${t.priceMin}`} className={fieldClass} />
+          <input id={ids.max} name="max" type="number" min={0} inputMode="numeric" defaultValue={query.max} placeholder={t.priceMax} aria-label={`${t.price} ${t.priceMax}`} className={fieldClass} />
+        </div>
+      </fieldset>
+      <div className="space-y-1">
+        <label htmlFor={ids.sort} className="text-xs font-medium">{t.sort}</label>
+        <select id={ids.sort} name="sort" defaultValue={query.sort} className={fieldClass}>
+          <option value="new">{t.sortNew}</option>
+          <option value="price-asc">{t.sortPriceAsc}</option>
+          <option value="price-desc">{t.sortPriceDesc}</option>
+        </select>
+      </div>
+      <div className="flex items-end gap-2 sm:col-span-2 lg:col-span-6">
+        <Button type="submit" className="h-11">{t.apply}</Button>
+        <Link href={`/${locale}/catalogue`} className={buttonVariants({ variant: "ghost", className: "h-11" })}>
+          {t.reset}
+        </Link>
+      </div>
+    </form>
+  );
+}

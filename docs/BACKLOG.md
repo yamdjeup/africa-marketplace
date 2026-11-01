@@ -2,11 +2,11 @@
 
 Ordre = priorité d'exécution. Statut initial : À faire. Chaque story est autonome et livrable ; « DoD » commun : lint + typecheck + build OK, aucun secret commité.
 
-> **Mise à jour du périmètre (2026-11-01)** : le POC inclut aussi les comptes utilisateurs (inscription, connexion, profil — US-27) et le suivi de commande (page Mes commandes, statuts simulés — US-28). Sont exclus : vrai paiement Stripe (US-14 devient un checkout simulé sans Stripe), back-office vendeur (US-15 à US-17 abandonnées), avis et liste de souhaits. Partie 1 développée : US-06 (hors table Variant), US-07 (seed), US-08, US-09 à US-14 (version simulée) ; comptes et suivi = partie 2.
+> **Mise à jour du périmètre (2026-11-01)** : le POC inclut aussi les comptes utilisateurs (inscription, connexion, profil — US-27) et le suivi de commande (page Mes commandes, statuts simulés — US-28). Sont exclus : vrai paiement Stripe (US-14 devient un checkout simulé sans Stripe), back-office vendeur (US-15 à US-17 abandonnées), avis et liste de souhaits. Partie 1 développée : US-06 (hors table Variant), US-07 (seed), US-08, US-09 à US-14 (version simulée) ; comptes et suivi = partie 2 (faite, voir HISTORY).
 
-**US-27 Comptes utilisateurs** — Je veux m'inscrire, me connecter et gérer mon profil. (Partie 2, à faire)
+**US-27 Comptes utilisateurs** — Je veux m'inscrire, me connecter et gérer mon profil. (Partie 2, fait : Auth.js credentials, e-mail + mot de passe hashé bcrypt, profil modifiable ; checkout invité ou lié au compte)
 
-**US-28 Suivi de commande** — Je veux voir mes commandes et leur statut simulé dans « Mes commandes ». (Partie 2, à faire)
+**US-28 Suivi de commande** — Je veux voir mes commandes et leur statut simulé dans « Mes commandes ». (Partie 2, fait : `/[locale]/account/orders` et détail ; statuts confirmée → en préparation (2 min) → expédiée (10 min) → livrée (60 min), calculés selon l'ancienneté)
 
 ## Phase 0 — Fondations
 

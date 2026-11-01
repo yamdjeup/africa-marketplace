@@ -1,10 +1,12 @@
 import Link from "next/link";
+import { auth } from "@/auth";
 import { CartLink } from "@/components/marketplace/cart-link";
 import { LanguageSwitcher } from "@/components/marketplace/language-switcher";
 import { getDict, type Locale } from "@/lib/i18n";
 
-export function SiteHeader({ locale }: { locale: Locale }) {
+export async function SiteHeader({ locale }: { locale: Locale }) {
   const t = getDict(locale);
+  const session = await auth();
   return (
     <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur">
       <div className="kente-band h-1" />
@@ -33,6 +35,20 @@ export function SiteHeader({ locale }: { locale: Locale }) {
           </form>
         </nav>
         <div className="flex items-center">
+          {session?.user ? (
+            <>
+              <Link href={`/${locale}/account/orders`} className="inline-flex min-h-11 items-center px-2 text-sm hover:text-terracotta">
+                {t.account.orders.title}
+              </Link>
+              <Link href={`/${locale}/account`} className="inline-flex min-h-11 items-center px-2 text-sm hover:text-terracotta">
+                {t.account.myAccount}
+              </Link>
+            </>
+          ) : (
+            <Link href={`/${locale}/login`} className="inline-flex min-h-11 items-center px-2 text-sm hover:text-terracotta">
+              {t.account.login}
+            </Link>
+          )}
           <LanguageSwitcher locale={locale} />
           <CartLink locale={locale} />
         </div>

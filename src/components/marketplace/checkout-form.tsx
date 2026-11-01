@@ -9,7 +9,7 @@ import { formatEur, getDict, type Locale } from "@/lib/i18n";
 
 const fieldClass = "h-11 w-full rounded-md border bg-background px-3 text-sm";
 
-export function CheckoutForm({ locale }: { locale: Locale }) {
+export function CheckoutForm({ locale, user }: { locale: Locale; user: { name: string; email: string } | null }) {
   const t = getDict(locale).checkout;
   const { lines, ready, totalCents } = useCart();
   const [state, action, pending] = useActionState<CheckoutState, FormData>(placeOrder, {});
@@ -45,6 +45,17 @@ export function CheckoutForm({ locale }: { locale: Locale }) {
         </p>
         <input type="hidden" name="locale" value={locale} />
         <input type="hidden" name="cart" value={cartPayload} />
+        {!user && (
+          <p className="text-sm text-muted-foreground">
+            {getDict(locale).account.guestNote}{" "}
+            <Link
+              href={`/${locale}/login?next=${encodeURIComponent(`/${locale}/checkout`)}`}
+              className="text-primary underline underline-offset-4"
+            >
+              {getDict(locale).account.login}
+            </Link>
+          </p>
+        )}
         <h2 className="font-heading text-xl">{t.contact}</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           {fields.map(([name, label, type, autoComplete]) => (
@@ -52,7 +63,15 @@ export function CheckoutForm({ locale }: { locale: Locale }) {
               <label htmlFor={name} className="text-sm font-medium">
                 {label}
               </label>
-              <input id={name} name={name} type={type} autoComplete={autoComplete} required className={fieldClass} />
+              <input
+                id={name}
+                name={name}
+                type={type}
+                autoComplete={autoComplete}
+                defaultValue={name === "email" ? user?.email : name === "fullName" ? user?.name : undefined}
+                required
+                className={fieldClass}
+              />
             </div>
           ))}
         </div>

@@ -2,6 +2,7 @@
 
 import { randomUUID } from "node:crypto";
 import { redirect } from "next/navigation";
+import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { isLocale } from "@/lib/i18n";
 
@@ -57,11 +58,14 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
   }
 
   const number = `AM-${randomUUID().slice(0, 8).toUpperCase()}`;
+  const session = await auth();
+  const user = session?.user?.id ? await db.user.findUnique({ where: { id: session.user.id } }) : null;
   await db.$transaction([
     db.order.create({
       data: {
         number,
         locale,
+        userId: user?.id ?? null,
         ...values,
         totalCents,
         items: {

@@ -8,7 +8,7 @@ import { auth, signIn, signOut } from "@/auth";
 import { db } from "@/lib/db";
 import { isLocale } from "@/lib/i18n";
 
-export type AuthState = { error?: "required" | "email" | "password" | "exists" | "invalid" | "current"; saved?: boolean };
+export type AuthState = { error?: "required" | "email" | "password" | "exists" | "invalid" | "current"; saved?: boolean; email?: string; name?: string };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -26,11 +26,11 @@ function safeNext(value: string, fallback: string) {
   return value.startsWith("/") && !value.startsWith("//") ? value : fallback;
 }
 
-async function credentialsSignIn(email: string, password: string, redirectTo: string): Promise<AuthState> {
+async function credentialsSignIn(email: string, password: string, redirectTo: string, name?: string): Promise<AuthState> {
   try {
     await signIn("credentials", { email, password, redirectTo });
   } catch (e) {
-    if (e instanceof AuthError) return { error: "invalid" };
+    if (e instanceof AuthError) return { error: "invalid", email, name };
     throw e;
   }
   return {};
@@ -40,7 +40,7 @@ export async function login(_prev: AuthState, formData: FormData): Promise<AuthS
   const locale = localeOf(formData);
   const email = text(formData, "email").toLowerCase();
   const password = String(formData.get("password") ?? "");
-  if (!email || !password) return { error: "required" };
+  if (!email || !password) return { error: "required", email };
   return credentialsSignIn(email, password, safeNext(text(formData, "next"), `/${locale}/account/orders`));
 }
 
@@ -49,13 +49,14 @@ export async function register(_prev: AuthState, formData: FormData): Promise<Au
   const name = text(formData, "name");
   const email = text(formData, "email").toLowerCase();
   const password = String(formData.get("password") ?? "");
-  if (!name || !email || !password) return { error: "required" };
-  if (!EMAIL_RE.test(email)) return { error: "email" };
-  if (password.length < 8 || password.length > 200) return { error: "password" };
-  if (await db.user.findUnique({ where: { email } })) return { error: "exists" };
+  const kept = { email, name };
+  if (!name || !email || !password) return { error: "required", ...kept };
+  if (!EMAIL_RE.test(email)) return { error: "email", ...kept };
+  if (password.length < 8 || password.length > 200) return { error: "password", ...kept };
+  if (await db.user.findUnique({ where: { email } })) return { error: "exists", ...kept };
 
   await db.user.create({ data: { name, email, passwordHash: await bcrypt.hash(password, 10) } });
-  return credentialsSignIn(email, password, safeNext(text(formData, "next"), `/${locale}/account`));
+  return credentialsSignIn(email, password, safeNext(text(formData, "next"), `/${locale}/account`), name);
 }
 
 export async function updateProfile(_prev: AuthState, formData: FormData): Promise<AuthState> {

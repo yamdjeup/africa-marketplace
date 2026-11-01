@@ -68,7 +68,7 @@ export function CheckoutForm({ locale, user }: { locale: Locale; user: { name: s
                 name={name}
                 type={type}
                 autoComplete={autoComplete}
-                defaultValue={name === "email" ? user?.email : name === "fullName" ? user?.name : undefined}
+                defaultValue={state.values?.[name] ?? (name === "email" ? user?.email : name === "fullName" ? user?.name : undefined)}
                 required
                 className={fieldClass}
               />

@@ -6,7 +6,7 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { isLocale } from "@/lib/i18n";
 
-export type CheckoutState = { error?: "required" | "email" | "stock" | "unknown" | "empty" };
+export type CheckoutState = { error?: "required" | "email" | "stock" | "unknown" | "empty"; values?: Record<string, string> };
 
 type CartInput = { slug: string; size: string | null; quantity: number }[];
 
@@ -35,11 +35,12 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
     city: field("city"),
     country: field("country"),
   };
-  if (Object.values(values).some((v) => !v)) return { error: "required" };
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) return { error: "email" };
+  const fail = (error: NonNullable<CheckoutState["error"]>): CheckoutState => ({ error, values });
+  if (Object.values(values).some((v) => !v)) return fail("required");
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) return fail("email");
 
   const cart = parseCart(formData.get("cart"));
-  if (cart.length === 0) return { error: "empty" };
+  if (cart.length === 0) return fail("empty");
 
   const products = await db.product.findMany({ where: { slug: { in: cart.map((l) => l.slug) } } });
   const bySlug = new Map(products.map((p) => [p.slug, p]));
@@ -48,11 +49,11 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
   const stockUsed = new Map<string, number>();
   for (const line of cart) {
     const p = bySlug.get(line.slug);
-    if (!p) return { error: "unknown" };
+    if (!p) return fail("unknown");
     const sizes = Array.isArray(p.sizes) ? (p.sizes as string[]) : [];
-    if (sizes.length > 0 ? !line.size || !sizes.includes(line.size) : line.size !== null) return { error: "unknown" };
+    if (sizes.length > 0 ? !line.size || !sizes.includes(line.size) : line.size !== null) return fail("unknown");
     const used = (stockUsed.get(p.slug) ?? 0) + line.quantity;
-    if (used > p.stock) return { error: "stock" };
+    if (used > p.stock) return fail("stock");
     stockUsed.set(p.slug, used);
     totalCents += p.priceCents * line.quantity;
   }

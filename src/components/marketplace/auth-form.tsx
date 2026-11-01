@@ -23,14 +23,14 @@ export function AuthForm({ locale, mode, next }: { locale: Locale; mode: "login"
           <label htmlFor="name" className="text-sm font-medium">
             {t.name}
           </label>
-          <input id="name" name="name" autoComplete="name" required className={fieldClass} />
+          <input id="name" name="name" autoComplete="name" defaultValue={state.name} required className={fieldClass} />
         </div>
       )}
       <div className="space-y-1">
         <label htmlFor="email" className="text-sm font-medium">
           {t.email}
         </label>
-        <input id="email" name="email" type="email" autoComplete="email" required className={fieldClass} />
+        <input id="email" name="email" type="email" autoComplete="email" defaultValue={state.email} required className={fieldClass} />
       </div>
       <div className="space-y-1">
         <label htmlFor="password" className="text-sm font-medium">

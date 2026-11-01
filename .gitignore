@@ -15,6 +15,9 @@
 
 # next.js
 /.next/
+# playwright
+/test-results/
+/playwright-report/
 /out/
 
 # production

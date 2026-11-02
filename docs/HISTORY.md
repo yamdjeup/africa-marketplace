@@ -58,3 +58,8 @@ Format : date — décision — raison. Ajouter les entrées en bas.
 - **Docs** : `.env.example` (noms seulement), `docs/DEPLOIEMENT.md` (guide débutant), README et skill `deploiement-vercel-neon` alignés.
 - **Tests** : `e2e/access.spec.ts` (projet « wall », second serveur port 3101, mot de passe jetable) ; serveur principal avec mur désactivé. 25 Playwright verts, lint et build OK.
 - **Limite** : pas de limitation de tentatives sur le mot de passe. **Non vérifié** : migration/seed contre un vrai Neon (pas de base disponible ici).
+
+## 2026-11 — Photos dignes d'une galerie
+- Script reproductible `scripts/enhance-photos.py` (OpenCV/Pillow) : redressement de perspective, recadrage au plus près, niveaux de luminance, netteté douce ; JPEG q90, 2000 px max. Aucune retouche créative ; balance des blancs seulement sur les céramiques (mur blanc), jamais sur les teintes d'auteur.
+- Originaux dans `scripts/photo-originals/` (gitignoré, hors déploiement).
+- Limites : Célanie 1 (vitrine, reflets sombres à droite) et Morère 1 (mur conservé, sculptures sans cadre) ne peuvent être nettoyés automatiquement.

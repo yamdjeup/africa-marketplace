@@ -51,3 +51,10 @@ Format : date — décision — raison. Ajouter les entrées en bas.
 - **Police** : Playfair Display et Inter (sous-ensemble latin) contiennent ó et ’ ; contrôlé par test e2e sur le titre et l'en-tête.
 ## 2026-11 — Œuvres affichées entières
 - Cartes, hero d'accueil, fiche œuvre, miniatures et panier : object-contain (plus de recadrage) avec marge de passe-partout sur fond neutre (g-muted) ; cadres de hauteur uniforme conservés pour l'alignement de la grille.
+
+## 2026-11 — Préparation du déploiement privé (Vercel + Neon)
+- **Mur de mot de passe intégré** (gratuit, sans Deployment Protection) : `src/proxy.ts` + `src/lib/site-access.ts`. Actif seulement si `SITE_ACCESS_PASSWORD` est défini (désactivé en local et dans les tests). Comparaison en temps constant (SHA-256 + XOR), cookie `site_access` httpOnly/secure/SameSite=Lax signé HMAC avec `SITE_ACCESS_SECRET` (repli sur le mot de passe), 30 jours. Page d'accès FR/EN en HTML autonome (`/acces`). Images et API derrière le mur : `images.unoptimized` (plus de `/_next/image` public) et matcher du proxy étendu ; `/_next`, favicon et `robots.txt` publics. `robots.txt` Disallow + `X-Robots-Tag: noindex` partout.
+- **Neon** : schéma canonique déjà PostgreSQL. Ajout de `db:deploy` (generate + `migrate deploy`, `DIRECT_URL` prioritaire), `db:check` (validation schéma/migrations sans base) et `vercel-build` (deploy puis `next build`). `npm run build` vérifié avec une `DATABASE_URL` Postgres factice (rendu à la demande, aucun accès base au build). Seed manuel depuis le poste : `npm run db:seed` avec l'URL Neon en variable de session.
+- **Docs** : `.env.example` (noms seulement), `docs/DEPLOIEMENT.md` (guide débutant), README et skill `deploiement-vercel-neon` alignés.
+- **Tests** : `e2e/access.spec.ts` (projet « wall », second serveur port 3101, mot de passe jetable) ; serveur principal avec mur désactivé. 25 Playwright verts, lint et build OK.
+- **Limite** : pas de limitation de tentatives sur le mot de passe. **Non vérifié** : migration/seed contre un vrai Neon (pas de base disponible ici).

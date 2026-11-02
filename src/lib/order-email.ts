@@ -1,0 +1,78 @@
+import nodemailer from "nodemailer";
+
+export type OrderEmailInput = {
+  to: string;
+  locale: "fr" | "en";
+  number: string;
+  fullName: string;
+  items: { name: string; quantity: number; unitPriceCents: number }[];
+  totalCents: number;
+};
+
+const SEND_TIMEOUT_MS = 8000;
+
+const esc = (s: string) =>
+  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+export function buildOrderEmail(o: OrderEmailInput) {
+  const fr = o.locale === "fr";
+  const money = (cents: number) =>
+    new Intl.NumberFormat(fr ? "fr-FR" : "en-GB", { style: "currency", currency: "EUR" }).format(cents / 100);
+  const t = fr
+    ? {
+        subject: `E póm ta’ — confirmation de la commande ${o.number} (simulée)`,
+        hello: `Bonjour ${o.fullName},`,
+        intro: "Merci pour votre commande sur E póm ta’.",
+        notice: "Commande simulée, aucun paiement n'a été effectué.",
+        num: "Numéro de commande",
+        works: "Œuvres",
+        total: "Total",
+        bye: "Démonstration privée — prix fictifs de démonstration.",
+      }
+    : {
+        subject: `E póm ta’ — order ${o.number} confirmation (simulated)`,
+        hello: `Hello ${o.fullName},`,
+        intro: "Thank you for your order on E póm ta’.",
+        notice: "Simulated order, no payment has been made.",
+        num: "Order number",
+        works: "Artworks",
+        total: "Total",
+        bye: "Private demonstration — fictional demo prices.",
+      };
+  const lines = o.items.map((i) => `${i.name} × ${i.quantity} — ${money(i.unitPriceCents * i.quantity)}`);
+  const text = [t.hello, "", t.intro, t.notice, "", `${t.num} : ${o.number}`, `${t.works} :`, ...lines.map((l) => `- ${l}`), "", `${t.total} : ${money(o.totalCents)}`, "", t.bye].join("\n");
+  const html = `<div style="font-family:Georgia,serif;color:#1c3060;background:#faf6ee;padding:24px;max-width:560px">
+<h1 style="font-size:22px;margin:0 0 16px">E póm ta’</h1>
+<p>${esc(t.hello)}</p><p>${esc(t.intro)}</p>
+<p style="border-left:3px solid #eba941;padding-left:12px"><strong>${esc(t.notice)}</strong></p>
+<p>${esc(t.num)} : <strong>${esc(o.number)}</strong></p>
+<p>${esc(t.works)} :</p><ul>${lines.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>
+<p><strong>${esc(t.total)} : ${esc(money(o.totalCents))}</strong></p>
+<p style="font-size:12px;opacity:.7">${esc(t.bye)}</p></div>`;
+  return { subject: t.subject, text, html };
+}
+
+// Ne lève jamais : une commande ne doit pas échouer à cause de l'e-mail.
+export async function sendOrderEmail(o: OrderEmailInput): Promise<void> {
+  const user = process.env.GMAIL_USER;
+  const pass = process.env.GMAIL_APP_PASSWORD;
+  if (!user || !pass) return;
+  try {
+    const transport = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: { user, pass },
+      connectionTimeout: SEND_TIMEOUT_MS,
+      greetingTimeout: SEND_TIMEOUT_MS,
+      socketTimeout: SEND_TIMEOUT_MS,
+    });
+    const msg = buildOrderEmail(o);
+    await Promise.race([
+      transport.sendMail({ from: `"E póm ta’" <${user}>`, to: o.to, ...msg }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), SEND_TIMEOUT_MS)),
+    ]);
+  } catch (e) {
+    console.error("order email failed:", e instanceof Error ? e.message : "unknown error");
+  }
+}

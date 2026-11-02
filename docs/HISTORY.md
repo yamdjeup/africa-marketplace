@@ -92,3 +92,9 @@ Format : date — décision — raison. Ajouter les entrées en bas.
 - `src/app/manifest.ts` (nom « E póm ta’ », standalone, start_url /fr, lang fr, couleurs #1c3060 / #faf6ee dérivées de la charte), icônes 192/512, maskable 512 et apple-touch-icon (monogramme « E » doré sur indigo) dans `public/icons/`, themeColor et appleWebApp dans le layout.
 - `src/proxy.ts` : seuls `/manifest.webmanifest` et `/icons/*.png` passent le mur sans cookie (les navigateurs récupèrent le manifeste sans identifiants) ; images et API restent bloquées (test `access.spec.ts`).
 - Pas de service worker ni de hors-ligne (BACKLOG US-18).
+
+## 2026-11 — E-mail de confirmation de commande
+- `src/lib/order-email.ts` : nodemailer, SMTP Gmail (smtp.gmail.com, 465 sécurisé), variables `GMAIL_USER` / `GMAIL_APP_PASSWORD` (jamais loguées ni commitées, voir `.env.example`).
+- `placeOrder` envoie l'e-mail après la création de la commande, en attendant l'envoi (serverless Vercel) avec un délai maximum de 8 s. Variables absentes, erreur ou timeout : la commande réussit quand même, erreur journalisée sans secret.
+- E-mail FR/EN selon la langue de la commande : numéro, œuvres, total EUR, mention « commande simulée, aucun paiement ».
+- Tests `e2e/order-email.spec.ts` (gabarit FR/EN, aucun envoi sans variables ; aucun envoi réel dans les tests). Procédure Google/Vercel : `docs/DEPLOIEMENT.md`, étape 5 ter.

@@ -94,6 +94,19 @@ La base est vide après la migration. Chargez les artistes et les œuvres **une 
 
 Le fichier peut être exécuté plusieurs fois sans danger. Il est régénéré par `npm run db:seed-sql` quand les données changent.
 
+## Étape 5 ter — E-mail de confirmation de commande (optionnel, Gmail)
+
+Sans nom de domaine, on envoie les e-mails depuis votre Gmail personnel. Si vous sautez cette étape, le site fonctionne : simplement, aucun e-mail n'est envoyé.
+
+1. Sur <https://myaccount.google.com/security>, vérifiez que la **validation en 2 étapes** est activée (obligatoire).
+2. Ouvrez <https://myaccount.google.com/apppasswords>, donnez un nom (ex. « E póm ta’ ») puis **Créer**. Google affiche un mot de passe de 16 caractères : copiez-le (il ne sera plus visible).
+3. Dans Vercel : **Settings → Environment Variables**, ajoutez :
+   - `GMAIL_USER` : votre adresse Gmail complète ;
+   - `GMAIL_APP_PASSWORD` : le mot de passe de 16 caractères (sans espaces).
+4. **Deployments → ⋯ → Redeploy**, puis passez une commande simulée avec votre propre adresse : l'e-mail (« commande simulée, aucun paiement ») doit arriver, parfois dans les courriers indésirables.
+
+Ne collez jamais ce mot de passe dans le code ni dans un message. Pour le révoquer : même page Google, icône corbeille. Gmail limite l'envoi (environ 500 messages par jour) : largement suffisant pour la démo. Si l'envoi échoue, la commande réussit quand même et l'erreur apparaît dans les logs Vercel.
+
 ## Étape 6 — Tester
 
 1. Dans Vercel, cliquez sur **Visit** (ou ouvrez l'adresse du projet). Vous devez voir la page **Accès réservé** et non le site.

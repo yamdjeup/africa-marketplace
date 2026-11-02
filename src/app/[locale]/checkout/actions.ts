@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { isLocale } from "@/lib/i18n";
+import { sendOrderEmail } from "@/lib/order-email";
 
 export type CheckoutState = { error?: "required" | "email" | "stock" | "unknown" | "empty"; values?: Record<string, string> };
 
@@ -87,6 +88,18 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
       db.product.update({ where: { slug }, data: { stock: { decrement: qty } } }),
     ),
   ]);
+
+  await sendOrderEmail({
+    to: values.email,
+    locale,
+    number,
+    fullName: values.fullName,
+    items: cart.map((l) => {
+      const p = bySlug.get(l.slug)!;
+      return { name: p.name, quantity: l.quantity, unitPriceCents: p.priceCents };
+    }),
+    totalCents,
+  });
 
   redirect(`/${locale}/checkout/confirmation/${number}`);
 }

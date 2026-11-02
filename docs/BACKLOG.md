@@ -99,6 +99,9 @@ Ordre = priorité d'exécution. Statut initial : À faire. Chaque story est auto
 - Métadonnées et Open Graph par page ; `next/image` ; sitemap
 - Lighthouse mobile ≥ 85 perf, ≥ 90 accessibilité
 
+**US-28 E-mail de confirmation de commande** — Je veux recevoir un e-mail après ma commande simulée.
+- Fait : nodemailer + SMTP Gmail, FR/EN, tolérant aux pannes (voir HISTORY). À faire plus tard : domaine dédié et fournisseur transactionnel (Resend…), e-mail d'expédition.
+
 ## Phase 4 — Tests Playwright
 
 **US-20 Configuration Playwright** — Je veux des tests E2E reproductibles.

@@ -1,5 +1,5 @@
 // Enveloppe Prisma : PostgreSQL (Neon) si DATABASE_URL est défini, sinon SQLite local.
-// Usage : node scripts/db.mjs <generate|setup|seed|studio>
+// Usage : node scripts/db.mjs <generate|setup|seed|deploy|check|studio>
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -47,6 +47,31 @@ const push = () =>
     : prisma("db", "push", "--schema", schema, "--skip-generate", "--accept-data-loss");
 const seed = () => run("npx", ["tsx", "prisma/seed.ts"]);
 
+// Migrations : DIRECT_URL (connexion Neon non poolée) si fournie, sinon DATABASE_URL.
+function deploy() {
+  if (!postgres) {
+    console.error("[db] db:deploy exige une DATABASE_URL PostgreSQL (postgresql://...).");
+    process.exit(1);
+  }
+  generate();
+  const direct = process.env.DIRECT_URL ?? "";
+  if (/^postgres(ql)?:\/\//.test(direct)) process.env.DATABASE_URL = direct;
+  prisma("migrate", "deploy", "--schema", schema);
+}
+
+// Vérifie sans base réelle : schéma PostgreSQL valide, migrations PostgreSQL, client générable.
+function check() {
+  const lock = readFileSync(join(root, "prisma", "migrations", "migration_lock.toml"), "utf8");
+  if (!/provider\s*=\s*"postgresql"/.test(lock)) {
+    console.error("[db] migration_lock.toml doit déclarer postgresql.");
+    process.exit(1);
+  }
+  if (!postgres) process.env.DATABASE_URL = "postgresql://user:password@localhost:5432/placeholder";
+  const canonical = join(root, "prisma", "schema.prisma");
+  prisma("validate", "--schema", canonical);
+  console.log("[db] Schéma PostgreSQL et migrations valides.");
+}
+
 switch (process.argv[2]) {
   case "generate":
     generate();
@@ -57,6 +82,12 @@ switch (process.argv[2]) {
   case "seed":
     seed();
     break;
+  case "deploy":
+    deploy();
+    break;
+  case "check":
+    check();
+    break;
   case "setup":
     generate();
     push();
@@ -66,6 +97,6 @@ switch (process.argv[2]) {
     prisma("studio", "--schema", schema);
     break;
   default:
-    console.error("Usage : node scripts/db.mjs <generate|push|seed|setup|studio>");
+    console.error("Usage : node scripts/db.mjs <generate|push|seed|setup|deploy|check|studio>");
     process.exit(1);
 }

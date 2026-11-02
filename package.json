@@ -5,12 +5,15 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "vercel-build": "node scripts/db.mjs deploy && next build",
     "start": "next start",
     "lint": "eslint",
     "test:e2e": "playwright test",
     "postinstall": "node scripts/db.mjs generate",
     "db:setup": "node scripts/db.mjs setup",
     "db:push": "node scripts/db.mjs push",
+    "db:deploy": "node scripts/db.mjs deploy",
+    "db:check": "node scripts/db.mjs check",
     "db:seed": "node scripts/db.mjs seed",
     "db:studio": "node scripts/db.mjs studio"
   },

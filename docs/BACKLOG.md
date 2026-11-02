@@ -92,8 +92,8 @@ Ordre = priorité d'exécution. Statut initial : À faire. Chaque story est auto
 - Liste des commandes contenant mes produits ; détail ; changement de statut (payée, expédiée)
 
 **US-18 PWA** — Je veux installer l'application.
-- Manifest, icônes, service worker ; installable sur mobile
-- Pages visitées consultables hors-ligne (fallback offline)
+- Manifest, icônes (fait, lot PWA 2026-11 : installable, derrière le mur) ; **service worker : reporté**
+- Pages visitées consultables hors-ligne (fallback offline) : **reporté, pas de service worker ni de mode hors ligne dans ce lot**
 
 **US-19 SEO et performance** — Je veux un site rapide et indexable.
 - Métadonnées et Open Graph par page ; `next/image` ; sitemap

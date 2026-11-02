@@ -13,6 +13,9 @@ import {
 
 const locales = ["fr", "en"];
 
+// Manifeste et icônes d'installation : le navigateur les récupère sans cookie, ils doivent rester publics (aucune œuvre).
+const PUBLIC_PWA = /^\/(manifest\.webmanifest|icons\/[\w-]+\.png)$/;
+
 const htmlHeaders = { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex, nofollow" };
 
 function pickLocale(request: NextRequest, next: string): "fr" | "en" {
@@ -52,6 +55,7 @@ async function guard(request: NextRequest): Promise<NextResponse | null> {
   if (!accessPassword()) return null;
   const { pathname, search } = request.nextUrl;
   if (pathname === ACCESS_PATH) return handleAccess(request);
+  if (PUBLIC_PWA.test(pathname)) return null;
   if (await verifyToken(request.cookies.get(ACCESS_COOKIE)?.value)) return null;
   const wantsPage = request.method === "GET" && !pathname.startsWith("/api/") && !/\.[a-z0-9]+$/i.test(pathname);
   if (!wantsPage) return new NextResponse("Unauthorized", { status: 401, headers: { "cache-control": "no-store" } });

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import { notFound } from "next/navigation";
 import { SiteFooter } from "@/components/marketplace/site-footer";
@@ -24,8 +24,15 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   if (!isLocale(locale)) return {};
   const t = getDict(locale);
-  return { title: { default: t.siteName, template: `%s — ${t.siteName}` }, description: t.tagline };
+  return {
+    title: { default: t.siteName, template: `%s — ${t.siteName}` },
+    description: t.tagline,
+    icons: { apple: "/icons/apple-touch-icon.png" },
+    appleWebApp: { capable: true, title: t.siteName },
+  };
 }
+
+export const viewport: Viewport = { themeColor: "#1c3060" };
 
 export default async function LocaleLayout({
   children,

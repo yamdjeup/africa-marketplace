@@ -22,6 +22,23 @@ test.describe("Mur de mot de passe", () => {
     expect(api.status()).toBe(401);
   });
 
+  test("manifeste PWA et icônes accessibles derrière le mur, images toujours bloquées", async ({ request }) => {
+    const res = await request.get("/manifest.webmanifest", { maxRedirects: 0 });
+    expect(res.status()).toBe(200);
+    const m = await res.json();
+    expect(m.name).toBe("E póm ta’");
+    expect(m.display).toBe("standalone");
+    expect(m.start_url).toBe("/fr");
+    for (const icon of m.icons) {
+      const r = await request.get(icon.src, { maxRedirects: 0 });
+      expect(r.status()).toBe(200);
+      expect(r.headers()["content-type"]).toContain("image/png");
+    }
+    const apple = await request.get("/icons/apple-touch-icon.png", { maxRedirects: 0 });
+    expect(apple.status()).toBe(200);
+    expect((await request.get("/images/artworks/celanie-1.jpg", { maxRedirects: 0 })).status()).toBe(401);
+  });
+
   test("mauvais mot de passe refusé, bon mot de passe accepté", async ({ page, context }) => {
     await page.goto("/acces?lang=en&next=%2Fen%2Fcatalogue");
     await expect(page.getByRole("heading", { name: "Private access" })).toBeVisible();

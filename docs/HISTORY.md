@@ -84,3 +84,6 @@ Format : date — décision — raison. Ajouter les entrées en bas.
 | taylor-2 | 1565x1060 | 3/2/3/0 |
 | taylor-3 | 1443x2202 | 3/3/3/3 |
 - Limites : Célanie 1 garde des reflets de vitrine ; le bord noir sur noir reste approximatif.
+
+## 2026-11 — Seed SQL pour Neon
+- `npm run db:seed-sql` (scripts/seed-sql.ts, lit src/data comme seed.ts) génère `prisma/seed.neon.sql` : upserts idempotents + nettoyage des anciennes lignes, en transaction. Vérifié sur PGlite (migrations 0001-0003 puis SQL exécuté 2 fois) : 4 catégories, 5 artistes, 13 œuvres, stock total 13. Permet de charger Neon via son SQL Editor quand le port 5432 est bloqué (DEPLOIEMENT.md, étape 5 bis). Régénérer le fichier à chaque changement de données.

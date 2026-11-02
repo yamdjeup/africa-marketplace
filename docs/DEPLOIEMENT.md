@@ -67,6 +67,25 @@ La base est vide après la migration. Chargez les artistes et les œuvres **une 
 
 3. Vous devez voir `Seed OK : 4 catégories, 5 artistes, 13 œuvres`. Le seed peut être relancé sans danger (il remet notamment le stock des pièces uniques à 1).
 
+## Étape 5 bis — Alternative sans connexion depuis votre ordinateur (SQL Editor Neon)
+
+À utiliser si l'étape 5 échoue, par exemple parce que votre réseau ou pare-feu **bloque le port 5432** (erreur de connexion à Neon). Tout se fait dans le navigateur, en HTTPS :
+
+1. Ouvrez le fichier `prisma/seed.neon.sql` du projet avec le Bloc-notes, puis **Ctrl+A** et **Ctrl+C** pour tout copier.
+2. Allez sur [console.neon.tech](https://console.neon.tech), ouvrez votre projet, puis cliquez sur **SQL Editor** dans le menu de gauche.
+3. Collez le contenu (**Ctrl+V**) puis cliquez sur **Run**. Aucun mot de passe n'est dans ce fichier.
+4. Vérifiez en exécutant, une requête à la fois :
+
+   ```sql
+   select count(*) from "Category";
+   select count(*) from "Creator";
+   select count(*) from "Product";
+   ```
+
+   (Les œuvres sont dans la table `"Product"`.) Vous devez obtenir **4**, **5** et **13**.
+
+Le fichier peut être exécuté plusieurs fois sans danger. Il est régénéré par `npm run db:seed-sql` quand les données changent.
+
 ## Étape 6 — Tester
 
 1. Dans Vercel, cliquez sur **Visit** (ou ouvrez l'adresse du projet). Vous devez voir la page **Accès réservé** et non le site.

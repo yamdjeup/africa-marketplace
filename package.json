@@ -15,7 +15,8 @@
     "db:deploy": "node scripts/db.mjs deploy",
     "db:check": "node scripts/db.mjs check",
     "db:seed": "node scripts/db.mjs seed",
-    "db:studio": "node scripts/db.mjs studio"
+    "db:studio": "node scripts/db.mjs studio",
+    "db:seed-sql": "tsx scripts/seed-sql.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

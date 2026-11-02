@@ -49,3 +49,5 @@ Format : date — décision — raison. Ajouter les entrées en bas.
 - **Inchangés** : nom du dépôt, nom du package npm (`afrique-marketplace`) et clé localStorage du panier. Aucun manifest PWA n'existe dans le projet (rien à renommer).
 - **Signification** : sous-titre du logo (« Tu es très belle » en ghomálá’) et section « E póm ta’ » de l'accueil, FR/EN.
 - **Police** : Playfair Display et Inter (sous-ensemble latin) contiennent ó et ’ ; contrôlé par test e2e sur le titre et l'en-tête.
+## 2026-11 — Œuvres affichées entières
+- Cartes, hero d'accueil, fiche œuvre, miniatures et panier : object-contain (plus de recadrage) avec marge de passe-partout sur fond neutre (g-muted) ; cadres de hauteur uniforme conservés pour l'alignement de la grille.

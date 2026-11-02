@@ -15,7 +15,7 @@ export function ProductGallery({ images, name, label }: { images: string[]; name
           unoptimized
           priority
           sizes="(min-width: 768px) 60vw, 100vw"
-          className="object-contain"
+          className="object-contain p-4"
         />
       </div>
       {images.length > 1 && (
@@ -29,7 +29,7 @@ export function ProductGallery({ images, name, label }: { images: string[]; name
                 aria-pressed={i === index}
                 className={`relative block size-16 overflow-hidden rounded-md border-2 ${i === index ? "border-primary" : "border-transparent"}`}
               >
-                <Image src={src} alt="" fill unoptimized sizes="64px" className="object-cover" />
+                <Image src={src} alt="" fill unoptimized sizes="64px" className="object-contain bg-muted p-1" />
               </button>
             </li>
           ))}

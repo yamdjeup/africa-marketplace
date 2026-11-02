@@ -37,7 +37,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: L
             unoptimized
             priority
             sizes="(min-width: 768px) 50vw, 100vw"
-            className="object-cover"
+            className="object-contain p-4 pb-6"
           />
           <div className="kente-band absolute inset-x-0 bottom-0 h-2" />
         </Link>

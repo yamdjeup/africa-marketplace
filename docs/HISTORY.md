@@ -87,3 +87,8 @@ Format : date — décision — raison. Ajouter les entrées en bas.
 
 ## 2026-11 — Seed SQL pour Neon
 - `npm run db:seed-sql` (scripts/seed-sql.ts, lit src/data comme seed.ts) génère `prisma/seed.neon.sql` : upserts idempotents + nettoyage des anciennes lignes, en transaction. Vérifié sur PGlite (migrations 0001-0003 puis SQL exécuté 2 fois) : 4 catégories, 5 artistes, 13 œuvres, stock total 13. Permet de charger Neon via son SQL Editor quand le port 5432 est bloqué (DEPLOIEMENT.md, étape 5 bis). Régénérer le fichier à chaque changement de données.
+
+## 2026-11 — PWA installable
+- `src/app/manifest.ts` (nom « E póm ta’ », standalone, start_url /fr, lang fr, couleurs #1c3060 / #faf6ee dérivées de la charte), icônes 192/512, maskable 512 et apple-touch-icon (monogramme « E » doré sur indigo) dans `public/icons/`, themeColor et appleWebApp dans le layout.
+- `src/proxy.ts` : seuls `/manifest.webmanifest` et `/icons/*.png` passent le mur sans cookie (les navigateurs récupèrent le manifeste sans identifiants) ; images et API restent bloquées (test `access.spec.ts`).
+- Pas de service worker ni de hors-ligne (BACKLOG US-18).

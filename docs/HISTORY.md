@@ -58,3 +58,29 @@ Format : date — décision — raison. Ajouter les entrées en bas.
 - **Docs** : `.env.example` (noms seulement), `docs/DEPLOIEMENT.md` (guide débutant), README et skill `deploiement-vercel-neon` alignés.
 - **Tests** : `e2e/access.spec.ts` (projet « wall », second serveur port 3101, mot de passe jetable) ; serveur principal avec mur désactivé. 25 Playwright verts, lint et build OK.
 - **Limite** : pas de limitation de tentatives sur le mot de passe. **Non vérifié** : migration/seed contre un vrai Neon (pas de base disponible ici).
+
+## 2026-11 — Photos dignes d'une galerie
+- Script reproductible `scripts/enhance-photos.py` (OpenCV/Pillow) : redressement de perspective, recadrage au plus près, niveaux de luminance, netteté douce ; JPEG q90, 2000 px max. Aucune retouche créative ; balance des blancs seulement sur les céramiques (mur blanc), jamais sur les teintes d'auteur.
+- Originaux dans `scripts/photo-originals/` (gitignoré, hors déploiement).
+- Limites : Célanie 1 (vitrine, reflets sombres à droite) et Morère 1 (mur conservé, sculptures sans cadre) ne peuvent être nettoyés automatiquement.
+
+### Photos — v2 (centrage et marges symétriques)
+- Chaque bord est détecté par script (gradient + droite robuste sur 13 points, deux passes), redressement par les 4 coins ajustés, marge de sécurité de 3 px au-delà du bord (jamais de coupe de l'œuvre). Sculptures (Morère) : centrage sur le bbox de l'objet + marge uniforme 7 %.
+- Marges mesurées après recadrage (px, Gauche/Droite/Haut/Bas ; pour les œuvres planes = liseré résiduel autour des 3 px de sécurité, 0 = aucun bord détecté ; pour les sculptures = marge réelle autour de l'objet) :
+
+| Œuvre | Taille avant plafonnement | G/D/H/B |
+|---|---|---|
+| celanie-1 | 1437x2030 | 3/3/3/3 |
+| celanie-2 | 1173x1687 | 3/2/3/2 |
+| kenof-1 | 1565x1255 | 3/3/3/0 |
+| kenof-2 | 1562x1199 | 3/2/5/0 |
+| kenof-3 | 1561x1283 | 3/2/2/2 |
+| morere-1 | 1571x782 | 96/96/96/96 |
+| morere-2 | 1122x2698 | 165/165/165/165 |
+| padua-1 | 1555x2261 | 3/2/0/0 |
+| padua-2 | 1556x1131 | 3/2/2/0 |
+| padua-3 | 1555x2350 | 3/2/3/0 |
+| taylor-1 | 1480x2295 | 3/3/3/3 |
+| taylor-2 | 1565x1060 | 3/2/3/0 |
+| taylor-3 | 1443x2202 | 3/3/3/3 |
+- Limites : Célanie 1 garde des reflets de vitrine ; le bord noir sur noir reste approximatif.

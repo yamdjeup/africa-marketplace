@@ -14,7 +14,7 @@ export const creators: Creator[] = [
     bio: "Originaire de Guadeloupe, Aurélie-Victoire Célanie développe une pratique mêlant peinture, dessin et installation. Son travail explore notamment les questions de filiation, de mémoire et de construction identitaire, dans un dialogue constant entre héritages et expérience contemporaine.",
     bioEn:
       "Originally from Guadeloupe, Aurélie-Victoire Célanie develops a practice combining painting, drawing and installation. Her work explores questions of filiation, memory and identity construction, in a constant dialogue between heritage and contemporary experience.",
-    image: img("celanie-3"),
+    image: img("celanie-2"),
     sourceUrl: G3A_SOURCE_URL,
   },
   {

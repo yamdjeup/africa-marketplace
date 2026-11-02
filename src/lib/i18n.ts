@@ -18,7 +18,7 @@ const fr = {
   home: {
     heroKicker: "Galerie en ligne",
     heroTitle: "Artistes plasticiens afrodescendants",
-    heroText: "Peintures, photographies, céramiques et dessins : cinq artistes, douze œuvres uniques, présentées avec les textes de G3A.",
+    heroText: "Peintures, photographies, céramiques et dessins : cinq artistes, treize œuvres uniques, présentées avec les textes de G3A.",
     heroCta: "Voir les œuvres",
     selection: "Sélection",
     featuredCreators: "Les artistes",
@@ -185,7 +185,7 @@ const en: Dict = {
   home: {
     heroKicker: "Online gallery",
     heroTitle: "Afro-descendant visual artists",
-    heroText: "Paintings, photographs, ceramics and drawings: five artists, twelve unique works, presented with G3A's texts.",
+    heroText: "Paintings, photographs, ceramics and drawings: five artists, thirteen unique works, presented with G3A's texts.",
     heroCta: "View the artworks",
     selection: "Selection",
     featuredCreators: "The artists",

@@ -39,6 +39,11 @@ Format : date — décision — raison. Ajouter les entrées en bas.
 - **Tests** : 21 Playwright verts (desktop + mobile), lint et build OK. Les commandes épuisant une pièce unique, les parcours de commande utilisent des œuvres distinctes et le serveur de test relance `db:seed` (stock remis à 1).
 - **Hypothèses à valider** : titre « Kwame » attribué à la photo celanie-3 (cartel 20, Carte d'identité, 56×76 cm, 2026) ; titres des autres œuvres descriptifs ; dimensions/années omises quand incertaines (ex. cartel de Morère « La Harpie » non repris).
 
+## 2026-11 — Images zoom : 13 œuvres
+- **Remplacement** : photos de meilleure qualité (`=w1600`, 13 images) ; anciennes images supprimées. Œuvres : Célanie ×2, Taylor ×3, KeNoF ×3, Morère ×2, Padua ×3 (13 au total).
+- **« Kwame » retiré** : les deux images de Célanie ne permettent pas d'affirmer laquelle correspond au cartel 20 ; titres descriptifs sobres, sans dimensions ni année pour Célanie (technique et série conservées).
+- **Tests** : slugs et décomptes mis à jour (13 œuvres, KeNoF 3, prix ≥ 5000 : 3). Le seed supprime les anciennes œuvres.
+
 ## 2026-11 — Renommage de la marque : « E póm ta’ »
 - **Décision** : « Afrique Marketplace » devient « E póm ta’ » (« tu es très belle » en ghomálá’) partout : en-tête, titres/métadonnées (`siteName`), textes FR/EN, tests, docs. Caractères exacts : ó (accent aigu) et ’ (apostrophe typographique U+2019).
 - **Inchangés** : nom du dépôt, nom du package npm (`afrique-marketplace`) et clé localStorage du panier. Aucun manifest PWA n'existe dans le projet (rien à renommer).

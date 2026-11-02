@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-const pages = ["/fr", "/fr/catalogue", "/fr/createurs", "/fr/produits/kwame", "/fr/cart", "/fr/login", "/fr/register", "/fr/checkout"];
+const pages = ["/fr", "/fr/catalogue", "/fr/createurs", "/fr/produits/portrait-encadre-cheveux-ocre", "/fr/cart", "/fr/login", "/fr/register", "/fr/checkout"];
 
 test.describe("Viewport mobile", () => {
   for (const path of pages) {

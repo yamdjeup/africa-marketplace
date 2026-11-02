@@ -48,32 +48,21 @@ const TAYLOR_SERIES: Pair = [
   "Work from Cruzz Taylor's “Instants habités” series, shown at G3A Visual Arts 2026.",
 ];
 const TAYLOR_SIZE = "60 × 90 cm";
+const KENOF_STORY: Pair = [
+  "Une œuvre qui met en relation mémoire, spiritualité et héritage bamiléké (KeNoF, G3A Visual Arts 2026).",
+  "A work that connects memory, spirituality and Bamileke heritage (KeNoF, G3A Visual Arts 2026).",
+];
 const PAINTING: Pair = ["Peinture", "Painting"];
 const CERAMIC: Pair = ["Céramique", "Ceramics"];
 
 const inputs: ArtworkInput[] = [
   {
-    slug: "kwame",
-    file: "celanie-3",
-    name: ["Kwame", "Kwame"],
-    description: [
-      "Profil de tête dont le contour est rempli d'une trame de petites silhouettes, sur fond noir. Cadre bois clair.",
-      "Profile of a head whose outline is filled with a pattern of tiny silhouettes, on a black ground. Light wood frame.",
-    ],
-    story: CELANIE_SERIES,
-    category: "dessin",
-    eur: 1800,
-    materials: [CELANIE_TECH],
-    dimensions: "56 × 76 cm (2026)",
-    creatorSlug: "aurelie-victoire-celanie",
-  },
-  {
-    slug: "figure-chevelure-blanche",
+    slug: "profil-points-et-texte",
     file: "celanie-1",
-    name: ["Figure à la chevelure blanche", "Figure with white hair"],
+    name: ["Profil aux points et au texte", "Profile of dots and text"],
     description: [
-      "Portrait frontal dont la chevelure et le buste se couvrent peu à peu de silhouettes, sur un fond noir quadrillé de croix.",
-      "Frontal portrait whose hair and bust gradually fill with silhouettes, on a black ground gridded with crosses.",
+      "Portrait de profil dont la chevelure et le visage se couvrent de petits caractères d'écriture, sur un fond noir parsemé de points.",
+      "Profile portrait whose hair and face are covered in small written characters, on a black ground scattered with dots.",
     ],
     story: CELANIE_SERIES,
     category: "dessin",
@@ -82,12 +71,12 @@ const inputs: ArtworkInput[] = [
     creatorSlug: "aurelie-victoire-celanie",
   },
   {
-    slug: "figure-aux-palmiers",
+    slug: "portrait-encadre-cheveux-ocre",
     file: "celanie-2",
-    name: ["Figure aux palmiers", "Figure with palm trees"],
+    name: ["Portrait encadré aux cheveux ocre", "Framed portrait with ochre hair"],
     description: [
-      "Buste composé d'une trame de silhouettes devant un paysage nocturne de palmiers, sur un fond quadrillé.",
-      "Bust made of a pattern of silhouettes in front of a nocturnal landscape of palm trees, on a gridded ground.",
+      "Silhouette dont le buste et la chevelure ocre sont composés de texte, devant un paysage nocturne sombre. Cadre bois clair.",
+      "Silhouette whose bust and ochre hair are made of text, in front of a dark nocturnal landscape. Light wood frame.",
     ],
     story: CELANIE_SERIES,
     category: "dessin",
@@ -96,27 +85,12 @@ const inputs: ArtworkInput[] = [
     creatorSlug: "aurelie-victoire-celanie",
   },
   {
-    slug: "instants-habites-portrait-turban-perle",
+    slug: "instants-habites-portrait-homme-veste",
     file: "taylor-1",
-    name: ["Portrait de femme au turban perlé", "Portrait of a woman in a pearled turban"],
+    name: ["Portrait d'homme en veste", "Portrait of a man in a jacket"],
     description: [
-      "Portrait d'une femme âgée coiffée d'un turban plissé orné de perles, sur fond sombre.",
-      "Portrait of an older woman wearing a pleated turban adorned with pearls, on a dark ground.",
-    ],
-    story: TAYLOR_SERIES,
-    category: "photographie",
-    eur: 450,
-    materials: [TAYLOR_TECH],
-    dimensions: TAYLOR_SIZE,
-    creatorSlug: "cruzz-taylor",
-  },
-  {
-    slug: "instants-habites-portrait-veste-rayee",
-    file: "taylor-2",
-    name: ["Portrait d'homme en veste rayée", "Portrait of a man in a pinstripe jacket"],
-    description: [
-      "Portrait frontal et en gros plan d'un homme en veste à fines rayures, sur fond brun.",
-      "Close-up frontal portrait of a man in a fine pinstripe jacket, on a brown ground.",
+      "Portrait frontal et en gros plan d'un homme au regard grave, en veste, sur fond brun.",
+      "Close-up frontal portrait of a man with a serious gaze, in a jacket, on a brown ground.",
     ],
     story: TAYLOR_SERIES,
     category: "photographie",
@@ -127,11 +101,26 @@ const inputs: ArtworkInput[] = [
   },
   {
     slug: "instants-habites-portrait-enfant-riant",
-    file: "taylor-3",
+    file: "taylor-2",
     name: ["Portrait d'enfant riant", "Portrait of a laughing child"],
     description: [
       "Portrait en gros plan d'un enfant éclatant de rire, sur un fond sombre aux reflets dorés.",
       "Close-up portrait of a child bursting into laughter, on a dark ground with golden highlights.",
+    ],
+    story: TAYLOR_SERIES,
+    category: "photographie",
+    eur: 450,
+    materials: [TAYLOR_TECH],
+    dimensions: TAYLOR_SIZE,
+    creatorSlug: "cruzz-taylor",
+  },
+  {
+    slug: "instants-habites-portrait-turban-perle",
+    file: "taylor-3",
+    name: ["Portrait de femme au turban perlé", "Portrait of a woman in a pearled turban"],
+    description: [
+      "Portrait d'une femme âgée coiffée d'un turban plissé orné de perles, sur fond sombre.",
+      "Portrait of an older woman wearing a pleated turban adorned with pearls, on a dark ground.",
     ],
     story: TAYLOR_SERIES,
     category: "photographie",
@@ -175,8 +164,36 @@ const inputs: ArtworkInput[] = [
     creatorSlug: "nathalie-morere",
   },
   {
-    slug: "grande-toile-masques-et-arbre",
+    slug: "kenof-figure-voilee-et-coiffe",
     file: "kenof-1",
+    name: ["Figure voilée et haute coiffe", "Veiled figure and tall headdress"],
+    description: [
+      "Une figure drapée de bleu et un personnage à la haute coiffe sculptée, devant une foule dessinée à l'encre, sur des fonds violets.",
+      "A figure draped in blue and a character with a tall sculpted headdress, in front of an ink-drawn crowd, on violet grounds.",
+    ],
+    story: KENOF_STORY,
+    category: "peinture",
+    eur: 5800,
+    materials: [PAINTING],
+    creatorSlug: "kenof",
+  },
+  {
+    slug: "kenof-figure-voilee-au-baton",
+    file: "kenof-2",
+    name: ["Figure voilée au bâton", "Veiled figure with a staff"],
+    description: [
+      "Une silhouette voilée de bleu tient un bâton à côté d'un personnage masqué, devant une architecture dessinée.",
+      "A figure veiled in blue holds a staff beside a masked character, in front of a drawn architecture.",
+    ],
+    story: KENOF_STORY,
+    category: "peinture",
+    eur: 5800,
+    materials: [PAINTING],
+    creatorSlug: "kenof",
+  },
+  {
+    slug: "grande-toile-masques-et-arbre",
+    file: "kenof-3",
     name: ["Grande toile aux masques et au grand arbre", "Large canvas of masks and a great tree"],
     description: [
       "Vaste composition peinte : masques, statues et figures s'assemblent au pied d'un arbre aux racines monumentales, sur un fond de motifs.",

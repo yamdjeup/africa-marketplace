@@ -40,22 +40,22 @@ test.describe.serial("Parcours client", () => {
     await expect(page).toHaveURL(/\/fr$/);
   });
 
-  test("galerie : 12 œuvres, filtres artiste/catégorie/prix/recherche", async ({ page }) => {
+  test("galerie : 13 œuvres, filtres artiste/catégorie/prix/recherche", async ({ page }) => {
     await page.goto("/fr/catalogue");
     const cards = page.locator('a[href^="/fr/produits/"]');
-    await expect(cards).toHaveCount(12);
+    await expect(cards).toHaveCount(13);
 
     await page.locator("#header-search").fill("kenof");
     await page.locator("#header-search").press("Enter");
     await expect(page).toHaveURL(/q=kenof/);
-    await expect(cards).toHaveCount(1);
+    await expect(cards).toHaveCount(3);
 
     await page.goto("/fr/catalogue?artist=cruzz-taylor");
     await expect(cards).toHaveCount(3);
     await page.goto("/fr/catalogue?category=photographie");
     await expect(cards).toHaveCount(3);
     await page.goto("/fr/catalogue?min=5000");
-    await expect(cards).toHaveCount(1);
+        await expect(cards).toHaveCount(3);
 
     await page.goto("/fr/catalogue?q=zzzintrouvable");
     await expect(page.getByText("Aucune œuvre ne correspond")).toBeVisible();
@@ -71,8 +71,8 @@ test.describe.serial("Parcours client", () => {
   });
 
   test("fiche œuvre : crédit artiste, prix fictif, pièce unique", async ({ page }) => {
-    await page.goto("/fr/produits/kwame");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Kwame");
+    await page.goto("/fr/produits/portrait-encadre-cheveux-ocre");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Portrait encadré aux cheveux ocre");
     await expect(page.getByRole("link", { name: "Aurélie-Victoire Célanie" }).first()).toBeVisible();
     await expect(page.getByText("Prix fictif de démonstration")).toBeVisible();
     await expect(page.getByText("Pièce unique").first()).toBeVisible();
@@ -137,7 +137,7 @@ test.describe.serial("Parcours client", () => {
 
   test("checkout simulé connecté : commande visible dans Mes commandes (FR/EN)", async ({ page }) => {
     await login(page);
-    await addArtworkToCart(page, "kwame");
+    await addArtworkToCart(page, "profil-points-et-texte");
     await page.goto("/fr/checkout");
     await expect(page.getByLabel("E-mail")).toHaveValue(email);
     await page.getByLabel("Adresse").fill("12 rue des Tests");
@@ -162,7 +162,7 @@ test.describe.serial("Parcours client", () => {
   });
 
   test("checkout invité en anglais", async ({ page }) => {
-    await addArtworkToCart(page, "figure-aux-palmiers", "en");
+    await addArtworkToCart(page, "kenof-figure-voilee-au-baton", "en");
     await page.goto("/en/checkout");
     await page.getByLabel("Email").fill("invite@example.test");
     await page.getByLabel("Full name").fill("Guest QA");

@@ -3,7 +3,7 @@ import type { Creator, Product } from "@prisma/client";
 import { db } from "@/lib/db";
 import { pick, type Locale } from "@/lib/i18n";
 
-export const PAGE_SIZE = 12;
+export const PAGE_SIZE = 24;
 
 export type ProductView = {
   slug: string;

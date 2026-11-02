@@ -14,7 +14,7 @@ export function ProductCard({ product, locale, soldOut }: { product: ProductView
           fill
           unoptimized
           sizes="(min-width: 1024px) 25vw, 50vw"
-          className="object-cover"
+          className="object-contain p-3"
         />
       </div>
       <CardContent className="space-y-1.5">

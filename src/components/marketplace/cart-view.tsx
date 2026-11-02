@@ -31,7 +31,7 @@ export function CartView({ locale }: { locale: Locale }) {
           return (
             <li key={key} className="flex gap-3 p-3 md:gap-4 md:p-4">
               <Link href={`/${locale}/produits/${l.slug}`} className="relative block size-24 shrink-0 overflow-hidden rounded-md bg-muted md:size-28">
-                <Image src={l.image} alt={l.name} fill unoptimized sizes="112px" className="object-cover" />
+                <Image src={l.image} alt={l.name} fill unoptimized sizes="112px" className="object-contain p-1" />
               </Link>
               <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <Link href={`/${locale}/produits/${l.slug}`} className="font-heading text-base leading-tight">

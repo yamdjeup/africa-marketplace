@@ -84,6 +84,14 @@ La base est vide après la migration. Chargez les artistes et les œuvres **une 
 
    (Les œuvres sont dans la table `"Product"`.) Vous devez obtenir **4**, **5** et **13**.
 
+### Variante : charger via GitHub Actions (si Neon est bloqué depuis votre PC)
+
+1. Dans GitHub, ouvrez le dépôt puis **Settings > Secrets and variables > Actions > New repository secret**.
+2. Nom : `NEON_DATABASE_URL`. Valeur : l'adresse de connexion Neon (« Connection string »). Cliquez sur **Add secret**.
+3. Ouvrez l'onglet **Actions**, choisissez **Seed Neon**, puis **Run workflow**.
+4. Attendez la coche verte. Dans le journal, l'étape « Compter les lignes » doit afficher `4|5|13`.
+5. **Supprimez ensuite le secret** (Settings > Secrets and variables > Actions > corbeille à côté de `NEON_DATABASE_URL`).
+
 Le fichier peut être exécuté plusieurs fois sans danger. Il est régénéré par `npm run db:seed-sql` quand les données changent.
 
 ## Étape 6 — Tester

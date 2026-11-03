@@ -47,5 +47,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# originaux photo (non déployés)
+# originaux photo (non dï¿½ployï¿½s)
 /scripts/photo-originals/
+
+# vidÃ©os artistes (maquette, non commitÃ©es)
+/public/videos/

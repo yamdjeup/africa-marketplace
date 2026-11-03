@@ -70,6 +70,7 @@ const fr = {
     notFound: "Œuvre introuvable",
   },
   creator: {
+    meet: "Rencontre avec",
     pieces: "Ses œuvres",
     bioSource: "Biographie : G3A, d'après l'article source",
     readSource: "Lire l'article source sur g3a.org",
@@ -237,6 +238,7 @@ const en: Dict = {
     notFound: "Artwork not found",
   },
   creator: {
+    meet: "Meet",
     pieces: "Their artworks",
     bioSource: "Biography: G3A, from the source article",
     readSource: "Read the source article on g3a.org",

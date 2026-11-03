@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { SiteFooter } from "@/components/marketplace/site-footer";
 import { SiteHeader } from "@/components/marketplace/site-header";
 import { CartProvider } from "@/lib/cart";
+import { FavoritesProvider } from "@/lib/favorites";
 import { getDict, isLocale } from "@/lib/i18n";
 import "../globals.css";
 
@@ -49,6 +50,7 @@ export default async function LocaleLayout({
     <html lang={locale} className={`${display.variable} ${body.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
         <CartProvider>
+          <FavoritesProvider>
           <a
             href="#main"
             className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-background focus:px-3 focus:py-2"
@@ -60,6 +62,7 @@ export default async function LocaleLayout({
             {children}
           </main>
           <SiteFooter locale={locale} />
+          </FavoritesProvider>
         </CartProvider>
       </body>
     </html>

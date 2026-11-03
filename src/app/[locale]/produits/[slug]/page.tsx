@@ -6,6 +6,7 @@ import { ProductCard } from "@/components/marketplace/product-card";
 import { ProductGallery } from "@/components/marketplace/product-gallery";
 import { Badge } from "@/components/ui/badge";
 import { Breadcrumb } from "@/components/marketplace/breadcrumb";
+import { FavoriteButton } from "@/components/marketplace/favorite-button";
 import { ruleFor } from "@/lib/category-rules";
 import { getCreatorWithProducts, getProduct } from "@/lib/catalog";
 import { formatEur, getDict, type Locale } from "@/lib/i18n";
@@ -47,7 +48,10 @@ export default async function ProductPage({ params }: Props) {
         <ProductGallery images={p.images} name={p.name} label={t.gallery} />
         <div className="space-y-5">
           <div className="space-y-2">
-            <Badge variant="secondary">{categoryLabel}</Badge>
+            <div className="flex items-center justify-between gap-2">
+              <Badge variant="secondary">{categoryLabel}</Badge>
+              <FavoriteButton slug={p.slug} name={p.name} locale={locale} className="relative border" />
+            </div>
             <h1 className="font-heading text-3xl leading-tight text-primary">{p.name}</h1>
             <p className="text-sm text-muted-foreground">
               {t.by}{" "}

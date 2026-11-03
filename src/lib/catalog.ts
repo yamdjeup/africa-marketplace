@@ -5,6 +5,7 @@ import { pick, type Locale } from "@/lib/i18n";
 import { slugify } from "@/lib/category-rules";
 
 export const PAGE_SIZE = 24;
+const NEW_DAYS = 60;
 
 export type ProductView = {
   slug: string;
@@ -27,6 +28,8 @@ export type ProductView = {
   depthCm: number | null;
   careInstructions: string | null;
   hasCertificate: boolean;
+  /** Mise en ligne il y a moins de NEW_DAYS jours (d'après createdAt). */
+  isNew: boolean;
   stock: number;
 };
 
@@ -70,6 +73,7 @@ export function toProductView(p: ProductRow, locale: Locale): ProductView {
     depthCm: p.depthCm,
     careInstructions: p.careInstructions ? pick(locale, p.careInstructions, p.careInstructionsEn ?? p.careInstructions) : null,
     hasCertificate: p.hasCertificate,
+    isNew: Date.now() - p.createdAt.getTime() < NEW_DAYS * 86_400_000,
     stock: p.stock,
   };
 }
@@ -156,7 +160,11 @@ function facet(rows: Product[], locale: Locale, fr: "material" | "technique" | "
 export async function getFilterOptions(locale: Locale, category?: string) {
   const [categories, artists, scoped] = await Promise.all([
     db.category.findMany({ orderBy: { sortOrder: "asc" } }),
-    db.creator.findMany({ orderBy: { name: "asc" }, select: { slug: true, name: true } }),
+    db.creator.findMany({
+      orderBy: { name: "asc" },
+      select: { slug: true, name: true },
+      ...(category ? { where: { products: { some: { categorySlug: category } } } } : {}),
+    }),
     db.product.findMany({ where: category ? { categorySlug: category } : {} }),
   ]);
   return {

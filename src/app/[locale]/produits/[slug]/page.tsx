@@ -131,7 +131,9 @@ export default async function ProductPage({ params }: Props) {
             {rule.dimensions && cm && (
               <>
                 <dt className="font-medium">{t.dimensions}</dt>
-                <dd>{cmLabel}</dd>
+                <dd>
+                  {cmLabel} <span className="text-xs text-muted-foreground">({t.fictitiousDimensions})</span>
+                </dd>
               </>
             )}
             {rule.dimensions && !cm && p.dimensions && (

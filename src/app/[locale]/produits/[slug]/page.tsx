@@ -15,6 +15,7 @@ const ROOM_CATEGORIES = ["peinture", "sculpture", "photographie", "textile-decor
 import { ruleFor } from "@/lib/category-rules";
 import { getProduct, getRelatedProducts } from "@/lib/catalog";
 import { formatEur, getDict, type Locale } from "@/lib/i18n";
+import { ApproxPrice } from "@/components/marketplace/approx-price";
 
 type Props = { params: Promise<{ locale: Locale; slug: string }> };
 
@@ -72,7 +73,10 @@ export default async function ProductPage({ params }: Props) {
             </p>
           </div>
           <div>
-            <p className="text-2xl font-semibold">{formatEur(p.priceCents, locale)}</p>
+            <p className="text-2xl font-semibold">
+              {formatEur(p.priceCents, locale)}
+              <ApproxPrice cents={p.priceCents} locale={locale} />
+            </p>
             <p className="text-xs text-muted-foreground">{t.fictitiousPrice}</p>
           </div>
           <p>{p.description}</p>

@@ -5,6 +5,12 @@ import { ProductCard } from "@/components/marketplace/product-card";
 import { getCreatorWithProducts } from "@/lib/catalog";
 import { getDict, type Locale } from "@/lib/i18n";
 
+const CREATOR_VIDEOS: Record<string, { src: string; poster: string }> = {
+  kenof: { src: "/videos/kenof.mp4", poster: "/videos/posters/kenof-poster.jpg" },
+  "nathalie-morere": { src: "/videos/nathalie.mp4", poster: "/videos/posters/nathalie-poster.jpg" },
+  "cruzz-taylor": { src: "/videos/taylor.mp4", poster: "/videos/posters/taylor-poster.jpg" },
+};
+
 type Props = { params: Promise<{ locale: Locale; slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -20,6 +26,7 @@ export default async function CreatorPage({ params }: Props) {
   if (!data) notFound();
   const { creator: c, products } = data;
   const t = getDict(locale).creator;
+  const video = CREATOR_VIDEOS[slug];
 
   return (
     <div className="space-y-10">
@@ -45,6 +52,22 @@ export default async function CreatorPage({ params }: Props) {
           </p>
         </div>
       </header>
+      {video && (
+        <section aria-labelledby="meet" className="space-y-4 rounded-2xl border border-accent bg-card p-4 md:p-6">
+          <h2 id="meet" className="font-heading text-2xl text-primary">
+            {t.meet} {c.name}
+          </h2>
+          <video
+            controls
+            preload="metadata"
+            playsInline
+            src={video.src}
+            poster={video.poster}
+            aria-label={`${t.meet} ${c.name}`}
+            className="mx-auto aspect-[9/16] w-full max-w-[360px] rounded-xl bg-black object-contain"
+          />
+        </section>
+      )}
       <section aria-labelledby="pieces" className="space-y-4">
         <h2 id="pieces" className="font-heading text-2xl text-primary">
           {t.pieces}

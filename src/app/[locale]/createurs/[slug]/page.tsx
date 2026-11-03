@@ -85,11 +85,7 @@ export default async function CreatorPage({ params }: Props) {
                   ”
                 </span>
               </blockquote>
-              <figcaption className="text-xs text-muted-foreground">{t.excerptFrom}</figcaption>
             </figure>
-            <a href="#pieces" className="inline-block text-sm text-terracotta underline underline-offset-4">
-              {t.pieces} ↓
-            </a>
           </div>
         </section>
       )}

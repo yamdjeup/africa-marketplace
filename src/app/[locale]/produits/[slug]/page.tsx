@@ -7,6 +7,9 @@ import { ProductGallery } from "@/components/marketplace/product-gallery";
 import { Badge } from "@/components/ui/badge";
 import { Breadcrumb } from "@/components/marketplace/breadcrumb";
 import { FavoriteButton } from "@/components/marketplace/favorite-button";
+import { RoomPreview } from "@/components/marketplace/room-preview";
+
+const ROOM_CATEGORIES = ["peinture", "sculpture", "photographie", "textile-decoration"];
 import { ruleFor } from "@/lib/category-rules";
 import { getProduct, getRelatedProducts } from "@/lib/catalog";
 import { formatEur, getDict, type Locale } from "@/lib/i18n";
@@ -32,6 +35,8 @@ export default async function ProductPage({ params }: Props) {
   const cmLabel = cm ? `${cm} ${t.cmUnit}` : "";
   const catalogT = getDict(locale).catalog;
   const more = await getRelatedProducts(p.slug, locale, 4);
+  const roomOk =
+    ROOM_CATEGORIES.includes(p.categorySlug) && !!p.widthCm && !!p.heightCm && p.widthCm > 0 && p.heightCm > 0 && p.images.length > 0;
 
   return (
     <div className="space-y-12">
@@ -80,6 +85,16 @@ export default async function ProductPage({ params }: Props) {
             sizes={sizeKind ? p.sizes : []}
             sizeLabel={sizeKind === "ring" ? t.sizeRing : t.size}
           />
+          {roomOk && (
+            <RoomPreview
+              key={p.slug}
+              locale={locale}
+              image={p.images[0]}
+              name={p.name}
+              widthCm={p.widthCm!}
+              heightCm={p.heightCm!}
+            />
+          )}
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 border-t pt-4 text-sm">
             {p.material && (
               <>

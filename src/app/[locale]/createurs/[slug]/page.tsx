@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/marketplace/product-card";
 import { getCreatorWithProducts } from "@/lib/catalog";
-import { getDict, type Locale } from "@/lib/i18n";
+import { formatEur, getDict, type Locale } from "@/lib/i18n";
 
-const CREATOR_VIDEOS: Record<string, { src: string; poster: string }> = {
-  kenof: { src: "/videos/kenof.mp4", poster: "/videos/posters/kenof-poster.jpg" },
-  "nathalie-morere": { src: "/videos/nathalie.mp4", poster: "/videos/posters/nathalie-poster.jpg" },
-  "cruzz-taylor": { src: "/videos/taylor.mp4", poster: "/videos/posters/taylor-poster.jpg" },
+const CREATOR_VIDEOS: Record<string, { src: string; poster: string; seconds: number }> = {
+  kenof: { src: "/videos/kenof.mp4", poster: "/videos/posters/kenof-poster.jpg", seconds: 13 },
+  "nathalie-morere": { src: "/videos/nathalie.mp4", poster: "/videos/posters/nathalie-poster.jpg", seconds: 26 },
+  "cruzz-taylor": { src: "/videos/taylor.mp4", poster: "/videos/posters/taylor-poster.jpg", seconds: 19 },
 };
 
 type Props = { params: Promise<{ locale: Locale; slug: string }> };
@@ -27,6 +28,8 @@ export default async function CreatorPage({ params }: Props) {
   const { creator: c, products } = data;
   const t = getDict(locale).creator;
   const video = CREATOR_VIDEOS[slug];
+  const sentences = c.bio.match(/[^.!?]+[.!?]/g)?.map((s) => s.trim()) ?? [c.bio];
+  const excerpt = sentences[sentences.length - 1];
 
   return (
     <div className="space-y-10">
@@ -66,11 +69,48 @@ export default async function CreatorPage({ params }: Props) {
             aria-label={`${t.meet} ${c.name}`}
             className="aspect-[9/16] w-full max-w-[320px] shrink-0 rounded-xl bg-black object-contain md:w-[340px] md:max-w-none"
           />
-          <div className="space-y-3 text-center md:text-left">
+          <div className="min-w-0 flex-1 space-y-4 text-center md:text-left">
             <h2 id="meet" className="font-heading text-2xl text-primary">
               {t.meet} {c.name}
             </h2>
             <p className="max-w-prose">{t.meetIntro}</p>
+            <figure className="space-y-1">
+              <blockquote className="font-heading text-lg italic leading-snug text-primary">
+                <span aria-hidden className="mr-1 text-3xl leading-none text-accent">
+                  “
+                </span>
+                {excerpt}
+              </blockquote>
+              <figcaption className="text-xs text-muted-foreground">{t.excerptFrom}</figcaption>
+            </figure>
+            <dl className="divide-y divide-accent border-y border-accent text-sm">
+              {[
+                [t.specialtyLabel, c.specialty],
+                [t.worksLabel, String(products.length)],
+                [t.durationLabel, `${video.seconds} s`],
+              ].map(([label, value]) => (
+                <div key={label} className="flex justify-between gap-4 py-1.5 text-left">
+                  <dt className="text-muted-foreground">{label}</dt>
+                  <dd className="text-right font-medium">{value}</dd>
+                </div>
+              ))}
+            </dl>
+            <ul className="grid grid-cols-3 gap-2">
+              {products.slice(0, 3).map((p) => (
+                <li key={p.slug}>
+                  <Link
+                    href={`/${locale}/produits/${p.slug}`}
+                    className="block space-y-1 rounded-lg border border-accent/60 bg-background p-1.5 text-left transition-shadow hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <span className="relative block aspect-square w-full">
+                      <Image src={p.images[0]} alt="" fill unoptimized sizes="110px" className="object-contain" />
+                    </span>
+                    <span className="block truncate text-xs font-medium">{p.name}</span>
+                    <span className="block text-xs text-muted-foreground">{formatEur(p.priceCents, locale)}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
             <a href="#pieces" className="inline-block text-sm text-terracotta underline underline-offset-4">
               {t.pieces} ↓
             </a>

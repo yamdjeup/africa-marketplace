@@ -3,7 +3,7 @@ import type { Creator, Product } from "@prisma/client";
 import { db } from "@/lib/db";
 import { pick, type Locale } from "@/lib/i18n";
 import { slugify } from "@/lib/category-rules";
-import { EXAMPLE_CREATOR_SLUG, isExampleCreator } from "@/lib/examples";
+import { EXAMPLE_CREATOR_SLUGS, isExampleCreator, isExampleProduct } from "@/lib/examples";
 
 export const PAGE_SIZE = 24;
 const NEW_DAYS = 60;
@@ -77,7 +77,7 @@ export function toProductView(p: ProductRow, locale: Locale): ProductView {
     careInstructions: p.careInstructions ? pick(locale, p.careInstructions, p.careInstructionsEn ?? p.careInstructions) : null,
     hasCertificate: p.hasCertificate,
     isNew: Date.now() - p.createdAt.getTime() < NEW_DAYS * 86_400_000,
-    isExample: isExampleCreator(p.creatorSlug),
+    isExample: isExampleProduct(p.slug),
     stock: p.stock,
   };
 }
@@ -196,7 +196,7 @@ export async function getFeaturedProducts(locale: Locale, take = 8) {
 }
 
 export async function getCreators(locale: Locale, take?: number) {
-  const rows = await db.creator.findMany({ where: { slug: { not: EXAMPLE_CREATOR_SLUG } }, orderBy: { name: "asc" }, take });
+  const rows = await db.creator.findMany({ where: { slug: { notIn: EXAMPLE_CREATOR_SLUGS } }, orderBy: { name: "asc" }, take });
   return rows.map((c) => toCreatorView(c, locale));
 }
 

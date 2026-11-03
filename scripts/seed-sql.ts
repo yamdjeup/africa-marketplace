@@ -2,7 +2,7 @@
 // Usage : npm run db:seed-sql
 import { writeFileSync } from "node:fs";
 import { categories, creators, products } from "../src/data";
-import { exampleCreator, exampleProducts } from "../src/data/examples";
+import { exampleCreators, exampleProducts } from "../src/data/examples";
 
 const str = (v: string) => `'${v.replace(/'/g, "''")}'`;
 const json = (v: unknown) => `${str(JSON.stringify(v))}::jsonb`;
@@ -15,7 +15,7 @@ const upsert = (table: string, cols: string[], rows: string[][], key: string) =>
 };
 // Le jeu d'exemple (seed séparé) est conservé s'il existe déjà.
 const keepProducts = [...products.map((p) => p.slug), ...exampleProducts.map((p) => p.slug)];
-const keepCreators = [...creators.map((c) => c.slug), exampleCreator.slug];
+const keepCreators = [...creators.map((c) => c.slug), ...exampleCreators.map((c) => c.slug)];
 const list = (xs: string[]) => (xs.length ? xs.map(str).join(", ") : "''");
 
 const out: string[] = [

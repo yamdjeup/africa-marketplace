@@ -1,13 +1,11 @@
-// Pièces d'essayage au Miroir (voir le composant mirror-try-on).
-// kind : où la pièce s'ancre sur le corps ; width : largeur du visuel relative à la largeur du visage (boucles, collier) ou des épaules (haut).
+// Pièces essayables au Miroir (voir le composant mirror-try-on).
+// kind : où la pièce s'ancre sur le corps. Les bijoux (earrings, necklace) sont prêts pour de vraies pièces à venir.
 export type MirrorKind = "earrings" | "necklace" | "top" | "jacket" | "belt";
 
 export const MIRROR_ITEMS: Record<string, { kind: MirrorKind }> = {
-  "exemple-boucles-anneau-goutte": { kind: "earrings" },
-  "exemple-collier-perles-pendentif": { kind: "necklace" },
-  "exemple-haut-toile-cuir": { kind: "top" },
-  "exemple-veste-longue-tie-dye": { kind: "jacket" },
-  "exemple-ceinture-cuir-poches": { kind: "belt" },
+  "exemple-imane-ayissi-veste-tie-dye": { kind: "jacket" },
+  "exemple-lozama-akara-belt": { kind: "belt" },
+  "exemple-lozama-neitha-harness": { kind: "top" },
 };
 
 export const MIRROR_CATEGORIES = ["bijoux", "couture-mode"];

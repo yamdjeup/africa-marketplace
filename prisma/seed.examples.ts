@@ -1,24 +1,27 @@
 // Jeu d'exemple (essayage au Miroir), SÉPARÉ du seed principal.
 // Usage : node scripts/db.mjs examples-add | examples-remove
 import { PrismaClient } from "@prisma/client";
-import { exampleCreator, exampleProducts, legacyExampleSlugs } from "../src/data/examples";
+import { exampleCreators, exampleProducts, legacyExampleCreatorSlugs, legacyExampleSlugs } from "../src/data/examples";
 
 const prisma = new PrismaClient();
 const mode = process.argv[2];
 
 async function main() {
   const slugs = exampleProducts.map((p) => p.slug);
+  const creatorSlugs = exampleCreators.map((c) => c.slug);
+  await prisma.orderItem.deleteMany({ where: { productSlug: { in: legacyExampleSlugs } } });
   await prisma.product.deleteMany({ where: { slug: { in: legacyExampleSlugs } } });
+  await prisma.creator.deleteMany({ where: { slug: { in: legacyExampleCreatorSlugs } } });
   if (mode === "remove") {
     await prisma.orderItem.deleteMany({ where: { productSlug: { in: slugs } } });
     await prisma.product.deleteMany({ where: { slug: { in: slugs } } });
-    await prisma.creator.deleteMany({ where: { slug: exampleCreator.slug } });
-    console.log(`Exemples retirés : ${slugs.length} pièces, 1 créateur`);
+    await prisma.creator.deleteMany({ where: { slug: { in: creatorSlugs } } });
+    console.log(`Exemples retirés : ${slugs.length} pièces, ${creatorSlugs.length} créateurs`);
     return;
   }
   if (mode !== "add") throw new Error("Usage : add | remove");
 
-  await prisma.creator.upsert({ where: { slug: exampleCreator.slug }, update: exampleCreator, create: exampleCreator });
+  for (const c of exampleCreators) await prisma.creator.upsert({ where: { slug: c.slug }, update: c, create: c });
   for (const p of exampleProducts) {
     const data = {
       name: p.name,
@@ -42,7 +45,7 @@ async function main() {
     };
     await prisma.product.upsert({ where: { slug: p.slug }, update: data, create: { slug: p.slug, ...data } });
   }
-  console.log(`Exemples ajoutés : ${exampleProducts.length} pièces, 1 créateur`);
+  console.log(`Exemples ajoutés : ${exampleProducts.length} pièces, ${creatorSlugs.length} créateurs`);
 }
 
 main().finally(() => prisma.$disconnect());

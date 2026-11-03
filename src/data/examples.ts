@@ -2,7 +2,7 @@ import type { Creator, Product } from "./types";
 
 // Jeu d'exemple SÉPARÉ du seed principal (voir prisma/seed.examples.ts et prisma/seed.examples*.sql).
 // Pièces de démonstration : prix, tailles et stock fictifs. Visuels protégés (démo privée uniquement, voir docs/BACKLOG.md).
-// Ces créateurs ne sont jamais listés dans « Nos artistes » ni sur /createurs (voir src/lib/examples.ts).
+// Ces créateurs sont listés dans « Nos artistes » et ont une page /createurs/<slug>.
 export const exampleCreators: Creator[] = [
   {
     slug: "imane-ayissi",
@@ -33,6 +33,16 @@ export const exampleCreators: Creator[] = [
     bioEn: "Born in Brazil in 1985 and raised between Côte d'Ivoire and the United States, Loza Maléombho trained in animation. She reinterprets West African stories and craftsmanship in sculptural, geometric silhouettes, at the crossroads of fashion, image and new technologies.",
     image: "/images/examples/ceinture-cuir.webp",
     sourceUrl: "https://www.lozamaleombho.com/about",
+  },
+  {
+    slug: "house-of-marjon",
+    name: "House of Marjón",
+    specialty: "Accessoires",
+    specialtyEn: "Accessories",
+    bio: "House of Marjón est une maison de design et une marque de mode nigériane, fondée et dirigée par Abdulazeez Sani Ibrahim. Elle est connue pour ses lunettes et ses masques sculpturaux faits main, associant fil de cuivre plaqué or, perles d'eau douce, cristaux et cauris. Son univers mêle héritage africain, géométrie sacrée, spiritualité et design d'avant-garde. Présentation indicative, à confirmer avec la maison.",
+    bioEn: "House of Marjón is a Nigerian design house and fashion brand, founded and led by Abdulazeez Sani Ibrahim. It is known for handmade eyewear and sculptural masks that combine gold-plated copper wire, freshwater pearls, cut crystals and cowrie shells. Its universe blends African heritage, sacred geometry, spirituality and avant-garde design. Indicative description, to be confirmed with the house.",
+    image: "/images/examples/marjon-lunettes-cristaux.webp",
+    sourceUrl: "",
   },
 ];
 
@@ -120,5 +130,39 @@ export const exampleProducts: Product[] = [
     material: { fr: "Toile et cuir", en: "Canvas and leather" },
     careInstructions: { fr: "Exemple : nettoyage à sec ; cuir à entretenir avec un chiffon doux.", en: "Example: dry clean; wipe the leather with a soft cloth." },
     images: ["/images/examples/haut-toile-cuir.webp"],
+  },
+  {
+    ...common,
+    category: "bijoux" as const,
+    sizes: [],
+    slug: "exemple-marjon-lunettes-cristaux",
+    creatorSlug: "house-of-marjon",
+    name: "Lunettes rouges à cristaux (Exemple)",
+    nameEn: "Red crystal glasses (Example)",
+    description: "Pièce de démonstration : lunettes à monture rouge ornées de cristaux et de fils dorés.",
+    descriptionEn: "Demo piece: red-framed glasses adorned with crystals and gold wire.",
+    story: "Exemple : pièce de démonstration, non vendue ; photo portée, sans essayage au Miroir ; le prix est fictif.",
+    storyEn: "Example: demo piece, not for sale; worn photo, no Mirror try-on; the price is fictitious.",
+    priceCents: 16000,
+    materials: [{ fr: "Métal et cristaux (exemple)", en: "Metal and crystals (example)" }],
+    material: { fr: "Métal et cristaux", en: "Metal and crystals" },
+    images: ["/images/examples/marjon-lunettes-cristaux.webp"],
+  },
+  {
+    ...common,
+    category: "bijoux" as const,
+    sizes: [],
+    slug: "exemple-marjon-lunettes-cauris",
+    creatorSlug: "house-of-marjon",
+    name: "Lunettes à cauris (Exemple)",
+    nameEn: "Cowrie glasses (Example)",
+    description: "Pièce de démonstration : lunettes à monture blanche ornées de cauris et de fils dorés.",
+    descriptionEn: "Demo piece: white-framed glasses adorned with cowrie shells and gold wire.",
+    story: "Exemple : pièce de démonstration, non vendue ; photo portée (la couronne dorée n'est pas incluse), sans essayage au Miroir ; le prix est fictif.",
+    storyEn: "Example: demo piece, not for sale; worn photo (the golden crown is not included), no Mirror try-on; the price is fictitious.",
+    priceCents: 18000,
+    materials: [{ fr: "Métal et cauris (exemple)", en: "Metal and cowrie shells (example)" }],
+    material: { fr: "Métal et cauris", en: "Metal and cowrie shells" },
+    images: ["/images/examples/marjon-lunettes-cauris.webp"],
   },
 ];

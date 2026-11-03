@@ -16,5 +16,6 @@ export const CREATOR_COUNTRIES: Record<string, Country[]> = {
   "paula-padua-nogueira": [CD],
   "imane-ayissi": [CM],
   "ldm-look-different-marque": [NG],
+  "house-of-marjon": [NG],
   "loza-maleombho": [CI],
 };

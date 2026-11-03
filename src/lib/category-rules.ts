@@ -15,7 +15,7 @@ export const CATEGORY_RULES: Record<string, CategoryRule> = {
   peinture: { dimensions: true, care: false },
   sculpture: { dimensions: true, care: false },
   "couture-mode": { sizeKind: "clothing", dimensions: false, care: true },
-  bijoux: { sizeKind: "ring", dimensions: false, care: false },
+  bijoux: { dimensions: false, care: false }, // slug technique conservé : libellé « Accessoires »
   "textile-decoration": { dimensions: false, care: false },
   photographie: { dimensions: true, care: false },
 };

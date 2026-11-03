@@ -88,6 +88,28 @@ model User {
   passwordHash String
   createdAt    DateTime @default(now())
   orders       Order[]
+  addresses    Address[]
+}
+
+model Address {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName   String
+  firstName  String   @default("")
+  lastName   String   @default("")
+  line1      String
+  houseNumber String  @default("")
+  box        String?
+  line2      String?
+  phone      String   @default("")
+  isDefault  Boolean  @default(false)
+  postalCode String
+  city       String
+  country    String
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
 }
 
 model Order {
@@ -104,6 +126,13 @@ model Order {
   postalCode String
   city       String
   country    String
+  phone      String      @default("")
+  street     String      @default("")
+  houseNumber String     @default("")
+  box        String?
+  complement String?
+  /// Jeton permettant à un invité de modifier l'adresse tant que la commande n'est pas expédiée
+  editToken  String?
   totalCents Int
   /// Statut simulé ; étendu en partie 2 (suivi de commande)
   status     String      @default("PLACED")

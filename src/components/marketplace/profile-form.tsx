@@ -7,7 +7,7 @@ import { getDict, type Locale } from "@/lib/i18n";
 
 const fieldClass = "h-11 w-full rounded-md border bg-background px-3 text-sm";
 
-export function ProfileForm({ locale, name, email }: { locale: Locale; name: string; email: string }) {
+export function ProfileForm({ locale, name, email, social = false }: { locale: Locale; name: string; email: string; social?: boolean }) {
   const t = getDict(locale).account;
   const [state, action, pending] = useActionState<AuthState, FormData>(updateProfile, {});
 
@@ -26,6 +26,7 @@ export function ProfileForm({ locale, name, email }: { locale: Locale; name: str
         </label>
         <input id="name" name="name" defaultValue={name} autoComplete="name" required className={fieldClass} />
       </div>
+      {!social && (
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1">
           <label htmlFor="currentPassword" className="text-sm font-medium">
@@ -40,6 +41,8 @@ export function ProfileForm({ locale, name, email }: { locale: Locale; name: str
           <input id="newPassword" name="newPassword" type="password" autoComplete="new-password" minLength={8} className={fieldClass} />
         </div>
       </div>
+      )}
+      {social && <p className="text-sm text-muted-foreground">{t.socialNote}</p>}
       {state.error && (
         <p role="alert" className="text-sm text-destructive">
           {t.errors[state.error]}

@@ -22,6 +22,15 @@ function Inner({ locale }: { locale: Locale }) {
   const hrefFor = (l: Locale) => `/${l}${rest}${search ? `?${search}` : ""}`;
 
   useEffect(() => {
+    const onOpen = (e: Event) => {
+      setTab((e as CustomEvent<"language" | "region">).detail ?? "language");
+      setOpen(true);
+    };
+    window.addEventListener("open-region-panel", onOpen);
+    return () => window.removeEventListener("open-region-panel", onOpen);
+  }, []);
+
+  useEffect(() => {
     if (!open) return;
     closeRef.current?.focus();
     const onKey = (e: KeyboardEvent) => {

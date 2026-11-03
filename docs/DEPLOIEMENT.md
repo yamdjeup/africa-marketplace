@@ -117,6 +117,12 @@ Sans ces variables, le bouton s'affiche grisé avec « Bientôt » et rien d'aut
 
 Puis **Deployments → ⋯ → Redeploy**. Ne mettez jamais ces valeurs dans le dépôt.
 
+## Étape 5 quinquies — Saisie guidée des adresses (optionnel)
+
+Les routes `/api/address/suggest` et `/api/address/check` utilisent par défaut **Photon** (`photon.komoot.io`, données OpenStreetMap, ODbL) : gratuit, sans clé, sans garantie de service, usage raisonnable uniquement (pas de rafales ; la saisie est temporisée à 350 ms et exige 3 caractères). S'il est indisponible, la saisie manuelle reste possible (repli silencieux). Pour un usage public, prévoir un fournisseur sous contrat. Pour activer **Google Places (New)** : activez « Places API (New) » dans Google Cloud, créez une clé API restreinte à cette API et renseignez `GOOGLE_PLACES_API_KEY` dans Vercel (clé côté serveur uniquement, jamais dans le dépôt), puis redéployez.
+
+Migrations additives `0005_addresses` et `0006_address_book` (tables/colonnes `Address` et `Order`) : appliquées automatiquement par `npm run db:deploy` au build Vercel.
+
 ## Étape 6 — Tester
 
 1. Dans Vercel, cliquez sur **Visit** (ou ouvrez l'adresse du projet). Vous devez voir la page **Accès réservé** et non le site.

@@ -5,6 +5,7 @@ import { AuthError } from "next-auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth, signIn, signOut } from "@/auth";
+import { checkAddress, readAddress } from "@/lib/address";
 import { db } from "@/lib/db";
 import { isLocale } from "@/lib/i18n";
 import { SOCIAL_ENABLED, SOCIAL_PROVIDERS, type SocialProvider } from "@/lib/social-providers";
@@ -90,6 +91,74 @@ export async function updateProfile(_prev: AuthState, formData: FormData): Promi
   await db.user.update({ where: { id: session.user.id }, data });
   revalidatePath(`/${locale}/account`);
   return { saved: true };
+}
+
+export async function saveAddress(formData: FormData) {
+  const session = await auth();
+  const locale = localeOf(formData);
+  if (!session?.user?.id) redirect(`/${locale}/login`);
+  const userId = session.user.id;
+  const f = (n: string) => text(formData, n);
+  const id = f("id");
+  const next = safeNext(f("next"), `/${locale}/account/addresses`);
+  const back = `/${locale}/account/addresses/${id ? encodeURIComponent(id) : "new"}`;
+  const v = readAddress(f);
+  const problem = checkAddress(v);
+  if (problem) redirect(`${back}?error=${problem}${f("next") ? `&next=${encodeURIComponent(next)}` : ""}`);
+
+  const data = {
+    firstName: v.firstName,
+    lastName: v.lastName,
+    fullName: `${v.firstName} ${v.lastName}`,
+    line1: v.line1,
+    houseNumber: v.houseNumber,
+    box: v.box || null,
+    line2: v.line2 || null,
+    postalCode: v.postalCode,
+    city: v.city,
+    country: v.country,
+    phone: v.phone,
+  };
+  let savedId = id;
+  if (id) {
+    await db.address.updateMany({ where: { id, userId }, data });
+  } else {
+    const count = await db.address.count({ where: { userId } });
+    savedId = (await db.address.create({ data: { ...data, userId, isDefault: count === 0 } })).id;
+  }
+  if (formData.get("isDefault") === "on") await makeDefault(userId, savedId);
+  revalidatePath(`/${locale}/account/addresses`);
+  redirect(next);
+}
+
+async function makeDefault(userId: string, id: string) {
+  await db.$transaction([
+    db.address.updateMany({ where: { userId }, data: { isDefault: false } }),
+    db.address.updateMany({ where: { id, userId }, data: { isDefault: true } }),
+  ]);
+}
+
+export async function setDefaultAddress(formData: FormData) {
+  const session = await auth();
+  const locale = localeOf(formData);
+  if (!session?.user?.id) redirect(`/${locale}/login`);
+  await makeDefault(session.user.id, text(formData, "id"));
+  revalidatePath(`/${locale}/account/addresses`);
+}
+
+export async function deleteAddress(formData: FormData) {
+  const session = await auth();
+  const locale = localeOf(formData);
+  if (!session?.user?.id) redirect(`/${locale}/login`);
+  const userId = session.user.id;
+  const id = text(formData, "id");
+  const target = await db.address.findFirst({ where: { id, userId } });
+  await db.address.deleteMany({ where: { id, userId } });
+  if (target?.isDefault) {
+    const first = await db.address.findFirst({ where: { userId }, orderBy: { createdAt: "asc" } });
+    if (first) await makeDefault(userId, first.id);
+  }
+  revalidatePath(`/${locale}/account/addresses`);
 }
 
 export async function logout(formData: FormData) {

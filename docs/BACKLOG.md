@@ -141,6 +141,7 @@ Reste à faire :
 - Droits des visuels (voir ci-dessous) : accord ou retrait avant toute mise en ligne publique.
 - Sauvegardes Neon, nom de domaine, e-mail transactionnel dédié (Resend…), service worker/hors-ligne (US-18).
 - **Reportés** : connexion Facebook (app Meta à créer) et Apple (compte Apple Developer payant) ; boutons retirés des pages connexion/inscription, seul Google est proposé.
+- Adresses : saisie guidée via Photon (gratuit, sans SLA, OSM) ; à remplacer par Google Places / Loqate / La Poste avant un lancement public. Le contrôle code postal/ville est indicatif (non bloquant).
 
 ## Droits des visuels d'exemple (Miroir)
 

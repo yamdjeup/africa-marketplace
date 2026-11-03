@@ -7,7 +7,7 @@ import Google from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
 import { randomBytes } from "node:crypto";
 import { db } from "@/lib/db";
-import { SOCIAL_ENABLED } from "@/lib/social-providers";
+import { SOCIAL_ENABLED, SOCIAL_HASH_PREFIX } from "@/lib/social-providers";
 
 declare module "next-auth" {
   interface Session {
@@ -54,7 +54,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       const row =
         existing ??
         (await db.user.create({
-          data: { email, name: user.name?.trim() || email.split("@")[0], passwordHash: await bcrypt.hash(randomBytes(32).toString("hex"), 10) },
+          data: { email, name: user.name?.trim() || email.split("@")[0], passwordHash: SOCIAL_HASH_PREFIX + randomBytes(32).toString("hex") },
         }));
       user.id = row.id;
       return true;

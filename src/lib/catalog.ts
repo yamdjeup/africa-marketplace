@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { pick, type Locale } from "@/lib/i18n";
 import { slugify } from "@/lib/category-rules";
 import { isExampleProduct } from "@/lib/examples";
+import { CREATOR_COUNTRY } from "@/data/creator-country";
 
 export const PAGE_SIZE = 24;
 const NEW_DAYS = 60;
@@ -40,6 +41,9 @@ export type CreatorView = {
   slug: string;
   name: string;
   specialty: string;
+  countryKey: string | null;
+  countryLabel: string | null;
+  categories: string[];
   bio: string;
   image: string;
   sourceUrl: string;
@@ -82,11 +86,20 @@ export function toProductView(p: ProductRow, locale: Locale): ProductView {
   };
 }
 
-export function toCreatorView(c: Creator, locale: Locale): CreatorView {
+const CATEGORY_ORDER = ["peinture", "sculpture", "photographie", "couture-mode", "bijoux", "textile-decoration"];
+
+export function toCreatorView(c: Creator, locale: Locale, cats: { slug: string; label: string }[] = []): CreatorView {
+  const country = CREATOR_COUNTRY[c.slug];
+  const countryLabel = country ? pick(locale, country.fr, country.en) : null;
+  const sorted = [...cats].sort((a, b) => CATEGORY_ORDER.indexOf(a.slug) - CATEGORY_ORDER.indexOf(b.slug));
+  const type = sorted.length ? sorted.map((x) => x.label).join(", ") : pick(locale, c.specialty, c.specialtyEn);
   return {
     slug: c.slug,
     name: c.name,
-    specialty: pick(locale, c.specialty, c.specialtyEn),
+    specialty: type,
+    countryKey: country?.key ?? null,
+    countryLabel,
+    categories: sorted.map((x) => x.slug),
     bio: pick(locale, c.bio, c.bioEn),
     image: c.image,
     sourceUrl: c.sourceUrl,
@@ -196,8 +209,16 @@ export async function getFeaturedProducts(locale: Locale, take = 8) {
 }
 
 export async function getCreators(locale: Locale, take?: number) {
-  const rows = await db.creator.findMany({ orderBy: { name: "asc" }, take });
-  return rows.map((c) => toCreatorView(c, locale));
+  const [rows, cats] = await Promise.all([
+    db.creator.findMany({ orderBy: { name: "asc" }, take, include: { products: { select: { categorySlug: true } } } }),
+    getCategories(locale),
+  ]);
+  return rows.map((c) => toCreatorView(c, locale, creatorCats(c.products, cats)));
+}
+
+function creatorCats(products: { categorySlug: string }[], cats: { slug: string; label: string }[]) {
+  const own = new Set(products.map((p) => p.categorySlug));
+  return cats.filter((c) => own.has(c.slug));
 }
 
 export async function getCreatorWithProducts(slug: string, locale: Locale) {
@@ -206,7 +227,7 @@ export async function getCreatorWithProducts(slug: string, locale: Locale) {
     include: { products: { include: withCreator, orderBy: { createdAt: "desc" } } },
   });
   if (!c) return null;
-  return { creator: toCreatorView(c, locale),   products: c.products.map((p) => toProductView(p, locale)) };
+  return { creator: toCreatorView(c, locale, creatorCats(c.products, await getCategories(locale))), products: c.products.map((p) => toProductView(p, locale)) };
 }
 
 export async function getCategories(locale: Locale) {

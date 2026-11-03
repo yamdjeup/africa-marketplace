@@ -2,6 +2,12 @@ name: Seed Neon
 
 on:
   workflow_dispatch:
+    inputs:
+      examples:
+        description: "Pièces d'exemple du Miroir (créateur fictif « Exemple » + 3 pièces) : none = ne rien changer, add = ajouter, remove = retirer"
+        type: choice
+        options: [none, add, remove]
+        default: none
 
 permissions:
   contents: read
@@ -17,7 +23,13 @@ jobs:
         run: test -n "$NEON_DATABASE_URL" || { echo "Secret NEON_DATABASE_URL absent"; exit 1; }
       - name: Charger prisma/seed.neon.sql
         run: psql "$NEON_DATABASE_URL" -v ON_ERROR_STOP=1 -f prisma/seed.neon.sql > /dev/null
-      - name: Compter les lignes (attendu 6, 5, 13)
+      - name: Ajouter les exemples du Miroir
+        if: ${{ inputs.examples == 'add' }}
+        run: psql "$NEON_DATABASE_URL" -v ON_ERROR_STOP=1 -f prisma/seed.examples.neon.sql > /dev/null
+      - name: Retirer les exemples du Miroir
+        if: ${{ inputs.examples == 'remove' }}
+        run: psql "$NEON_DATABASE_URL" -v ON_ERROR_STOP=1 -f prisma/seed.examples.remove.neon.sql > /dev/null
+      - name: Compter les lignes (attendu 6, 5, 13 ; avec exemples 6, 6, 16)
         run: |
           psql "$NEON_DATABASE_URL" -v ON_ERROR_STOP=1 -At -c \
             'select (select count(*) from "Category") as categories, (select count(*) from "Creator") as artistes, (select count(*) from "Product") as oeuvres;'

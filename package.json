@@ -16,11 +16,15 @@
     "db:check": "node scripts/db.mjs check",
     "db:seed": "node scripts/db.mjs seed",
     "db:studio": "node scripts/db.mjs studio",
-    "db:seed-sql": "tsx scripts/seed-sql.ts"
+    "db:seed-sql": "tsx scripts/seed-sql.ts",
+    "db:examples-add": "node scripts/db.mjs examples-add",
+    "db:examples-remove": "node scripts/db.mjs examples-remove",
+    "db:seed-examples-sql": "tsx scripts/seed-examples-sql.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
     "@google/model-viewer": "^4.4.0",
+    "@mediapipe/tasks-vision": "^1.2.0",
     "@prisma/client": "^6.19.3",
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",

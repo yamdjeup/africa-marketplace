@@ -82,6 +82,10 @@ switch (process.argv[2]) {
   case "seed":
     seed();
     break;
+  case "examples-add":
+  case "examples-remove":
+    run("npx", ["tsx", "prisma/seed.examples.ts", process.argv[2] === "examples-add" ? "add" : "remove"]);
+    break;
   case "deploy":
     deploy();
     break;

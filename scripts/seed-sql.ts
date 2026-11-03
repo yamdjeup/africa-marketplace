@@ -2,6 +2,7 @@
 // Usage : npm run db:seed-sql
 import { writeFileSync } from "node:fs";
 import { categories, creators, products } from "../src/data";
+import { exampleCreator, exampleProducts } from "../src/data/examples";
 
 const str = (v: string) => `'${v.replace(/'/g, "''")}'`;
 const json = (v: unknown) => `${str(JSON.stringify(v))}::jsonb`;
@@ -12,6 +13,9 @@ const upsert = (table: string, cols: string[], rows: string[][], key: string) =>
     .map((r) => `INSERT INTO "${table}" (${names}) VALUES (${r.join(", ")})\nON CONFLICT ("${key}") DO UPDATE SET ${update};`)
     .join("\n");
 };
+// Le jeu d'exemple (seed séparé) est conservé s'il existe déjà.
+const keepProducts = [...products.map((p) => p.slug), ...exampleProducts.map((p) => p.slug)];
+const keepCreators = [...creators.map((c) => c.slug), exampleCreator.slug];
 const list = (xs: string[]) => (xs.length ? xs.map(str).join(", ") : "''");
 
 const out: string[] = [
@@ -48,9 +52,9 @@ out.push(
     ]),
     "slug",
   ),
-  `DELETE FROM "OrderItem" WHERE "productSlug" NOT IN (${list(products.map((p) => p.slug))});`,
-  `DELETE FROM "Product" WHERE "slug" NOT IN (${list(products.map((p) => p.slug))});`,
-  `DELETE FROM "Creator" WHERE "slug" NOT IN (${list(creators.map((c) => c.slug))});`,
+  `DELETE FROM "OrderItem" WHERE "productSlug" NOT IN (${list(keepProducts)});`,
+    `DELETE FROM "Product" WHERE "slug" NOT IN (${list(keepProducts)});`,
+    `DELETE FROM "Creator" WHERE "slug" NOT IN (${list(keepCreators)});`,
   `DELETE FROM "Category" WHERE "slug" NOT IN (${list(categories.map((c) => c.slug))});`,
   "COMMIT;",
 );

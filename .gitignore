@@ -49,6 +49,3 @@ next-env.d.ts
 
 # originaux photo (non d�ploy�s)
 /scripts/photo-originals/
-
-# vidéos artistes (maquette, non commitées)
-/public/videos/

@@ -53,10 +53,10 @@ export default async function CreatorPage({ params }: Props) {
         </div>
       </header>
       {video && (
-        <section aria-labelledby="meet" className="space-y-4 rounded-2xl border border-accent bg-card p-4 md:p-6">
-          <h2 id="meet" className="font-heading text-2xl text-primary">
-            {t.meet} {c.name}
-          </h2>
+        <section
+          aria-labelledby="meet"
+          className="flex flex-col items-center gap-4 rounded-2xl border border-accent bg-card p-4 md:flex-row md:items-center md:gap-8 md:p-5"
+        >
           <video
             controls
             preload="metadata"
@@ -64,8 +64,17 @@ export default async function CreatorPage({ params }: Props) {
             src={video.src}
             poster={video.poster}
             aria-label={`${t.meet} ${c.name}`}
-            className="mx-auto aspect-[9/16] w-full max-w-[360px] rounded-xl bg-black object-contain"
+            className="aspect-[9/16] w-full max-w-[320px] shrink-0 rounded-xl bg-black object-contain md:w-[340px] md:max-w-none"
           />
+          <div className="space-y-3 text-center md:text-left">
+            <h2 id="meet" className="font-heading text-2xl text-primary">
+              {t.meet} {c.name}
+            </h2>
+            <p className="max-w-prose">{t.meetIntro}</p>
+            <a href="#pieces" className="inline-block text-sm text-terracotta underline underline-offset-4">
+              {t.pieces} ↓
+            </a>
+          </div>
         </section>
       )}
       <section aria-labelledby="pieces" className="space-y-4">

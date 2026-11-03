@@ -71,6 +71,7 @@ const fr = {
   },
   creator: {
     meet: "Rencontre avec",
+    meetIntro: "Découvrez l'artiste en quelques mots, lors de l'exposition G3A.",
     pieces: "Ses œuvres",
     bioSource: "Biographie : G3A, d'après l'article source",
     readSource: "Lire l'article source sur g3a.org",
@@ -239,6 +240,7 @@ const en: Dict = {
   },
   creator: {
     meet: "Meet",
+    meetIntro: "Get to know the artist in a few words, at the G3A exhibition.",
     pieces: "Their artworks",
     bioSource: "Biography: G3A, from the source article",
     readSource: "Read the source article on g3a.org",

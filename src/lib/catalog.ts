@@ -3,6 +3,7 @@ import type { Creator, Product } from "@prisma/client";
 import { db } from "@/lib/db";
 import { pick, type Locale } from "@/lib/i18n";
 import { slugify } from "@/lib/category-rules";
+import { EXAMPLE_CREATOR_SLUG, isExampleCreator } from "@/lib/examples";
 
 export const PAGE_SIZE = 24;
 const NEW_DAYS = 60;
@@ -30,6 +31,8 @@ export type ProductView = {
   hasCertificate: boolean;
   /** Mise en ligne il y a moins de NEW_DAYS jours (d'après createdAt). */
   isNew: boolean;
+  /** Pièce fictive « Exemple » (essayage au Miroir). */
+  isExample: boolean;
   stock: number;
 };
 
@@ -74,6 +77,7 @@ export function toProductView(p: ProductRow, locale: Locale): ProductView {
     careInstructions: p.careInstructions ? pick(locale, p.careInstructions, p.careInstructionsEn ?? p.careInstructions) : null,
     hasCertificate: p.hasCertificate,
     isNew: Date.now() - p.createdAt.getTime() < NEW_DAYS * 86_400_000,
+    isExample: isExampleCreator(p.creatorSlug),
     stock: p.stock,
   };
 }
@@ -192,7 +196,7 @@ export async function getFeaturedProducts(locale: Locale, take = 8) {
 }
 
 export async function getCreators(locale: Locale, take?: number) {
-  const rows = await db.creator.findMany({ orderBy: { name: "asc" }, take });
+  const rows = await db.creator.findMany({ where: { slug: { not: EXAMPLE_CREATOR_SLUG } }, orderBy: { name: "asc" }, take });
   return rows.map((c) => toCreatorView(c, locale));
 }
 
@@ -201,8 +205,8 @@ export async function getCreatorWithProducts(slug: string, locale: Locale) {
     where: { slug },
     include: { products: { include: withCreator, orderBy: { createdAt: "desc" } } },
   });
-  if (!c) return null;
-  return { creator: toCreatorView(c, locale), products: c.products.map((p) => toProductView(p, locale)) };
+  if (!c || isExampleCreator(c.slug)) return null;
+  return { creator: toCreatorView(c, locale),   products: c.products.map((p) => toProductView(p, locale)) };
 }
 
 export async function getCategories(locale: Locale) {

@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Breadcrumb } from "@/components/marketplace/breadcrumb";
 import { FavoriteButton } from "@/components/marketplace/favorite-button";
 import { RoomPreview } from "@/components/marketplace/room-preview";
+import { MirrorTryOn } from "@/components/marketplace/mirror-try-on";
+import { MIRROR_CATEGORIES, MIRROR_ITEMS } from "@/data/mirror-items";
 
 const ROOM_CATEGORIES = ["peinture", "sculpture", "photographie", "textile-decoration"];
 import { ruleFor } from "@/lib/category-rules";
@@ -35,6 +37,7 @@ export default async function ProductPage({ params }: Props) {
   const cmLabel = cm ? `${cm} ${t.cmUnit}` : "";
   const catalogT = getDict(locale).catalog;
   const more = await getRelatedProducts(p.slug, locale, 4);
+  const mirror = MIRROR_CATEGORIES.includes(p.categorySlug) && p.images.length > 0 ? MIRROR_ITEMS[p.slug] : undefined;
   const roomOk =
     ROOM_CATEGORIES.includes(p.categorySlug) && !!p.widthCm && !!p.heightCm && p.widthCm > 0 && p.heightCm > 0 && p.images.length > 0;
 
@@ -54,15 +57,22 @@ export default async function ProductPage({ params }: Props) {
         <div className="space-y-5">
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-2">
-              <Badge variant="secondary">{categoryLabel}</Badge>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="secondary">{categoryLabel}</Badge>
+                {p.isExample && <Badge variant="outline">{t.example}</Badge>}
+              </div>
               <FavoriteButton slug={p.slug} name={p.name} locale={locale} className="relative border" />
             </div>
             <h1 className="font-heading text-3xl leading-tight text-primary">{p.name}</h1>
             <p className="text-sm text-muted-foreground">
               {t.by}{" "}
-              <Link href={`/${locale}/createurs/${creator.slug}`} className="underline underline-offset-4">
-                {creator.name}
-              </Link>
+              {p.isExample ? (
+                creator.name
+              ) : (
+                <Link href={`/${locale}/createurs/${creator.slug}`} className="underline underline-offset-4">
+                  {creator.name}
+                </Link>
+              )}
             </p>
           </div>
           <div>
@@ -96,6 +106,7 @@ export default async function ProductPage({ params }: Props) {
               flat={p.categorySlug !== "sculpture"}
             />
           )}
+          {mirror && <MirrorTryOn key={`mirror-${p.slug}`} locale={locale} image={p.images[0]} name={p.name} kind={mirror.kind} />}
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 border-t pt-4 text-sm">
             {p.material && (
               <>

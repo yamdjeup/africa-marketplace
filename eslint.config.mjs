@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Binaires et glue wasm auto-hébergés (MediaPipe), non édités à la main.
+    "public/mediapipe/**",
   ]),
 ]);
 

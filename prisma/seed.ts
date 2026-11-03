@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { categories, creators, products } from "../src/data";
+import { exampleCreator, exampleProducts } from "../src/data/examples";
 
 const prisma = new PrismaClient();
 
@@ -50,10 +51,11 @@ async function main() {
   }
 
   // Retire les anciennes données (couture) absentes du jeu actuel ; les commandes qui y renvoient sont supprimées.
-  const keep = products.map((p) => p.slug);
+  // Le jeu d'exemple (seed séparé, voir seed.examples.ts) est conservé s'il existe.
+  const keep = [...products.map((p) => p.slug), ...exampleProducts.map((p) => p.slug)];
   await prisma.orderItem.deleteMany({ where: { productSlug: { notIn: keep } } });
   await prisma.product.deleteMany({ where: { slug: { notIn: keep } } });
-  await prisma.creator.deleteMany({ where: { slug: { notIn: creators.map((c) => c.slug) } } });
+  await prisma.creator.deleteMany({ where: { slug: { notIn: [...creators.map((c) => c.slug), exampleCreator.slug] } } });
   await prisma.category.deleteMany({ where: { slug: { notIn: categories.map((c) => c.slug) } } });
 
   console.log(`Seed OK : ${categories.length} catégories, ${creators.length} artistes, ${products.length} œuvres`);

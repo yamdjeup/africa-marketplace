@@ -7,7 +7,7 @@ import { drawPerspective, homography, toMatrix3d, type Pt, type Quad } from "@/l
 
 type Art = { cx: number; cy: number; wcm: number };
 type Cors = "pending" | "ok" | "fail";
-type Tab = "photo" | "perspective" | "ar";
+type Tab = "photo" | "ar";
 
 type Props = { locale: Locale; image: string; name: string; widthCm: number; heightCm: number; flat: boolean };
 
@@ -30,6 +30,7 @@ export function RoomPreview({ locale, image, name, widthCm, heightCm, flat }: Pr
   const [cors, setCors] = useState<Cors>("pending");
   const [dlError, setDlError] = useState(false);
   const [tab, setTab] = useState<Tab>("photo");
+  const [persp, setPersp] = useState(false);
   const [quadState, setQuad] = useState<Quad | null>(null);
   const drag = useRef<
     | { kind: "seg"; a: Pt }
@@ -43,7 +44,8 @@ export function RoomPreview({ locale, image, name, widthCm, heightCm, flat }: Pr
   const ratio = heightCm / widthCm;
   const cm = parseFloat(realCm.replace(",", "."));
   const segLen = seg ? Math.hypot(seg.b.x - seg.a.x, seg.b.y - seg.a.y) : 0;
-  const scale = seg && segLen > 5 && cm > 0 ? segLen / cm : null; // px naturels par cm
+  const calibrated = seg && segLen > 5 && cm > 0 ? segLen / cm : null; // px naturels par cm
+  const scale = nat ? (calibrated ?? nat.w / 300) : null; // repli : photo ≈ 3 m de large
 
   useEffect(() => {
     return () => {
@@ -87,6 +89,7 @@ export function RoomPreview({ locale, image, name, widthCm, heightCm, flat }: Pr
     setSeg(null);
     setArt(null);
     setQuad(null);
+    setPersp(false);
     setRealCm("");
     setDlError(false);
   };
@@ -119,7 +122,7 @@ export function RoomPreview({ locale, image, name, widthCm, heightCm, flat }: Pr
   const H = quad ? homography(REF_W, REF_H, quad) : null;
 
   const onBgDown = (e: React.PointerEvent) => {
-    if (tab !== "photo") return;
+    if (persp) return;
     e.currentTarget.setPointerCapture(e.pointerId);
     const p = toNat(e);
     drag.current = { kind: "seg", a: p };
@@ -184,7 +187,7 @@ export function RoomPreview({ locale, image, name, widthCm, heightCm, flat }: Pr
       ctx.drawImage(ph, 0, 0, nat.w, nat.h);
       const x = art.cx - artW / 2;
       const y = art.cy - artH / 2;
-      if (tab === "perspective" && quad) {
+      if (persp && quad) {
         if (!drawPerspective(ctx, ai, quad, Math.max(6, artW * 0.03))) return setDlError(true);
       } else {
         ctx.save();
@@ -248,7 +251,6 @@ export function RoomPreview({ locale, image, name, widthCm, heightCm, flat }: Pr
               {(
                 [
                   ["photo", t.tabPhoto],
-                  ["perspective", t.tabPerspective],
                   ["ar", t.tabAr],
                 ] as [Tab, string][]
               ).map(([id, label]) => (
@@ -288,7 +290,8 @@ export function RoomPreview({ locale, image, name, widthCm, heightCm, flat }: Pr
 
           {photo && (
             <>
-              <p className="text-sm text-muted-foreground">{t.step2}</p>
+              <p className="text-sm font-medium">{t.step2}</p>
+              <p className="text-sm text-muted-foreground">{t.step2Hint}</p>
               <div className="flex flex-wrap items-end gap-3">
                 <div className="space-y-1">
                   <label htmlFor={lengthId} className="block text-sm font-medium">
@@ -317,21 +320,25 @@ export function RoomPreview({ locale, image, name, widthCm, heightCm, flat }: Pr
                     {t.redraw}
                   </button>
                 )}
-                {tab === "perspective" && quadState && (
+                {persp && quadState && (
                   <button type="button" onClick={() => setQuad(null)} className="min-h-11 rounded-md border px-3 text-sm">
                     {t.perspReset}
                   </button>
                 )}
               </div>
               <p className="text-sm" aria-live="polite">
-                {tab === "perspective"
-                  ? scale
-                    ? t.perspHelp
-                    : t.perspNeedScale
-                  : scale
-                    ? `${t.calibrated(scale.toFixed(2))} — ${t.step3}`
-                    : t.notCalibrated}
+                {calibrated ? t.calibrated(calibrated.toFixed(2)) : t.freeSize}
               </p>
+              <p className="text-sm font-medium">{t.step3}</p>
+              {flat && (
+                <label className="flex min-h-11 items-center gap-2 text-sm">
+                  <input type="checkbox" checked={persp} onChange={(e) => setPersp(e.target.checked)} className="size-5" />
+                  <span>
+                    <span className="font-medium">{t.step4}</span> — {t.perspHelp}
+                  </span>
+                </label>
+              )}
+              {persp && <p className="text-xs text-muted-foreground">{t.perspHint}</p>}
 
               <div
                 ref={boxRef}
@@ -353,7 +360,7 @@ export function RoomPreview({ locale, image, name, widthCm, heightCm, flat }: Pr
                   onLoad={(e) => setNat({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
                   className="block h-auto w-full"
                 />
-                {nat && seg && tab === "photo" && (
+                {nat && seg && !persp && (
                   <svg className="pointer-events-none absolute inset-0 size-full" viewBox={`0 0 ${nat.w} ${nat.h}`}>
                     <line
                       x1={seg.a.x}
@@ -374,7 +381,7 @@ export function RoomPreview({ locale, image, name, widthCm, heightCm, flat }: Pr
                     />
                   </svg>
                 )}
-                {tab === "perspective" && quad && H && nat && cors !== "pending" && (
+                {persp && quad && H && nat && cors !== "pending" && (
                   <>
                     <div
                       className="pointer-events-none absolute left-0 top-0"
@@ -422,7 +429,7 @@ export function RoomPreview({ locale, image, name, widthCm, heightCm, flat }: Pr
                     ))}
                   </>
                 )}
-                {tab === "photo" && art && scale && nat && cors !== "pending" && (
+                {!persp && art && scale && nat && cors !== "pending" && (
                   <div
                     onPointerDown={onArtDown}
                     onPointerMove={onMove}
@@ -465,6 +472,7 @@ export function RoomPreview({ locale, image, name, widthCm, heightCm, flat }: Pr
                 )}
               </div>
 
+              {canDownload && <p className="text-sm font-medium">{t.step5}</p>}
               {canDownload && (
                 <button
                   type="button"

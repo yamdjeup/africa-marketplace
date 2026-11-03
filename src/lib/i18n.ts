@@ -10,14 +10,14 @@ const fr = {
   siteName: "E póm ta’",
   brandMeaning: "« Tu es très belle » en ghomálá’",
   demoBanner: "Démonstration privée",
-  tagline: "Galerie en ligne d'art et de création africaine et afrodescendante.",
+  tagline: "Galerie en ligne : l'art afrodescendant sous toutes ses formes.",
   skip: "Aller au contenu",
   nav: { catalog: "Œuvres", creators: "Artistes", search: "Rechercher", cart: "Panier", menu: "Menu", main: "Principale" },
   footer: { about: "À propos", delivery: "Livraison et retours", contact: "Contact", legal: "Mentions légales", poc: "Démonstration privée — données et prix fictifs, aucun paiement réel" },
   lang: { label: "Langue", fr: "Français", en: "English" },
   home: {
     heroKicker: "Galerie en ligne",
-    heroTitle: "L'art et la création africaine et afrodescendante",
+    heroTitle: "L'art afrodescendant sous toutes ses formes",
     heroText: (creators: number, works: number) =>
       `Peinture, sculpture, photographie, couture et mode : ${creators} créateurs et ${works} œuvres (hors pièces d'exemple).`,
     heroCta: "Voir les œuvres",
@@ -289,14 +289,14 @@ const en: Dict = {
   siteName: "E póm ta’",
   brandMeaning: "“You are very beautiful” in Ghomálá’",
   demoBanner: "Private demo",
-  tagline: "Online gallery of African and Afro-descendant art and creation.",
+  tagline: "Online gallery: Afro-descendant art in all its forms.",
   skip: "Skip to content",
   nav: { catalog: "Artworks", creators: "Artists", search: "Search", cart: "Cart", menu: "Menu", main: "Main" },
   footer: { about: "About", delivery: "Shipping and returns", contact: "Contact", legal: "Legal notice", poc: "Private demo — fictional data and prices, no real payment" },
   lang: { label: "Language", fr: "Français", en: "English" },
   home: {
     heroKicker: "Online gallery",
-    heroTitle: "African and Afro-descendant art and creation",
+    heroTitle: "Afro-descendant art in all its forms",
     heroText: (creators: number, works: number) =>
       `Painting, sculpture, photography, fashion and tailoring: ${creators} creators and ${works} works (sample pieces excluded).`,
     heroCta: "View the artworks",

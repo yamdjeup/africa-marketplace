@@ -66,13 +66,9 @@ export default async function ProductPage({ params }: Props) {
             <h1 className="font-heading text-3xl leading-tight text-primary">{p.name}</h1>
             <p className="text-sm text-muted-foreground">
               {t.by}{" "}
-              {p.isExample ? (
-                creator.name
-              ) : (
-                <Link href={`/${locale}/createurs/${creator.slug}`} className="underline underline-offset-4">
-                  {creator.name}
-                </Link>
-              )}
+              <Link href={`/${locale}/createurs/${creator.slug}`} className="underline underline-offset-4">
+                {creator.name}
+              </Link>
             </p>
           </div>
           <div>

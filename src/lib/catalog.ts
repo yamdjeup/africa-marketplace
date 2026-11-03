@@ -3,7 +3,7 @@ import type { Creator, Product } from "@prisma/client";
 import { db } from "@/lib/db";
 import { pick, type Locale } from "@/lib/i18n";
 import { slugify } from "@/lib/category-rules";
-import { EXAMPLE_CREATOR_SLUGS, isExampleCreator, isExampleProduct } from "@/lib/examples";
+import { isExampleProduct } from "@/lib/examples";
 
 export const PAGE_SIZE = 24;
 const NEW_DAYS = 60;
@@ -196,7 +196,7 @@ export async function getFeaturedProducts(locale: Locale, take = 8) {
 }
 
 export async function getCreators(locale: Locale, take?: number) {
-  const rows = await db.creator.findMany({ where: { slug: { notIn: EXAMPLE_CREATOR_SLUGS } }, orderBy: { name: "asc" }, take });
+  const rows = await db.creator.findMany({ orderBy: { name: "asc" }, take });
   return rows.map((c) => toCreatorView(c, locale));
 }
 
@@ -205,7 +205,7 @@ export async function getCreatorWithProducts(slug: string, locale: Locale) {
     where: { slug },
     include: { products: { include: withCreator, orderBy: { createdAt: "desc" } } },
   });
-  if (!c || isExampleCreator(c.slug)) return null;
+  if (!c) return null;
   return { creator: toCreatorView(c, locale),   products: c.products.map((p) => toProductView(p, locale)) };
 }
 

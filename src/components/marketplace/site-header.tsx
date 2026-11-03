@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { auth } from "@/auth";
 import { CartLink } from "@/components/marketplace/cart-link";
+import { FavoritesLink } from "@/components/marketplace/favorites-link";
 import { LanguageSwitcher } from "@/components/marketplace/language-switcher";
 import { getCategories } from "@/lib/catalog";
 import { getDict, type Locale } from "@/lib/i18n";
@@ -54,6 +55,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
             </Link>
           )}
           <LanguageSwitcher locale={locale} />
+          <FavoritesLink locale={locale} />
           <CartLink locale={locale} />
         </div>
       </div>

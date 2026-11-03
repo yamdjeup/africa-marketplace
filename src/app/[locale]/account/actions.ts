@@ -92,6 +92,27 @@ export async function updateProfile(_prev: AuthState, formData: FormData): Promi
   return { saved: true };
 }
 
+export async function addAddress(formData: FormData) {
+  const session = await auth();
+  const locale = localeOf(formData);
+  if (!session?.user?.id) redirect(`/${locale}/login`);
+  const f = (n: string) => text(formData, n);
+  if (f("fullName") && f("line1") && f("postalCode") && f("city") && f("country")) {
+    await db.address.create({
+      data: { userId: session.user.id, fullName: f("fullName"), line1: f("line1"), line2: f("line2") || null, postalCode: f("postalCode"), city: f("city"), country: f("country") },
+    });
+  }
+  revalidatePath(`/${locale}/account/addresses`);
+}
+
+export async function deleteAddress(formData: FormData) {
+  const session = await auth();
+  const locale = localeOf(formData);
+  if (!session?.user?.id) redirect(`/${locale}/login`);
+  await db.address.deleteMany({ where: { id: text(formData, "id"), userId: session.user.id } });
+  revalidatePath(`/${locale}/account/addresses`);
+}
+
 export async function logout(formData: FormData) {
   await signOut({ redirectTo: `/${localeOf(formData)}` });
 }

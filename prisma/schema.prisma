@@ -88,6 +88,22 @@ model User {
   passwordHash String
   createdAt    DateTime @default(now())
   orders       Order[]
+  addresses    Address[]
+}
+
+model Address {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName   String
+  line1      String
+  line2      String?
+  postalCode String
+  city       String
+  country    String
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
 }
 
 model Order {

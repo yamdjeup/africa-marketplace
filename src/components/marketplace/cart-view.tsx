@@ -13,18 +13,30 @@ export function CartView({ locale }: { locale: Locale }) {
 
   if (!ready) return <p className="text-muted-foreground" aria-busy="true">…</p>;
 
+  const backLink = (
+    <Link href={`/${locale}/catalogue`} aria-label={t.back} title={t.back} className="mb-4 inline-flex min-h-11 items-center gap-1 text-sm hover:text-terracotta">
+      <span aria-hidden="true" className="text-xl leading-none">←</span>
+      <span className="sr-only">{t.back}</span>
+    </Link>
+  );
+
   if (lines.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed p-10 text-center">
-        <p className="font-heading text-xl">{t.empty}</p>
-        <Link href={`/${locale}/catalogue`} className={buttonVariants({ className: "mt-4" })}>
-          {t.continue}
-        </Link>
+      <div>
+        {backLink}
+        <div className="rounded-lg border border-dashed p-10 text-center">
+          <p className="font-heading text-xl">{t.empty}</p>
+          <Link href={`/${locale}/catalogue`} className={buttonVariants({ className: "mt-4" })}>
+            {t.continue}
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
+    <div>
+    {backLink}
     <div className="grid gap-8 lg:grid-cols-[1fr_20rem]">
       <ul className="divide-y rounded-lg border">
         {lines.map((l) => {
@@ -94,10 +106,14 @@ export function CartView({ locale }: { locale: Locale }) {
         <Link href={`/${locale}/checkout`} className={buttonVariants({ size: "lg", className: "h-12 w-full" })}>
           {t.checkout}
         </Link>
+        <Link href={`/${locale}/catalogue`} className={buttonVariants({ variant: "outline", size: "lg", className: "h-12 w-full" })}>
+          {t.continue}
+        </Link>
         <Button variant="ghost" className="w-full" onClick={clear}>
           {t.clear}
         </Button>
       </aside>
+    </div>
     </div>
   );
 }

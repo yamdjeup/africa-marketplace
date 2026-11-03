@@ -12,10 +12,12 @@ datasource db {
 }
 
 model Category {
-  slug     String    @id
-  name     String
-  nameEn   String
-  products Product[]
+  slug      String    @id
+  name      String
+  nameEn    String
+  /// Ordre d'affichage dans le menu et les filtres
+  sortOrder Int       @default(0)
+  products  Product[]
 }
 
 model Creator {
@@ -32,29 +34,48 @@ model Creator {
 }
 
 model Product {
-  slug          String      @id
-  name          String
-  nameEn        String
-  description   String
-  descriptionEn String
-  story         String
-  storyEn       String
-  categorySlug  String
-  category      Category    @relation(fields: [categorySlug], references: [slug])
-  creatorSlug   String
-  creator       Creator     @relation(fields: [creatorSlug], references: [slug])
+  slug               String      @id
+  name               String
+  nameEn             String
+  description        String
+  descriptionEn      String
+  story              String
+  storyEn            String
+  categorySlug       String
+  category           Category    @relation(fields: [categorySlug], references: [slug])
+  creatorSlug        String
+  creator            Creator     @relation(fields: [creatorSlug], references: [slug])
   /// Prix en centimes d'EUR
-  priceCents    Int
+  priceCents         Int
   /// [{ fr, en }]
-  materials     Json
-  /// string[] ; vide si pièce sans taille
-  sizes         Json
-  dimensions    String?
-  stock         Int
+  materials          Json
+  /// string[] ; vide si pièce sans taille (tailles S/M/L, tour de doigt)
+  sizes              Json
+  /// Texte libre historique ; préférer widthCm/heightCm/depthCm
+  dimensions         String?
+  /// Matière principale (filtre) et technique, FR/EN
+  material           String?
+  materialEn         String?
+  technique          String?
+  techniqueEn        String?
+  /// Origine géographique (filtre pays/région)
+  country            String?
+  countryEn          String?
+  region             String?
+  regionEn           String?
+  /// Dimensions en cm (peinture, sculpture, photographie)
+  widthCm            Float?
+  heightCm           Float?
+  depthCm            Float?
+  /// Conseils d'entretien (couture)
+  careInstructions   String?
+  careInstructionsEn String?
+  hasCertificate     Boolean     @default(true)
+  stock              Int
   /// string[] de chemins publics
-  images        Json
-  createdAt     DateTime    @default(now())
-  orderItems    OrderItem[]
+  images             Json
+  createdAt          DateTime    @default(now())
+  orderItems         OrderItem[]
 
   @@index([categorySlug])
   @@index([creatorSlug])

@@ -2,11 +2,13 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { CartLink } from "@/components/marketplace/cart-link";
 import { LanguageSwitcher } from "@/components/marketplace/language-switcher";
+import { getCategories } from "@/lib/catalog";
 import { getDict, type Locale } from "@/lib/i18n";
 
 export async function SiteHeader({ locale }: { locale: Locale }) {
   const t = getDict(locale);
   const session = await auth();
+  const categories = await getCategories(locale);
   return (
     <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur">
       <div className="bg-accent/20 py-1 text-center text-xs tracking-wide text-foreground">{t.demoBanner}</div>
@@ -55,6 +57,17 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           <CartLink locale={locale} />
         </div>
       </div>
+      <nav aria-label={t.catalog.title} className="border-t">
+        <ul className="mx-auto flex max-w-6xl gap-5 overflow-x-auto px-4 text-sm">
+          {categories.map((c) => (
+            <li key={c.slug} className="shrink-0">
+              <Link href={`/${locale}/catalogue?category=${c.slug}`} className="inline-flex min-h-11 items-center hover:text-terracotta">
+                {c.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
     </header>
   );
 }

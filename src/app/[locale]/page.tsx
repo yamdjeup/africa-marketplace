@@ -1,27 +1,69 @@
 import Image from "next/image";
 import Link from "next/link";
-import { CreatorCard } from "@/components/marketplace/creator-card";
+import { Newsletter } from "@/components/marketplace/newsletter";
 import { ProductCard } from "@/components/marketplace/product-card";
 import { buttonVariants } from "@/components/ui/button";
 import { CREATOR_VIDEO_SHOWCASE } from "@/data/creator-videos";
 import { getCategoryShowcase, getCreators, getFeaturedProducts, getHeroProduct } from "@/lib/catalog";
 import { getDict, type Locale } from "@/lib/i18n";
 
+function Carousel({ id, title, sub, href, seeAll, hint, children }: { id: string; title: string; sub: string; href: string; seeAll: string; hint: string; children: React.ReactNode }) {
+  return (
+    <section aria-labelledby={id} className="space-y-4">
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <h2 id={id} className="font-heading text-2xl text-primary">{title}</h2>
+          <p className="text-sm text-muted-foreground">{sub}</p>
+        </div>
+        <Link href={href} className="inline-flex min-h-11 shrink-0 items-center rounded-md border border-black px-4 text-sm hover:bg-black hover:text-white">
+          {seeAll}
+        </Link>
+      </div>
+      <ul tabIndex={0} aria-label={`${title}. ${hint}`} className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-4 px-4 pb-2 focus-visible:outline-2 focus-visible:outline-ring">
+        {children}
+      </ul>
+    </section>
+  );
+}
+
 export default async function HomePage({ params }: { params: Promise<{ locale: Locale }> }) {
   const { locale } = await params;
   const t = getDict(locale);
-  const [products, creators, categories, allCreators, hero] = await Promise.all([
-    getFeaturedProducts(locale, 8),
-    getCreators(locale, 4),
+  const f = t.f4;
+  const [products, categories, allCreators, hero] = await Promise.all([
+    getFeaturedProducts(locale, 16),
     getCategoryShowcase(locale),
     getCreators(locale),
     getHeroProduct(locale),
   ]);
   const heroProduct = hero ?? products[0];
+  const newIn = products.slice(0, 8);
+  const trending = products.length > 8 ? products.slice(8) : products;
+  const banners = ["couture-mode", "peinture"].flatMap((s) => categories.filter((c) => c.slug === s && c.count > 0 && c.image));
   const videoArtists = CREATOR_VIDEO_SHOWCASE.flatMap((v) => {
     const c = allCreators.find((x) => x.slug === v.slug);
     return c ? [{ ...v, name: c.name }] : [];
   });
+
+  const banner = (i: number) => {
+    const c = banners[i];
+    if (!c) return null;
+    return (
+      <section aria-label={c.label} className={`grid items-center gap-6 md:grid-cols-2 md:gap-10 ${i % 2 ? "md:[&>*:first-child]:order-2" : ""}`}>
+        <Link href={`/${locale}/catalogue?category=${c.slug}`} className="relative block aspect-[4/3] overflow-hidden rounded-lg bg-muted" tabIndex={-1} aria-hidden>
+          <Image src={c.image!} alt="" fill unoptimized sizes="(min-width: 768px) 50vw, 100vw" className="object-cover" />
+        </Link>
+        <div className="space-y-4 text-center">
+          <p className="text-xs uppercase tracking-widest text-terracotta">{f.bannerKicker}</p>
+          <h2 className="font-heading text-3xl font-normal text-primary md:text-4xl">{c.label}</h2>
+          <p className="mx-auto max-w-prose text-muted-foreground">{f.bannerText(c.label.toLowerCase())}</p>
+          <Link href={`/${locale}/catalogue?category=${c.slug}`} className="inline-flex min-h-11 items-center rounded-md border border-black px-6 text-sm hover:bg-black hover:text-white">
+            {f.discover}
+          </Link>
+        </div>
+      </section>
+    );
+  };
 
   return (
     <div className="space-y-12 md:space-y-16">
@@ -98,23 +140,25 @@ export default async function HomePage({ params }: { params: Promise<{ locale: L
         </ul>
       </section>
 
-      <section aria-labelledby="sel" className="space-y-4">
-        <div className="flex items-end justify-between gap-4">
-          <h2 id="sel" className="font-heading text-2xl text-primary">
-            {t.home.selection}
-          </h2>
-          <Link href={`/${locale}/catalogue`} className="text-sm underline underline-offset-4">
-            {t.home.allProducts}
-          </Link>
-        </div>
-        <ul className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-          {products.map((p) => (
-            <li key={p.slug}>
-              <ProductCard product={p} locale={locale} />
-            </li>
-          ))}
-        </ul>
-      </section>
+      <Carousel id="new" title={f.newIn} sub={f.newInSub} href={`/${locale}/catalogue`} seeAll={f.seeAll} hint={f.carousel}>
+        {newIn.map((p) => (
+          <li key={p.slug} className="w-44 shrink-0 snap-start md:w-56">
+            <ProductCard product={p} locale={locale} />
+          </li>
+        ))}
+      </Carousel>
+
+      {banner(0)}
+
+      <Carousel id="sel" title={f.trending} sub={f.trendingSub} href={`/${locale}/catalogue`} seeAll={f.seeAll} hint={f.carousel}>
+        {trending.map((p) => (
+          <li key={p.slug} className="w-44 shrink-0 snap-start md:w-56">
+            <ProductCard product={p} locale={locale} />
+          </li>
+        ))}
+      </Carousel>
+
+      {banner(1)}
 
       {videoArtists.length > 0 && (
         <section aria-labelledby="vid" className="space-y-4">
@@ -158,19 +202,30 @@ export default async function HomePage({ params }: { params: Promise<{ locale: L
         </section>
       )}
 
-      <section aria-labelledby="cre" className="space-y-4">
-        <div className="flex items-end justify-between gap-4">
-          <h2 id="cre" className="font-heading text-2xl text-primary">
-            {t.home.featuredCreators}
-          </h2>
-          <Link href={`/${locale}/createurs`} className="text-sm underline underline-offset-4">
-            {t.home.allCreators}
-          </Link>
-        </div>
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {creators.map((c) => (
-            <li key={c.slug}>
-              <CreatorCard creator={c} locale={locale} />
+      <Carousel id="cre" title={f.artists} sub={f.artistsSub} href={`/${locale}/createurs`} seeAll={f.seeAll} hint={f.carousel}>
+        {allCreators.map((c) => (
+          <li key={c.slug} className="w-40 shrink-0 snap-start md:w-48">
+            <Link href={`/${locale}/createurs/${c.slug}`} className="group block space-y-2">
+              <span className="relative block aspect-square overflow-hidden bg-muted">
+                <Image src={c.image} alt="" fill unoptimized sizes="192px" className="object-cover transition-transform group-hover:scale-105" />
+              </span>
+              <span className="block text-center text-sm font-semibold group-hover:underline">{c.name}</span>
+            </Link>
+          </li>
+        ))}
+      </Carousel>
+
+      <Newsletter locale={locale} />
+
+      <section aria-labelledby="help" className="space-y-4">
+        <h2 id="help" className="font-heading text-2xl text-primary">{f.helpTitle}</h2>
+        <ul className="grid gap-3 md:grid-cols-3">
+          {f.help.map((h) => (
+            <li key={h.title}>
+              <Link href={`/${locale}/support/${h.slug}`} className="block h-full rounded-lg border p-4 transition-shadow hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring">
+                <span className="block font-heading text-lg text-primary">{h.title}</span>
+                <span className="block text-sm text-muted-foreground">{h.text}</span>
+              </Link>
             </li>
           ))}
         </ul>

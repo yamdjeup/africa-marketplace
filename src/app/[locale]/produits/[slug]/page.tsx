@@ -93,6 +93,7 @@ export default async function ProductPage({ params }: Props) {
               name={p.name}
               widthCm={p.widthCm!}
               heightCm={p.heightCm!}
+              flat={p.categorySlug !== "sculpture"}
             />
           )}
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 border-t pt-4 text-sm">

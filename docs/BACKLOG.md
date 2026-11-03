@@ -131,10 +131,21 @@ Ordre = priorité d'exécution. Statut initial : À faire. Chaque story est auto
 - Tests Playwright exécutés sur l'URL déployée ; rapport joint
 - README final (démo, comptes fictifs, limites connues) ; vérification : aucun secret dans l'historique, aucune mention d'ENGIE
 
+## État des lots de maquette (2026-11-03)
+
+Livrés : A, B, correctifs filtres, C, D, D2, D3, E, E2, E3, E4, E5, E6, E7, E8, F1 (détail dans HISTORY). Connexion Google validée en ligne le 2026-11-03.
+
+Reste à faire :
+- Tests sur téléphone réel : AR / « Voir dans votre intérieur » et Miroir (caméra).
+- Vraies pièces et vrais créateurs à la place des exemples ; pays/orthographe confirmés pour House of Marjón ; vraies dimensions et vrais prix.
+- Droits des visuels (voir ci-dessous) : accord ou retrait avant toute mise en ligne publique.
+- Sauvegardes Neon, nom de domaine, e-mail transactionnel dédié (Resend…), service worker/hors-ligne (US-18).
+- **Reportés** : connexion Facebook (app Meta à créer) et Apple (compte Apple Developer payant) ; boutons retirés des pages connexion/inscription, seul Google est proposé.
+
 ## Droits des visuels d'exemple (Miroir)
 
 - Les images `public/images/examples/` de couture (`veste-tiedye.webp`, `ceinture-cuir.webp`, `haut-toile-cuir.webp`, `veste-verte-portee.webp`) restent la **propriété des marques/créateurs** (Imane Ayissi, LDM, Lozama Leombho). Usage : **démo privée uniquement**.
 - **Retirer ou obtenir l'accord des ayants droit avant toute mise en ligne publique** (retrait : `npm run db:examples-remove` / `prisma/seed.examples.remove.neon.sql`, puis supprimer les fichiers).
-- Attribution : tie-dye → Imane Ayissi ; Hao Set → LDM (Look Different Marque) ; Akara Belt et Neitha Harness → Lozama Leombho. Ces créateurs n'ont pas de page et ne figurent pas dans « Nos artistes ». Prix, tailles et stock restent fictifs ; titres « (Exemple) » + badge.
+- Attribution : tie-dye → Imane Ayissi ; Hao Set → LDM (Look Different Marque) ; Akara Belt et Neitha Harness → Lozama Leombho. Ces créateurs ont une page et figurent dans « Nos artistes » (lot E4). Prix, tailles et stock restent fictifs ; titres « (Exemple) » + badge.
 - La catégorie « Bijoux » a été renommée « Accessoires » / « Accessories » (libellé seulement ; le slug technique `bijoux` est conservé). Le code Miroir bijoux est conservé pour de vraies pièces.
 - House of Marjón (maison d'accessoires nigériane) : `marjon-lunettes-cristaux.webp` et `marjon-lunettes-cauris.webp` sont la **propriété de House of Marjón** ; photos tirées d'Instagram (@onemarjon), recadrées 4:5, **démo privée uniquement**. Bio d'après une source indirecte (aperçu IA), formulée prudemment : à confirmer avec la maison, ainsi que l'attribution des pièces à des collections (non confirmée). Obtenir l'accord avant toute mise en ligne publique (le retrait passe par le seed examples remove).

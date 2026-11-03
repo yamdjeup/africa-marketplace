@@ -40,20 +40,22 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           </form>
         </nav>
         <div className="flex items-center">
-          {session?.user ? (
-            <>
-              <Link href={`/${locale}/account/orders`} className="inline-flex min-h-11 items-center px-2 text-sm hover:text-terracotta">
-                {t.account.orders.title}
-              </Link>
-              <Link href={`/${locale}/account`} className="inline-flex min-h-11 items-center px-2 text-sm hover:text-terracotta">
-                {t.account.myAccount}
-              </Link>
-            </>
-          ) : (
-            <Link href={`/${locale}/login`} className="inline-flex min-h-11 items-center px-2 text-sm hover:text-terracotta">
-              {t.account.login}
+          {session?.user && (
+            <Link href={`/${locale}/account/orders`} className="inline-flex min-h-11 items-center px-2 text-sm hover:text-terracotta">
+              {t.account.orders.title}
             </Link>
           )}
+          <Link
+            href={`/${locale}/${session?.user ? "account" : "login"}`}
+            aria-label={t.account.accountIcon}
+            title={t.account.accountIcon}
+            className="inline-flex min-h-11 min-w-11 items-center justify-center hover:text-terracotta"
+          >
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" />
+            </svg>
+          </Link>
           <LanguageSwitcher locale={locale} />
           <FavoritesLink locale={locale} />
           <CartLink locale={locale} />

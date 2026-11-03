@@ -107,6 +107,16 @@ Sans nom de domaine, on envoie les e-mails depuis votre Gmail personnel. Si vous
 
 Ne collez jamais ce mot de passe dans le code ni dans un message. Pour le révoquer : même page Google, icône corbeille. Gmail limite l'envoi (environ 500 messages par jour) : largement suffisant pour la démo. Si l'envoi échoue, la commande réussit quand même et l'erreur apparaît dans les logs Vercel.
 
+## Étape 5 quater — Connexion avec Google / Facebook / Apple (optionnel)
+
+Sans ces variables, les boutons s'affichent grisés avec « Bientôt » et rien d'autre ne change. Aucune migration de base n'est nécessaire : un compte social est lié à l'e-mail (créé s'il n'existe pas). URL de callback à déclarer chez chaque fournisseur : `https://epomta-demo.vercel.app/api/auth/callback/<google|facebook|apple>`.
+
+- **Google** : <https://console.cloud.google.com> → projet → **APIs & Services → OAuth consent screen** (External, ajoutez-vous en test user) → **Credentials → Create credentials → OAuth client ID** (Web application). *Authorized JavaScript origins* : `https://epomta-demo.vercel.app` ; *Authorized redirect URIs* : `https://epomta-demo.vercel.app/api/auth/callback/google`. Variables Vercel : `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`.
+- **Facebook** : <https://developers.facebook.com> → **Create app** (type Consumer / Facebook Login) → **Facebook Login → Settings** → *Valid OAuth Redirect URIs* : `https://epomta-demo.vercel.app/api/auth/callback/facebook`. Permission e-mail par défaut. Variables : `AUTH_FACEBOOK_ID` (App ID), `AUTH_FACEBOOK_SECRET` (App secret). En mode développement, seuls les rôles de l'app peuvent se connecter.
+- **Apple** : exige un compte **Apple Developer payant** (≈ 99 $/an) : App ID + Services ID « Sign in with Apple », clé privée, et `AUTH_APPLE_SECRET` est un JWT signé (à régénérer tous les 6 mois). Non configuré pour l'instant.
+
+Puis **Deployments → ⋯ → Redeploy**. Ne mettez jamais ces valeurs dans le dépôt.
+
 ## Étape 6 — Tester
 
 1. Dans Vercel, cliquez sur **Visit** (ou ouvrez l'adresse du projet). Vous devez voir la page **Accès réservé** et non le site.

@@ -53,11 +53,13 @@ export default async function CreatorPage({ params }: Props) {
           <h1 className="font-heading text-3xl text-primary">{c.name}</h1>
           <p className="text-xs uppercase tracking-wide text-terracotta">{c.specialty}</p>
           <p className="max-w-prose pt-2">{bio}</p>
-          <p className="text-xs text-muted-foreground">
-            <a href={c.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">
-              {t.readSource}
-            </a>
-          </p>
+          {c.sourceUrl.includes("g3a.org") && (
+            <p className="text-xs text-muted-foreground">
+              <a href={c.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">
+                {t.readSource}
+              </a>
+            </p>
+          )}
         </div>
       </header>
       {video && (

@@ -305,4 +305,18 @@ const EXTRAS: Record<string, Partial<ArtworkInput>> = {
   "paula-padua-nogueira": PADUA_EXTRA,
 };
 
-export const products: Product[] = inputs.map((i) => build({ ...i, ...EXTRAS[i.creatorSlug] }));
+// Dimensions fictives de démonstration (cm), proches du ratio de l'image ; Taylor garde 60 × 90 cm.
+const DEMO_DIMENSIONS: Record<string, Pick<ArtworkInput, "widthCm" | "heightCm" | "depthCm">> = {
+  "profil-points-et-texte": { widthCm: 50, heightCm: 70 },
+  "portrait-encadre-cheveux-ocre": { widthCm: 50, heightCm: 72 },
+  "kenof-figure-voilee-et-coiffe": { widthCm: 120, heightCm: 96 },
+  "kenof-figure-voilee-au-baton": { widthCm: 120, heightCm: 92 },
+  "grande-toile-masques-et-arbre": { widthCm: 150, heightCm: 123 },
+  "trois-reliefs-ceramique-blanche": { widthCm: 80, heightCm: 40, depthCm: 6 },
+  "sculpture-ceramique-vasque-bleue": { widthCm: 30, heightCm: 72, depthCm: 30 },
+  "scene-de-chambre-oiseau-noir": { widthCm: 60, heightCm: 87 },
+  "trois-figures-et-nuancier-capillaire": { widthCm: 110, heightCm: 80 },
+  "femme-enceinte-et-ane-rieur": { widthCm: 70, heightCm: 106 },
+};
+
+export const products: Product[] = inputs.map((i) => build({ ...i, ...EXTRAS[i.creatorSlug], ...DEMO_DIMENSIONS[i.slug] }));

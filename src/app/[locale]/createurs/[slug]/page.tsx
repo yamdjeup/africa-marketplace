@@ -5,10 +5,10 @@ import { ProductCard } from "@/components/marketplace/product-card";
 import { getCreatorWithProducts } from "@/lib/catalog";
 import { getDict, type Locale } from "@/lib/i18n";
 
-const CREATOR_VIDEOS: Record<string, string> = {
-  kenof: "/videos/kenof.mp4",
-  "nathalie-morere": "/videos/nathalie.mp4",
-  "cruzz-taylor": "/videos/taylor.mp4",
+const CREATOR_VIDEOS: Record<string, { src: string; poster: string }> = {
+  kenof: { src: "/videos/kenof.mp4", poster: "/videos/posters/kenof-poster.jpg" },
+  "nathalie-morere": { src: "/videos/nathalie.mp4", poster: "/videos/posters/nathalie-poster.jpg" },
+  "cruzz-taylor": { src: "/videos/taylor.mp4", poster: "/videos/posters/taylor-poster.jpg" },
 };
 
 type Props = { params: Promise<{ locale: Locale; slug: string }> };
@@ -61,9 +61,10 @@ export default async function CreatorPage({ params }: Props) {
             controls
             preload="metadata"
             playsInline
-            src={video}
+            src={video.src}
+            poster={video.poster}
             aria-label={`${t.meet} ${c.name}`}
-            className="aspect-video w-full rounded-xl bg-black object-contain"
+            className="mx-auto aspect-[9/16] w-full max-w-[360px] rounded-xl bg-black object-contain"
           />
         </section>
       )}

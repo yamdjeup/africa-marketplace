@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { pick, type Locale } from "@/lib/i18n";
 import { slugify } from "@/lib/category-rules";
 import { isExampleProduct } from "@/lib/examples";
-import { CREATOR_COUNTRY } from "@/data/creator-country";
+import { CREATOR_COUNTRIES } from "@/data/creator-country";
 
 export const PAGE_SIZE = 24;
 const NEW_DAYS = 60;
@@ -41,8 +41,7 @@ export type CreatorView = {
   slug: string;
   name: string;
   specialty: string;
-  countryKey: string | null;
-  countryLabel: string | null;
+  countries: { key: string; label: string }[];
   categories: string[];
   bio: string;
   image: string;
@@ -89,16 +88,14 @@ export function toProductView(p: ProductRow, locale: Locale): ProductView {
 const CATEGORY_ORDER = ["peinture", "sculpture", "photographie", "couture-mode", "bijoux", "textile-decoration"];
 
 export function toCreatorView(c: Creator, locale: Locale, cats: { slug: string; label: string }[] = []): CreatorView {
-  const country = CREATOR_COUNTRY[c.slug];
-  const countryLabel = country ? pick(locale, country.fr, country.en) : null;
+  const countries = (CREATOR_COUNTRIES[c.slug] ?? []).map((k) => ({ key: k.key, label: pick(locale, k.fr, k.en) }));
   const sorted = [...cats].sort((a, b) => CATEGORY_ORDER.indexOf(a.slug) - CATEGORY_ORDER.indexOf(b.slug));
   const type = sorted.length ? sorted.map((x) => x.label).join(", ") : pick(locale, c.specialty, c.specialtyEn);
   return {
     slug: c.slug,
     name: c.name,
     specialty: type,
-    countryKey: country?.key ?? null,
-    countryLabel,
+    countries,
     categories: sorted.map((x) => x.slug),
     bio: pick(locale, c.bio, c.bioEn),
     image: c.image,

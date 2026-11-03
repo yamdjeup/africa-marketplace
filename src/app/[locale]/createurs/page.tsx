@@ -27,11 +27,11 @@ export default async function CreatorsPage({
   const catOptions = cats.filter((c) => all.some((a) => a.categories.includes(c.slug)));
   const category = catOptions.some((c) => c.slug === sp.category) ? sp.category : undefined;
   const inCat = category ? all.filter((a) => a.categories.includes(category)) : all;
-  const countryOptions = [...new Map(inCat.filter((a) => a.countryKey).map((a) => [a.countryKey!, a.countryLabel!])).entries()].sort((a, b) =>
+  const countryOptions = [...new Map(inCat.flatMap((a) => a.countries).map((k) => [k.key, k.label] as const)).entries()].sort((a, b) =>
     a[1].localeCompare(b[1], locale),
   );
   const country = countryOptions.some(([k]) => k === sp.country) ? sp.country : undefined;
-  const creators = country ? inCat.filter((a) => a.countryKey === country) : inCat;
+  const creators = country ? inCat.filter((a) => a.countries.some((k) => k.key === country)) : inCat;
   const active = Boolean(category || country);
 
   const form = (

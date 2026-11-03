@@ -31,6 +31,7 @@ test.describe("Viewport mobile", () => {
 
   test("bascule de langue en mobile", async ({ page }) => {
     await page.goto("/fr");
+    await page.getByRole("button", { name: /Langue et région/ }).click();
     await page.getByRole("link", { name: "English" }).click();
     await expect(page).toHaveURL(/\/en$/);
   });

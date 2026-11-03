@@ -234,6 +234,16 @@ const fr = {
     home: "Retour à l'accueil",
     notFound: "Commande introuvable",
   },
+  region: {
+    open: "Langue et région",
+    close: "Fermer",
+    tabLanguage: "Langue",
+    tabRegion: "Région",
+    search: "Rechercher un pays",
+    none: "Aucun pays trouvé.",
+    note: "Conversion indicative : le paiement se fait toujours en EUR.",
+    languages: "Langue du site",
+  },
   account: {
     login: "Connexion",
     logout: "Se déconnecter",
@@ -519,6 +529,16 @@ const en: Dict = {
     to: "Simulated delivery to",
     home: "Back to home",
     notFound: "Order not found",
+  },
+  region: {
+    open: "Language and region",
+    close: "Close",
+    tabLanguage: "Language",
+    tabRegion: "Region",
+    search: "Search for a country",
+    none: "No country found.",
+    note: "Indicative conversion: payment is always in EUR.",
+    languages: "Site language",
   },
   account: {
     login: "Sign in",

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { useCart } from "@/lib/cart";
 import { formatEur, getDict, type Locale } from "@/lib/i18n";
+import { ApproxPrice } from "@/components/marketplace/approx-price";
 
 export function CartView({ locale }: { locale: Locale }) {
   const t = getDict(locale).cart;
@@ -40,7 +41,10 @@ export function CartView({ locale }: { locale: Locale }) {
                 <p className="text-xs text-muted-foreground">
                   {l.creatorName}
                 </p>
-                <p className="text-sm font-semibold">{formatEur(l.priceCents, locale)}</p>
+                <p className="text-sm font-semibold">
+                  {formatEur(l.priceCents, locale)}
+                  <ApproxPrice cents={l.priceCents} locale={locale} />
+                </p>
                 <div className="mt-auto flex items-center justify-between gap-2">
                   <div className="inline-flex items-center rounded-md border" role="group" aria-label={t.quantity}>
                     <button
@@ -81,7 +85,10 @@ export function CartView({ locale }: { locale: Locale }) {
       <aside className="h-fit space-y-4 rounded-lg border p-4">
         <p className="flex items-baseline justify-between text-lg">
           <span>{t.subtotal}</span>
-          <strong>{formatEur(totalCents, locale)}</strong>
+          <strong className="text-right">
+            {formatEur(totalCents, locale)}
+            <ApproxPrice cents={totalCents} locale={locale} />
+          </strong>
         </p>
         <p className="text-xs text-muted-foreground">{t.shippingNote}</p>
         <Link href={`/${locale}/checkout`} className={buttonVariants({ size: "lg", className: "h-12 w-full" })}>

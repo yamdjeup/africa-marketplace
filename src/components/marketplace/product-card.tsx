@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { FavoriteButton } from "@/components/marketplace/favorite-button";
 import type { ProductView } from "@/lib/catalog";
 import { formatEur, getDict, type Locale } from "@/lib/i18n";
+import { ApproxPrice } from "@/components/marketplace/approx-price";
 
 export function ProductCard({ product, locale, soldOut }: { product: ProductView; locale: Locale; soldOut?: string }) {
   const t = getDict(locale).product;
@@ -47,6 +48,7 @@ export function ProductCard({ product, locale, soldOut }: { product: ProductView
         <p className="font-semibold">
           {formatEur(product.priceCents, locale)}
           {soldOut && product.stock === 0 ? <span className="ml-2 text-xs text-destructive">{soldOut}</span> : null}
+          <ApproxPrice cents={product.priceCents} locale={locale} />
         </p>
       </CardContent>
     </Card>

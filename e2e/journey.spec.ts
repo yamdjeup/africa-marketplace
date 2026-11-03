@@ -32,6 +32,7 @@ test.describe.serial("Parcours client", () => {
     await expect(page.getByText("Démonstration privée").first()).toBeVisible();
     await expect(page.getByRole("link", { name: /E póm ta’/ }).first()).toBeVisible();
     await expect(page).toHaveTitle(/E póm ta’/);
+    await page.getByRole("button", { name: /Langue et région/ }).click();
     await page.getByRole("link", { name: "English" }).click();
     await expect(page).toHaveURL(/\/en$/);
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Afro-descendant visual artists");

@@ -1,7 +1,13 @@
 import NextAuth, { type DefaultSession } from "next-auth";
+import type { Provider } from "next-auth/providers";
 import Credentials from "next-auth/providers/credentials";
+import Apple from "next-auth/providers/apple";
+import Facebook from "next-auth/providers/facebook";
+import Google from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
+import { randomBytes } from "node:crypto";
 import { db } from "@/lib/db";
+import { SOCIAL_ENABLED } from "@/lib/social-providers";
 
 declare module "next-auth" {
   interface Session {
@@ -12,12 +18,20 @@ declare module "next-auth" {
 // Le secret vient de AUTH_SECRET (.env.local). Valeur de repli uniquement hors production.
 const secret = process.env.AUTH_SECRET ?? (process.env.NODE_ENV === "production" ? undefined : "dev-only-insecure-secret");
 
+// Fournisseurs sociaux : actifs seulement si leurs variables AUTH_<FOURNISSEUR>_ID / _SECRET existent.
+const socialProviders = [
+  SOCIAL_ENABLED.google && Google({ allowDangerousEmailAccountLinking: true }),
+  SOCIAL_ENABLED.facebook && Facebook({ allowDangerousEmailAccountLinking: true }),
+  SOCIAL_ENABLED.apple && Apple({ allowDangerousEmailAccountLinking: true }),
+].filter(Boolean) as Provider[];
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   secret,
   trustHost: true,
   session: { strategy: "jwt", maxAge: 60 * 60 * 24 * 30 },
   pages: { signIn: "/fr/login" },
   providers: [
+    ...socialProviders,
     Credentials({
       credentials: { email: {}, password: {} },
       async authorize(credentials) {
@@ -31,6 +45,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
+    // Connexion sociale : compte lié par e-mail (créé si absent, avec un mot de passe aléatoire inutilisable).
+    async signIn({ user, account }) {
+      if (!account || account.provider === "credentials") return true;
+      const email = user.email?.trim().toLowerCase();
+      if (!email) return false;
+      const existing = await db.user.findUnique({ where: { email } });
+      const row =
+        existing ??
+        (await db.user.create({
+          data: { email, name: user.name?.trim() || email.split("@")[0], passwordHash: await bcrypt.hash(randomBytes(32).toString("hex"), 10) },
+        }));
+      user.id = row.id;
+      return true;
+    },
     jwt({ token, user }) {
       if (user?.id) token.sub = user.id;
       return token;

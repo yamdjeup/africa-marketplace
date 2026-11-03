@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { auth, signIn, signOut } from "@/auth";
 import { db } from "@/lib/db";
 import { isLocale } from "@/lib/i18n";
+import { SOCIAL_ENABLED, SOCIAL_PROVIDERS, type SocialProvider } from "@/lib/social-providers";
 
 export type AuthState = { error?: "required" | "email" | "password" | "exists" | "invalid" | "current"; saved?: boolean; email?: string; name?: string };
 
@@ -57,6 +58,15 @@ export async function register(_prev: AuthState, formData: FormData): Promise<Au
 
   await db.user.create({ data: { name, email, passwordHash: await bcrypt.hash(password, 10) } });
   return credentialsSignIn(email, password, safeNext(text(formData, "next"), `/${locale}/account`), name);
+}
+
+export async function socialLogin(formData: FormData) {
+  const locale = localeOf(formData);
+  const provider = text(formData, "provider");
+  if (!SOCIAL_PROVIDERS.includes(provider as SocialProvider) || !SOCIAL_ENABLED[provider as SocialProvider]) {
+    redirect(`/${locale}/login`);
+  }
+  await signIn(provider, { redirectTo: safeNext(text(formData, "next"), `/${locale}/account`) });
 }
 
 export async function updateProfile(_prev: AuthState, formData: FormData): Promise<AuthState> {

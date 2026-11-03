@@ -27,6 +27,10 @@ export default async function CreatorPage({ params }: Props) {
   const { creator: c, products } = data;
   const t = getDict(locale).creator;
   const video = CREATOR_VIDEOS[slug];
+  const sentences = c.bio.match(/[^.!?]+[.!?]/g)?.map((s) => s.trim()) ?? [c.bio];
+  const excerpt = sentences[sentences.length - 1];
+  // La phrase citée à côté de la vidéo n'est pas répétée dans la bio affichée.
+  const bio = video && sentences.length > 1 ? sentences.slice(0, -1).join(" ") : c.bio;
 
   return (
     <div className="space-y-10">
@@ -43,7 +47,7 @@ export default async function CreatorPage({ params }: Props) {
         <div className="space-y-2">
           <h1 className="font-heading text-3xl text-primary">{c.name}</h1>
           <p className="text-xs uppercase tracking-wide text-terracotta">{c.specialty}</p>
-          <p className="max-w-prose pt-2">{c.bio}</p>
+          <p className="max-w-prose pt-2">{bio}</p>
           <p className="text-xs text-muted-foreground">
             {t.bioSource}.{" "}
             <a href={c.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">
@@ -66,14 +70,22 @@ export default async function CreatorPage({ params }: Props) {
             aria-label={`${t.meet} ${c.name}`}
             className="aspect-[9/16] w-full max-w-[320px] shrink-0 rounded-xl bg-black object-contain md:w-[340px] md:max-w-none"
           />
-          <div className="space-y-3 text-center md:text-left">
+          <div className="min-w-0 flex-1 space-y-4 text-center md:text-left">
             <h2 id="meet" className="font-heading text-2xl text-primary">
               {t.meet} {c.name}
             </h2>
             <p className="max-w-prose">{t.meetIntro}</p>
-            <a href="#pieces" className="inline-block text-sm text-terracotta underline underline-offset-4">
-              {t.pieces} ↓
-            </a>
+            <figure className="space-y-1">
+              <blockquote className="font-heading text-lg italic leading-snug text-primary">
+                <span aria-hidden className="mr-1 text-3xl leading-none text-accent">
+                  “
+                </span>
+                {excerpt}
+                <span aria-hidden className="ml-1 text-3xl leading-none text-accent">
+                  ”
+                </span>
+              </blockquote>
+            </figure>
           </div>
         </section>
       )}

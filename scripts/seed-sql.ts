@@ -18,7 +18,7 @@ const out: string[] = [
   "-- E póm ta’ — chargement des données (généré par `npm run db:seed-sql`, ne pas modifier à la main).",
   "-- Idempotent : peut être exécuté plusieurs fois. À coller dans Neon > SQL Editor.",
   "BEGIN;",
-  upsert("Category", ["slug", "name", "nameEn"], categories.map((c) => [str(c.slug), str(c.name), str(c.nameEn)]), "slug"),
+  upsert("Category", ["slug", "name", "nameEn", "sortOrder"], categories.map((c) => [str(c.slug), str(c.name), str(c.nameEn), String(c.sortOrder)]), "slug"),
   upsert(
     "Creator",
     ["slug", "name", "specialty", "specialtyEn", "bio", "bioEn", "image", "sourceUrl"],
@@ -28,7 +28,9 @@ const out: string[] = [
 ];
 
 const base = Date.UTC(2026, 9, 1);
-const cols = ["slug", "name", "nameEn", "description", "descriptionEn", "story", "storyEn", "categorySlug", "creatorSlug", "priceCents", "materials", "sizes", "dimensions", "stock", "images", "createdAt"];
+const cols = ["slug", "name", "nameEn", "description", "descriptionEn", "story", "storyEn", "categorySlug", "creatorSlug", "priceCents", "materials", "sizes", "dimensions", "material", "materialEn", "technique", "techniqueEn", "country", "countryEn", "region", "regionEn", "widthCm", "heightCm", "depthCm", "careInstructions", "careInstructionsEn", "hasCertificate", "stock", "images", "createdAt"];
+const sn = (v?: string) => (v ? str(v) : "NULL");
+const nn = (v?: number) => (v === undefined ? "NULL" : String(v));
 out.push(
   upsert(
     "Product",
@@ -36,7 +38,12 @@ out.push(
     products.map((p, i) => [
       str(p.slug), str(p.name), str(p.nameEn), str(p.description), str(p.descriptionEn), str(p.story), str(p.storyEn),
       str(p.category), str(p.creatorSlug), String(p.priceCents), json(p.materials), json(p.sizes),
-      p.dimensions ? str(p.dimensions) : "NULL", String(p.stock), json(p.images),
+      p.dimensions ? str(p.dimensions) : "NULL",
+      sn(p.material?.fr), sn(p.material?.en), sn(p.technique?.fr), sn(p.technique?.en),
+      sn(p.country?.fr), sn(p.country?.en), sn(p.region?.fr), sn(p.region?.en),
+      nn(p.widthCm), nn(p.heightCm), nn(p.depthCm),
+      sn(p.careInstructions?.fr), sn(p.careInstructions?.en), String(p.hasCertificate),
+      String(p.stock), json(p.images),
       `'${new Date(base - i * 86_400_000).toISOString()}'::timestamp`,
     ]),
     "slug",

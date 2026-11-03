@@ -13,8 +13,17 @@ type ArtworkInput = {
   eur: number;
   materials: Pair[];
   dimensions?: string;
+  material?: Pair;
+  technique?: Pair;
+  country?: Pair;
+  region?: Pair;
+  widthCm?: number;
+  heightCm?: number;
+  depthCm?: number;
   creatorSlug: string;
 };
+
+const bi = (p?: Pair): Bilingual | undefined => (p ? { fr: p[0], en: p[1] } : undefined);
 
 function build(input: ArtworkInput): Product {
   const materials: Bilingual[] = input.materials.map(([fr, en]) => ({ fr, en }));
@@ -31,6 +40,14 @@ function build(input: ArtworkInput): Product {
     materials,
     sizes: [],
     dimensions: input.dimensions,
+    material: bi(input.material),
+    technique: bi(input.technique),
+    country: bi(input.country),
+    region: bi(input.region),
+    widthCm: input.widthCm,
+    heightCm: input.heightCm,
+    depthCm: input.depthCm,
+    hasCertificate: true,
     stock: 1,
     images: [`/images/artworks/${input.file}.jpg`],
     creatorSlug: input.creatorSlug,
@@ -54,6 +71,25 @@ const KENOF_STORY: Pair = [
 ];
 const PAINTING: Pair = ["Peinture", "Painting"];
 const CERAMIC: Pair = ["Céramique", "Ceramics"];
+const CELANIE_EXTRA = {
+  technique: ["Acrylique, café et graphite", "Acrylic, coffee and graphite"] as Pair,
+  material: ["Papier Arches", "Arches paper"] as Pair,
+  country: ["Guadeloupe", "Guadeloupe"] as Pair,
+  region: ["Caraïbes", "Caribbean"] as Pair,
+};
+const TAYLOR_EXTRA = {
+  technique: ["Tirage photographique", "Photographic print"] as Pair,
+  material: ["Dibond", "Dibond"] as Pair,
+  widthCm: 60,
+  heightCm: 90,
+};
+const MORERE_EXTRA = { material: CERAMIC };
+const KENOF_EXTRA = {
+  technique: PAINTING,
+  country: ["Cameroun", "Cameroon"] as Pair,
+  region: ["Afrique centrale", "Central Africa"] as Pair,
+};
+const PADUA_EXTRA = { technique: PAINTING };
 
 const inputs: ArtworkInput[] = [
   {
@@ -65,7 +101,7 @@ const inputs: ArtworkInput[] = [
       "Profile portrait whose hair and face are covered in small written characters, on a black ground scattered with dots.",
     ],
     story: CELANIE_SERIES,
-    category: "dessin",
+    category: "peinture",
     eur: 1800,
     materials: [CELANIE_TECH],
     creatorSlug: "aurelie-victoire-celanie",
@@ -79,7 +115,7 @@ const inputs: ArtworkInput[] = [
       "Silhouette whose bust and ochre hair are made of text, in front of a dark nocturnal landscape. Light wood frame.",
     ],
     story: CELANIE_SERIES,
-    category: "dessin",
+    category: "peinture",
     eur: 1800,
     materials: [CELANIE_TECH],
     creatorSlug: "aurelie-victoire-celanie",
@@ -141,7 +177,7 @@ const inputs: ArtworkInput[] = [
       "Ces formes semblent provenir d'une civilisation réelle ou imaginaire (Nathalie Morere, G3A Visual Arts 2026).",
       "These forms seem to come from a real or imaginary civilisation (Nathalie Morere, G3A Visual Arts 2026).",
     ],
-    category: "sculpture-ceramique",
+    category: "sculpture",
     eur: 1400,
     materials: [CERAMIC],
     creatorSlug: "nathalie-morere",
@@ -158,7 +194,7 @@ const inputs: ArtworkInput[] = [
       "Entre mémoire et transmission, une pièce qui interroge ce que nous conservons ou reconstruisons de nos héritages.",
       "Between memory and transmission, a piece that questions what we preserve or rebuild from our heritage.",
     ],
-    category: "sculpture-ceramique",
+    category: "sculpture",
     eur: 950,
     materials: [CERAMIC],
     creatorSlug: "nathalie-morere",
@@ -261,4 +297,12 @@ const inputs: ArtworkInput[] = [
   },
 ];
 
-export const products: Product[] = inputs.map(build);
+const EXTRAS: Record<string, Partial<ArtworkInput>> = {
+  "aurelie-victoire-celanie": CELANIE_EXTRA,
+  "cruzz-taylor": TAYLOR_EXTRA,
+  "nathalie-morere": MORERE_EXTRA,
+  kenof: KENOF_EXTRA,
+  "paula-padua-nogueira": PADUA_EXTRA,
+};
+
+export const products: Product[] = inputs.map((i) => build({ ...i, ...EXTRAS[i.creatorSlug] }));

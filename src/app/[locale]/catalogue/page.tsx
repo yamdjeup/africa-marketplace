@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ProductCard } from "@/components/marketplace/product-card";
+import { Breadcrumb } from "@/components/marketplace/breadcrumb";
+import { ruleFor, SIZE_OPTIONS } from "@/lib/category-rules";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { getFilterOptions, searchProducts, type CatalogParams } from "@/lib/catalog";
 import { getDict, type Locale } from "@/lib/i18n";
@@ -36,6 +38,10 @@ export default async function CatalogPage({
     q: first(sp.q),
     category: first(sp.category),
     artist: first(sp.artist),
+    material: first(sp.material),
+    technique: first(sp.technique),
+    country: first(sp.country),
+    size: first(sp.size),
     min: num(first(sp.min)),
     max: num(first(sp.max)),
     sort: sortRaw === "price-asc" || sortRaw === "price-desc" ? sortRaw : "new",
@@ -44,8 +50,13 @@ export default async function CatalogPage({
 
   const [{ items, total, page, pages }, options] = await Promise.all([
     searchProducts(query, locale),
-    getFilterOptions(locale),
+    getFilterOptions(locale, query.category),
   ]);
+  const categoryLabel = options.categories.find((c) => c.value === query.category)?.label;
+  const crumbs = [
+    { label: t.home, href: `/${locale}` },
+    ...(categoryLabel ? [{ label: t.title, href: `/${locale}/catalogue` }, { label: categoryLabel }] : [{ label: t.title }]),
+  ];
 
   const hrefFor = (p: number) => {
     const qs = new URLSearchParams();
@@ -56,12 +67,17 @@ export default async function CatalogPage({
     return `/${locale}/catalogue${s ? `?${s}` : ""}`;
   };
 
-  const filtersActive = Boolean(query.q || query.category || query.artist || query.min !== undefined || query.max !== undefined);
+  const filtersActive = Boolean(
+    query.q || query.category || query.artist || query.material || query.technique || query.country || query.size ||
+      query.min !== undefined || query.max !== undefined,
+  );
+  const onlyCategory = Boolean(query.category) && !query.q && !query.artist && !query.material && !query.technique && !query.country && !query.size && query.min === undefined && query.max === undefined;
 
   return (
     <div className="space-y-6">
+      <Breadcrumb items={crumbs} label={t.breadcrumb} />
       <div className="flex items-end justify-between gap-4">
-        <h1 className="font-heading text-3xl text-primary">{t.title}</h1>
+        <h1 className="font-heading text-3xl text-primary">{categoryLabel ?? t.title}</h1>
         <p className="text-sm text-muted-foreground" aria-live="polite">
           {t.results(total)}
         </p>
@@ -79,8 +95,8 @@ export default async function CatalogPage({
 
       {items.length === 0 ? (
         <div className="rounded-lg border border-dashed p-10 text-center">
-          <p className="font-heading text-xl">{t.empty}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{t.emptyHint}</p>
+          <p className="font-heading text-xl">{onlyCategory ? t.emptyCategory : t.empty}</p>
+          {!onlyCategory && <p className="mt-1 text-sm text-muted-foreground">{t.emptyHint}</p>}
           <Link href={`/${locale}/catalogue`} className={buttonVariants({ variant: "outline", className: "mt-4" })}>
             {t.reset}
           </Link>
@@ -132,8 +148,22 @@ function Filters({
   const t = getDict(locale).catalog;
   const id = (name: string) => `f-${prefix}-${name}`;
   const ids = { q: id("q"), cat: id("cat"), artist: id("artist"), min: id("min"), max: id("max"), sort: id("sort") };
+  const sizeKind = ruleFor(query.category).sizeKind;
+  const facets: { name: string; label: string; value?: string; options: { value: string; label: string }[] }[] = [
+    { name: "material", label: t.material, value: query.material, options: options.materials },
+    { name: "technique", label: t.technique, value: query.technique, options: options.techniques },
+    { name: "country", label: t.country, value: query.country, options: options.countries },
+    ...(sizeKind
+      ? [{
+          name: "size",
+          label: sizeKind === "ring" ? t.sizeRing : t.size,
+          value: query.size,
+          options: SIZE_OPTIONS[sizeKind].map((s) => ({ value: s, label: s })),
+        }]
+      : []),
+  ];
   return (
-    <form method="get" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+    <form method="get" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <div className="space-y-1 lg:col-span-2">
         <label htmlFor={ids.q} className="text-xs font-medium">{t.search}</label>
         <input id={ids.q} name="q" type="search" defaultValue={query.q} placeholder={t.searchPlaceholder} className={fieldClass} />
@@ -148,7 +178,7 @@ function Filters({
         </select>
       </div>
       <div className="space-y-1">
-        <label htmlFor={ids.artist} className="text-xs font-medium">{t.country}</label>
+        <label htmlFor={ids.artist} className="text-xs font-medium">{t.artist}</label>
         <select id={ids.artist} name="artist" defaultValue={query.artist ?? ""} className={fieldClass}>
           <option value="">{t.all}</option>
           {options.artists.map((c) => (
@@ -156,6 +186,19 @@ function Filters({
           ))}
         </select>
       </div>
+      {facets.map((f) =>
+        f.options.length > 0 ? (
+          <div key={f.name} className="space-y-1">
+            <label htmlFor={id(f.name)} className="text-xs font-medium">{f.label}</label>
+            <select id={id(f.name)} name={f.name} defaultValue={f.value ?? ""} className={fieldClass}>
+              <option value="">{f.name === "country" || f.name === "size" ? t.all : t.allF}</option>
+              {f.options.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+          </div>
+        ) : null,
+      )}
       <fieldset className="space-y-1">
         <legend className="text-xs font-medium">{t.price}</legend>
         <div className="flex gap-2">
@@ -171,7 +214,7 @@ function Filters({
           <option value="price-desc">{t.sortPriceDesc}</option>
         </select>
       </div>
-      <div className="flex items-end gap-2 sm:col-span-2 lg:col-span-6">
+      <div className="flex items-end gap-2 sm:col-span-2 lg:col-span-4">
         <Button type="submit" className="h-11">{t.apply}</Button>
         <Link href={`/${locale}/catalogue`} className={buttonVariants({ variant: "ghost", className: "h-11" })}>
           {t.reset}

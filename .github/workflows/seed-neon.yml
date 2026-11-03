@@ -17,7 +17,7 @@ jobs:
         run: test -n "$NEON_DATABASE_URL" || { echo "Secret NEON_DATABASE_URL absent"; exit 1; }
       - name: Charger prisma/seed.neon.sql
         run: psql "$NEON_DATABASE_URL" -v ON_ERROR_STOP=1 -f prisma/seed.neon.sql > /dev/null
-      - name: Compter les lignes (attendu 4, 5, 13)
+      - name: Compter les lignes (attendu 6, 5, 13)
         run: |
           psql "$NEON_DATABASE_URL" -v ON_ERROR_STOP=1 -At -c \
             'select (select count(*) from "Category") as categories, (select count(*) from "Creator") as artistes, (select count(*) from "Product") as oeuvres;'

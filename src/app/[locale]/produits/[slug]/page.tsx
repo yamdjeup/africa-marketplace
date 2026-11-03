@@ -5,6 +5,8 @@ import { AddToCart } from "@/components/marketplace/add-to-cart";
 import { ProductCard } from "@/components/marketplace/product-card";
 import { ProductGallery } from "@/components/marketplace/product-gallery";
 import { Badge } from "@/components/ui/badge";
+import { Breadcrumb } from "@/components/marketplace/breadcrumb";
+import { ruleFor } from "@/lib/category-rules";
 import { getCreatorWithProducts, getProduct } from "@/lib/catalog";
 import { formatEur, getDict, type Locale } from "@/lib/i18n";
 
@@ -23,10 +25,24 @@ export default async function ProductPage({ params }: Props) {
   if (!data) notFound();
   const { product: p, creator, categoryLabel } = data;
   const t = getDict(locale).product;
+  const rule = ruleFor(p.categorySlug);
+  const sizeKind = rule.sizeKind;
+  const cm = [p.widthCm, p.heightCm, p.depthCm].filter((v): v is number => v != null).join(" × ");
+  const cmLabel = cm ? `${cm} ${t.cmUnit}` : "";
+  const catalogT = getDict(locale).catalog;
   const more = (await getCreatorWithProducts(creator.slug, locale))?.products.filter((x) => x.slug !== p.slug).slice(0, 4) ?? [];
 
   return (
     <div className="space-y-12">
+      <Breadcrumb
+        label={catalogT.breadcrumb}
+        items={[
+          { label: catalogT.home, href: `/${locale}` },
+          { label: catalogT.title, href: `/${locale}/catalogue` },
+          { label: categoryLabel, href: `/${locale}/catalogue?category=${p.categorySlug}` },
+          { label: p.name },
+        ]}
+      />
       <div className="grid gap-6 md:grid-cols-[3fr_2fr] md:gap-10">
         <ProductGallery images={p.images} name={p.name} label={t.gallery} />
         <div className="space-y-5">
@@ -57,17 +73,61 @@ export default async function ProductPage({ params }: Props) {
             image={p.images[0]}
             priceCents={p.priceCents}
             stock={p.stock}
+            sizes={sizeKind ? p.sizes : []}
+            sizeLabel={sizeKind === "ring" ? t.sizeRing : t.size}
           />
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 border-t pt-4 text-sm">
-            <dt className="font-medium">{t.materials}</dt>
-            <dd>{p.materials.join(", ")}</dd>
-            {p.dimensions && (
+            {p.material && (
+              <>
+                <dt className="font-medium">{t.material}</dt>
+                <dd>{p.material}</dd>
+              </>
+            )}
+            {p.technique && (
+              <>
+                <dt className="font-medium">{t.technique}</dt>
+                <dd>{p.technique}</dd>
+              </>
+            )}
+            {!p.material && !p.technique && (
+              <>
+                <dt className="font-medium">{t.materials}</dt>
+                <dd>{p.materials.join(", ")}</dd>
+              </>
+            )}
+            {p.origin && (
+              <>
+                <dt className="font-medium">{t.origin}</dt>
+                <dd>{p.origin}</dd>
+              </>
+            )}
+            {rule.dimensions && cm && (
+              <>
+                <dt className="font-medium">{t.dimensions}</dt>
+                <dd>{cmLabel}</dd>
+              </>
+            )}
+            {rule.dimensions && !cm && p.dimensions && (
               <>
                 <dt className="font-medium">{t.dimensions}</dt>
                 <dd>{p.dimensions}</dd>
               </>
             )}
           </dl>
+          {p.hasCertificate && (
+            <p className="flex items-center gap-2 rounded-md border border-secondary/60 bg-secondary/10 px-3 py-2 text-sm">
+              <span aria-hidden="true">✓</span>
+              {t.certificate}
+            </p>
+          )}
+          {rule.care && p.careInstructions && (
+            <section aria-labelledby="care" className="space-y-1 text-sm">
+              <h2 id="care" className="font-medium">
+                {t.care}
+              </h2>
+              <p className="text-muted-foreground">{p.careInstructions}</p>
+            </section>
+          )}
         </div>
       </div>
 

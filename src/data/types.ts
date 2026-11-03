@@ -4,7 +4,13 @@
  * centimes d'EUR. Les prix sont fictifs ; les biographies sont celles de G3A.
  */
 
-export type CategorySlug = "peinture" | "photographie" | "sculpture-ceramique" | "dessin";
+export type CategorySlug =
+  | "peinture"
+  | "sculpture"
+  | "couture-mode"
+  | "bijoux"
+  | "textile-decoration"
+  | "photographie";
 
 export type Bilingual = { fr: string; en: string };
 
@@ -12,6 +18,8 @@ export type Category = {
   slug: CategorySlug;
   name: string;
   nameEn: string;
+  /** Ordre d'affichage (menu, filtres). */
+  sortOrder: number;
 };
 
 export type Creator = {
@@ -43,9 +51,20 @@ export type Product = {
   priceCents: number;
   /** Technique(s) : ex. « Acrylique, café, graphite sur papier Arches ». */
   materials: Bilingual[];
-  /** Toujours vide : œuvres sans déclinaison de taille. */
+  /** Tailles proposées (S/M/L, tour de doigt) ; vide pour une pièce unique sans taille. */
   sizes: string[];
   dimensions?: string;
+  /** Matière principale (filtre) et technique ; omis si inconnus. */
+  material?: Bilingual;
+  technique?: Bilingual;
+  /** Origine géographique ; omise si non documentée. */
+  country?: Bilingual;
+  region?: Bilingual;
+  widthCm?: number;
+  heightCm?: number;
+  depthCm?: number;
+  careInstructions?: Bilingual;
+  hasCertificate: boolean;
   /** Pièce unique : stock = 1. */
   stock: number;
   /** Chemins publics des photos de l'œuvre. */

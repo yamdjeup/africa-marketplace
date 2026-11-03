@@ -20,13 +20,13 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           <span className="block text-[10px] font-normal leading-none text-muted-foreground">{t.brandMeaning}</span>
         </Link>
         <nav aria-label={t.nav.main} className="order-3 flex w-full items-center gap-4 text-sm md:order-none md:w-auto md:gap-6">
-          <Link href={`/${locale}/catalogue`} className="inline-flex min-h-11 items-center hover:text-terracotta">
+          <Link href={`/${locale}/catalogue`} className="hidden min-h-11 items-center hover:text-terracotta md:inline-flex">
             {t.nav.catalog}
           </Link>
-          <Link href={`/${locale}/createurs`} className="inline-flex min-h-11 items-center hover:text-terracotta">
+          <Link href={`/${locale}/createurs`} className="hidden min-h-11 items-center hover:text-terracotta md:inline-flex">
             {t.nav.creators}
           </Link>
-          <form action={`/${locale}/catalogue`} role="search" className="ml-auto flex md:ml-0">
+          <form action={`/${locale}/catalogue`} role="search" className="flex w-full md:w-auto">
             <label htmlFor="header-search" className="sr-only">
               {t.nav.search}
             </label>
@@ -34,8 +34,8 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
               id="header-search"
               name="q"
               type="search"
-              placeholder={t.nav.search}
-              className="h-11 w-32 rounded-md border bg-background px-3 text-sm sm:w-44"
+              placeholder={t.f4.searchPlaceholder}
+              className="h-11 w-full rounded-md border bg-background px-3 text-sm md:w-52"
             />
           </form>
         </nav>

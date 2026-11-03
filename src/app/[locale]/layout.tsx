@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import { notFound } from "next/navigation";
 import { SiteFooter } from "@/components/marketplace/site-footer";
+import { auth } from "@/auth";
+import { MobileTabBar } from "@/components/marketplace/mobile-tab-bar";
 import { SiteHeader } from "@/components/marketplace/site-header";
 import { CartProvider } from "@/lib/cart";
 import { FavoritesProvider } from "@/lib/favorites";
@@ -62,6 +64,7 @@ export default async function LocaleLayout({
             {children}
           </main>
           <SiteFooter locale={locale} />
+          <MobileTabBar locale={locale} loggedIn={Boolean((await auth())?.user)} />
           </FavoritesProvider>
         </CartProvider>
       </body>

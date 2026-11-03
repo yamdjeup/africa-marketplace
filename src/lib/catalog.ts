@@ -143,14 +143,21 @@ export async function searchProducts(params: CatalogParams, locale: Locale) {
 
   // Filtres matière/technique/pays/taille et recherche texte en JS (portable SQLite/PostgreSQL ; catalogue de taille modeste).
   const q = params.q ? normalize(params.q.trim()) : "";
+  const cats = q ? await db.category.findMany() : [];
+  const catText = new Map(cats.map((c) => [c.slug, `${c.name} ${c.nameEn}`]));
   const matched = rows.filter((p) => {
     if (params.material && !(p.material && slugify(p.material) === params.material)) return false;
     if (params.technique && !(p.technique && slugify(p.technique) === params.technique)) return false;
     if (params.country && !(p.country && slugify(p.country) === params.country)) return false;
     if (params.size && !strings(p.sizes).includes(params.size)) return false;
     if (!q) return true;
+    const artistCountries = (CREATOR_COUNTRIES[p.creatorSlug] ?? []).map((c) => `${c.fr} ${c.en}`);
     return normalize(
-      [p.name, p.nameEn, p.description, p.descriptionEn, p.creator.name, JSON.stringify(p.materials)].join(" "),
+      [
+        p.name, p.nameEn, p.description, p.descriptionEn, p.creator.name, JSON.stringify(p.materials),
+        p.country, p.countryEn, p.technique, p.techniqueEn, p.material, p.materialEn,
+        catText.get(p.categorySlug), ...artistCountries,
+      ].filter(Boolean).join(" "),
     ).includes(q);
   });
 

@@ -209,3 +209,38 @@ export async function getCategories(locale: Locale) {
   const rows = await db.category.findMany({ orderBy: { sortOrder: "asc" } });
   return rows.map((c) => ({ slug: c.slug, label: pick(locale, c.name, c.nameEn) }));
 }
+
+/** Une bannière par catégorie : visuel de l'œuvre la plus récente et nombre d'œuvres (0 = catégorie vide). */
+export async function getCategoryShowcase(locale: Locale) {
+  const [cats, rows] = await Promise.all([
+    db.category.findMany({ orderBy: { sortOrder: "asc" } }),
+    db.product.findMany({ orderBy: { createdAt: "desc" }, select: { categorySlug: true, images: true, name: true, nameEn: true } }),
+  ]);
+  return cats.map((c) => {
+    const own = rows.filter((r) => r.categorySlug === c.slug);
+    return {
+      slug: c.slug,
+      label: pick(locale, c.name, c.nameEn),
+      count: own.length,
+      image: own[0] ? (strings(own[0].images)[0] ?? null) : null,
+      imageAlt: own[0] ? pick(locale, own[0].name, own[0].nameEn) : "",
+    };
+  });
+}
+
+/** Œuvres proches : même artiste d'abord, puis même catégorie, puis même matière ; hors œuvre courante. */
+export async function getRelatedProducts(slug: string, locale: Locale, take = 4) {
+  const cur = await db.product.findUnique({ where: { slug } });
+  if (!cur) return [];
+  const rows = await db.product.findMany({ where: { slug: { not: slug } }, include: withCreator, orderBy: { createdAt: "desc" } });
+  const score = (p: Product) =>
+    (p.creatorSlug === cur.creatorSlug ? 4 : 0) +
+    (p.categorySlug === cur.categorySlug ? 2 : 0) +
+    (p.material && p.material === cur.material ? 1 : 0);
+  return rows
+    .map((p) => ({ p, s: score(p) }))
+    .filter((x) => x.s > 0)
+    .sort((a, b) => b.s - a.s)
+    .slice(0, take)
+    .map((x) => toProductView(x.p, locale));
+}

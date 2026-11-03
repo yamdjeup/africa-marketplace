@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Breadcrumb } from "@/components/marketplace/breadcrumb";
 import { FavoriteButton } from "@/components/marketplace/favorite-button";
 import { ruleFor } from "@/lib/category-rules";
-import { getCreatorWithProducts, getProduct } from "@/lib/catalog";
+import { getProduct, getRelatedProducts } from "@/lib/catalog";
 import { formatEur, getDict, type Locale } from "@/lib/i18n";
 
 type Props = { params: Promise<{ locale: Locale; slug: string }> };
@@ -31,7 +31,7 @@ export default async function ProductPage({ params }: Props) {
   const cm = [p.widthCm, p.heightCm, p.depthCm].filter((v): v is number => v != null).join(" × ");
   const cmLabel = cm ? `${cm} ${t.cmUnit}` : "";
   const catalogT = getDict(locale).catalog;
-  const more = (await getCreatorWithProducts(creator.slug, locale))?.products.filter((x) => x.slug !== p.slug).slice(0, 4) ?? [];
+  const more = await getRelatedProducts(p.slug, locale, 4);
 
   return (
     <div className="space-y-12">

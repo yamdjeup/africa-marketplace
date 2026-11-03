@@ -7,6 +7,7 @@ export type OrderEmailInput = {
   fullName: string;
   items: { name: string; quantity: number; unitPriceCents: number }[];
   totalCents: number;
+  shipping?: { lines: string[]; phone: string; editUrl?: string };
 };
 
 const SEND_TIMEOUT_MS = 8000;
@@ -27,6 +28,10 @@ export function buildOrderEmail(o: OrderEmailInput) {
         num: "Numéro de commande",
         works: "Œuvres",
         total: "Total",
+        shipTo: "Adresse de livraison",
+        phone: "Téléphone",
+        mistake: "Une erreur ? Modifiez l'adresse tant que la commande n'est pas expédiée, ou contactez-nous.",
+        edit: "Modifier l'adresse",
         bye: "Démonstration privée — prix fictifs de démonstration.",
       }
     : {
@@ -37,10 +42,23 @@ export function buildOrderEmail(o: OrderEmailInput) {
         num: "Order number",
         works: "Artworks",
         total: "Total",
+        shipTo: "Delivery address",
+        phone: "Phone",
+        mistake: "A mistake? Edit the address until the order has shipped, or contact us.",
+        edit: "Edit address",
         bye: "Private demonstration — fictional demo prices.",
       };
   const lines = o.items.map((i) => `${i.name} × ${i.quantity} — ${money(i.unitPriceCents * i.quantity)}`);
-  const text = [t.hello, "", t.intro, t.notice, "", `${t.num} : ${o.number}`, `${t.works} :`, ...lines.map((l) => `- ${l}`), "", `${t.total} : ${money(o.totalCents)}`, "", t.bye].join("\n");
+  const ship = o.shipping;
+  const shipText = ship
+    ? ["", `${t.shipTo} :`, ...ship.lines, `${t.phone} : ${ship.phone}`, t.mistake, ...(ship.editUrl ? [`${t.edit} : ${ship.editUrl}`] : [])]
+    : [];
+  const shipHtml = ship
+    ? `<p>${esc(t.shipTo)} :<br><strong>${ship.lines.map(esc).join("<br>")}</strong><br>${esc(t.phone)} : ${esc(ship.phone)}</p><p style="font-size:13px">${esc(t.mistake)}${
+        ship.editUrl ? ` <a href="${esc(ship.editUrl)}">${esc(t.edit)}</a>` : ""
+      }</p>`
+    : "";
+  const text = [t.hello, "", t.intro, t.notice, "", `${t.num} : ${o.number}`, `${t.works} :`, ...lines.map((l) => `- ${l}`), "", `${t.total} : ${money(o.totalCents)}`, ...shipText, "", t.bye].join("\n");
   const html = `<div style="font-family:Georgia,serif;color:#1c3060;background:#faf6ee;padding:24px;max-width:560px">
 <h1 style="font-size:22px;margin:0 0 16px">E póm ta’</h1>
 <p>${esc(t.hello)}</p><p>${esc(t.intro)}</p>
@@ -48,6 +66,7 @@ export function buildOrderEmail(o: OrderEmailInput) {
 <p>${esc(t.num)} : <strong>${esc(o.number)}</strong></p>
 <p>${esc(t.works)} :</p><ul>${lines.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>
 <p><strong>${esc(t.total)} : ${esc(money(o.totalCents))}</strong></p>
+${shipHtml}
 <p style="font-size:12px;opacity:.7">${esc(t.bye)}</p></div>`;
   return { subject: t.subject, text, html };
 }

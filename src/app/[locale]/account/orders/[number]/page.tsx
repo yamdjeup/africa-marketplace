@@ -7,6 +7,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { db } from "@/lib/db";
 import { formatEur, getDict, type Locale } from "@/lib/i18n";
 import { simulatedStatus } from "@/lib/order-status";
+import { isAddressEditable } from "@/lib/order-edit";
 
 type Props = { params: Promise<{ locale: Locale; number: string }> };
 
@@ -64,7 +65,13 @@ export default async function OrderDetailPage({ params }: Props) {
         </p>
         <p className="text-sm text-muted-foreground">
           {t.shipTo} {order.fullName}, {order.address}, {order.postalCode} {order.city}, {order.country}
+          {order.phone ? ` — ${order.phone}` : ""}
         </p>
+        {isAddressEditable(order.createdAt) && (
+          <Link href={`/${locale}/checkout/confirmation/${order.number}/address`} className="inline-flex min-h-11 items-center text-sm underline underline-offset-4 hover:text-terracotta">
+            {getDict(locale).confirmation.editAddress}
+          </Link>
+        )}
       </section>
       <Link href={`/${locale}/account/orders`} className={buttonVariants({ variant: "outline" })}>
         {t.back}

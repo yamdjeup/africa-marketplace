@@ -5,10 +5,15 @@ import { ProductCard } from "@/components/marketplace/product-card";
 import { getCreatorWithProducts } from "@/lib/catalog";
 import { getDict, type Locale } from "@/lib/i18n";
 
-const CREATOR_VIDEOS: Record<string, { src: string; poster: string }> = {
-  kenof: { src: "/videos/kenof.mp4", poster: "/videos/posters/kenof-poster.jpg" },
-  "nathalie-morere": { src: "/videos/nathalie.mp4", poster: "/videos/posters/nathalie-poster.jpg" },
-  "cruzz-taylor": { src: "/videos/taylor.mp4", poster: "/videos/posters/taylor-poster.jpg" },
+const VIDEO_LAYOUT = {
+  portrait: "aspect-[9/16] w-full max-w-[320px] md:w-[340px] md:max-w-none",
+  landscape: "aspect-video w-full md:w-[600px] md:max-w-[60%]",
+} as const;
+
+const CREATOR_VIDEOS: Record<string, { src: string; poster: string; orientation: keyof typeof VIDEO_LAYOUT }> = {
+  kenof: { src: "/videos/kenof.mp4", poster: "/videos/posters/kenof-poster.jpg", orientation: "landscape" },
+  "nathalie-morere": { src: "/videos/nathalie.mp4", poster: "/videos/posters/nathalie-poster.jpg", orientation: "portrait" },
+  "cruzz-taylor": { src: "/videos/taylor.mp4", poster: "/videos/posters/taylor-poster.jpg", orientation: "portrait" },
 };
 
 type Props = { params: Promise<{ locale: Locale; slug: string }> };
@@ -68,7 +73,7 @@ export default async function CreatorPage({ params }: Props) {
             src={video.src}
             poster={video.poster}
             aria-label={`${t.meet} ${c.name}`}
-            className="aspect-[9/16] w-full max-w-[320px] shrink-0 rounded-xl bg-black object-contain md:w-[340px] md:max-w-none"
+            className={`${VIDEO_LAYOUT[video.orientation]} shrink-0 rounded-xl bg-black object-contain`}
           />
           <div className="min-w-0 flex-1 space-y-4 text-center md:text-left">
             <h2 id="meet" className="font-heading text-2xl text-primary">
@@ -85,11 +90,7 @@ export default async function CreatorPage({ params }: Props) {
                   ”
                 </span>
               </blockquote>
-              <figcaption className="text-xs text-muted-foreground">{t.excerptFrom}</figcaption>
             </figure>
-            <a href="#pieces" className="inline-block text-sm text-terracotta underline underline-offset-4">
-              {t.pieces} ↓
-            </a>
           </div>
         </section>
       )}

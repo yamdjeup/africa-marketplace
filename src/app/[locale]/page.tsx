@@ -4,19 +4,18 @@ import { CreatorCard } from "@/components/marketplace/creator-card";
 import { ProductCard } from "@/components/marketplace/product-card";
 import { buttonVariants } from "@/components/ui/button";
 import { CREATOR_VIDEO_SHOWCASE } from "@/data/creator-videos";
-import { getCategoryShowcase, getCreators, getFeaturedProducts, getHeroProduct, getSiteStats } from "@/lib/catalog";
+import { getCategoryShowcase, getCreators, getFeaturedProducts, getHeroProduct } from "@/lib/catalog";
 import { getDict, type Locale } from "@/lib/i18n";
 
 export default async function HomePage({ params }: { params: Promise<{ locale: Locale }> }) {
   const { locale } = await params;
   const t = getDict(locale);
-  const [products, creators, categories, allCreators, hero, stats] = await Promise.all([
+  const [products, creators, categories, allCreators, hero] = await Promise.all([
     getFeaturedProducts(locale, 8),
     getCreators(locale, 4),
     getCategoryShowcase(locale),
     getCreators(locale),
     getHeroProduct(locale),
-    getSiteStats(),
   ]);
   const heroProduct = hero ?? products[0];
   const videoArtists = CREATOR_VIDEO_SHOWCASE.flatMap((v) => {
@@ -30,7 +29,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: L
         <div className="space-y-4">
           <p className="text-xs uppercase tracking-widest text-terracotta">{t.home.heroKicker}</p>
           <h1 className="font-heading text-3xl leading-tight text-primary md:text-5xl">{t.home.heroTitle}</h1>
-          <p className="max-w-prose text-muted-foreground">{t.home.heroText(stats.creators, stats.works)}</p>
+          <p className="max-w-prose text-muted-foreground">{t.home.heroText}</p>
           <Link href={`/${locale}/catalogue`} className={buttonVariants({ size: "lg" })}>
             {t.home.heroCta}
           </Link>

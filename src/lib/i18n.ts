@@ -18,8 +18,7 @@ const fr = {
   home: {
     heroKicker: "Galerie en ligne",
     heroTitle: "L'art afrodescendant sous toutes ses formes",
-    heroText: (creators: number, works: number) =>
-      `Peinture, sculpture, photographie, couture et mode : ${creators} créateurs et ${works} œuvres (hors pièces d'exemple).`,
+    heroText: "Peinture, sculpture, photographie, couture et mode : ces créateurs ont choisi E póm ta’ comme vitrine digitale.",
     heroCta: "Voir les œuvres",
     selection: "Sélection du moment",
     soon: "Bientôt",
@@ -297,8 +296,7 @@ const en: Dict = {
   home: {
     heroKicker: "Online gallery",
     heroTitle: "Afro-descendant art in all its forms",
-    heroText: (creators: number, works: number) =>
-      `Painting, sculpture, photography, fashion and tailoring: ${creators} creators and ${works} works (sample pieces excluded).`,
+    heroText: "Painting, sculpture, photography, couture and fashion: these creators chose E póm ta’ as their digital showcase.",
     heroCta: "View the artworks",
     selection: "Featured now",
     soon: "Coming soon",

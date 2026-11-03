@@ -133,6 +133,7 @@ Ordre = priorité d'exécution. Statut initial : À faire. Chaque story est auto
 
 ## Droits des visuels d'exemple (Miroir)
 
-- Les images `public/images/examples/` de couture (`veste-tiedye.webp`, `ceinture-cuir.png`, `haut-toile-cuir.png`, `veste-verte-portee.webp`) proviennent de sources tierces **protégées** (la veste tie-dye porte une signature de créateur visible). Usage : **démo privée uniquement**.
+- Les images `public/images/examples/` de couture (`veste-tiedye.webp`, `ceinture-cuir.webp`, `haut-toile-cuir.webp`, `veste-verte-portee.webp`) restent la **propriété des marques/créateurs** (Imane Ayissi, LDM, Lozama Leombho). Usage : **démo privée uniquement**.
 - **Retirer ou obtenir l'accord des ayants droit avant toute mise en ligne publique** (retrait : `npm run db:examples-remove` / `prisma/seed.examples.remove.neon.sql`, puis supprimer les fichiers).
-- Aucune de ces pièces n'est attribuée à un créateur ou une marque réels : créateur affiché « Exemple », prix et tailles fictifs.
+- Attribution : tie-dye → Imane Ayissi ; Hao Set → LDM (Look Different Marque) ; Akara Belt et Neitha Harness → Lozama Leombho. Ces créateurs n'ont pas de page et ne figurent pas dans « Nos artistes ». Prix, tailles et stock restent fictifs ; titres « (Exemple) » + badge.
+- Les bijoux d'exemple ont été supprimés (catégorie Bijoux « Bientôt » ; le code Miroir bijoux est conservé pour de vraies pièces). Le seed de retrait nettoie leurs anciens slugs.

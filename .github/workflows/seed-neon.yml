@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       examples:
-        description: "Pièces d'exemple du Miroir (créateur fictif « Exemple » + 3 pièces) : none = ne rien changer, add = ajouter, remove = retirer"
+        description: "Pièces d'exemple du Miroir (3 créateurs de démo + 4 pièces couture « Exemple ») : none = ne rien changer, add = ajouter, remove = retirer"
         type: choice
         options: [none, add, remove]
         default: none
@@ -29,7 +29,7 @@ jobs:
       - name: Retirer les exemples du Miroir
         if: ${{ inputs.examples == 'remove' }}
         run: psql "$NEON_DATABASE_URL" -v ON_ERROR_STOP=1 -f prisma/seed.examples.remove.neon.sql > /dev/null
-      - name: Compter les lignes (attendu 6, 5, 13 ; avec exemples 6, 6, 16)
+      - name: Compter les lignes (attendu 6, 5, 13 ; avec exemples 6, 8, 17)
         run: |
           psql "$NEON_DATABASE_URL" -v ON_ERROR_STOP=1 -At -c \
             'select (select count(*) from "Category") as categories, (select count(*) from "Creator") as artistes, (select count(*) from "Product") as oeuvres;'

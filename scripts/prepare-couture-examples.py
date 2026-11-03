@@ -67,6 +67,41 @@ def cut(name, out, tol, max_side, fmt, white_ring=False):
     print(out, rgba.size, path.stat().st_size // 1024, "Ko")
 
 
+def from_alpha(name, out, max_side):
+    """Sources haute resolution deja detourees (alpha natif) : recadrage, reduction Lanczos, WebP."""
+    im = Image.open(SRC / name).convert("RGBA")
+    a = np.array(im.getchannel("A")) > 8
+    # Ne garder que la plus grande composante (retire les filets parasites du fichier source).
+    seen = np.zeros(a.shape, bool)
+    best = None
+    for y, x in zip(*np.nonzero(a[::8, ::8])):
+        y, x = y * 8, x * 8
+        if not a[y, x] or seen[y, x]:
+            continue
+        comp = np.zeros(a.shape, bool)
+        q = deque([(y, x)])
+        comp[y, x] = seen[y, x] = True
+        while q:
+            cy, cx = q.popleft()
+            for ny, nx in ((cy + 1, cx), (cy - 1, cx), (cy, cx + 1), (cy, cx - 1)):
+                if 0 <= ny < a.shape[0] and 0 <= nx < a.shape[1] and a[ny, nx] and not seen[ny, nx]:
+                    seen[ny, nx] = comp[ny, nx] = True
+                    q.append((ny, nx))
+        if best is None or comp.sum() > best.sum():
+            best = comp
+    keep = Image.fromarray((best * 255).astype("uint8")).filter(ImageFilter.MaxFilter(5))
+    alpha = Image.fromarray(np.minimum(np.array(im.getchannel("A")), np.array(keep)))
+    im.putalpha(alpha)
+    bbox = alpha.point(lambda v: 255 if v > 8 else 0).getbbox()
+    im = im.crop(bbox)
+    im.thumbnail((max_side, max_side), Image.LANCZOS)
+    path = OUT / out
+    im.save(path, "WEBP", quality=90, method=6)
+    print(out, im.size, path.stat().st_size // 1024, "Ko")
+
+
+# Veste tie-dye : source a fond uni, detouree ici.
 cut("veste-tiedye.webp", "veste-tiedye.webp", 14, 1000, "webp")
-cut("ceinture-cuir.png", "ceinture-cuir.png", 10, 560, "png")
-cut("haut-toile-cuir.png", "haut-toile-cuir.png", 10, 560, "png", white_ring=True)
+# Ceinture et haut (Lozama Leombho) : originaux Wix 3000x3000 avec alpha.
+from_alpha("belt-hi.png", "ceinture-cuir.webp", 1000)
+from_alpha("harness-hi.png", "haut-toile-cuir.webp", 1000)

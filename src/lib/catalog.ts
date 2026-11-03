@@ -160,7 +160,11 @@ function facet(rows: Product[], locale: Locale, fr: "material" | "technique" | "
 export async function getFilterOptions(locale: Locale, category?: string) {
   const [categories, artists, scoped] = await Promise.all([
     db.category.findMany({ orderBy: { sortOrder: "asc" } }),
-    db.creator.findMany({ orderBy: { name: "asc" }, select: { slug: true, name: true } }),
+    db.creator.findMany({
+      orderBy: { name: "asc" },
+      select: { slug: true, name: true },
+      ...(category ? { where: { products: { some: { categorySlug: category } } } } : {}),
+    }),
     db.product.findMany({ where: category ? { categorySlug: category } : {} }),
   ]);
   return {

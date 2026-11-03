@@ -48,10 +48,10 @@ export default async function CatalogPage({
     page: num(first(sp.page)),
   };
 
-  const [{ items, total, page, pages }, options] = await Promise.all([
-    searchProducts(query, locale),
-    getFilterOptions(locale, query.category),
-  ]);
+  const options = await getFilterOptions(locale, query.category);
+  // Un artiste sans œuvre dans la catégorie choisie est ignoré (réinitialisé).
+  if (query.artist && !options.artists.some((a) => a.value === query.artist)) query.artist = undefined;
+  const { items, total, page, pages } = await searchProducts(query, locale);
   const categoryLabel = options.categories.find((c) => c.value === query.category)?.label;
   const crumbs = [
     { label: t.home, href: `/${locale}` },
@@ -163,7 +163,7 @@ function Filters({
       : []),
   ];
   return (
-    <form method="get" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <form key={JSON.stringify(query)} method="get" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <div className="space-y-1 lg:col-span-2">
         <label htmlFor={ids.q} className="text-xs font-medium">{t.search}</label>
         <input id={ids.q} name="q" type="search" defaultValue={query.q} placeholder={t.searchPlaceholder} className={fieldClass} />

@@ -130,3 +130,9 @@ Ordre = priorité d'exécution. Statut initial : À faire. Chaque story est auto
 **US-26 Recette finale** — Je veux valider le POC.
 - Tests Playwright exécutés sur l'URL déployée ; rapport joint
 - README final (démo, comptes fictifs, limites connues) ; vérification : aucun secret dans l'historique, aucune mention d'ENGIE
+
+## Droits des visuels d'exemple (Miroir)
+
+- Les images `public/images/examples/` de couture (`veste-tiedye.webp`, `ceinture-cuir.png`, `haut-toile-cuir.png`, `veste-verte-portee.webp`) proviennent de sources tierces **protégées** (la veste tie-dye porte une signature de créateur visible). Usage : **démo privée uniquement**.
+- **Retirer ou obtenir l'accord des ayants droit avant toute mise en ligne publique** (retrait : `npm run db:examples-remove` / `prisma/seed.examples.remove.neon.sql`, puis supprimer les fichiers).
+- Aucune de ces pièces n'est attribuée à un créateur ou une marque réels : créateur affiché « Exemple », prix et tailles fictifs.

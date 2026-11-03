@@ -1,13 +1,14 @@
 // Jeu d'exemple (essayage au Miroir), SÉPARÉ du seed principal.
 // Usage : node scripts/db.mjs examples-add | examples-remove
 import { PrismaClient } from "@prisma/client";
-import { exampleCreator, exampleProducts } from "../src/data/examples";
+import { exampleCreator, exampleProducts, legacyExampleSlugs } from "../src/data/examples";
 
 const prisma = new PrismaClient();
 const mode = process.argv[2];
 
 async function main() {
   const slugs = exampleProducts.map((p) => p.slug);
+  await prisma.product.deleteMany({ where: { slug: { in: legacyExampleSlugs } } });
   if (mode === "remove") {
     await prisma.orderItem.deleteMany({ where: { productSlug: { in: slugs } } });
     await prisma.product.deleteMany({ where: { slug: { in: slugs } } });

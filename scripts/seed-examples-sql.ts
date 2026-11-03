@@ -1,12 +1,12 @@
 // Génère prisma/seed.examples.neon.sql (ajout) et prisma/seed.examples.remove.neon.sql (suppression) pour le jeu d'exemple.
 // Ces fichiers sont indépendants de prisma/seed.neon.sql. Usage : npm run db:seed-examples-sql
 import { writeFileSync } from "node:fs";
-import { exampleCreator, exampleProducts } from "../src/data/examples";
+import { exampleCreator, exampleProducts, legacyExampleSlugs } from "../src/data/examples";
 
 const str = (v: string) => `'${v.replace(/'/g, "''")}'`;
 const json = (v: unknown) => `${str(JSON.stringify(v))}::jsonb`;
 const sn = (v?: string) => (v ? str(v) : "NULL");
-const slugs = exampleProducts.map((p) => str(p.slug)).join(", ");
+const slugs = [...exampleProducts, ...legacyExampleSlugs.map((slug) => ({ slug }))].map((p) => str(p.slug)).join(", ");
 
 const c = exampleCreator;
 const creatorCols = ["slug", "name", "specialty", "specialtyEn", "bio", "bioEn", "image", "sourceUrl"];
@@ -21,6 +21,7 @@ const add = [
   "-- E póm ta’ — jeu d'exemple (Miroir) : 1 créateur fictif + 3 pièces « Exemple ». Généré par `npm run db:seed-examples-sql`.",
   "-- Idempotent, indépendant de seed.neon.sql. Retrait : seed.examples.remove.neon.sql.",
   "BEGIN;",
+  `DELETE FROM "Product" WHERE "slug" IN (${legacyExampleSlugs.map(str).join(", ")});`,
   upsert("Creator", creatorCols, [c.slug, c.name, c.specialty, c.specialtyEn, c.bio, c.bioEn, c.image, c.sourceUrl].map(str)),
   ...exampleProducts.map((p) =>
     upsert("Product", productCols, [

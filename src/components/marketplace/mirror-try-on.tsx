@@ -58,13 +58,25 @@ function facePlacements(face: Pt[], kind: "earrings" | "necklace"): Placement[] 
   return [{ x: chin.x - up.x * faceH * 0.15, y: chin.y - up.y * faceH * 0.15, w, rot: roll }];
 }
 
-function topPlacement(pose: Pt[]): Placement {
+const POSE_KINDS: MirrorKind[] = ["top", "jacket", "belt"];
+
+/** Haut / veste : ancrés aux épaules. Ceinture : ancrée à la taille (entre épaules et hanches). */
+function bodyPlacement(pose: Pt[], kind: "top" | "jacket" | "belt"): Placement | null {
   const l = pose[11];
   const r = pose[12];
   const sw = dist(l, r);
   const mid = lerp(l, r, 0.5);
   const rot = Math.atan2(r.y - l.y, r.x - l.x);
-  return { x: mid.x + Math.sin(rot) * sw * 0.1, y: mid.y - Math.cos(rot) * sw * 0.1, w: sw * 1.85, rot };
+  const down = { x: -Math.sin(rot), y: Math.cos(rot) };
+  if (kind === "belt") {
+    if (!pose[23] || !pose[24]) return null;
+    const waist = lerp(mid, lerp(pose[23], pose[24], 0.5), 0.72);
+    const w = sw * 1.15;
+    const off = w * 0.2;
+    return { x: waist.x - down.x * off, y: waist.y - down.y * off, w, rot };
+  }
+  const up = kind === "jacket" ? 0.14 : 0.1;
+  return { x: mid.x - down.x * sw * up, y: mid.y - down.y * sw * up, w: sw * (kind === "jacket" ? 2.1 : 1.85), rot };
 }
 
 type Props = { locale: Locale; image: string; name: string; kind: MirrorKind };
@@ -166,7 +178,7 @@ export function MirrorTryOn({ locale, image, name, kind }: Props) {
       const { FilesetResolver, FaceLandmarker: Face, PoseLandmarker: Pose } = await import("@mediapipe/tasks-vision");
       const fileset = await FilesetResolver.forVisionTasks(WASM);
       const make = (delegate: "GPU" | "CPU") =>
-        kind === "top"
+        POSE_KINDS.includes(kind)
           ? Pose.createFromOptions(fileset, { baseOptions: { modelAssetPath: MODELS.pose, delegate }, runningMode: "VIDEO", numPoses: 1 })
           : Face.createFromOptions(fileset, { baseOptions: { modelAssetPath: MODELS.face, delegate }, runningMode: "VIDEO", numFaces: 1 });
       try {
@@ -195,10 +207,13 @@ export function MirrorTryOn({ locale, image, name, kind }: Props) {
           const { width: w, height: h } = canvas;
           let raw: Placement[] = [];
           try {
-            if (kind === "top") {
+            if (kind === "top" || kind === "jacket" || kind === "belt") {
               const res = (model as PoseLandmarker).detectForVideo(video, performance.now());
               const lm = res.landmarks[0];
-              if (lm && lm[11] && lm[12]) raw = [topPlacement(lm.map((l) => toCanvas(l, w, h)))];
+              if (lm && lm[11] && lm[12]) {
+                const pl = bodyPlacement(lm.map((l) => toCanvas(l, w, h)), kind);
+                if (pl) raw = [pl];
+              }
             } else {
               const res = (model as FaceLandmarker).detectForVideo(video, performance.now());
               const lm = res.faceLandmarks[0];
@@ -242,7 +257,8 @@ export function MirrorTryOn({ locale, image, name, kind }: Props) {
     }, "image/png");
   }
 
-  const intro = kind === "earrings" ? t.introEarrings : kind === "necklace" ? t.introNecklace : t.introTop;
+  const intro =
+    kind === "earrings" ? t.introEarrings : kind === "necklace" ? t.introNecklace : kind === "belt" ? t.introBelt : kind === "jacket" ? t.introJacket : t.introTop;
   const busy = status === "loading";
 
   return (
@@ -290,7 +306,7 @@ export function MirrorTryOn({ locale, image, name, kind }: Props) {
             <canvas ref={canvasRef} role="img" aria-label={t.videoLabel} className="mx-auto block h-auto max-h-[68vh] w-full object-contain" />
             {lost && status === "live" && (
               <p role="status" className="absolute inset-x-2 bottom-2 rounded-md bg-background/90 px-3 py-2 text-center text-sm">
-                {kind === "top" ? t.lostBody : t.lostFace}
+                {kind === "earrings" || kind === "necklace" ? t.lostFace : t.lostBody}
               </p>
             )}
           </div>

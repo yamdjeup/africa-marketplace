@@ -4,18 +4,20 @@ import { CreatorCard } from "@/components/marketplace/creator-card";
 import { ProductCard } from "@/components/marketplace/product-card";
 import { buttonVariants } from "@/components/ui/button";
 import { CREATOR_VIDEO_SHOWCASE } from "@/data/creator-videos";
-import { getCategoryShowcase, getCreators, getFeaturedProducts } from "@/lib/catalog";
+import { getCategoryShowcase, getCreators, getFeaturedProducts, getHeroProduct } from "@/lib/catalog";
 import { getDict, type Locale } from "@/lib/i18n";
 
 export default async function HomePage({ params }: { params: Promise<{ locale: Locale }> }) {
   const { locale } = await params;
   const t = getDict(locale);
-  const [products, creators, categories, allCreators] = await Promise.all([
+  const [products, creators, categories, allCreators, hero] = await Promise.all([
     getFeaturedProducts(locale, 8),
     getCreators(locale, 4),
     getCategoryShowcase(locale),
     getCreators(locale),
+    getHeroProduct(locale),
   ]);
+  const heroProduct = hero ?? products[0];
   const videoArtists = CREATOR_VIDEO_SHOWCASE.flatMap((v) => {
     const c = allCreators.find((x) => x.slug === v.slug);
     return c ? [{ ...v, name: c.name }] : [];
@@ -33,12 +35,12 @@ export default async function HomePage({ params }: { params: Promise<{ locale: L
           </Link>
         </div>
         <Link
-          href={`/${locale}/produits/${products[0].slug}`}
+          href={`/${locale}/produits/${heroProduct.slug}`}
           className="relative block aspect-[4/3] overflow-hidden rounded-lg bg-muted"
         >
           <Image
-            src={products[0].images[0]}
-            alt={`${products[0].name} — ${products[0].creatorName}`}
+            src={heroProduct.images[0]}
+            alt={`${heroProduct.name} — ${heroProduct.creatorName}`}
             fill
             unoptimized
             priority

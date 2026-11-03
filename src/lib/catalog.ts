@@ -205,6 +205,16 @@ export async function getFeaturedProducts(locale: Locale, take = 8) {
   return rows.map((p) => toProductView(p, locale));
 }
 
+/** Visuel du bandeau d'accueil : une œuvre d'art (pas de pièce de couture), la plus récente. */
+export async function getHeroProduct(locale: Locale) {
+  const row = await db.product.findFirst({
+    where: { categorySlug: { in: ["peinture", "sculpture", "photographie"] } },
+    include: withCreator,
+    orderBy: { createdAt: "desc" },
+  });
+  return row ? toProductView(row, locale) : null;
+}
+
 export async function getCreators(locale: Locale, take?: number) {
   const [rows, cats] = await Promise.all([
     db.creator.findMany({ orderBy: { name: "asc" }, take, include: { products: { select: { categorySlug: true } } } }),

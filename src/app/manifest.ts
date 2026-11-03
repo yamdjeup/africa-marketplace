@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "E póm ta’",
     short_name: "E póm ta’",
-    description: "Galerie en ligne d’artistes plasticiens afrodescendants.",
+    description: "Galerie en ligne : l’art afrodescendant sous toutes ses formes.",
     lang: "fr",
     start_url: "/fr",
     scope: "/",

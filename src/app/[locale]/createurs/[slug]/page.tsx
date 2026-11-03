@@ -54,7 +54,6 @@ export default async function CreatorPage({ params }: Props) {
           <p className="text-xs uppercase tracking-wide text-terracotta">{c.specialty}</p>
           <p className="max-w-prose pt-2">{bio}</p>
           <p className="text-xs text-muted-foreground">
-            {t.bioSource}.{" "}
             <a href={c.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">
               {t.readSource}
             </a>

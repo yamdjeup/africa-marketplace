@@ -143,6 +143,10 @@ Reste à faire :
 - **Reportés** : connexion Facebook (app Meta à créer) et Apple (compte Apple Developer payant) ; boutons retirés des pages connexion/inscription, seul Google est proposé.
 - Adresses : saisie guidée via Photon (gratuit, sans SLA, OSM) ; à remplacer par Google Places / Loqate / La Poste avant un lancement public. Le contrôle code postal/ville est indicatif (non bloquant).
 
+## Page À propos (lot F17)
+
+- Texte ghomálá' (« E póm ta’ » = « Tu es très belle ») à faire valider par un locuteur (graphie et signes diacritiques) avant toute mise en ligne publique.
+
 ## Droits des visuels d'exemple (Miroir)
 
 - Les images `public/images/examples/` de couture (`veste-tiedye.webp`, `ceinture-cuir.webp`, `haut-toile-cuir.webp`, `veste-verte-portee.webp`) restent la **propriété des marques/créateurs** (Imane Ayissi, LDM, Lozama Leombho). Usage : **démo privée uniquement**.

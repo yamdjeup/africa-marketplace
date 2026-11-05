@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { searchProducts, type CatalogParams } from "@/lib/catalog";
+import { getFilterOptions, searchProducts, type CatalogParams } from "@/lib/catalog";
 
 const num = (v: string | null) => {
   const n = v === null || v === "" ? NaN : Number(v);
@@ -21,8 +21,9 @@ export async function GET(req: Request) {
     size: get("size"),
     min: num(sp.get("min")),
     max: num(sp.get("max")),
-    sort: sort === "price-asc" || sort === "price-desc" ? sort : "new",
+    sort: sort === "price-asc" || sort === "price-desc" || sort === "pick" ? sort : "new",
   };
-  const { total } = await searchProducts(params, "fr");
-  return NextResponse.json({ total });
+  const locale = sp.get("locale") === "en" ? "en" : "fr";
+  const [{ total }, options] = await Promise.all([searchProducts(params, locale), getFilterOptions(locale, params.category)]);
+  return NextResponse.json({ total, options });
 }

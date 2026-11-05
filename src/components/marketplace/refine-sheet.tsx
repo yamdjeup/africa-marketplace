@@ -6,7 +6,7 @@ import { getDict, type Locale } from "@/lib/i18n";
 import { ruleFor, SIZE_OPTIONS } from "@/lib/category-rules";
 
 type Opt = { value: string; label: string };
-type Values = Record<"category" | "artist" | "material" | "technique" | "country" | "size" | "min" | "max" | "sort", string>;
+type Values = Record<"q" | "category" | "artist" | "material" | "technique" | "country" | "size" | "min" | "max" | "sort", string>;
 
 export type RefineOptions = {
   categories: Opt[];
@@ -16,20 +16,18 @@ export type RefineOptions = {
   countries: Opt[];
 };
 
-const EMPTY: Values = { category: "", artist: "", material: "", technique: "", country: "", size: "", min: "", max: "", sort: "new" };
+const EMPTY: Values = { q: "", category: "", artist: "", material: "", technique: "", country: "", size: "", min: "", max: "", sort: "new" };
 
-// Écran « Affiner » plein écran (mobile) : tri + filtres, avec nombre de résultats mis à jour avant validation.
+// Écran « Affiner » plein écran (mobile) : tri + filtres, avec nombre de résultats et options recalculés selon la catégorie avant validation.
 export function RefineSheet({
   locale,
   options,
   initial,
-  q,
   total,
 }: {
   locale: Locale;
   options: RefineOptions;
   initial: Partial<Values>;
-  q?: string;
   total: number;
 }) {
   const t = getDict(locale).f11;
@@ -38,10 +36,10 @@ export function RefineSheet({
   const router = useRouter();
   const [v, setV] = useState<Values>({ ...EMPTY, ...initial });
   const [count, setCount] = useState<number | null>(null);
+  const [opts, setOpts] = useState<RefineOptions>(options);
 
   const qs = (vals: Values) => {
     const p = new URLSearchParams();
-    if (q) p.set("q", q);
     for (const [k, val] of Object.entries(vals)) if (val && !(k === "sort" && val === "new")) p.set(k, val);
     return p.toString();
   };
@@ -51,9 +49,19 @@ export function RefineSheet({
     const ctrl = new AbortController();
     const id = setTimeout(() => {
       const p = new URLSearchParams(qs(v));
+      p.set("locale", locale);
       fetch(`/api/catalog/count?${p}`, { signal: ctrl.signal })
         .then((r) => r.json())
-        .then((d: { total: number }) => setCount(d.total))
+        .then((d: { total: number; options: RefineOptions }) => {
+          setCount(d.total);
+          setOpts(d.options);
+          // Une sélection devenue absente des options de la catégorie est retirée.
+          setV((s) => {
+            const keep = (k: "artist" | "material" | "technique" | "country", list: Opt[]) => (s[k] && !list.some((o) => o.value === s[k]) ? "" : s[k]);
+            const next = { ...s, artist: keep("artist", d.options.artists), material: keep("material", d.options.materials), technique: keep("technique", d.options.techniques), country: keep("country", d.options.countries) };
+            return next.artist === s.artist && next.material === s.material && next.technique === s.technique && next.country === s.country ? s : next;
+          });
+        })
         .catch(() => {});
     }, 200);
     return () => {
@@ -91,7 +99,7 @@ export function RefineSheet({
 
   return (
     <>
-      <button type="button" onClick={() => { setV({ ...EMPTY, ...initial }); setCount(total); setOpen(true); }} className="h-10 rounded-md border border-black px-4 text-sm hover:bg-black hover:text-white">
+      <button type="button" onClick={() => { setV({ ...EMPTY, ...initial }); setOpts(options); setCount(total); setOpen(true); }} className="h-10 rounded-md border border-black px-4 text-sm hover:bg-black hover:text-white">
         {t.refine}
         {activeCount > 0 ? ` (${activeCount})` : ""}
       </button>
@@ -117,9 +125,13 @@ export function RefineSheet({
             </button>
           </div>
           <div className="flex-1 overflow-y-auto px-4 pb-4">
+            <div className="pt-3">
+              <input type="search" value={v.q} onChange={(e) => set("q", e.target.value)} placeholder={t.searchWorks} aria-label={t.searchWorks} className="h-11 w-full rounded-md bg-muted px-3 text-sm" />
+            </div>
             <fieldset>
               <legend className="py-3 font-heading text-2xl text-primary">{t.sortBy}</legend>
               {([
+                ["pick", t.ourPicks],
                 ["new", c.sortNew],
                 ["price-desc", c.sortPriceDesc],
                 ["price-asc", c.sortPriceAsc],
@@ -131,11 +143,11 @@ export function RefineSheet({
               ))}
             </fieldset>
             <h2 className="py-3 pt-6 font-heading text-2xl text-primary">{t.filterBy}</h2>
-            {select("category", c.category, options.categories, t.anyF)}
-            {select("artist", t.artists, options.artists, t.any)}
-            {select("material", c.material, options.materials, t.anyF)}
-            {select("technique", c.technique, options.techniques, t.anyF)}
-            {select("country", c.country, options.countries, t.any)}
+            {select("category", c.category, opts.categories, t.anyF)}
+            {select("artist", t.artists, opts.artists, t.any)}
+            {select("material", c.material, opts.materials, t.anyF)}
+            {select("technique", c.technique, opts.techniques, t.anyF)}
+            {select("country", c.country, opts.countries, t.any)}
             {sizes.length > 0 && select("size", sizeKind === "ring" ? c.sizeRing : t.sizes, sizes.map((s) => ({ value: s, label: s })), t.any)}
             <details className="border-b" open={Boolean(v.min || v.max)}>
               <summary className="flex min-h-14 cursor-pointer items-center text-sm">{t.priceRange}</summary>

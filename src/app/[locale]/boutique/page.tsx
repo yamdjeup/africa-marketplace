@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { ShopRow } from "@/components/marketplace/shop-row";
+import { ShopTopBar } from "@/components/marketplace/shop-topbar";
 import { getDict, type Locale } from "@/lib/i18n";
 
 type Props = { params: Promise<{ locale: Locale }> };
@@ -19,15 +20,11 @@ export default async function ShopPage({ params }: Props) {
   ];
   return (
     <div className="mx-auto max-w-xl space-y-4">
-      <h1 className="font-heading text-3xl font-normal text-primary">{f.shopTitle}</h1>
+      <ShopTopBar locale={locale} title={f.shopTitle} />
+      <h1 className="sr-only">{f.shopTitle}</h1>
       <ul>
         {rows.map((r) => (
-          <li key={r.key}>
-            <Link href={r.href} className="flex min-h-14 items-center justify-between border-b px-1 text-base hover:text-terracotta">
-              <span>{r.label}</span>
-              <span aria-hidden="true" className="text-muted-foreground">›</span>
-            </Link>
-          </li>
+          <ShopRow key={r.key} href={r.href} label={r.label} />
         ))}
       </ul>
     </div>

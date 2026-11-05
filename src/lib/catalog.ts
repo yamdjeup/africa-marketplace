@@ -118,7 +118,7 @@ export type CatalogParams = {
   size?: string;
   min?: number;
   max?: number;
-  sort?: "new" | "price-asc" | "price-desc";
+  sort?: "new" | "pick" | "price-asc" | "price-desc";
   page?: number;
 };
 
@@ -138,7 +138,9 @@ export async function searchProducts(params: CatalogParams, locale: Locale) {
         ? { priceCents: "asc" }
         : params.sort === "price-desc"
           ? { priceCents: "desc" }
-          : { createdAt: "desc" },
+          : params.sort === "pick"
+            ? [{ creatorSlug: "asc" }, { createdAt: "desc" }]
+            : { createdAt: "desc" },
   });
 
   // Filtres matière/technique/pays/taille et recherche texte en JS (portable SQLite/PostgreSQL ; catalogue de taille modeste).

@@ -71,6 +71,17 @@ export default async function CatalogPage({
 
   const onlyCategory = Boolean(query.category) && !query.q && !query.artist && !query.material && !query.technique && !query.country && !query.size && query.min === undefined && query.max === undefined;
 
+  // Parent hiérarchique explicite (pas router.back()) : liste produits → niveau 3/4 de sa catégorie → … → Shop.
+  const shopBase = `/${locale}/boutique`;
+  const backHref = query.category
+    ? query.artist
+      ? `${shopBase}/categories/${query.category}/artistes`
+      : sortRaw === "new" && !query.material && !query.technique
+        ? `${shopBase}/categories/${query.category}/decouvrir`
+        : `${shopBase}/categories/${query.category}/explorer`
+    : sortRaw === "new"
+      ? `${shopBase}/categories/nouveautes`
+      : shopBase;
   const f = getDict(locale).f11;
   const labelOf = (list: { value: string; label: string }[], v?: string) => list.find((o) => o.value === v)?.label ?? v;
   const chips: { key: string; label: string }[] = [];
@@ -95,7 +106,7 @@ export default async function CatalogPage({
 
   return (
     <div className="space-y-6">
-      <ShopTopBar locale={locale} backHref={`/${locale}/boutique`} title={categoryLabel ?? t.title} />
+      <ShopTopBar locale={locale} backHref={backHref} title={categoryLabel ?? t.title} />
       <div className="space-y-6 max-md:hidden">
         <Breadcrumb items={crumbs} label={t.breadcrumb} />
         <div className="flex items-end justify-between gap-4">

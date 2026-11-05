@@ -10,7 +10,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
   return (
     <footer className="mt-12 bg-primary pb-16 text-primary-foreground md:pb-0">
       <div className="kente-band h-1" />
-      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-8 text-sm sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-8 text-sm sm:grid-cols-2 lg:max-w-[1400px] lg:grid-cols-4">
         <nav aria-label={f.footerService}>
           <h2 className={head}>{f.footerService}</h2>
           <ul className={col}>

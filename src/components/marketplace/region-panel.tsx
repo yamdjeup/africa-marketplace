@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { Flag } from "@/components/marketplace/flag";
 import { REGIONS } from "@/data/regions";
 import { getDict, pick, type Locale } from "@/lib/i18n";
 import { setRegion, useRegion } from "@/lib/region";
@@ -59,7 +60,7 @@ function Inner({ locale }: { locale: Locale }) {
         title={t.open}
         className="inline-flex min-h-11 min-w-11 items-center justify-center gap-1 px-2 text-sm hover:text-terracotta"
       >
-        <span aria-hidden="true" className="text-xl leading-none">{region.flag}</span>
+        <Flag code={region.code} />
         <span className="hidden text-xs uppercase sm:inline">{locale}</span>
       </button>
       {open &&
@@ -126,7 +127,7 @@ function Inner({ locale }: { locale: Locale }) {
                         aria-pressed={r.code === region.code}
                         className={`flex min-h-11 w-full items-center gap-3 rounded-md px-3 text-left text-sm hover:bg-muted ${r.code === region.code ? "font-semibold text-primary" : ""}`}
                       >
-                        <span aria-hidden="true" className="text-xl">{r.flag}</span>
+                        <Flag code={r.code} />
                         <span className="flex-1">{pick(locale, r.fr, r.en)}</span>
                         <span className="text-xs text-muted-foreground">{r.currency}</span>
                       </button>

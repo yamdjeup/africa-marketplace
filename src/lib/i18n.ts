@@ -17,6 +17,9 @@ const fr = {
   lang: { label: "Langue", fr: "Français", en: "English" },
   f4: {
     searchPlaceholder: "Que cherchez-vous ?",
+    menuCountries: "Pays",
+    prev: "Précédent",
+    next: "Suivant",
     tabs: { home: "Accueil", shop: "Boutique", favorites: "Favoris", me: "Moi", label: "Navigation mobile" },
     newIn: "Nouveautés",
     newInSub: "Les dernières pièces ajoutées, choisies avec soin.",
@@ -417,6 +420,9 @@ const en: Dict = {
   lang: { label: "Language", fr: "Français", en: "English" },
   f4: {
     searchPlaceholder: "What are you looking for?",
+    menuCountries: "Countries",
+    prev: "Previous",
+    next: "Next",
     tabs: { home: "Home", shop: "Shop", favorites: "Favorites", me: "Me", label: "Mobile navigation" },
     newIn: "New in",
     newInSub: "The latest pieces, carefully chosen.",

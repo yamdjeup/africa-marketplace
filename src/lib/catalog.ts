@@ -249,6 +249,25 @@ export async function getCategories(locale: Locale) {
   return rows.map((c) => ({ slug: c.slug, label: pick(locale, c.name, c.nameEn) }));
 }
 
+/** Menu desktop : par catégorie, artistes et pays des œuvres présentes. */
+export async function getCategoryMenu(locale: Locale) {
+  const [cats, rows] = await Promise.all([
+    db.category.findMany({ orderBy: { sortOrder: "asc" } }),
+    db.product.findMany({ select: { categorySlug: true, country: true, countryEn: true, creator: { select: { slug: true, name: true } } } }),
+  ]);
+  return cats.map((c) => {
+    const own = rows.filter((r) => r.categorySlug === c.slug);
+    const artists = new Map(own.map((r) => [r.creator.slug, r.creator.name]));
+    const countries = new Map(own.flatMap((r) => (r.country ? [[slugify(r.country), pick(locale, r.country, r.countryEn ?? r.country)] as const] : [])));
+    return {
+      slug: c.slug,
+      label: pick(locale, c.name, c.nameEn),
+      artists: [...artists].map(([slug, name]) => ({ slug, name })),
+      countries: [...countries].map(([value, label]) => ({ value, label })),
+    };
+  });
+}
+
 /** Une bannière par catégorie : visuel de l'œuvre la plus récente et nombre d'œuvres (0 = catégorie vide). */
 export async function getCategoryShowcase(locale: Locale) {
   const [cats, rows] = await Promise.all([

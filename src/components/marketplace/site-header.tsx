@@ -3,45 +3,49 @@ import { auth } from "@/auth";
 import { CartLink } from "@/components/marketplace/cart-link";
 import { FavoritesLink } from "@/components/marketplace/favorites-link";
 import { RegionPanel } from "@/components/marketplace/region-panel";
-import { getCategories } from "@/lib/catalog";
+import { getCategoryMenu } from "@/lib/catalog";
 import { getDict, type Locale } from "@/lib/i18n";
 
 export async function SiteHeader({ locale }: { locale: Locale }) {
   const t = getDict(locale);
   const session = await auth();
-  const categories = await getCategories(locale);
+  const menu = await getCategoryMenu(locale);
   return (
     <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur">
       <div className="bg-accent/20 py-1 text-center text-xs tracking-wide text-foreground">{t.demoBanner}</div>
       <div className="kente-band h-1" />
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-2">
-        <Link href={`/${locale}`} className="font-heading text-lg font-semibold text-primary md:text-xl">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-2 lg:max-w-[1400px] lg:flex-nowrap lg:gap-x-8 lg:py-3">
+        <Link href={`/${locale}`} className="font-heading text-lg font-semibold text-primary md:text-xl lg:text-2xl">
           {t.siteName}
           <span className="block text-[10px] font-normal leading-none text-muted-foreground">{t.brandMeaning}</span>
         </Link>
-        <nav aria-label={t.nav.main} className="order-3 flex w-full items-center gap-4 text-sm md:order-none md:w-auto md:gap-6">
+        <nav aria-label={t.nav.main} className="order-3 flex w-full items-center gap-4 text-sm md:order-none md:w-auto md:gap-6 lg:flex-1">
           <Link href={`/${locale}/catalogue`} className="hidden min-h-11 items-center hover:text-terracotta md:inline-flex">
             {t.nav.catalog}
           </Link>
           <Link href={`/${locale}/createurs`} className="hidden min-h-11 items-center hover:text-terracotta md:inline-flex">
             {t.nav.creators}
           </Link>
-          <form action={`/${locale}/catalogue`} role="search" className="flex w-full md:w-auto">
+          <form action={`/${locale}/catalogue`} role="search" className="relative flex w-full md:w-auto lg:ml-auto">
             <label htmlFor="header-search" className="sr-only">
               {t.nav.search}
             </label>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 hidden -translate-y-1/2 text-muted-foreground lg:block">
+              <circle cx="11" cy="11" r="6.5" />
+              <path d="M16 16l4.5 4.5" />
+            </svg>
             <input
               id="header-search"
               name="q"
               type="search"
               placeholder={t.f4.searchPlaceholder}
-              className="h-11 w-full rounded-md border bg-background px-3 text-sm md:w-52"
+              className="h-11 w-full rounded-md border bg-background px-3 text-sm md:w-52 lg:w-72 lg:rounded-full lg:pl-10"
             />
           </form>
         </nav>
         <div className="flex items-center">
           {session?.user && (
-            <Link href={`/${locale}/account/orders`} className="inline-flex min-h-11 items-center px-2 text-sm hover:text-terracotta">
+            <Link href={`/${locale}/account/orders`} className="inline-flex min-h-11 items-center px-2 text-sm hover:text-terracotta lg:hidden">
               {t.account.orders.title}
             </Link>
           )}
@@ -62,12 +66,37 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
         </div>
       </div>
       <nav aria-label={t.catalog.title} className="border-t">
-        <ul className="mx-auto flex max-w-6xl gap-5 overflow-x-auto px-4 text-sm">
-          {categories.map((c) => (
-            <li key={c.slug} className="shrink-0">
+        <ul className="mx-auto flex max-w-6xl gap-5 overflow-x-auto px-4 text-sm lg:max-w-[1400px] lg:justify-center lg:gap-8 lg:overflow-visible lg:font-light">
+          {menu.map((c) => (
+            <li key={c.slug} className="group relative shrink-0">
               <Link href={`/${locale}/catalogue?category=${c.slug}`} className="inline-flex min-h-11 items-center hover:text-terracotta">
                 {c.label}
               </Link>
+              <div className="invisible absolute left-1/2 top-full z-20 hidden w-[28rem] -translate-x-1/2 gap-6 border bg-background p-5 text-sm opacity-0 shadow-lg transition-opacity group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100 lg:grid lg:grid-cols-2">
+                <div>
+                  <p className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">{t.nav.creators}</p>
+                  <ul className="space-y-1">
+                    {c.artists.map((a) => (
+                      <li key={a.slug}>
+                        <Link href={`/${locale}/catalogue?category=${c.slug}&artist=${a.slug}`} className="hover:underline">{a.name}</Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <p className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">{t.f4.menuCountries}</p>
+                  <ul className="space-y-1">
+                    {c.countries.map((k) => (
+                      <li key={k.value}>
+                        <Link href={`/${locale}/catalogue?category=${c.slug}&country=${k.value}`} className="hover:underline">{k.label}</Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <Link href={`/${locale}/catalogue?category=${c.slug}`} className="col-span-2 border-t pt-3 font-medium underline underline-offset-4">
+                  {t.f4.seeAll} — {c.label}
+                </Link>
+              </div>
             </li>
           ))}
         </ul>

@@ -14,7 +14,7 @@ export function FavoritesLink({ locale }: { locale: Locale }) {
       aria-label={`${t.title} (${count})`}
     >
       <span aria-hidden="true">♡</span>
-      <span className="hidden sm:inline">{t.short}</span>
+      <span className="hidden text-xs sm:inline lg:hidden">{t.short}</span>
       <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs text-primary-foreground">
         {count}
       </span>

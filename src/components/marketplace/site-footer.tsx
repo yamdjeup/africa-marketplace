@@ -27,7 +27,6 @@ export function SiteFooter({ locale }: { locale: Locale }) {
         </nav>
         <nav aria-label={f.footerAbout}>
           <h2 className={head}><Link href={l("/support/about")} className="hover:underline">{f.footerAbout}</Link></h2>
-          <p className="mb-2 opacity-80">{t.tagline}</p>
           <ul className={col}>
             <li><Link href={l("/catalogue")}>{t.nav.catalog}</Link></li>
             <li><Link href={l("/createurs")}>{t.nav.creators}</Link></li>

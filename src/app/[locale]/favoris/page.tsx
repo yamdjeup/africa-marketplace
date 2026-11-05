@@ -12,12 +12,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function FavoritesPage({ params }: Props) {
   const { locale } = await params;
-  const t = getDict(locale).favorites;
   // Les favoris vivent dans le navigateur : on fournit le catalogue, le client filtre.
   const { items } = await searchProducts({ page: 1 }, locale);
   return (
     <div className="space-y-6">
-      <h1 className="font-heading text-3xl text-primary">{t.title}</h1>
       <FavoritesList products={items} locale={locale} />
     </div>
   );

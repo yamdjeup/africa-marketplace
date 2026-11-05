@@ -23,8 +23,8 @@ export default async function ShopArtistsPage({ params, searchParams }: Props) {
     .map((c) => ({ slug: c.slug, name: c.name, countries: c.countries }));
   return (
     <div className="mx-auto max-w-xl space-y-4">
-      <ShopTopBar locale={locale} backHref={`/${locale}/boutique`} />
-      <h1 className="font-heading text-3xl font-normal text-primary">{t.artistsTitle}</h1>
+      <ShopTopBar locale={locale} backHref={`/${locale}/boutique`} title={t.artistsTitle} />
+      <h1 className="sr-only">{t.artistsTitle}</h1>
       <ShopTabs locale={locale} base={`/${locale}/boutique/artistes`} current={tab} />
       <ArtistDirectory key={tab} locale={locale} artists={list} />
     </div>

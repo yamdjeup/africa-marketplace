@@ -38,8 +38,11 @@ export function ArtistDirectory({ locale, artists }: { locale: Locale; artists: 
           setDraft(picked);
           setOpen(true);
         }}
-        className="h-11 w-full rounded-md border border-black text-sm hover:bg-black hover:text-white"
+        className="inline-flex h-10 items-center gap-2 rounded-md border border-black px-4 text-sm hover:bg-black hover:text-white"
       >
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
+          <path d="M4 7h16M7 12h10M10 17h4" />
+        </svg>
         {t.refine}
         {picked.length > 0 ? ` (${picked.length})` : ""}
       </button>
@@ -53,9 +56,16 @@ export function ArtistDirectory({ locale, artists }: { locale: Locale; artists: 
       />
       <p className="sr-only" aria-live="polite">{getDict(locale).creator.results(shown.length)}</p>
       {shown.length === 0 && <p className="py-6 text-center text-sm text-muted-foreground">{t.noArtist}</p>}
+      {groups.size > 1 && (
+        <nav aria-label={t.azIndex} className="fixed right-0 top-1/2 z-30 flex -translate-y-1/2 flex-col px-1 text-[11px] leading-5 text-muted-foreground">
+          {[...groups.keys()].map((l) => (
+            <a key={l} href={`#az-${l}`} className="px-1 hover:text-primary">{l}</a>
+          ))}
+        </nav>
+      )}
       {[...groups].map(([letter, list]) => (
-        <section key={letter} aria-label={letter}>
-          <h2 className="border-b pb-1 font-heading text-xl text-primary">{letter}</h2>
+        <section key={letter} id={`az-${letter}`} aria-label={letter} className="scroll-mt-16 pr-5">
+          <h2 className="pb-1 pt-4 font-heading text-4xl font-light text-primary">{letter}</h2>
           <ul>
             {list.map((a) => (
               <li key={a.slug}>
@@ -80,7 +90,7 @@ export function ArtistDirectory({ locale, artists }: { locale: Locale; artists: 
             </button>
           </div>
           <fieldset className="flex-1 overflow-y-auto px-4 py-2">
-            <legend className="py-3 font-heading text-2xl text-primary">{t.country}</legend>
+            <legend className="py-3 font-heading text-2xl text-primary">{t.filterBy} : {t.country}</legend>
             {countries.map(([k, l]) => (
               <label key={k} className="flex min-h-14 cursor-pointer items-center justify-between border-b text-sm">
                 {l}

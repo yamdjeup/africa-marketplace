@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ProductCard } from "@/components/marketplace/product-card";
 import { RefineSheet } from "@/components/marketplace/refine-sheet";
+import { ShopTopBar } from "@/components/marketplace/shop-topbar";
 import { Breadcrumb } from "@/components/marketplace/breadcrumb";
 import { ruleFor, SIZE_OPTIONS } from "@/lib/category-rules";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -45,7 +46,7 @@ export default async function CatalogPage({
     size: first(sp.size),
     min: num(first(sp.min)),
     max: num(first(sp.max)),
-    sort: sortRaw === "price-asc" || sortRaw === "price-desc" ? sortRaw : "new",
+    sort: sortRaw === "price-asc" || sortRaw === "price-desc" || sortRaw === "pick" ? sortRaw : "new",
     page: num(first(sp.page)),
   };
 
@@ -70,25 +71,63 @@ export default async function CatalogPage({
 
   const onlyCategory = Boolean(query.category) && !query.q && !query.artist && !query.material && !query.technique && !query.country && !query.size && query.min === undefined && query.max === undefined;
 
+  const f = getDict(locale).f11;
+  const labelOf = (list: { value: string; label: string }[], v?: string) => list.find((o) => o.value === v)?.label ?? v;
+  const chips: { key: string; label: string }[] = [];
+  if (query.category) chips.push({ key: "category", label: categoryLabel ?? query.category });
+  if (query.artist) chips.push({ key: "artist", label: labelOf(options.artists, query.artist) ?? "" });
+  if (query.material) chips.push({ key: "material", label: labelOf(options.materials, query.material) ?? "" });
+  if (query.technique) chips.push({ key: "technique", label: labelOf(options.techniques, query.technique) ?? "" });
+  if (query.country) chips.push({ key: "country", label: labelOf(options.countries, query.country) ?? "" });
+  if (query.size) chips.push({ key: "size", label: query.size });
+  if (query.q) chips.push({ key: "q", label: `« ${query.q} »` });
+  if (query.min !== undefined || query.max !== undefined) chips.push({ key: "price", label: `${query.min ?? 0}–${query.max ?? "∞"} EUR` });
+  const without = (key: string) => {
+    const qs = new URLSearchParams();
+    for (const [k, v] of Object.entries({ ...query, page: undefined })) {
+      if (v === undefined || v === "" || (k === "sort" && v === "new")) continue;
+      if (k === key || (key === "price" && (k === "min" || k === "max"))) continue;
+      qs.set(k, String(v));
+    }
+    const s = qs.toString();
+    return `/${locale}/catalogue${s ? `?${s}` : ""}`;
+  };
+
   return (
     <div className="space-y-6">
-      <Breadcrumb items={crumbs} label={t.breadcrumb} />
-      <div className="flex items-end justify-between gap-4">
-        <h1 className="font-heading text-3xl text-primary">{categoryLabel ?? t.title}</h1>
-        <p className="text-sm text-muted-foreground max-md:hidden" aria-live="polite">
-          {t.results(total)}
-        </p>
+      <ShopTopBar locale={locale} backHref={`/${locale}/boutique`} title={categoryLabel ?? t.title} />
+      <div className="space-y-6 max-md:hidden">
+        <Breadcrumb items={crumbs} label={t.breadcrumb} />
+        <div className="flex items-end justify-between gap-4">
+          <h1 className="font-heading text-3xl text-primary">{categoryLabel ?? t.title}</h1>
+          <p className="text-sm text-muted-foreground" aria-live="polite">
+            {t.results(total)}
+          </p>
+        </div>
       </div>
+      <h1 className="sr-only md:hidden">{categoryLabel ?? t.title}</h1>
+      {chips.length > 0 && (
+        <ul aria-label={f.activeFilters} className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:hidden">
+          {chips.map((c) => (
+            <li key={c.key} className="shrink-0">
+              <Link href={without(c.key)} aria-label={`${f.removeFilter} : ${c.label}`} className="inline-flex min-h-9 items-center gap-2 rounded-full bg-muted px-3 text-xs">
+                {c.label}
+                <span aria-hidden="true">✕</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
       <div className="flex items-center justify-between md:hidden">
         <p className="text-sm text-muted-foreground" aria-live="polite">
-          {getDict(locale).f11.pieces(total)}
+          {f.pieces(total)}
         </p>
         <RefineSheet
           locale={locale}
           options={options}
-          q={query.q}
           total={total}
           initial={{
+            q: query.q ?? "",
             category: query.category ?? "",
             artist: query.artist ?? "",
             material: query.material ?? "",

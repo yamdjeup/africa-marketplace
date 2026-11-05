@@ -20,11 +20,11 @@ export default async function ShopCategoriesPage({ params, searchParams }: Props
   const cats = (await getCategoryShowcase(locale)).filter((c) => c.count > 0 && (tab === "all" || tabOf(c.slug) === tab));
   return (
     <div className="mx-auto max-w-xl space-y-4">
-      <ShopTopBar locale={locale} backHref={`/${locale}/boutique`} />
-      <h1 className="font-heading text-3xl font-normal text-primary">{t.categoriesTitle}</h1>
+      <ShopTopBar locale={locale} backHref={`/${locale}/boutique`} title={t.categoriesTitle} />
+      <h1 className="sr-only">{t.categoriesTitle}</h1>
       <ShopTabs locale={locale} base={`/${locale}/boutique/categories`} current={tab} />
       <ul>
-        <ShopRow href={`/${locale}/catalogue?sort=new`} label={t.newIn} />
+        <ShopRow href={`/${locale}/boutique/categories/nouveautes`} label={getDict(locale).f11.newTrending} />
         {cats.map((c) => (
           <ShopRow key={c.slug} href={`/${locale}/boutique/categories/${c.slug}`} label={c.label} hint={t.pieces(c.count)} />
         ))}

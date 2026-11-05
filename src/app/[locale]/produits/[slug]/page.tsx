@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { AddToCart } from "@/components/marketplace/add-to-cart";
 import { ProductCard } from "@/components/marketplace/product-card";
 import { ProductGallery } from "@/components/marketplace/product-gallery";
+import { RecentTracker } from "@/components/marketplace/recent-views";
 import { Badge } from "@/components/ui/badge";
 import { Breadcrumb } from "@/components/marketplace/breadcrumb";
 import { FavoriteButton } from "@/components/marketplace/favorite-button";
@@ -44,6 +45,7 @@ export default async function ProductPage({ params }: Props) {
 
   return (
     <div className="space-y-12">
+      <RecentTracker item={{ slug: p.slug, name: p.name, creatorName: p.creatorName, image: p.images[0] ?? "", priceCents: p.priceCents }} />
       <Breadcrumb
         label={catalogT.breadcrumb}
         items={[

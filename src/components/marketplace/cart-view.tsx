@@ -4,11 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { useCart } from "@/lib/cart";
+import { useFavorites } from "@/lib/favorites";
 import { formatEur, getDict, type Locale } from "@/lib/i18n";
 import { ApproxPrice } from "@/components/marketplace/approx-price";
 
 export function CartView({ locale }: { locale: Locale }) {
   const t = getDict(locale).cart;
+  const f9 = getDict(locale).f9;
+  const { has, toggle } = useFavorites();
   const { lines, ready, totalCents, setQuantity, remove, clear } = useCart();
 
   if (!ready) return <p className="text-muted-foreground" aria-busy="true">…</p>;
@@ -88,13 +91,25 @@ export function CartView({ locale }: { locale: Locale }) {
                     {t.remove}
                     <span className="sr-only"> {l.name}</span>
                   </button>
+                  <button
+                    type="button"
+                    className="hidden min-h-11 px-2 text-sm underline underline-offset-4 hover:text-terracotta lg:inline"
+                    onClick={() => {
+                      if (!has(l.slug)) toggle(l.slug);
+                      remove(l.slug, l.size);
+                    }}
+                  >
+                    {f9.moveToFavorites}
+                    <span className="sr-only"> {l.name}</span>
+                  </button>
                 </div>
               </div>
             </li>
           );
         })}
       </ul>
-      <aside className="h-fit space-y-4 rounded-lg border p-4">
+      <aside className="h-fit space-y-4 rounded-lg border p-4 lg:sticky lg:top-40">
+        <h2 className="hidden font-heading text-xl font-normal text-primary lg:block">{f9.summary}</h2>
         <p className="flex items-baseline justify-between text-lg">
           <span>{t.subtotal}</span>
           <strong className="text-right">
@@ -102,10 +117,22 @@ export function CartView({ locale }: { locale: Locale }) {
             <ApproxPrice cents={totalCents} locale={locale} />
           </strong>
         </p>
+        <p className="hidden justify-between text-sm lg:flex">
+          <span>{f9.shipping}</span>
+          <span>{f9.shippingValue}</span>
+        </p>
+        <p className="hidden justify-between border-t pt-3 text-base font-semibold lg:flex">
+          <span>{f9.total}</span>
+          <span>{formatEur(totalCents, locale)}</span>
+        </p>
         <p className="text-xs text-muted-foreground">{t.shippingNote}</p>
         <Link href={`/${locale}/checkout`} className={buttonVariants({ size: "lg", className: "h-12 w-full" })}>
           {t.checkout}
         </Link>
+        <p className="hidden rounded-md bg-muted p-3 text-center text-sm lg:block">
+          {f9.freeReturns}
+          <span className="block text-xs text-muted-foreground">{f9.placeholder}</span>
+        </p>
         <Link href={`/${locale}/catalogue`} className={buttonVariants({ variant: "outline", size: "lg", className: "h-12 w-full" })}>
           {t.continue}
         </Link>

@@ -1,0 +1,7 @@
+android/
+ios/
+resources/
+native-www/
+capacitor.config.ts
+docs/
+files/

@@ -75,6 +75,8 @@ flowchart TD
 - **Cache** : `unstable_cache` 60 s sur `getCategories`, `getCategoryMenu`, `getCategoryShowcase`, `getFilterOptions` (données identiques pour tous) ; pas de cache sur favoris, panier, compte, alertes. Une modification en base peut mettre jusqu'à 60 s à apparaître.
 - **Performance** : région `fra1` proche de Neon, requêtes Prisma indépendantes en `Promise.all`, squelettes `loading.tsx` sur `/boutique` et `/catalogue`.
 
+- **Application native** : coque Capacitor (`capacitor.config.ts`, `android/`, `ios/`) qui charge le site Vercel (`server.url`) ; pont natif `native-bridge.tsx`, partage `share-button.tsx`. `android/`, `ios/` exclus du déploiement web par `.vercelignore`. Détails, workflows CI et prérequis : [APP-NATIVE.md](APP-NATIVE.md).
+
 ## 4. Environnement et exécution
 
 Le build Vercel utilise `vercel-build`. Les pages sont rendues à la demande (aucun accès base pendant le build).

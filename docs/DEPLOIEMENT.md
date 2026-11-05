@@ -136,6 +136,10 @@ Les routes `/api/address/suggest` et `/api/address/check` utilisent par défaut 
 
 Migrations additives `0005_addresses` et `0006_address_book` (tables/colonnes `Address` et `Order`) : appliquées automatiquement par `npm run db:deploy` au build Vercel.
 
+## Étape 5 sexies — Application Android / iOS (optionnel)
+
+L'app native (Capacitor) charge ce site Vercel ; rien à déployer de plus côté web (`android/` et `ios/` sont ignorés par `.vercelignore`). Si le domaine change, mettre à jour `server.url` dans `capacitor.config.ts`. Voir [APP-NATIVE.md](APP-NATIVE.md).
+
 ## Étape 6 — Tester
 
 1. Dans Vercel, cliquez sur **Visit** (ou ouvrez l'adresse du projet). Vous devez voir la page **Accès réservé** et non le site.

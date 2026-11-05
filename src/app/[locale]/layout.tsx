@@ -8,6 +8,7 @@ import { SiteHeader } from "@/components/marketplace/site-header";
 import { CartProvider } from "@/lib/cart";
 import { FavoritesProvider } from "@/lib/favorites";
 import { getDict, isLocale } from "@/lib/i18n";
+import { DESKTOP_VIEWPORT_SCRIPT } from "@/lib/viewport-script";
 import "../globals.css";
 
 // Les pages lisent la base : rendu à la demande (pas d'accès DB au build).
@@ -50,13 +51,10 @@ export default async function LocaleLayout({
 
   return (
     <html lang={locale} className={`${display.variable} ${body.variable} h-full antialiased`}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: DESKTOP_VIEWPORT_SCRIPT }} />
+      </head>
       <body className="flex min-h-full flex-col">
-        {/* iPhone en « version ordinateur » (UA Macintosh + tactile + petit écran) : viewport 980 px comme Chrome Android. */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{if(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1&&Math.min(screen.width,screen.height)<600){var m=document.querySelector('meta[name="viewport"]');if(!m){m=document.createElement('meta');m.name='viewport';document.head.appendChild(m);}m.setAttribute('content','width=980');}}catch(e){}})();`,
-          }}
-        />
         <CartProvider>
           <FavoritesProvider>
           <a

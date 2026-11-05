@@ -14,7 +14,7 @@ import {
 const locales = ["fr", "en"];
 
 // Manifeste et icônes d'installation : le navigateur les récupère sans cookie, ils doivent rester publics (aucune œuvre).
-const PUBLIC_PWA = /^\/(manifest\.webmanifest|icons\/[\w-]+\.png|sw\.js)$/;
+const PUBLIC_PWA = /^\/(manifest\.webmanifest|icons\/[\w-]+\.png|sw\.js|debug-viewport)$/;
 
 // Liens des e-mails d'alertes (désinscription) et cron : publics, protégés par jeton signé / CRON_SECRET.
 const PUBLIC_ALERTS = /^\/(api\/(alerts\/(run|unsubscribe)|push\/test)|(fr|en)\/alertes\/desinscription)$/;
@@ -74,7 +74,7 @@ export async function proxy(request: NextRequest) {
   if (denied) return denied;
   const { pathname } = request.nextUrl;
   const first = pathname.split("/")[1];
-  const isAsset = first === "api" || first === "images" || pathname === ACCESS_PATH || /\.[a-z0-9]+$/i.test(pathname);
+  const isAsset = first === "api" || first === "debug-viewport" || first === "images" || pathname === ACCESS_PATH || /\.[a-z0-9]+$/i.test(pathname);
   if (isAsset || locales.includes(first)) return NextResponse.next();
   const url = request.nextUrl.clone();
   url.pathname = `/fr${pathname === "/" ? "" : pathname}`;

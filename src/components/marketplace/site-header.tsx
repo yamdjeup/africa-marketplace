@@ -73,7 +73,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
       </div>
       <div className="border-t lg:mx-auto lg:flex lg:max-w-[1400px] lg:items-center lg:justify-between lg:gap-8 lg:px-4">
       <nav aria-label={t.catalog.title} className="min-w-0">
-        <ul className="mx-auto flex max-w-6xl gap-5 overflow-x-auto px-4 text-sm lg:mx-0 lg:max-w-none lg:gap-8 lg:overflow-visible lg:px-0 lg:font-light">
+        <ul className="mx-auto flex max-w-6xl gap-5 overflow-x-auto px-4 text-sm lg:mx-0 lg:max-w-none lg:gap-5 xl:gap-8 lg:overflow-visible lg:px-0 lg:font-light">
           {menu.map((c) => (
             <li key={c.slug} className="group relative shrink-0">
               <Link href={`/${locale}/catalogue?category=${c.slug}`} className="inline-flex min-h-11 items-center hover:text-terracotta">
@@ -121,7 +121,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           name="q"
           type="search"
           placeholder={t.f4.searchPlaceholder}
-          className="h-11 w-72 border-0 border-b border-foreground/40 bg-transparent pl-7 text-sm font-light focus:border-foreground focus:outline-none"
+          className="h-11 w-44 border-0 xl:w-72 border-b border-foreground/40 bg-transparent pl-7 text-sm font-light focus:border-foreground focus:outline-none"
         />
       </form>
       </div>

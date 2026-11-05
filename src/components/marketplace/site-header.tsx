@@ -11,39 +11,35 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
   const session = await auth();
   const menu = await getCategoryMenu(locale);
   return (
-    <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur">
+    <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur max-lg:[body:has([data-wishlist])_&]:hidden">
       <div className="bg-accent/20 py-1 text-center text-xs tracking-wide text-foreground">{t.demoBanner}</div>
       <div className="kente-band h-1" />
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-2 lg:max-w-[1400px] lg:flex-nowrap lg:gap-x-8 lg:py-3">
-        <Link href={`/${locale}`} className="font-heading text-lg font-semibold text-primary md:text-xl lg:text-2xl">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-2 lg:grid lg:max-w-[1400px] lg:grid-cols-[1fr_auto_1fr] lg:gap-x-8 lg:py-3">
+        <Link href={`/${locale}`} className="font-heading text-lg font-semibold text-primary md:text-xl lg:order-2 lg:text-center lg:text-3xl">
           {t.siteName}
           <span className="block text-[10px] font-normal leading-none text-muted-foreground">{t.brandMeaning}</span>
         </Link>
-        <nav aria-label={t.nav.main} className="order-3 flex w-full items-center gap-4 text-sm md:order-none md:w-auto md:gap-6 lg:flex-1">
+        <nav aria-label={t.nav.main} className="order-3 flex w-full items-center gap-4 text-sm md:order-none md:w-auto md:gap-6 lg:order-1">
           <Link href={`/${locale}/catalogue`} className="hidden min-h-11 items-center hover:text-terracotta md:inline-flex">
             {t.nav.catalog}
           </Link>
           <Link href={`/${locale}/createurs`} className="hidden min-h-11 items-center hover:text-terracotta md:inline-flex">
             {t.nav.creators}
           </Link>
-          <form action={`/${locale}/catalogue`} role="search" className="relative flex w-full md:w-auto lg:ml-auto">
+          <form action={`/${locale}/catalogue`} role="search" className="relative flex w-full md:w-auto lg:hidden">
             <label htmlFor="header-search" className="sr-only">
               {t.nav.search}
             </label>
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 hidden -translate-y-1/2 text-muted-foreground lg:block">
-              <circle cx="11" cy="11" r="6.5" />
-              <path d="M16 16l4.5 4.5" />
-            </svg>
             <input
               id="header-search"
               name="q"
               type="search"
               placeholder={t.f4.searchPlaceholder}
-              className="h-11 w-full rounded-md border bg-background px-3 text-sm md:w-52 lg:w-72 lg:rounded-full lg:pl-10"
+              className="h-11 w-full rounded-md border bg-background px-3 text-sm md:w-52"
             />
           </form>
         </nav>
-        <div className="flex items-center">
+        <div className="flex items-center lg:order-3 lg:justify-self-end">
           {session?.user && (
             <Link href={`/${locale}/account/orders`} className="inline-flex min-h-11 items-center px-2 text-sm hover:text-terracotta lg:hidden">
               {t.account.orders.title}
@@ -60,13 +56,17 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
               <path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" />
             </svg>
           </Link>
+          {session?.user?.name && (
+            <span className="mr-1 hidden max-w-24 truncate text-sm font-light lg:inline">{session.user.name.split(" ")[0]}</span>
+          )}
           <RegionPanel locale={locale} />
           <FavoritesLink locale={locale} />
           <CartLink locale={locale} />
         </div>
       </div>
-      <nav aria-label={t.catalog.title} className="border-t">
-        <ul className="mx-auto flex max-w-6xl gap-5 overflow-x-auto px-4 text-sm lg:max-w-[1400px] lg:justify-center lg:gap-8 lg:overflow-visible lg:font-light">
+      <div className="border-t lg:mx-auto lg:flex lg:max-w-[1400px] lg:items-center lg:justify-between lg:gap-8 lg:px-4">
+      <nav aria-label={t.catalog.title} className="min-w-0">
+        <ul className="mx-auto flex max-w-6xl gap-5 overflow-x-auto px-4 text-sm lg:mx-0 lg:max-w-none lg:gap-8 lg:overflow-visible lg:px-0 lg:font-light">
           {menu.map((c) => (
             <li key={c.slug} className="group relative shrink-0">
               <Link href={`/${locale}/catalogue?category=${c.slug}`} className="inline-flex min-h-11 items-center hover:text-terracotta">
@@ -101,6 +101,23 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           ))}
         </ul>
       </nav>
+      <form action={`/${locale}/catalogue`} role="search" className="relative hidden lg:flex">
+        <label htmlFor="header-search-lg" className="sr-only">
+          {t.nav.search}
+        </label>
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true" className="pointer-events-none absolute left-0 top-1/2 -translate-y-1/2 text-muted-foreground">
+          <circle cx="11" cy="11" r="6.5" />
+          <path d="M16 16l4.5 4.5" />
+        </svg>
+        <input
+          id="header-search-lg"
+          name="q"
+          type="search"
+          placeholder={t.f4.searchPlaceholder}
+          className="h-11 w-72 border-0 border-b border-foreground/40 bg-transparent pl-7 text-sm font-light focus:border-foreground focus:outline-none"
+        />
+      </form>
+      </div>
     </header>
   );
 }

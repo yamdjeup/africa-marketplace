@@ -57,6 +57,9 @@ export default async function AccountPage({ params }: Props) {
       <Section title={t.me.sectionLang}>
         <RegionRows locale={locale} />
       </Section>
+      <Section title={t.wishlist.settings}>
+        <Row href={`${base}/alertes`} label={t.wishlist.commPrefs} />
+      </Section>
       <Section title={t.me.sectionSupport}>
         <Row href={`${base}/support/faq`} label={t.me.faq} />
         <Row href={`${base}/support/terms`} label={t.me.terms} />

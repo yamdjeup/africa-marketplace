@@ -58,10 +58,10 @@ function Inner({ locale }: { locale: Locale }) {
         aria-haspopup="dialog"
         aria-label={`${t.open} (${pick(locale, region.fr, region.en)}, ${locale.toUpperCase()}, ${region.currency})`}
         title={t.open}
-        className="inline-flex min-h-11 min-w-11 items-center justify-center gap-1 px-2 text-sm hover:text-terracotta"
+        className="inline-flex min-h-11 min-w-11 items-center justify-center gap-1 px-2 text-sm hover:text-terracotta lg:gap-1.5 lg:px-0 lg:hover:text-accent"
       >
         <Flag code={region.code} />
-        <span className="hidden text-xs uppercase sm:inline">{locale}</span>
+        <span className="hidden text-xs uppercase sm:inline lg:text-[11px]">{locale}</span>
       </button>
       {open &&
         createPortal(

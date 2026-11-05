@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>E póm ta’</title>
+<style>
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#faf6ee;color:#1c3060;font-family:Georgia,serif;text-align:center;padding:24px}
+  h1{font-size:2rem;margin:0 0 .5rem} p{margin:.25rem 0;font-family:system-ui,sans-serif;font-size:1rem}
+  button{margin-top:1.5rem;min-height:44px;padding:0 24px;border:0;border-radius:8px;background:#1c3060;color:#fff;font-size:1rem}
+  .band{height:6px;position:fixed;top:0;left:0;right:0;background:linear-gradient(90deg,#c8553d,#e8a93a,#2f6b4f,#1c3060)}
+</style>
+</head>
+<body>
+<div class="band"></div>
+<main>
+  <h1>E póm ta’</h1>
+  <p id="m1">Pas de connexion Internet.</p>
+  <p id="m2">Vérifiez votre réseau puis réessayez.</p>
+  <button id="b" type="button">Réessayer</button>
+</main>
+<script>
+  if (!(navigator.language || "").toLowerCase().startsWith("fr")) {
+    document.documentElement.lang = "en";
+    document.getElementById("m1").textContent = "No internet connection.";
+    document.getElementById("m2").textContent = "Check your network and try again.";
+    document.getElementById("b").textContent = "Retry";
+  }
+  document.getElementById("b").onclick = function () { location.href = "/"; };
+  window.addEventListener("online", function () { location.href = "/"; });
+</script>
+</body>
+</html>

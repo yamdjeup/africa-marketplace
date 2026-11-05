@@ -148,7 +148,7 @@ export async function searchProducts(params: CatalogParams, locale: Locale) {
   const matched = rows.filter((p) => {
     if (params.material && !(p.material && slugify(p.material) === params.material)) return false;
     if (params.technique && !(p.technique && slugify(p.technique) === params.technique)) return false;
-    if (params.country && !(p.country && slugify(p.country) === params.country)) return false;
+    if (params.country && !(p.country && slugify(p.country) === params.country) && !(CREATOR_COUNTRIES[p.creatorSlug] ?? []).some((c) => c.key === params.country)) return false;
     if (params.size && !strings(p.sizes).includes(params.size)) return false;
     if (!q) return true;
     const artistCountries = (CREATOR_COUNTRIES[p.creatorSlug] ?? []).map((c) => `${c.fr} ${c.en}`);
@@ -193,7 +193,11 @@ export async function getFilterOptions(locale: Locale, category?: string) {
     artists: artists.map((a) => ({ value: a.slug, label: a.name })),
     materials: facet(scoped, locale, "material", "materialEn"),
     techniques: facet(scoped, locale, "technique", "techniqueEn"),
-    countries: facet(scoped, locale, "country", "countryEn"),
+    countries: (() => {
+      const m = new Map(facet(scoped, locale, "country", "countryEn").map((o) => [o.value, o.label] as const));
+      for (const p of scoped) for (const k of CREATOR_COUNTRIES[p.creatorSlug] ?? []) if (!m.has(k.key)) m.set(k.key, pick(locale, k.fr, k.en));
+      return [...m].map(([value, label]) => ({ value, label })).sort((a, b) => a.label.localeCompare(b.label, locale));
+    })(),
   };
 }
 
@@ -258,7 +262,12 @@ export async function getCategoryMenu(locale: Locale) {
   return cats.map((c) => {
     const own = rows.filter((r) => r.categorySlug === c.slug);
     const artists = new Map(own.map((r) => [r.creator.slug, r.creator.name]));
-    const countries = new Map(own.flatMap((r) => (r.country ? [[slugify(r.country), pick(locale, r.country, r.countryEn ?? r.country)] as const] : [])));
+    const countries = new Map(
+      own.flatMap((r) => [
+        ...(CREATOR_COUNTRIES[r.creator.slug] ?? []).map((k) => [k.key, pick(locale, k.fr, k.en)] as const),
+        ...(r.country ? [[slugify(r.country), pick(locale, r.country, r.countryEn ?? r.country)] as const] : []),
+      ]),
+    );
     return {
       slug: c.slug,
       label: pick(locale, c.name, c.nameEn),

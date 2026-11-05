@@ -26,7 +26,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
           </ul>
         </nav>
         <nav aria-label={f.footerAbout}>
-          <h2 className={head}>{f.footerAbout}</h2>
+          <h2 className={head}><Link href={l("/support/about")} className="hover:underline">{f.footerAbout}</Link></h2>
           <p className="mb-2 opacity-80">{t.tagline}</p>
           <ul className={col}>
             <li><Link href={l("/catalogue")}>{t.nav.catalog}</Link></li>
@@ -34,9 +34,8 @@ export function SiteFooter({ locale }: { locale: Locale }) {
           </ul>
         </nav>
         <nav aria-label={f.footerAccount}>
-          <h2 className={head}>{f.footerAccount}</h2>
+          <h2 className={head}><Link href={l("/account")} className="hover:underline">{f.footerAccount}</Link></h2>
           <ul className={col}>
-            <li><Link href={l("/account")}>{f.footerAccount}</Link></li>
             <li><Link href={l("/account/orders")}>{f.orders}</Link></li>
             <li><Link href={l("/account/addresses")}>{f.addresses}</Link></li>
             <li><Link href={l("/favoris")}>{f.tabs.favorites}</Link></li>

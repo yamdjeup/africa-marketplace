@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { auth } from "@/auth";
+import { AccountMenu } from "@/components/marketplace/account-menu";
 import { CartLink } from "@/components/marketplace/cart-link";
 import { FavoritesLink } from "@/components/marketplace/favorites-link";
 import { RegionPanel } from "@/components/marketplace/region-panel";
@@ -53,13 +54,14 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
             href={`/${locale}/${session?.user ? "account" : "login"}`}
             aria-label={t.account.accountIcon}
             title={t.account.accountIcon}
-            className="inline-flex min-h-11 min-w-11 items-center justify-center hover:text-terracotta max-md:hidden"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center hover:text-terracotta max-md:hidden lg:hidden"
           >
             <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <circle cx="12" cy="8" r="4" />
               <path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" />
             </svg>
           </Link>
+          <div className="hidden lg:block"><AccountMenu locale={locale} name={session?.user?.name ?? null} /></div>
           {session?.user?.name && (
             <span className="mr-1 hidden max-w-24 truncate text-sm font-light lg:inline">{session.user.name.split(" ")[0]}</span>
           )}

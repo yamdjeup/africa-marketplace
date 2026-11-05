@@ -11,7 +11,7 @@ export function ProductCard({ product, locale, soldOut }: { product: ProductView
   const t = getDict(locale).product;
   const second = product.images[1];
   return (
-    <Card className="group relative h-full overflow-hidden pt-0 transition-shadow focus-within:ring-2 focus-within:ring-ring hover:shadow-md">
+    <Card className="group relative isolate h-full overflow-hidden pt-0 transition-shadow focus-within:ring-2 focus-within:ring-ring hover:shadow-md">
       <div className="relative aspect-[4/5] w-full bg-muted">
         <Image
           src={product.images[0]}

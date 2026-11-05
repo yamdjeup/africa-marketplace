@@ -163,6 +163,7 @@ Pour **fermer complètement** la démo : mettez un mot de passe que personne ne 
 
 ## Pour les développeurs
 
+- Vue d'ensemble de l'architecture (schémas, variables, limites, feuille de route) : [ARCHITECTURE.md](./ARCHITECTURE.md).
 - Schéma canonique : PostgreSQL (`prisma/schema.prisma`, migrations dans `prisma/migrations/`). Sans `DATABASE_URL`, le développement local utilise une base SQLite dérivée automatiquement.
 - Flux de production : `DATABASE_URL` Postgres → `npm run db:deploy` (génération du client + `prisma migrate deploy`, utilise `DIRECT_URL` si présent) → `npm run db:seed`.
 - `npm run vercel-build` (exécuté par Vercel à la place de `npm run build`) = `db:deploy` puis `next build`. `postinstall` génère déjà le client Prisma.

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { login, register, socialLogin, type AuthState } from "@/app/[locale]/account/actions";
+import { RegionRows } from "@/components/marketplace/region-rows";
 import { Button } from "@/components/ui/button";
 import { getDict, type Locale } from "@/lib/i18n";
 import type { SocialProvider } from "@/lib/social-providers";
@@ -133,6 +134,9 @@ export function AuthForm({
             </button>
           </form>
         ))}
+      </div>
+      <div className="md:hidden">
+        <RegionRows locale={locale} />
       </div>
     </div>
   );

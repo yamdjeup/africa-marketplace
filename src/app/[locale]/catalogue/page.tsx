@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ProductCard } from "@/components/marketplace/product-card";
+import { RefineSheet } from "@/components/marketplace/refine-sheet";
 import { Breadcrumb } from "@/components/marketplace/breadcrumb";
 import { ruleFor, SIZE_OPTIONS } from "@/lib/category-rules";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -67,10 +68,6 @@ export default async function CatalogPage({
     return `/${locale}/catalogue${s ? `?${s}` : ""}`;
   };
 
-  const filtersActive = Boolean(
-    query.q || query.category || query.artist || query.material || query.technique || query.country || query.size ||
-      query.min !== undefined || query.max !== undefined,
-  );
   const onlyCategory = Boolean(query.category) && !query.q && !query.artist && !query.material && !query.technique && !query.country && !query.size && query.min === undefined && query.max === undefined;
 
   return (
@@ -78,17 +75,32 @@ export default async function CatalogPage({
       <Breadcrumb items={crumbs} label={t.breadcrumb} />
       <div className="flex items-end justify-between gap-4">
         <h1 className="font-heading text-3xl text-primary">{categoryLabel ?? t.title}</h1>
-        <p className="text-sm text-muted-foreground" aria-live="polite">
+        <p className="text-sm text-muted-foreground max-md:hidden" aria-live="polite">
           {t.results(total)}
         </p>
       </div>
-
-      <details className="rounded-lg border md:hidden" open={filtersActive}>
-        <summary className="flex min-h-11 cursor-pointer items-center px-4 text-sm font-medium">{t.filters}</summary>
-        <div className="border-t p-4">
-          <Filters prefix="m" locale={locale} query={query} options={options} />
-        </div>
-      </details>
+      <div className="flex items-center justify-between md:hidden">
+        <p className="text-sm text-muted-foreground" aria-live="polite">
+          {getDict(locale).f11.pieces(total)}
+        </p>
+        <RefineSheet
+          locale={locale}
+          options={options}
+          q={query.q}
+          total={total}
+          initial={{
+            category: query.category ?? "",
+            artist: query.artist ?? "",
+            material: query.material ?? "",
+            technique: query.technique ?? "",
+            country: query.country ?? "",
+            size: query.size ?? "",
+            min: query.min !== undefined ? String(query.min) : "",
+            max: query.max !== undefined ? String(query.max) : "",
+            sort: query.sort ?? "new",
+          }}
+        />
+      </div>
       <div className="hidden rounded-lg border p-4 md:block">
         <Filters prefix="d" locale={locale} query={query} options={options} />
       </div>

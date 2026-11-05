@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getCategories } from "@/lib/catalog";
 import { getDict, type Locale } from "@/lib/i18n";
 
 type Props = { params: Promise<{ locale: Locale }> };
@@ -12,11 +11,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ShopPage({ params }: Props) {
   const { locale } = await params;
-  const f = getDict(locale).f4;
-  const categories = await getCategories(locale);
+  const t = getDict(locale);
+  const f = t.f4;
   const rows = [
-    ...categories.map((c) => ({ key: c.slug, href: `/${locale}/catalogue?category=${c.slug}`, label: c.label })),
-    { key: "artists", href: `/${locale}/createurs`, label: f.shopArtists },
+    { key: "artists", href: `/${locale}/boutique/artistes`, label: t.f11.artistsTitle },
+    { key: "categories", href: `/${locale}/boutique/categories`, label: t.f11.categoriesTitle },
   ];
   return (
     <div className="mx-auto max-w-xl space-y-4">

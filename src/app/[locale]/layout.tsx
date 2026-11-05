@@ -60,7 +60,7 @@ export default async function LocaleLayout({
             {t.skip}
           </a>
           <SiteHeader locale={locale} />
-          <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 md:py-10">
+          <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 md:py-10 lg:max-w-[1400px]">
             {children}
           </main>
           <SiteFooter locale={locale} />

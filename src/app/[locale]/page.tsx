@@ -1,13 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Newsletter } from "@/components/marketplace/newsletter";
+import { ScrollRow } from "@/components/marketplace/scroll-row";
 import { ProductCard } from "@/components/marketplace/product-card";
 import { buttonVariants } from "@/components/ui/button";
 import { CREATOR_VIDEO_SHOWCASE } from "@/data/creator-videos";
 import { getCategoryShowcase, getCreators, getFeaturedProducts, getHeroProduct } from "@/lib/catalog";
 import { getDict, type Locale } from "@/lib/i18n";
 
-function Carousel({ id, title, sub, href, seeAll, hint, children }: { id: string; title: string; sub: string; href: string; seeAll: string; hint: string; children: React.ReactNode }) {
+function Carousel({ id, title, sub, href, seeAll, hint, prev, next, children }: { id: string; title: string; sub: string; href: string; seeAll: string; hint: string; prev: string; next: string; children: React.ReactNode }) {
   return (
     <section aria-labelledby={id} className="space-y-4">
       <div className="flex items-end justify-between gap-4">
@@ -19,9 +20,9 @@ function Carousel({ id, title, sub, href, seeAll, hint, children }: { id: string
           {seeAll}
         </Link>
       </div>
-      <ul tabIndex={0} aria-label={`${title}. ${hint}`} className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-4 px-4 pb-2 focus-visible:outline-2 focus-visible:outline-ring">
+      <ScrollRow label={`${title}. ${hint}`} prev={prev} next={next}>
         {children}
-      </ul>
+      </ScrollRow>
     </section>
   );
 }
@@ -67,18 +68,18 @@ export default async function HomePage({ params }: { params: Promise<{ locale: L
 
   return (
     <div className="space-y-12 md:space-y-16">
-      <section className="grid items-center gap-6 md:grid-cols-2 md:gap-10">
-        <div className="space-y-4">
+      <section className="grid items-center gap-6 md:grid-cols-2 md:gap-10 lg:grid-cols-[2fr_3fr] lg:gap-16">
+        <div className="space-y-4 lg:space-y-6 lg:text-center">
           <p className="text-xs uppercase tracking-widest text-terracotta">{t.home.heroKicker}</p>
-          <h1 className="font-heading text-3xl leading-tight text-primary md:text-5xl">{t.home.heroTitle}</h1>
-          <p className="max-w-prose text-muted-foreground">{t.home.heroText}</p>
-          <Link href={`/${locale}/catalogue`} className={buttonVariants({ size: "lg" })}>
+          <h1 className="font-heading text-3xl leading-tight text-primary md:text-5xl lg:font-normal">{t.home.heroTitle}</h1>
+          <p className="max-w-prose text-muted-foreground lg:mx-auto">{t.home.heroText}</p>
+          <Link href={`/${locale}/catalogue`} className={`${buttonVariants({ size: "lg" })} lg:border lg:border-black lg:bg-transparent lg:text-black lg:hover:bg-black lg:hover:text-white`}>
             {t.home.heroCta}
           </Link>
         </div>
         <Link
           href={`/${locale}/produits/${heroProduct.slug}`}
-          className="relative block aspect-[4/3] overflow-hidden rounded-lg bg-muted"
+          className="relative block aspect-[4/3] overflow-hidden rounded-lg bg-muted lg:aspect-[16/10]"
         >
           <Image
             src={heroProduct.images[0]}
@@ -140,7 +141,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: L
         </ul>
       </section>
 
-      <Carousel id="new" title={f.newIn} sub={f.newInSub} href={`/${locale}/catalogue`} seeAll={f.seeAll} hint={f.carousel}>
+      <Carousel id="new" title={f.newIn} sub={f.newInSub} href={`/${locale}/catalogue`}       seeAll={f.seeAll} hint={f.carousel} prev={f.prev} next={f.next}>
         {newIn.map((p) => (
           <li key={p.slug} className="w-44 shrink-0 snap-start md:w-56">
             <ProductCard product={p} locale={locale} />
@@ -150,7 +151,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: L
 
       {banner(0)}
 
-      <Carousel id="sel" title={f.trending} sub={f.trendingSub} href={`/${locale}/catalogue`} seeAll={f.seeAll} hint={f.carousel}>
+      <Carousel id="sel" title={f.trending} sub={f.trendingSub} href={`/${locale}/catalogue`}       seeAll={f.seeAll} hint={f.carousel} prev={f.prev} next={f.next}>
         {trending.map((p) => (
           <li key={p.slug} className="w-44 shrink-0 snap-start md:w-56">
             <ProductCard product={p} locale={locale} />
@@ -202,9 +203,9 @@ export default async function HomePage({ params }: { params: Promise<{ locale: L
         </section>
       )}
 
-      <Carousel id="cre" title={f.artists} sub={f.artistsSub} href={`/${locale}/createurs`} seeAll={f.seeAll} hint={f.carousel}>
+      <Carousel id="cre" title={f.artists} sub={f.artistsSub} href={`/${locale}/createurs`}       seeAll={f.seeAll} hint={f.carousel} prev={f.prev} next={f.next}>
         {allCreators.map((c) => (
-          <li key={c.slug} className="w-40 shrink-0 snap-start md:w-48">
+          <li key={c.slug} className="w-40 shrink-0 snap-start md:w-48 lg:w-64">
             <Link href={`/${locale}/createurs/${c.slug}`} className="group block space-y-2">
               <span className="relative block aspect-square overflow-hidden bg-muted">
                 <Image src={c.image} alt="" fill unoptimized sizes="192px" className="object-cover transition-transform group-hover:scale-105" />

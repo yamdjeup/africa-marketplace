@@ -36,10 +36,10 @@ export function ProductCard({ product, locale, soldOut }: { product: ProductView
           {product.stock === 1 && !product.isExample && <Badge variant="secondary">{t.badgeUnique}</Badge>}
           {product.isNew && <Badge>{t.badgeNew}</Badge>}
         </div>
-        <FavoriteButton slug={product.slug} name={product.name} locale={locale} className="absolute right-2 top-2" />
+        <FavoriteButton slug={product.slug} name={product.name} locale={locale} className="absolute right-2 top-2 lg:opacity-0 lg:transition-opacity lg:group-hover:opacity-100 lg:focus-visible:opacity-100 lg:aria-pressed:opacity-100" />
       </div>
       <CardContent className="space-y-1.5">
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">{product.creatorName}</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-foreground lg:text-sm">{product.creatorName}</p>
         <h3 className="font-heading text-base leading-tight md:text-lg">
           <Link href={`/${locale}/produits/${product.slug}`} className="after:absolute after:inset-0">
             {product.name}

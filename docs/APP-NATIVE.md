@@ -8,7 +8,6 @@ flowchart LR
   V --> N[(Neon)]
   A --> P[Plugins natifs]
   P --> S[Partage]
-  P --> H[Haptique]
   P --> B[Bouton retour]
   P --> F[Push FCM / APNs]
   G[GitHub Actions] -->|android-apk.yml| K[APK debug]
@@ -23,7 +22,7 @@ flowchart LR
 | Projets `android/` et `ios/` générés et versionnés | Oui |
 | Icônes + splash (Android et iOS) depuis le « E » doré sur bleu nuit (`resources/`, `@capacitor/assets`) | Générés |
 | Page hors ligne (`native-www/offline.html`, `server.errorPath`) FR/EN | Oui |
-| Bouton retour Android, haptique léger, barre d'état, splash (`NativeBridge`) | Oui |
+| Bouton retour Android, barre d'état, splash (`NativeBridge`) | Oui |
 | Partage natif d'une œuvre (`ShareButton`, fiche œuvre) | Oui (aussi Web Share sur le web) |
 | APK debug | **Non construit ici** (pas de JDK/SDK) → workflow `android-apk.yml` |
 | Build iOS | Impossible sans Mac → workflow `ios-testflight.yml` |
@@ -86,7 +85,7 @@ Le site utilise déjà Web Push (VAPID). Pour des push **natives** dans l'app :
 
 ## App Store (guideline 4.2) et Google Play
 
-Apple refuse les « simples sites web emballés ». Éléments natifs présents : partage natif, haptique, bouton retour, splash, page hors ligne, barre d'état. À renforcer avant soumission : push natives, widget/raccourcis éventuels, et une valeur d'usage claire (favoris, alertes, Miroir caméra). Prévoir un compte de démonstration pour les relecteurs et le mot de passe d'accès de la démo dans les notes de revue.
+Apple refuse les « simples sites web emballés ». Éléments natifs présents : partage natif, bouton retour, splash, page hors ligne, barre d'état. À renforcer avant soumission : push natives, widget/raccourcis éventuels, et une valeur d'usage claire (favoris, alertes, Miroir caméra). Prévoir un compte de démonstration pour les relecteurs et le mot de passe d'accès de la démo dans les notes de revue.
 
 ### Fiche de store (brouillon)
 

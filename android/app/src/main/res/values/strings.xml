@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">E póm ta’</string>
+    <string name="title_activity_main">E póm ta’</string>
+    <string name="package_name">com.epomta.app</string>
+    <string name="custom_url_scheme">com.epomta.app</string>
+</resources>

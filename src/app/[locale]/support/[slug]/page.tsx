@@ -24,8 +24,20 @@ const PAGES: Record<string, { fr: string[]; en: string[] }> = {
     en: ["Terms and conditions of sale: text to be written. This private demo is not an offer for sale."],
   },
   privacy: {
-    fr: ["Politique de confidentialité : texte à rédiger. La démonstration ne conserve que les données nécessaires aux comptes et commandes simulées."],
-    en: ["Privacy policy: text to be written. The demo only keeps the data needed for accounts and simulated orders."],
+    fr: [
+      "Données collectées : nom, adresse e-mail et mot de passe (stocké chiffré, jamais en clair) à la création d'un compte ; adresses de livraison, commandes simulées, favoris et préférences d'alertes ; abonnement de notification push si vous l'activez. Connexion Google (facultative) : nous recevons uniquement votre nom et votre e-mail.",
+      "Finalités : gérer votre compte et vos commandes, vous envoyer les e-mails et notifications que vous avez choisis (baisse de prix, indisponibilité d'un favori, panier laissé), faire fonctionner le site. Aucune publicité, aucune revente de données, aucun suivi publicitaire.",
+      "Caméra (Miroir) et photos : l'image est traitée sur votre appareil et n'est pas envoyée à nos serveurs. Langue et région sont mémorisées dans un cookie ou sur votre appareil.",
+      "Prestataires techniques : Vercel (hébergement), Neon (base de données, Francfort), Google (connexion), service d'envoi d'e-mails, flagcdn.com (drapeaux) et Photon/Komoot (suggestions d'adresses). Les notifications push passent par les services Apple/Google/navigateur.",
+      "Vos droits (accès, rectification, suppression, retrait du consentement) : écrivez-nous via la page Contact ; la suppression du compte efface vos données personnelles. Responsable de traitement et coordonnées définitives : à compléter avant la mise en ligne publique.",
+    ],
+    en: [
+      "Data we collect: name, email address and password (stored hashed, never in clear text) when you create an account; delivery addresses, simulated orders, favourites and alert preferences; a push-notification subscription if you enable it. Google sign-in (optional): we only receive your name and email.",
+      "Purposes: running your account and orders, sending the emails and notifications you chose (price drop, favourite unavailable, abandoned cart), operating the site. No advertising, no resale of data, no ad tracking.",
+      "Camera (Mirror) and photos: the image is processed on your device and is not sent to our servers. Language and region are stored in a cookie or on your device.",
+      "Technical providers: Vercel (hosting), Neon (database, Frankfurt), Google (sign-in), an email-sending service, flagcdn.com (flags) and Photon/Komoot (address suggestions). Push notifications go through Apple/Google/browser services.",
+      "Your rights (access, correction, deletion, withdrawing consent): write to us via the Contact page; deleting your account erases your personal data. Data controller and final contact details: to be completed before public launch.",
+    ],
   },
   contact: {
     fr: ["Contact : coordonnées à renseigner. Pour la démonstration, adressez vos questions à la personne qui vous a communiqué l'accès."],

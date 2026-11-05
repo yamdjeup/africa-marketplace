@@ -8,6 +8,7 @@ import { RecentTracker } from "@/components/marketplace/recent-views";
 import { Badge } from "@/components/ui/badge";
 import { Breadcrumb } from "@/components/marketplace/breadcrumb";
 import { FavoriteButton } from "@/components/marketplace/favorite-button";
+import { ShareButton } from "@/components/marketplace/share-button";
 import { RoomPreview } from "@/components/marketplace/room-preview";
 import { MirrorTryOn } from "@/components/marketplace/mirror-try-on";
 import { MIRROR_CATEGORIES, MIRROR_ITEMS } from "@/data/mirror-items";
@@ -63,7 +64,10 @@ export default async function ProductPage({ params }: Props) {
                 <Badge variant="secondary">{categoryLabel}</Badge>
                 {p.isExample && <Badge variant="outline">{t.example}</Badge>}
               </div>
-              <FavoriteButton slug={p.slug} name={p.name} locale={locale} className="relative border" />
+              <div className="flex items-center gap-2">
+                <ShareButton title={p.name} text={`${p.name} — ${creator.name}`} label={locale === "fr" ? "Partager cette œuvre" : "Share this artwork"} />
+                <FavoriteButton slug={p.slug} name={p.name} locale={locale} className="relative border" />
+              </div>
             </div>
             <h1 className="font-heading text-3xl leading-tight text-primary">{p.name}</h1>
             <p className="text-sm text-muted-foreground">

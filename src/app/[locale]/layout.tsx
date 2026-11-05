@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { SiteFooter } from "@/components/marketplace/site-footer";
 import { auth } from "@/auth";
 import { MobileTabBar } from "@/components/marketplace/mobile-tab-bar";
+import { NativeBridge } from "@/components/marketplace/native-bridge";
 import { SiteHeader } from "@/components/marketplace/site-header";
 import { CartProvider } from "@/lib/cart";
 import { FavoritesProvider } from "@/lib/favorites";
@@ -56,6 +57,7 @@ export default async function LocaleLayout({
       </head>
       <body className="flex min-h-full flex-col">
         <CartProvider>
+          <NativeBridge />
           <FavoritesProvider>
           <a
             href="#main"

@@ -18,7 +18,6 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-2 lg:grid lg:max-w-[1400px] lg:grid-cols-[1fr_auto_1fr] lg:gap-x-8 lg:py-3">
         <Link href={`/${locale}`} className="font-heading text-lg font-semibold text-primary md:text-xl lg:order-2 lg:text-center lg:text-3xl">
           {t.siteName}
-          <span className="block text-[10px] font-normal leading-none text-muted-foreground">{t.brandMeaning}</span>
         </Link>
         <nav aria-label={t.nav.main} className="order-3 flex w-full items-center gap-4 text-sm md:order-none md:w-auto md:gap-6 lg:order-1">
           <Link href={`/${locale}/catalogue`} className="hidden min-h-11 items-center hover:text-terracotta md:inline-flex">

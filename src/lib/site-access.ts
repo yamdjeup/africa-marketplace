@@ -127,8 +127,7 @@ export function accessPageHtml(locale: "fr" | "en", next: string, failed: boolea
 <body>
 <main>
   <h1>E póm ta’</h1>
-  <p class="meaning">${escapeHtml(t.meaning)}</p>
-  <h2 style="font-size:1.125rem;margin:0">${escapeHtml(t.title)}</h2>
+  <h2 style="font-size:1.125rem;margin:1.5rem 0 0">${escapeHtml(t.title)}</h2>
   <p>${escapeHtml(t.lead)}</p>
   <form method="post" action="${ACCESS_PATH}?lang=${locale}">
     <input type="hidden" name="next" value="${escapeHtml(next)}">

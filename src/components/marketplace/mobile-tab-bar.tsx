@@ -27,7 +27,7 @@ export function MobileTabBar({ locale, loggedIn }: { locale: Locale; loggedIn: b
   const base = `/${locale}`;
   const items = [
     { key: "home", href: base, label: t.home, active: path === base },
-    { key: "shop", href: `${base}/createurs`, label: t.shop, active: path.startsWith(`${base}/createurs`) || path.startsWith(`${base}/catalogue`) || path.startsWith(`${base}/produits`) },
+    { key: "shop", href: `${base}/boutique`, label: t.shop, active: path.startsWith(`${base}/boutique`) || path.startsWith(`${base}/createurs`) || path.startsWith(`${base}/catalogue`) || path.startsWith(`${base}/produits`) },
     { key: "favorites", href: `${base}/favoris`, label: t.favorites, active: path.startsWith(`${base}/favoris`) },
     { key: "me", href: `${base}/${loggedIn ? "account" : "login"}`, label: t.me, active: path.startsWith(`${base}/account`) || path.startsWith(`${base}/login`) || path.startsWith(`${base}/register`) },
   ] as const;

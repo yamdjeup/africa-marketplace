@@ -11,7 +11,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
   const session = await auth();
   const menu = await getCategoryMenu(locale);
   return (
-    <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur max-lg:[body:has([data-wishlist])_&]:hidden">
+    <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur max-lg:[body:has([data-wishlist])_&]:hidden max-md:[body:has([data-account])_&]:hidden">
       <div className="bg-accent/20 py-1 text-center text-xs tracking-wide text-foreground">{t.demoBanner}</div>
       <div className="kente-band h-1" />
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-2 lg:grid lg:max-w-[1400px] lg:grid-cols-[1fr_auto_1fr] lg:gap-x-8 lg:py-3">
@@ -30,18 +30,22 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
             <label htmlFor="header-search" className="sr-only">
               {t.nav.search}
             </label>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground md:hidden">
+              <circle cx="11" cy="11" r="6.5" />
+              <path d="M16 16l4.5 4.5" />
+            </svg>
             <input
               id="header-search"
               name="q"
               type="search"
               placeholder={t.f4.searchPlaceholder}
-              className="h-11 w-full rounded-md border bg-background px-3 text-sm md:w-52"
+              className="h-11 w-full rounded-md border bg-background px-3 text-sm max-md:rounded-lg max-md:border-0 max-md:bg-muted max-md:pl-10 md:w-52"
             />
           </form>
         </nav>
         <div className="flex items-center lg:order-3 lg:justify-self-end">
           {session?.user && (
-            <Link href={`/${locale}/account/orders`} className="inline-flex min-h-11 items-center px-2 text-sm hover:text-terracotta lg:hidden">
+            <Link href={`/${locale}/account/orders`} className="inline-flex min-h-11 items-center px-2 text-sm hover:text-terracotta max-md:hidden lg:hidden">
               {t.account.orders.title}
             </Link>
           )}
@@ -49,7 +53,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
             href={`/${locale}/${session?.user ? "account" : "login"}`}
             aria-label={t.account.accountIcon}
             title={t.account.accountIcon}
-            className="inline-flex min-h-11 min-w-11 items-center justify-center hover:text-terracotta"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center hover:text-terracotta max-md:hidden"
           >
             <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <circle cx="12" cy="8" r="4" />
@@ -59,8 +63,8 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           {session?.user?.name && (
             <span className="mr-1 hidden max-w-24 truncate text-sm font-light lg:inline">{session.user.name.split(" ")[0]}</span>
           )}
-          <RegionPanel locale={locale} />
-          <FavoritesLink locale={locale} />
+          <div className="max-md:hidden md:contents"><RegionPanel locale={locale} /></div>
+          <div className="max-md:hidden md:contents"><FavoritesLink locale={locale} /></div>
           <CartLink locale={locale} />
         </div>
       </div>

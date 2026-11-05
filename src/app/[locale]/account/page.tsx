@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { CartLink } from "@/components/marketplace/cart-link";
 import { logout } from "@/app/[locale]/account/actions";
 import { RegionRows } from "@/components/marketplace/region-rows";
 import { db } from "@/lib/db";
@@ -19,7 +20,7 @@ const rowClass = "flex min-h-14 items-center justify-between border-b px-1 text-
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="space-y-1">
-      <h2 className="border-b pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</h2>
+      <h2 className="border-b pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground max-md:text-2xl max-md:font-heading max-md:font-normal max-md:normal-case max-md:tracking-normal max-md:text-primary">{title}</h2>
       {children}
     </section>
   );
@@ -44,11 +45,24 @@ export default async function AccountPage({ params }: Props) {
   const base = `/${locale}`;
 
   return (
-    <div className="mx-auto max-w-xl space-y-8">
-      <div>
+    <div data-account className="mx-auto max-w-xl space-y-8">
+      <div className="-mx-4 -mt-6 flex items-center justify-between border-b px-4 py-2 md:hidden">
+        <p className="truncate font-heading text-xl text-primary">{user.name.split(" ")[0]}</p>
+        <div className="flex items-center">
+          <Link href={`${base}/catalogue`} aria-label={t.nav.search} className="inline-flex min-h-11 min-w-11 items-center justify-center">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="6.5" />
+              <path d="M16 16l4.5 4.5" />
+            </svg>
+          </Link>
+          <CartLink locale={locale} />
+        </div>
+      </div>
+      <div className="max-md:hidden">
         <h1 className="font-heading text-3xl text-primary">{user.name}</h1>
         <p className="text-sm text-muted-foreground">{user.email}</p>
       </div>
+      <h1 className="sr-only md:hidden">{user.name}</h1>
       <Section title={t.me.sectionAccount}>
         <Row href={`${base}/account/orders`} label={t.account.orders.title} />
         <Row href={`${base}/account/addresses`} label={t.me.addresses} />

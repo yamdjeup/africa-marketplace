@@ -68,18 +68,20 @@ export default async function HomePage({ params }: { params: Promise<{ locale: L
 
   return (
     <div className="space-y-12 md:space-y-16">
+      <p className="-mx-4 -mt-6 bg-primary px-4 py-3 text-center text-sm text-primary-foreground md:hidden">{f.promoBar}</p>
       <section className="grid items-center gap-6 md:grid-cols-2 md:gap-10 lg:grid-cols-[2fr_3fr] lg:gap-16">
-        <div className="space-y-4 lg:space-y-6 lg:text-center">
+        <div className="space-y-4 max-md:text-center lg:space-y-6 lg:text-center">
           <p className="text-xs uppercase tracking-widest text-terracotta">{t.home.heroKicker}</p>
-          <h1 className="font-heading text-3xl leading-tight text-primary md:text-5xl lg:font-normal">{t.home.heroTitle}</h1>
-          <p className="max-w-prose text-muted-foreground lg:mx-auto">{t.home.heroText}</p>
-          <Link href={`/${locale}/catalogue`} className={`${buttonVariants({ size: "lg" })} lg:border lg:border-black lg:bg-transparent lg:text-black lg:hover:bg-black lg:hover:text-white`}>
-            {t.home.heroCta}
+          <h1 className="font-heading text-3xl leading-tight text-primary max-md:font-normal md:text-5xl lg:font-normal">{t.home.heroTitle}</h1>
+          <p className="max-w-prose text-muted-foreground max-md:mx-auto lg:mx-auto">{t.home.heroText}</p>
+          <Link href={`/${locale}/catalogue`} className={`${buttonVariants({ size: "lg" })} max-md:border max-md:border-black max-md:bg-transparent max-md:text-black lg:border lg:border-black lg:bg-transparent lg:text-black lg:hover:bg-black lg:hover:text-white`}>
+            <span className="md:hidden">{f.discover}</span>
+            <span className="max-md:hidden">{t.home.heroCta}</span>
           </Link>
         </div>
         <Link
           href={`/${locale}/produits/${heroProduct.slug}`}
-          className="relative block aspect-[4/3] overflow-hidden rounded-lg bg-muted lg:aspect-[16/10]"
+          className="relative block aspect-[4/3] overflow-hidden rounded-lg bg-muted max-md:-mx-4 max-md:order-first max-md:aspect-[4/5] max-md:rounded-none lg:aspect-[16/10]"
         >
           <Image
             src={heroProduct.images[0]}

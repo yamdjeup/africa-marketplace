@@ -2,6 +2,11 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* Chrome Android « version ordinateur » rend ~980 px : le seuil desktop (lg) est abaissé à 900 px. */
+@theme {
+  --breakpoint-lg: 56.25rem;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

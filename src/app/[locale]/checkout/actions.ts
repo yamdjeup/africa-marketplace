@@ -2,6 +2,8 @@
 
 import { randomUUID } from "node:crypto";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
+import { runAlerts } from "@/lib/alerts";
 import { auth } from "@/auth";
 import { checkAddress, formatStreet, readAddress } from "@/lib/address";
 import { db } from "@/lib/db";
@@ -151,6 +153,9 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
       editUrl: `${base}/${locale}/checkout/confirmation/${number}/address?t=${editToken}`,
     },
   });
+
+  // Pièce vendue (dernière pièce / rupture) : avis aux abonnés, après la réponse pour ne pas ralentir la commande.
+  after(() => runAlerts(20).catch(() => undefined));
 
   redirect(`/${locale}/checkout/confirmation/${number}?t=${editToken}`);
 }

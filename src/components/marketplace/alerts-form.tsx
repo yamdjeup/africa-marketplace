@@ -31,17 +31,35 @@ function Switch({ id, label, checked, disabled, onChange, hint }: { id: string; 
 export function AlertsForm({ locale }: { locale: Locale }) {
   const w = getDict(locale).wishlist;
   const [prefs, setPrefs] = useState<Prefs>({ email: false, promo: false });
+  const [account, setAccount] = useState<boolean | null>(null);
+  const [msg, setMsg] = useState("");
   useEffect(() => {
+    let local: Partial<Prefs> = {};
     try {
-      const raw = localStorage.getItem(KEY);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      if (raw) setPrefs({ email: false, promo: false, ...JSON.parse(raw) });
+      local = JSON.parse(localStorage.getItem(KEY) ?? "{}");
     } catch {}
+    fetch("/api/alerts/prefs")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { email: boolean; promo: boolean } | null) => {
+        setAccount(!!d);
+        setPrefs(d ? { email: d.email, promo: d.promo } : { email: !!local.email, promo: !!local.promo });
+      })
+      .catch(() => setAccount(false));
   }, []);
   const update = (p: Partial<Prefs>) => {
     const next = { ...prefs, ...p };
     setPrefs(next);
-    localStorage.setItem(KEY, JSON.stringify(next));
+    if (account) {
+      void fetch("/api/alerts/prefs", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(p) });
+    } else {
+      localStorage.setItem(KEY, JSON.stringify(next));
+    }
+  };
+  const sendTest = async () => {
+    setMsg("");
+    const r = await fetch(`/api/alerts/test?lang=${locale}`, { method: "POST" }).catch(() => null);
+    const s = r ? ((await r.json().catch(() => ({}))) as { status?: string }).status : "failed";
+    setMsg(s === "sent" ? w.testSent : s === "rate_limited" ? w.testLimited : s === "unconfigured" ? w.testUnconfigured : w.testFailed);
   };
   return (
     <div className="mx-auto max-w-xl space-y-6">
@@ -58,7 +76,16 @@ export function AlertsForm({ locale }: { locale: Locale }) {
         <h2 id="more" className="py-4 text-sm font-semibold">{w.more}</h2>
         <Switch id="al-promo" label={w.promo} checked={prefs.promo} onChange={(v) => update({ promo: v })} />
       </section>
-      <p className="text-xs text-muted-foreground">{w.simulated}</p>
+      <p className="text-xs text-muted-foreground">{w.note}</p>
+      {account === false && <p className="text-sm">{w.loginHint}</p>}
+      {account && (
+        <div>
+          <button type="button" onClick={sendTest} className="inline-flex min-h-11 items-center rounded-md border border-black px-5 text-sm hover:bg-black hover:text-white">
+            {w.testBtn}
+          </button>
+          {msg && <p role="status" className="mt-2 text-sm">{msg}</p>}
+        </div>
+      )}
     </div>
   );
 }

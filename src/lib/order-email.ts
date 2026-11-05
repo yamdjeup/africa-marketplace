@@ -1,4 +1,4 @@
-import nodemailer from "nodemailer";
+import { sendEmail } from "@/lib/email";
 
 export type OrderEmailInput = {
   to: string;
@@ -9,8 +9,6 @@ export type OrderEmailInput = {
   totalCents: number;
   shipping?: { lines: string[]; phone: string; editUrl?: string };
 };
-
-const SEND_TIMEOUT_MS = 8000;
 
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -73,25 +71,5 @@ ${shipHtml}
 
 // Ne lève jamais : une commande ne doit pas échouer à cause de l'e-mail.
 export async function sendOrderEmail(o: OrderEmailInput): Promise<void> {
-  const user = process.env.GMAIL_USER;
-  const pass = process.env.GMAIL_APP_PASSWORD;
-  if (!user || !pass) return;
-  try {
-    const transport = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
-      auth: { user, pass },
-      connectionTimeout: SEND_TIMEOUT_MS,
-      greetingTimeout: SEND_TIMEOUT_MS,
-      socketTimeout: SEND_TIMEOUT_MS,
-    });
-    const msg = buildOrderEmail(o);
-    await Promise.race([
-      transport.sendMail({ from: `"E póm ta’" <${user}>`, to: o.to, ...msg }),
-      new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), SEND_TIMEOUT_MS)),
-    ]);
-  } catch (e) {
-    console.error("order email failed:", e instanceof Error ? e.message : "unknown error");
-  }
+  await sendEmail({ to: o.to, ...buildOrderEmail(o) });
 }

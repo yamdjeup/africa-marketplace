@@ -6,6 +6,8 @@ import { pick, type Locale } from "@/lib/i18n";
 import { slugify } from "@/lib/category-rules";
 import { isExampleProduct } from "@/lib/examples";
 import { CREATOR_COUNTRIES } from "@/data/creator-country";
+import { normalize, tokenize, tokenInWords, synonymCategorySlugs } from "@/lib/search-core";
+import { didYouMean, matchCreators, type SearchIndex } from "@/lib/search-index";
 
 export const PAGE_SIZE = 24;
 const NEW_DAYS = 60;
@@ -106,8 +108,41 @@ export function toCreatorView(c: Creator, locale: Locale, cats: { slug: string; 
 
 const withCreator = { creator: { select: { name: true } } } as const;
 
-const normalize = (s: string) =>
-  s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+const getSearchIndexRaw = async (): Promise<SearchIndex> => {
+  const [creators, categories, products] = await Promise.all([
+    db.creator.findMany({ orderBy: { name: "asc" } }),
+    db.category.findMany({ orderBy: { sortOrder: "asc" } }),
+    db.product.findMany({ include: withCreator }),
+  ]);
+  return {
+    creators: creators.map((c) => ({
+      slug: c.slug,
+      name: c.name,
+      image: c.image,
+      specialty: c.specialty,
+      specialtyEn: c.specialtyEn,
+      core: tokenize([c.name, c.specialty, c.specialtyEn, ...(CREATOR_COUNTRIES[c.slug] ?? []).map((k) => `${k.fr} ${k.en}`)].join(" ")),
+      bio: tokenize(`${c.bio} ${c.bioEn}`),
+    })),
+    categories: categories.map((c) => ({ slug: c.slug, name: c.name, nameEn: c.nameEn })),
+    products: products.map((p) => ({
+      slug: p.slug,
+      name: p.name,
+      nameEn: p.nameEn,
+      creator: p.creator.name,
+      categorySlug: p.categorySlug,
+      core: tokenize([p.name, p.nameEn, p.material, p.materialEn, p.technique, p.techniqueEn, JSON.stringify(p.materials)].filter(Boolean).join(" ")),
+    })),
+  };
+};
+
+export const getSearchIndex = unstable_cache(getSearchIndexRaw, ["search-index"], { revalidate: 60 });
+
+export async function searchExtras(q: string, locale: Locale) {
+  const ix = await getSearchIndex();
+  const artists = matchCreators(ix, q).map((c) => ({ slug: c.slug, name: c.name, image: c.image, label: locale === "fr" ? c.specialty : c.specialtyEn }));
+  return { artists, didYouMean: didYouMean(ix, q, locale), suggested: ix.creators.slice(0, 3).map((c) => ({ slug: c.slug, name: c.name, image: c.image, label: locale === "fr" ? c.specialty : c.specialtyEn })) };
+}
 
 export type CatalogParams = {
   q?: string;
@@ -146,8 +181,10 @@ export async function searchProducts(params: CatalogParams, locale: Locale) {
 
   // Filtres matière/technique/pays/taille et recherche texte en JS (portable SQLite/PostgreSQL ; catalogue de taille modeste).
   const q = params.q ? normalize(params.q.trim()) : "";
-  const cats = q ? await db.category.findMany() : [];
+  const tokens = tokenize(q);
+  const cats = q ? (await getSearchIndex()).categories : [];
   const catText = new Map(cats.map((c) => [c.slug, `${c.name} ${c.nameEn}`]));
+  const syn = synonymCategorySlugs(tokens, cats);
   const matched = rows.filter((p) => {
     if (params.material && !(p.material && slugify(p.material) === params.material)) return false;
     if (params.technique && !(p.technique && slugify(p.technique) === params.technique)) return false;
@@ -155,13 +192,15 @@ export async function searchProducts(params: CatalogParams, locale: Locale) {
     if (params.size && !strings(p.sizes).includes(params.size)) return false;
     if (!q) return true;
     const artistCountries = (CREATOR_COUNTRIES[p.creatorSlug] ?? []).map((c) => `${c.fr} ${c.en}`);
-    return normalize(
+    const core = tokenize(
       [
-        p.name, p.nameEn, p.description, p.descriptionEn, p.creator.name, JSON.stringify(p.materials),
+        p.name, p.nameEn, p.creator.name, JSON.stringify(p.materials),
         p.country, p.countryEn, p.technique, p.techniqueEn, p.material, p.materialEn,
         catText.get(p.categorySlug), ...artistCountries,
       ].filter(Boolean).join(" "),
-    ).includes(q);
+    );
+    const desc = normalize(`${p.description} ${p.descriptionEn}`);
+    return tokens.every((t) => tokenInWords(t, core) || (t.length >= 3 && desc.includes(t)) || syn.get(t)?.has(p.categorySlug));
   });
 
   const pages = Math.max(1, Math.ceil(matched.length / PAGE_SIZE));

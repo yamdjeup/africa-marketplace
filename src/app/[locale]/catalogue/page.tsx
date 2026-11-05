@@ -6,7 +6,7 @@ import { ShopTopBar } from "@/components/marketplace/shop-topbar";
 import { Breadcrumb } from "@/components/marketplace/breadcrumb";
 import { ruleFor, SIZE_OPTIONS } from "@/lib/category-rules";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { getFilterOptions, searchProducts, type CatalogParams } from "@/lib/catalog";
+import { getFilterOptions, searchExtras, searchProducts, type CatalogParams } from "@/lib/catalog";
 import { getDict, type Locale } from "@/lib/i18n";
 
 type SearchParams = Record<string, string | string[] | undefined>;
@@ -50,7 +50,11 @@ export default async function CatalogPage({
     page: num(first(sp.page)),
   };
 
-  const [options, firstSearch] = await Promise.all([getFilterOptions(locale, query.category), searchProducts({ ...query }, locale)]);
+  const [options, firstSearch, extras] = await Promise.all([
+    getFilterOptions(locale, query.category),
+    searchProducts({ ...query }, locale),
+    query.q ? searchExtras(query.q, locale) : Promise.resolve(null),
+  ]);
   // Un artiste sans œuvre dans la catégorie choisie est ignoré (réinitialisé) : la recherche est alors refaite.
   let result = firstSearch;
   if (query.artist && !options.artists.some((a) => a.value === query.artist)) {
@@ -159,13 +163,37 @@ export default async function CatalogPage({
         <Filters prefix="d" locale={locale} query={query} options={options} />
       </div>
 
+      {extras && extras.artists.length > 0 && (
+        <section aria-labelledby="s-artists" className="space-y-3">
+          <h2 id="s-artists" className="font-heading text-xl text-primary">{t.sArtists}</h2>
+          <ArtistCards artists={extras.artists} locale={locale} />
+          {items.length > 0 && <h2 className="font-heading text-xl text-primary">{t.sWorks}</h2>}
+        </section>
+      )}
       {items.length === 0 ? (
         <div className="rounded-lg border border-dashed p-10 text-center">
           <p className="font-heading text-xl">{onlyCategory ? t.emptyCategory : t.empty}</p>
           {!onlyCategory && <p className="mt-1 text-sm text-muted-foreground">{t.emptyHint}</p>}
+          {extras?.didYouMean && (
+            <p className="mt-3 text-sm">
+              {t.didYouMean}{" "}
+              <Link
+                href={extras.didYouMean.kind === "artist" ? `/${locale}/createurs/${extras.didYouMean.slug}` : `/${locale}/catalogue?category=${extras.didYouMean.slug}`}
+                className="font-medium underline underline-offset-4"
+              >
+                {extras.didYouMean.label} ?
+              </Link>
+            </p>
+          )}
           <Link href={`/${locale}/catalogue`} className={buttonVariants({ variant: "outline", className: "mt-4" })}>
             {t.reset}
           </Link>
+          {extras && extras.artists.length === 0 && (
+            <div className="mt-6 space-y-3 text-left">
+              <h2 className="font-heading text-lg text-primary">{t.suggestedArtists}</h2>
+              <ArtistCards artists={extras.suggested} locale={locale} />
+            </div>
+          )}
         </div>
       ) : (
         <ul className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4">
@@ -197,6 +225,25 @@ export default async function CatalogPage({
         </nav>
       )}
     </div>
+  );
+}
+
+function ArtistCards({ artists, locale }: { artists: { slug: string; name: string; image: string; label: string }[]; locale: Locale }) {
+  return (
+    <ul className="flex gap-3 overflow-x-auto pb-1">
+      {artists.map((a) => (
+        <li key={a.slug} className="shrink-0">
+          <Link href={`/${locale}/createurs/${a.slug}`} className="flex min-h-11 w-56 items-center gap-3 rounded-lg border bg-background p-3 hover:border-accent">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={a.image} alt="" width={48} height={48} loading="lazy" className="h-12 w-12 rounded-full object-cover" />
+            <span className="min-w-0">
+              <span className="block truncate font-heading text-primary">{a.name}</span>
+              <span className="block truncate text-xs text-muted-foreground">{a.label}</span>
+            </span>
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 }
 

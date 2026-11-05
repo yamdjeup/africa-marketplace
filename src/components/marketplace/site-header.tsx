@@ -4,6 +4,7 @@ import { AccountMenu } from "@/components/marketplace/account-menu";
 import { CartLink } from "@/components/marketplace/cart-link";
 import { FavoritesLink } from "@/components/marketplace/favorites-link";
 import { RegionPanel } from "@/components/marketplace/region-panel";
+import { SearchBox } from "@/components/marketplace/search-box";
 import { getCategoryMenu } from "@/lib/catalog";
 import { getDict, type Locale } from "@/lib/i18n";
 
@@ -11,6 +12,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
   const t = getDict(locale);
   const session = await auth();
   const menu = await getCategoryMenu(locale);
+  const labels = { artist: t.catalog.kindArtist, category: t.catalog.kindCategory, work: t.catalog.kindWork };
   return (
     <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur max-lg:[body:has([data-wishlist])_&]:hidden max-md:[body:has([data-account])_&]:hidden max-md:[body:has([data-shopnav])_&]:hidden">
       <div className="bg-accent/20 py-1 text-center text-xs tracking-wide text-foreground">{t.demoBanner}</div>
@@ -34,11 +36,11 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
               <circle cx="11" cy="11" r="6.5" />
               <path d="M16 16l4.5 4.5" />
             </svg>
-            <input
+            <SearchBox
               id="header-search"
-              name="q"
-              type="search"
+              locale={locale}
               placeholder={t.f4.searchPlaceholder}
+              labels={labels}
               className="h-11 w-full rounded-md border bg-background px-3 text-sm max-md:rounded-lg max-md:border-0 max-md:bg-muted max-md:pl-10 md:w-52"
             />
           </form>
@@ -115,11 +117,11 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           <circle cx="11" cy="11" r="6.5" />
           <path d="M16 16l4.5 4.5" />
         </svg>
-        <input
+        <SearchBox
           id="header-search-lg"
-          name="q"
-          type="search"
+          locale={locale}
           placeholder={t.f4.searchPlaceholder}
+          labels={labels}
           className="h-11 w-44 border-0 xl:w-72 border-b border-foreground/40 bg-transparent pl-7 text-sm font-light focus:border-foreground focus:outline-none"
         />
       </form>

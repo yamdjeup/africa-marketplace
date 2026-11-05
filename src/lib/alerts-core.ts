@@ -63,6 +63,16 @@ const T = {
   },
 };
 
+// Texte court pour une notification push (même contenu que l'e-mail, sans lien de désinscription).
+export function buildAlertPush(o: { kind: "favorites" | "new"; locale: "fr" | "en"; items: AlertItem[] }) {
+  const t = T[o.locale];
+  const first = o.items[0];
+  const more = o.items.length > 1 ? (o.locale === "fr" ? ` et ${o.items.length - 1} autre(s)` : ` and ${o.items.length - 1} more`) : "";
+  const body = first ? `${first.creatorName} — ${first.name}${first.kind ? ` : ${t[first.kind]}` : ""}${more}` : "";
+  const url = o.items.length === 1 && o.kind === "favorites" && first ? `/${o.locale}/produits/${first.slug}` : o.kind === "favorites" ? `/${o.locale}/favoris` : `/${o.locale}/catalogue`;
+  return { title: o.kind === "new" ? t.newSubject : t.favSubject, body, url };
+}
+
 export function buildAlertEmail(o: { kind: "favorites" | "new" | "test"; locale: "fr" | "en"; userId: string; items?: AlertItem[] }) {
   const t = T[o.locale];
   const money = (c: number) => new Intl.NumberFormat(o.locale === "fr" ? "fr-FR" : "en-GB", { style: "currency", currency: "EUR" }).format(c / 100);

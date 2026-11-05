@@ -33,6 +33,56 @@ export function AlertsForm({ locale }: { locale: Locale }) {
   const [prefs, setPrefs] = useState<Prefs>({ email: false, promo: false });
   const [account, setAccount] = useState<boolean | null>(null);
   const [msg, setMsg] = useState("");
+  const [push, setPush] = useState<"loading" | "unconfigured" | "unsupported" | "ios" | "denied" | "off" | "on">("loading");
+  const [pushKey, setPushKey] = useState("");
+  const [pushMsg, setPushMsg] = useState("");
+  useEffect(() => {
+    void (async () => {
+      const cfg = (await fetch("/api/push/subscribe").then((r) => r.json()).catch(() => null)) as { configured?: boolean; publicKey?: string } | null;
+      if (!cfg?.configured || !cfg.publicKey) return setPush("unconfigured");
+      setPushKey(cfg.publicKey);
+      const ua = navigator.userAgent;
+      const ios = /iPad|iPhone|iPod/.test(ua) || (ua.includes("Mac") && navigator.maxTouchPoints > 1);
+      const standalone = window.matchMedia("(display-mode: standalone)").matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
+      if (ios && !standalone) return setPush("ios");
+      if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) return setPush("unsupported");
+      if (Notification.permission === "denied") return setPush("denied");
+      const reg = await navigator.serviceWorker.getRegistration("/sw.js");
+      const sub = await reg?.pushManager.getSubscription();
+      setPush(sub && Notification.permission === "granted" ? "on" : "off");
+    })();
+  }, []);
+  const togglePush = async (v: boolean) => {
+    setPushMsg("");
+    try {
+      const reg = await navigator.serviceWorker.register("/sw.js");
+      await navigator.serviceWorker.ready;
+      if (v) {
+        const perm = await Notification.requestPermission();
+        if (perm !== "granted") return setPush(perm === "denied" ? "denied" : "off");
+        const b64 = pushKey.replace(/-/g, "+").replace(/_/g, "/");
+        const raw = atob(b64 + "=".repeat((4 - (b64.length % 4)) % 4));
+        const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: Uint8Array.from(raw, (c) => c.charCodeAt(0)) });
+        const r = await fetch("/api/push/subscribe", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ subscription: sub.toJSON(), locale }) });
+        if (!r.ok) {
+          await sub.unsubscribe();
+          throw new Error("subscribe");
+        }
+        setPush("on");
+      } else {
+        const sub = await reg.pushManager.getSubscription();
+        if (sub) {
+          await fetch("/api/push/subscribe", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ endpoint: sub.endpoint }) });
+          await sub.unsubscribe();
+        }
+        setPush("off");
+      }
+    } catch {
+      setPushMsg(w.pushError);
+    }
+  };
+  const pushHint = push === "unconfigured" || push === "loading" ? w.soon : undefined;
+  const pushNote = push === "denied" ? w.pushDenied : push === "unsupported" ? w.pushUnsupported : push === "ios" ? w.pushIos : account === false ? w.pushLogin : "";
   useEffect(() => {
     let local: Partial<Prefs> = {};
     try {
@@ -69,7 +119,8 @@ export function AlertsForm({ locale }: { locale: Locale }) {
       <h1 className="font-heading text-3xl font-normal text-primary">{w.alertsTitle}</h1>
       <section aria-labelledby="via" className="divide-y border-y">
         <h2 id="via" className="py-4 text-sm text-muted-foreground">{w.alertsVia}</h2>
-        <Switch id="al-push" label={w.push} checked={false} disabled hint={w.soon} />
+        <Switch id="al-push" label={w.push} checked={push === "on"} disabled={!(push === "off" || push === "on") || !account} hint={pushHint} onChange={togglePush} />
+        {(pushNote || pushMsg) && <p role="status" className="py-3 text-xs text-muted-foreground">{pushMsg || pushNote}</p>}
         <Switch id="al-email" label={w.email} checked={prefs.email} onChange={(v) => update({ email: v })} />
       </section>
       <section aria-labelledby="more" className="divide-y border-y">

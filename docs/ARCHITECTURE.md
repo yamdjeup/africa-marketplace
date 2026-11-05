@@ -96,7 +96,10 @@ Source : `.env.example` (aucune valeur dans le dépôt). Local : `.env.local` (i
 | `GMAIL_USER` / `GMAIL_APP_PASSWORD` | E-mails via Gmail SMTP | Optionnelles (sans elles, aucun e-mail) |
 | `RESEND_API_KEY` / `EMAIL_FROM` | E-mails via Resend (prioritaire sur Gmail) | Optionnelles |
 | `GOOGLE_PLACES_API_KEY` | Adresses via Google Places (sinon Photon) | Optionnelle |
-| `CRON_SECRET` | Autorise `/api/alerts/run` (envoyé par Vercel Cron) | Oui pour les alertes |
+| `CRON_SECRET` | Autorise `/api/alerts/run` (envoyé par Vercel Cron) et `/api/push/test` | Oui pour les alertes |
+| `VAPID_PUBLIC_KEY` (alias `NEXT_PUBLIC_VAPID_PUBLIC_KEY`) | Clé publique Web Push | Non (sans elle : push « Bientôt ») ; Vercel |
+| `VAPID_PRIVATE_KEY` | Clé privée Web Push (secret) | Non ; Vercel |
+| `VAPID_SUBJECT` | Contact VAPID (`mailto:`…) | Non ; Vercel |
 | Secret GitHub `NEON_DATABASE_URL` | Utilisé par le workflow Seed Neon | Si seed via GitHub Actions |
 
 ## 6. Limites connues et dette technique
@@ -104,7 +107,7 @@ Source : `.env.example` (aucune valeur dans le dépôt). Local : `.env.local` (i
 - Drapeaux servis par `flagcdn.com` (CDN tiers, requiert Internet).
 - Photon (OpenStreetMap/Komoot) : service public sans SLA.
 - Gmail SMTP : environ 500 e-mails/jour ; Resend nécessite un domaine vérifié.
-- Notifications push non implémentées (pas de service worker ; option « Bientôt »).
+- Notifications push : service worker `public/sw.js` + `web-push` (table `PushSubscription`, migration `0008_push`) ; absentes sans clés VAPID. Pas de push « panier laissé » (panier en localStorage) ; iOS exige l'installation sur l'écran d'accueil.
 - Préférences de magasin (« Mes préférences boutique ») simulées en localStorage.
 - Coordonnées de contact et textes « provisoire » à remplacer ; visuels d'artistes/marques réels = démonstration privée uniquement.
 - Vercel Hobby : démarrages à froid ; cache 60 s non invalidé à la demande.
@@ -115,7 +118,7 @@ Source : `.env.example` (aucune valeur dans le dépôt). Local : `.env.local` (i
 1. Domaine dédié `epomta.com` : achat via OVH, puis rattachement à Vercel (Connect External Domain).
 2. Sauvegardes Neon (point-in-time restore / exports planifiés).
 3. Resend avec domaine vérifié.
-4. Service worker et notifications push.
+4. Push : voir [DEPLOIEMENT.md](./DEPLOIEMENT.md) (clés VAPID) ; reste : service worker de cache hors ligne.
 5. Dépôt de marque (INPI / EUIPO).
 6. Remplacer les contenus provisoires et les visuels sous droits.
 

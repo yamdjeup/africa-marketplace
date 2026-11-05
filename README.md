@@ -17,4 +17,4 @@ Sans `DATABASE_URL`, une base SQLite locale (`prisma/.dev/dev.db`, ignorée par 
 
 `dev`, `build`, `start`, `lint`, `test:e2e`, `db:setup`, `db:push`, `db:seed`, `db:deploy` (migrations PostgreSQL), `db:check`, `db:studio`, `vercel-build`.
 
-Déploiement privé Vercel + Neon avec mot de passe d'entrée (`SITE_ACCESS_PASSWORD`) : voir `docs/DEPLOIEMENT.md`.
+Déploiement privé Vercel + Neon avec mot de passe d'entrée (`SITE_ACCESS_PASSWORD`) : voir `docs/DEPLOIEMENT.md`. Architecture complète (GitHub, Vercel, Neon, services, variables d'environnement) : voir `docs/ARCHITECTURE.md`.

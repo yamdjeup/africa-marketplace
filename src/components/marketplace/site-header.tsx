@@ -44,7 +44,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
             />
           </form>
         </nav>
-        <div className="flex items-center lg:order-3 lg:justify-self-end">
+        <div className="flex items-center lg:order-3 lg:justify-self-end lg:gap-5">
           {session?.user && (
             <Link href={`/${locale}/account/orders`} className="inline-flex min-h-11 items-center px-2 text-sm hover:text-terracotta max-md:hidden lg:hidden">
               {t.account.orders.title}
@@ -61,13 +61,14 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
               <path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" />
             </svg>
           </Link>
-          <div className="hidden lg:block"><AccountMenu locale={locale} name={session?.user?.name ?? null} /></div>
+          <div className="hidden lg:order-3 lg:block"><AccountMenu locale={locale} name={session?.user?.name ?? null} /></div>
           {session?.user?.name && (
-            <span className="mr-1 hidden max-w-24 truncate text-sm font-light lg:inline">{session.user.name.split(" ")[0]}</span>
+            <span className="hidden max-w-[10ch] truncate text-xs font-light text-muted-foreground lg:order-4 lg:-ml-3 lg:inline">{session.user.name.split(" ")[0]}</span>
           )}
-          <div className="max-md:hidden md:contents"><RegionPanel locale={locale} /></div>
-          <div className="max-md:hidden md:contents"><FavoritesLink locale={locale} /></div>
-          <CartLink locale={locale} />
+          <div className="max-md:hidden md:contents lg:order-1 lg:flex"><RegionPanel locale={locale} /></div>
+          <span aria-hidden="true" className="hidden h-6 w-px bg-foreground/20 lg:order-2 lg:block" />
+          <div className="max-md:hidden md:contents lg:order-5 lg:flex"><FavoritesLink locale={locale} /></div>
+          <div className="contents lg:order-6 lg:flex"><CartLink locale={locale} /></div>
         </div>
       </div>
       <div className="border-t lg:mx-auto lg:flex lg:max-w-[1400px] lg:items-center lg:justify-between lg:gap-8 lg:px-4">

@@ -50,10 +50,14 @@ export default async function CatalogPage({
     page: num(first(sp.page)),
   };
 
-  const options = await getFilterOptions(locale, query.category);
-  // Un artiste sans œuvre dans la catégorie choisie est ignoré (réinitialisé).
-  if (query.artist && !options.artists.some((a) => a.value === query.artist)) query.artist = undefined;
-  const { items, total, page, pages } = await searchProducts(query, locale);
+  const [options, firstSearch] = await Promise.all([getFilterOptions(locale, query.category), searchProducts({ ...query }, locale)]);
+  // Un artiste sans œuvre dans la catégorie choisie est ignoré (réinitialisé) : la recherche est alors refaite.
+  let result = firstSearch;
+  if (query.artist && !options.artists.some((a) => a.value === query.artist)) {
+    query.artist = undefined;
+    result = await searchProducts(query, locale);
+  }
+  const { items, total, page, pages } = result;
   const categoryLabel = options.categories.find((c) => c.value === query.category)?.label;
   const crumbs = [
     { label: t.home, href: `/${locale}` },

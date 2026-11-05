@@ -1,4 +1,5 @@
 import "server-only";
+import { unstable_cache } from "next/cache";
 import type { Creator, Product } from "@prisma/client";
 import { db } from "@/lib/db";
 import { pick, type Locale } from "@/lib/i18n";
@@ -180,7 +181,7 @@ function facet(rows: Product[], locale: Locale, fr: "material" | "technique" | "
   return [...map].map(([value, label]) => ({ value, label })).sort((a, b) => a.label.localeCompare(b.label, locale));
 }
 
-export async function getFilterOptions(locale: Locale, category?: string) {
+async function getFilterOptionsRaw(locale: Locale, category?: string) {
   const [categories, artists, scoped] = await Promise.all([
     db.category.findMany({ orderBy: { sortOrder: "asc" } }),
     db.creator.findMany({
@@ -242,21 +243,30 @@ function creatorCats(products: { categorySlug: string }[], cats: { slug: string;
 }
 
 export async function getCreatorWithProducts(slug: string, locale: Locale) {
-  const c = await db.creator.findUnique({
-    where: { slug },
-    include: { products: { include: withCreator, orderBy: { createdAt: "desc" } } },
-  });
+  const [c, cats] = await Promise.all([
+    db.creator.findUnique({
+      where: { slug },
+      include: { products: { include: withCreator, orderBy: { createdAt: "desc" } } },
+    }),
+    getCategories(locale),
+  ]);
   if (!c) return null;
-  return { creator: toCreatorView(c, locale, creatorCats(c.products, await getCategories(locale))), products: c.products.map((p) => toProductView(p, locale)) };
+  return { creator: toCreatorView(c, locale, creatorCats(c.products, cats)), products: c.products.map((p) => toProductView(p, locale)) };
 }
 
-export async function getCategories(locale: Locale) {
+// Données identiques pour tous les visiteurs : cache serveur 60 s (pas de données par utilisateur ici).
+export const getCategories = unstable_cache(getCategoriesRaw, ["catalog-categories"], { revalidate: 60 });
+export const getCategoryMenu = unstable_cache(getCategoryMenuRaw, ["catalog-menu"], { revalidate: 60 });
+export const getCategoryShowcase = unstable_cache(getCategoryShowcaseRaw, ["catalog-showcase"], { revalidate: 60 });
+export const getFilterOptions = unstable_cache(getFilterOptionsRaw, ["catalog-filter-options"], { revalidate: 60 });
+
+async function getCategoriesRaw(locale: Locale) {
   const rows = await db.category.findMany({ orderBy: { sortOrder: "asc" } });
   return rows.map((c) => ({ slug: c.slug, label: pick(locale, c.name, c.nameEn) }));
 }
 
 /** Menu desktop : par catégorie, artistes et pays des œuvres présentes. */
-export async function getCategoryMenu(locale: Locale) {
+async function getCategoryMenuRaw(locale: Locale) {
   const [cats, rows] = await Promise.all([
     db.category.findMany({ orderBy: { sortOrder: "asc" } }),
     db.product.findMany({ select: { categorySlug: true, country: true, countryEn: true, creator: { select: { slug: true, name: true } } } }),
@@ -280,7 +290,7 @@ export async function getCategoryMenu(locale: Locale) {
 }
 
 /** Une bannière par catégorie : visuel de l'œuvre la plus récente et nombre d'œuvres (0 = catégorie vide). */
-export async function getCategoryShowcase(locale: Locale) {
+async function getCategoryShowcaseRaw(locale: Locale) {
   const [cats, rows] = await Promise.all([
     db.category.findMany({ orderBy: { sortOrder: "asc" } }),
     db.product.findMany({ orderBy: { createdAt: "desc" }, select: { categorySlug: true, images: true, name: true, nameEn: true } }),

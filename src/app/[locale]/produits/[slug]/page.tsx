@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProductPage({ params }: Props) {
   const { locale, slug } = await params;
-  const data = await getProduct(slug, locale);
+  const [data, more] = await Promise.all([getProduct(slug, locale), getRelatedProducts(slug, locale, 4)]);
   if (!data) notFound();
   const { product: p, creator, categoryLabel } = data;
   const t = getDict(locale).product;
@@ -38,7 +38,6 @@ export default async function ProductPage({ params }: Props) {
   const cm = [p.widthCm, p.heightCm, p.depthCm].filter((v): v is number => v != null).join(" × ");
   const cmLabel = cm ? `${cm} ${t.cmUnit}` : "";
   const catalogT = getDict(locale).catalog;
-  const more = await getRelatedProducts(p.slug, locale, 4);
   const mirror = MIRROR_CATEGORIES.includes(p.categorySlug) && p.images.length > 0 ? MIRROR_ITEMS[p.slug] : undefined;
   const roomOk =
     ROOM_CATEGORIES.includes(p.categorySlug) && !!p.widthCm && !!p.heightCm && p.widthCm > 0 && p.heightCm > 0 && p.images.length > 0;

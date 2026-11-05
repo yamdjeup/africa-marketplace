@@ -26,9 +26,20 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
   const [slugs, setSlugs] = useState<string[]>([]);
   const synced = useRef(false);
 
-  const push = useCallback((next: string[]) => {
+  const push = useCallback((next: string[], rollback?: string[]) => {
     if (!synced.current) return;
-    void fetch("/api/favorites", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ slugs: next }) }).catch(() => {});
+    const undo = () => {
+      if (!rollback) return;
+      setSlugs(rollback);
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(rollback));
+      } catch {}
+    };
+    void fetch("/api/favorites", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ slugs: next }) })
+      .then((r) => {
+        if (!r.ok) undo();
+      })
+      .catch(undo);
   }, []);
 
   useEffect(() => {
@@ -57,14 +68,15 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
   }, [push]);
 
   const toggle = useCallback((slug: string) => {
-    const next = read().includes(slug) ? read().filter((s) => s !== slug) : [...read(), slug];
+    const prev = read();
+    const next = prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug];
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     } catch {
       // stockage indisponible : l'état reste en mémoire
     }
     setSlugs(next);
-    push(next);
+    push(next, prev);
   }, [push]);
 
   const value = useMemo<FavoritesValue>(

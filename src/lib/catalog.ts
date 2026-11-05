@@ -243,12 +243,15 @@ function creatorCats(products: { categorySlug: string }[], cats: { slug: string;
 }
 
 export async function getCreatorWithProducts(slug: string, locale: Locale) {
-  const c = await db.creator.findUnique({
-    where: { slug },
-    include: { products: { include: withCreator, orderBy: { createdAt: "desc" } } },
-  });
+  const [c, cats] = await Promise.all([
+    db.creator.findUnique({
+      where: { slug },
+      include: { products: { include: withCreator, orderBy: { createdAt: "desc" } } },
+    }),
+    getCategories(locale),
+  ]);
   if (!c) return null;
-  return { creator: toCreatorView(c, locale, creatorCats(c.products, await getCategories(locale))), products: c.products.map((p) => toProductView(p, locale)) };
+  return { creator: toCreatorView(c, locale, creatorCats(c.products, cats)), products: c.products.map((p) => toProductView(p, locale)) };
 }
 
 // Données identiques pour tous les visiteurs : cache serveur 60 s (pas de données par utilisateur ici).

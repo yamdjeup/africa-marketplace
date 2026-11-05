@@ -107,6 +107,17 @@ Sans nom de domaine, on envoie les e-mails depuis votre Gmail personnel. Si vous
 
 Ne collez jamais ce mot de passe dans le code ni dans un message. Pour le révoquer : même page Google, icône corbeille. Gmail limite l'envoi (environ 500 messages par jour) : largement suffisant pour la démo. Si l'envoi échoue, la commande réussit quand même et l'erreur apparaît dans les logs Vercel.
 
+## Étape 5 ter bis — Alertes e-mail (favoris, nouvelles pièces)
+
+**Migration additive `0007_alerts`** (colonnes d'alerte sur `User`, table `Favorite`) : appliquée par `npm run db:deploy` au build Vercel, rien à faire à la main.
+
+Variables à ajouter dans Vercel :
+- `CRON_SECRET` : chaîne aléatoire longue. Protège `/api/alerts/run` ; le cron quotidien de `vercel.json` (07:00 UTC, compatible Hobby) l'envoie automatiquement. Appel manuel : `curl -H "Authorization: Bearer <CRON_SECRET>" https://<site>/api/alerts/run`.
+- `AUTH_URL` (ou `NEXT_PUBLIC_SITE_URL`) : sert à construire les liens des e-mails (pièce, désinscription).
+- Fournisseur d'e-mail : Gmail (`GMAIL_USER`, `GMAIL_APP_PASSWORD`, étape précédente) par défaut ; pour passer à Resend, ajouter `RESEND_API_KEY` et `EMAIL_FROM` (expéditeur d'un domaine vérifié) : Resend est alors prioritaire.
+
+Fonctionnement : pour les comptes connectés, les favoris sont synchronisés en base. Un avis part (une seule fois par changement) quand une pièce favorite baisse de prix, devient la dernière disponible ou revient en stock, et un e-mail « Nouvelles pièces » part aux abonnés aux nouveautés. Déclenchement : cron quotidien, appel manuel, et après chaque commande. Volume limité à 100 e-mails par exécution (Gmail : ~500/jour). Chaque e-mail contient un lien de désinscription signé. Les notifications push restent « Bientôt ». Les e-mails sont envoyés en français.
+
 ## Étape 5 quater — Connexion avec Google / Facebook / Apple (optionnel)
 
 Sans ces variables, le bouton s'affiche grisé avec « Bientôt » et rien d'autre ne change. Seul **Google** est proposé sur les pages connexion/inscription (Google validé en ligne le 2026-11-03) ; Facebook et Apple sont reportés (code prêt côté `src/auth.ts`, mais aucun bouton affiché). Aucune migration de base n'est nécessaire : un compte social est lié à l'e-mail (créé s'il n'existe pas). URL de callback à déclarer chez chaque fournisseur : `https://epomta-demo.vercel.app/api/auth/callback/<google|facebook|apple>`.

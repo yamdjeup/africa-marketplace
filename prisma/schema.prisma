@@ -89,6 +89,25 @@ model User {
   createdAt    DateTime @default(now())
   orders       Order[]
   addresses    Address[]
+  /// Alertes e-mail sur les favoris (baisse de prix, dernière pièce, retour en stock)
+  alertFavorites Boolean  @default(false)
+  /// E-mail « Nouvelles pièces » ; promoSince = point de départ (pièces créées après)
+  alertPromo     Boolean  @default(false)
+  promoSince     DateTime?
+  lastTestEmailAt DateTime?
+  favorites      Favorite[]
+}
+
+/// Favoris synchronisés des comptes connectés ; lastPriceCents/lastStock = dernier état notifié (anti-doublon)
+model Favorite {
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productSlug    String
+  lastPriceCents Int
+  lastStock      Int
+  createdAt      DateTime @default(now())
+
+  @@id([userId, productSlug])
 }
 
 model Address {

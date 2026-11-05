@@ -96,6 +96,21 @@ model User {
   promoSince     DateTime?
   lastTestEmailAt DateTime?
   favorites      Favorite[]
+  pushSubscriptions PushSubscription[]
+}
+
+/// Abonnements Web Push (un par navigateur/appareil) ; supprimés si le service push répond 404/410
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  locale    String   @default("fr")
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 /// Favoris synchronisés des comptes connectés ; lastPriceCents/lastStock = dernier état notifié (anti-doublon)

@@ -13,7 +13,7 @@ import { CartLink } from "@/components/marketplace/cart-link";
 const DISMISS_KEY = "epomta-notify-dismissed";
 
 // Bloc « Restez informé » : fermeture mémorisée sur l'appareil (aucun envoi réel).
-function NotifyBanner({ locale }: { locale: Locale }) {
+export function NotifyBanner({ locale, title, text }: { locale: Locale; title?: string; text?: string }) {
   const w = getDict(locale).wishlist;
   const [hidden, setHidden] = useState(true);
   useEffect(() => {
@@ -35,8 +35,8 @@ function NotifyBanner({ locale }: { locale: Locale }) {
       >
         <span aria-hidden="true">✕</span>
       </button>
-      <p className="font-heading text-lg text-primary">{w.notifyTitle}</p>
-      <p className="mt-1 text-sm text-muted-foreground">{w.notifyText}</p>
+      <p className="font-heading text-lg text-primary">{title ?? w.notifyTitle}</p>
+      <p className="mt-1 text-sm text-muted-foreground">{text ?? w.notifyText}</p>
       <Link href={`/${locale}/alertes`} className="mt-3 inline-flex min-h-11 items-center rounded-md border border-black px-5 text-sm hover:bg-black hover:text-white">
         {w.notifyCta}
       </Link>

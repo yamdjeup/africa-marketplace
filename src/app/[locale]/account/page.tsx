@@ -3,6 +3,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { CartLink } from "@/components/marketplace/cart-link";
+import { NotifyBanner } from "@/components/marketplace/favorites-list";
+import { ShopPrefs } from "@/components/marketplace/shop-prefs";
 import { logout } from "@/app/[locale]/account/actions";
 import { RegionRows } from "@/components/marketplace/region-rows";
 import { db } from "@/lib/db";
@@ -63,6 +65,45 @@ export default async function AccountPage({ params }: Props) {
         <p className="text-sm text-muted-foreground">{user.email}</p>
       </div>
       <h1 className="sr-only md:hidden">{user.name}</h1>
+      <div className="space-y-8 md:hidden">
+        <NotifyBanner locale={locale} title={t.f10.notifTitle} text={t.f10.notifText} />
+        <Section title={t.me.sectionAccount}>
+          <Row href={`${base}/account/orders`} label={t.f10.ordersReturns} />
+          <Row href={`${base}/support/credits`} label={`${t.f10.credits} (${t.f10.provisional})`} />
+          <Row href={`${base}/account/security`} label={t.me.security} />
+          <Row href={`${base}/account/addresses`} label={t.me.addresses} />
+        </Section>
+        <Section title={t.me.sectionLang}>
+          <RegionRows locale={locale} />
+        </Section>
+        <Section title={t.f10.prefTitle}>
+          <ShopPrefs locale={locale} />
+        </Section>
+        <Section title={t.f10.settings}>
+          <Row href={`${base}/alertes`} label={t.wishlist.commPrefs} />
+        </Section>
+        <Section title={t.me.sectionSupport}>
+          <Row href={`${base}/support/about`} label={t.f10.about} />
+          <Row href={`${base}/support/discounts`} label={`${t.f10.discounts} (${t.f10.provisional})`} />
+          <Row href={`${base}/support/terms`} label={t.me.terms} />
+          <Row href={`${base}/support/privacy`} label={t.me.privacy} />
+          <Row href={`${base}/support/do-not-sell`} label={`${t.f10.doNotSell} (${t.f10.provisional})`} />
+          <Row href={`${base}/support/faq`} label={t.me.faq} />
+        </Section>
+        <section className="space-y-3 text-center">
+          <h2 className="font-heading text-2xl font-normal text-primary">{t.f10.help}</h2>
+          <Link href={`${base}/support/contact`} className="flex h-12 w-full items-center justify-center rounded-md border border-black text-sm hover:bg-black hover:text-white">
+            {t.me.contact}
+          </Link>
+          <form action={logout}>
+            <input type="hidden" name="locale" value={locale} />
+            <button type="submit" className="h-12 w-full rounded-md bg-black text-sm font-medium text-white hover:bg-black/85">
+              {t.account.logout}
+            </button>
+          </form>
+        </section>
+      </div>
+      <div className="space-y-8 max-md:hidden">
       <Section title={t.me.sectionAccount}>
         <Row href={`${base}/account/orders`} label={t.account.orders.title} />
         <Row href={`${base}/account/addresses`} label={t.me.addresses} />
@@ -86,6 +127,7 @@ export default async function AccountPage({ params }: Props) {
           {t.account.logout}
         </button>
       </form>
+      </div>
     </div>
   );
 }

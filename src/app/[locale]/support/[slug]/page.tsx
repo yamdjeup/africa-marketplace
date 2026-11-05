@@ -33,14 +33,22 @@ const PAGES: Record<string, { fr: string[]; en: string[] }> = {
   },
 };
 
-const KEYS = ["faq", "terms", "privacy", "contact"] as const;
+const KEYS = ["faq", "terms", "privacy", "contact", "about", "discounts", "doNotSell", "credits"] as const;
 type Key = (typeof KEYS)[number];
-const keyOf = (slug: string) => (KEYS as readonly string[]).includes(slug) ? (slug as Key) : null;
+const keyOf = (slug: string) => {
+  const s = slug === "do-not-sell" ? "doNotSell" : slug;
+  return (KEYS as readonly string[]).includes(s) ? (s as Key) : null;
+};
+
+function labelOf(locale: Locale, key: Key) {
+  const d = getDict(locale);
+  return key in d.me ? d.me[key as keyof typeof d.me] as string : key === "credits" ? d.f10.credits : d.f10[key as "about" | "discounts" | "doNotSell"];
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
   const key = keyOf(slug);
-  return { title: key ? getDict(locale).me[key] : undefined, robots: { index: false } };
+  return { title: key ? labelOf(locale, key) : undefined, robots: { index: false } };
 }
 
 export default async function SupportPage({ params }: Props) {
@@ -48,14 +56,15 @@ export default async function SupportPage({ params }: Props) {
   const key = keyOf(slug);
   if (!key) notFound();
   const t = getDict(locale).me;
+  const body = key in PAGES ? PAGES[key][locale === "en" ? "en" : "fr"] : [getDict(locale).f10.pages[key as "about" | "discounts" | "doNotSell" | "credits"]];
   return (
     <div className="mx-auto max-w-xl space-y-4">
       <Link href={`/${locale}/account`} className="text-sm text-muted-foreground hover:text-terracotta">
         ‹ {t.back}
       </Link>
-      <h1 className="font-heading text-3xl text-primary">{t[key]}</h1>
+      <h1 className="font-heading text-3xl text-primary">{labelOf(locale, key)}</h1>
       <p className="rounded-md bg-accent/20 px-3 py-2 text-xs">{t.provisional}</p>
-      {PAGES[key][locale === "en" ? "en" : "fr"].map((p) => (
+      {body.map((p) => (
         <p key={p} className="text-sm leading-relaxed">
           {p}
         </p>

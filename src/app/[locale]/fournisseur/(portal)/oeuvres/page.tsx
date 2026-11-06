@@ -51,6 +51,7 @@ export default async function WorksPage({ params, searchParams }: Props) {
                   </span>
                   <span className="flex flex-col items-end gap-1">
                     <Pill cls={st[2]}>{tr(locale, st[0], st[1])}</Pill>
+                    {p.status === "REJECTED" && p.rejectReason && <span className="line-clamp-2 max-w-40 text-right text-xs text-destructive/80">{p.rejectReason}</span>}
                     {p.status === "PUBLISHED" && avail <= 0 && <Pill cls="bg-red-100 text-red-900">{tr(locale, "Épuisée", "Sold out")}</Pill>}
                     {p.status === "PUBLISHED" && avail > 0 && avail <= p.lowStockThreshold && <Pill cls="bg-amber-100 text-amber-900">{tr(locale, "Stock bas", "Low stock")}</Pill>}
                   </span>

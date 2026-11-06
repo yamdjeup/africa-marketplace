@@ -49,7 +49,7 @@ Comptes : partenaire actif (accepté au lot A), admin (`ADMIN_EMAILS`), client.
 
 ### Admin — `/fr/admin/oeuvres`
 - [ ] File des œuvres soumises avec photos, prix, stock, attestation/édition ; « Publier » ou « Refuser » (motif obligatoire). E-mail au partenaire dans les deux cas.
-- [ ] Œuvre publiée → visible dans le catalogue et sur la fiche de l'artiste ; refusée → corrigeable puis re-soumettable.
+- [ ] Œuvre publiée → visible dans le catalogue et sur la fiche de l'artiste ; refusée → corrigeable puis re-soumettable ; dans la liste `/fr/fournisseur/oeuvres`, le motif du refus s'affiche sous le badge « Refusée » (2 lignes max, rouge discret).
 - [ ] Derniers mouvements de stock visibles.
 
 ### Client

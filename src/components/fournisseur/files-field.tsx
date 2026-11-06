@@ -57,7 +57,7 @@ export function PartnerFilesField({ initial, fr }: { initial: F[]; fr: boolean }
       }
       if (res.ok) setFiles((cur) => [...cur, data as F]);
       else if (res.status === 413) setMsg(errors.size);
-      else setMsg(errors[data.error ?? ""] ?? t(`Envoi impossible (erreur ${res.status}).`, `Upload failed (error ${res.status}).`));
+      else setMsg(errors[data.error ?? ""] ?? t(`Envoi impossible (POST /api/partner/files : erreur ${res.status}).`, `Upload failed (POST /api/partner/files: error ${res.status}).`));
     }
     setBusy(false);
     if (input.current) input.current.value = "";

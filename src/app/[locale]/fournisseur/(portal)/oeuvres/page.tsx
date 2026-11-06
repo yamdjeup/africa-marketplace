@@ -5,6 +5,9 @@ import { getPortalContext } from "@/lib/supplier";
 import { tr } from "@/lib/tr";
 import { formatLocal, type Currency } from "@/lib/currency";
 import type { Locale } from "@/lib/i18n";
+import { PhotoLightbox } from "@/components/admin/table-widgets";
+
+const lb = (l: Locale) => ({ open: tr(l, "Agrandir la photo", "Enlarge photo"), close: tr(l, "Fermer", "Close"), prev: tr(l, "Photo précédente", "Previous photo"), next: tr(l, "Photo suivante", "Next photo") });
 
 export const metadata = { title: "Œuvres et stock", robots: { index: false } };
 
@@ -41,10 +44,9 @@ export default async function WorksPage({ params, searchParams }: Props) {
             const st = STATUS[p.status] ?? STATUS.DRAFT;
             const imgs = Array.isArray(p.images) ? (p.images as string[]) : [];
             return (
-              <li key={p.slug}>
-                <Link href={`/${locale}/fournisseur/oeuvres/${p.slug}`} className="flex min-h-16 items-center gap-3 p-3 hover:bg-muted/50">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  {imgs[0] ? <img src={imgs[0]} alt="" className="size-14 rounded-md object-cover" /> : <span className="size-14 rounded-md bg-muted" />}
+              <li key={p.slug} className="flex items-center gap-3 pl-3 hover:bg-muted/50">
+                {imgs.length > 0 ? <PhotoLightbox images={imgs} title={locale === "en" ? p.nameEn : p.name} labels={lb(locale)} /> : <span className="size-14 shrink-0 rounded-md bg-muted" />}
+                <Link href={`/${locale}/fournisseur/oeuvres/${p.slug}`} className="flex min-h-16 min-w-0 flex-1 items-center gap-3 p-3 pl-0">
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-medium">{locale === "en" ? p.nameEn : p.name}</span>
                     <span className="block text-xs text-muted-foreground">{formatLocal(p.priceLocal ?? p.priceCents, p.currency as Currency, locale)} · {tr(locale, "stock", "stock")} {avail}{p.reserved > 0 ? ` (${p.reserved} ${tr(locale, "réservé(s)", "reserved")})` : ""}</span>

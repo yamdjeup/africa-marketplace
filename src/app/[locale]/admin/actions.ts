@@ -75,11 +75,11 @@ export async function moderateProduct(formData: FormData) {
   const reason = String(formData.get("reason") ?? "").trim().slice(0, 500);
   const p = await db.product.findUnique({ where: { slug } });
   const sup = p?.supplierId ? await db.supplier.findUnique({ where: { id: p.supplierId }, include: { user: { select: { email: true } } } }) : null;
-  if (!p || p.status !== "SUBMITTED" || !sup) return;
+  if (!p || !sup || !(p.status === "SUBMITTED" || (p.status === "PUBLISHED" && decision === "REJECTED"))) return;
   if (decision === "REJECTED" && !reason) return;
   const ok = decision === "PUBLISHED";
   if (!ok && decision !== "REJECTED") return;
-  await db.product.update({ where: { slug }, data: { status: decision, rejectReason: ok ? null : reason } });
+  await db.product.update({ where: { slug }, data: { status: decision, rejectReason: ok ? null : reason, decidedAt: new Date() } });
   if (sup.user?.email) await emailPartnerProductDecision({ email: sup.user.email, name: sup.displayName, locale: "fr" }, p.name, ok, reason);
   revalidatePath("/[locale]/admin/oeuvres", "page");
 }

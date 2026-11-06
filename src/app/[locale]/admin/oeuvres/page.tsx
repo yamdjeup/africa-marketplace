@@ -153,8 +153,13 @@ export default async function AdminWorks({ params, searchParams }: Props) {
                         <td className="px-2 py-2">{(p.status === "SUBMITTED" || p.status === "PUBLISHED") && <input type="checkbox" name="slug" value={p.slug} aria-label={title} className="size-5" />}</td>
                         <td className="px-2 py-2"><PhotoLightbox images={imgs} title={title} labels={lb} /></td>
                         <td className="px-2 py-2">{p.partner}</td>
-                        <td className="max-w-48 px-2 py-2 font-medium">{title}
-                          {p.createdByAdmin && <span className="mt-1 block w-fit rounded-full bg-muted px-2 py-0.5 text-xs font-normal">{tr(locale, "Saisie par l'administration", "Entered by administration")}</span>}
+                        <td className="max-w-48 px-2 py-2                         font-medium">
+                                                  {p.status === "PUBLISHED" ? (
+                                                    <a href={`/${locale}/produits/${p.slug}`} target="_blank" rel="noopener noreferrer" title={tr(locale, "Ouvrir la fiche publique", "Open public page")} className="underline-offset-2 hover:underline">{title} <span aria-hidden="true" className="text-xs text-muted-foreground">↗</span></a>
+                                                  ) : (
+                                                    <>{title}{p.supplierId && <Link href={`/${locale}/admin/fournisseurs/${p.supplierId}/oeuvres`} className="block text-xs font-normal underline">{tr(locale, "Voir côté partenaire", "View partner side")}</Link>}</>
+                                                  )}
+                                                  {p.createdByAdmin && <span className="mt-1 block w-fit rounded-full bg-muted px-2 py-0.5 text-xs font-normal">{tr(locale, "Saisie par l'administration", "Entered by administration")}</span>}
                           {(p.edition || p.authorAttestedAt || p.signatureFileId) && (
                             <span className="mt-1 block text-xs font-normal text-muted-foreground">
                               {p.edition && `${p.edition} · `}
@@ -199,7 +204,7 @@ export default async function AdminWorks({ params, searchParams }: Props) {
             <tbody>{moves.map((m) => (
               <tr key={m.id} className="border-b">
                 <td className="whitespace-nowrap py-2 pr-3">{dtf(m.createdAt)}</td>
-                <td className="pr-3">{m.productSlug}</td>
+                <td className="pr-3"><a href={`/${locale}/produits/${m.productSlug}`} target="_blank" rel="noopener noreferrer" title={tr(locale, "Ouvrir la fiche publique", "Open public page")} className="underline-offset-2 hover:underline">{m.productSlug} <span aria-hidden="true" className="text-xs text-muted-foreground">↗</span></a></td>
                 <td className="pr-3">{MOVEMENT_LABELS[m.type as keyof typeof MOVEMENT_LABELS]?.[fr ? "fr" : "en"] ?? m.type}</td>
                 <td className="pr-3">{m.quantity > 0 ? `+${m.quantity}` : m.quantity}</td>
                 <td className="pr-3">{m.reason}</td><td>{m.authorLabel}</td>

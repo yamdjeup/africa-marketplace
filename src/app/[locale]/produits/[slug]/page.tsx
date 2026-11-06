@@ -16,6 +16,8 @@ import { MIRROR_CATEGORIES, MIRROR_ITEMS } from "@/data/mirror-items";
 const ROOM_CATEGORIES = ["peinture", "sculpture", "photographie", "textile-decoration"];
 import { ruleFor } from "@/lib/category-rules";
 import { getProduct, getRelatedProducts } from "@/lib/catalog";
+import { auth } from "@/auth";
+import { isAdminEmail } from "@/lib/supplier";
 import { formatEur, getDict, type Locale } from "@/lib/i18n";
 import { ApproxPrice } from "@/components/marketplace/approx-price";
 
@@ -42,9 +44,18 @@ export default async function ProductPage({ params }: Props) {
   const mirror = MIRROR_CATEGORIES.includes(p.categorySlug) && p.images.length > 0 ? MIRROR_ITEMS[p.slug] : undefined;
   const roomOk =
     ROOM_CATEGORIES.includes(p.categorySlug) && !!p.widthCm && !!p.heightCm && p.widthCm > 0 && p.heightCm > 0 && p.images.length > 0;
+  const adminUser = isAdminEmail((await auth())?.user?.email);
 
   return (
     <div className="space-y-12">
+      {adminUser && (
+        <div role="region" aria-label="Admin" className="flex flex-wrap items-center gap-3 rounded-md border border-accent bg-accent/15 p-3 text-sm">
+          <strong>Admin :</strong>
+          <Link href={`/${locale}/admin/oeuvres?f=published`} className="underline">{locale === "fr" ? "Retour à la modération" : "Back to moderation"}</Link>
+          <Link href={`/${locale}/admin/oeuvres?f=published&q=${encodeURIComponent(p.name)}`} className="underline">{locale === "fr" ? "Refuser" : "Reject"}</Link>
+          <Link href={`/${locale}/admin/fournisseurs`} className="underline">{locale === "fr" ? "Modifier" : "Edit"}</Link>
+        </div>
+      )}
       <RecentTracker item={{ slug: p.slug, name: p.name, creatorName: p.creatorName, image: p.images[0] ?? "", priceCents: p.priceCents }} />
       <Breadcrumb
         label={catalogT.breadcrumb}

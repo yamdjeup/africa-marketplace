@@ -32,7 +32,7 @@ export default async function ApplyPage({ params, searchParams }: Props) {
       : null;
   const errors: Record<string, string> = {
     invalid: tr(locale, "Vérifiez les champs : lien du portfolio valide (s'il est renseigné) et présentation d'au moins 20 caractères.", "Please check the fields: valid portfolio link (if provided) and at least 20 characters of description."),
-    proof: tr(locale, "Indiquez un lien (portfolio, réseau social) OU joignez au moins un fichier de vos œuvres.", "Provide a link (portfolio, social profile) OR attach at least one file of your work."),
+    proof: tr(locale, "Indiquez un lien (portfolio, réseau social) OU joignez au moins un fichier de vos créations.", "Provide a link (portfolio, social profile) OR attach at least one file of your creations."),
     pending: tr(locale, "Votre candidature est déjà en cours d'examen.", "Your application is already under review."),
     rate: tr(locale, "Trop de candidatures aujourd'hui, réessayez demain.", "Too many applications today, please try again tomorrow."),
   };
@@ -56,7 +56,7 @@ export default async function ApplyPage({ params, searchParams }: Props) {
           {blockReason && <p>{tr(locale, "Motif : ", "Reason: ")}{blockReason}</p>}
           <p>
             {supplier.status === "SUSPENDED"
-              ? tr(locale, "Vos œuvres sont masquées du catalogue le temps de la suspension. ", "Your works are hidden from the catalogue during the suspension. ")
+              ? tr(locale, "Vos créations sont masquées du catalogue le temps de la suspension. ", "Your creations are hidden from the catalogue during the suspension. ")
               : ""}
             <Link className="underline" href={`/${locale}/support/contact`}>{tr(locale, "Contactez-nous", "Contact us")}</Link>
             {tr(locale, " pour en discuter.", " to discuss it.")}
@@ -92,7 +92,7 @@ export default async function ApplyPage({ params, searchParams }: Props) {
                 <input required name="name" defaultValue={last?.name ?? user?.name ?? ""} maxLength={120} className={inputCls} /></label>
               <label className={field}>{tr(locale, "Pays", "Country")}
                 <select required name="country" defaultValue={last?.country ?? "Cameroun"} className={inputCls}>{COUNTRIES.map((c) => <option key={c}>{c}</option>)}</select></label>
-              <label className={field}>{tr(locale, "Type d'œuvres", "Type of work")}
+              <label className={field}>{tr(locale, "Type de créations", "Type of creations")}
                 <select required name="craftType" defaultValue={last?.craftType ?? CRAFTS[0]} className={inputCls}>{CRAFTS.map((c) => <option key={c}>{c}</option>)}</select></label>
               <label className={field}>{tr(locale, "Lien vers votre portfolio ou réseau social (facultatif si vous joignez des fichiers)", "Link to your portfolio or social profile (optional if you attach files)")}
                 <input type="url" name="portfolioUrl" defaultValue={last?.portfolioUrl ?? ""} placeholder="https://" className={inputCls} /></label>

@@ -9,13 +9,13 @@ type Props = { params: Promise<{ locale: Locale; slug: string }> };
 const PAGES: Record<string, { fr: string[]; en: string[] }> = {
   faq: {
     fr: [
-      "Comment acheter ? Choisissez une œuvre, ajoutez-la au panier, puis passez la commande simulée : aucun paiement réel n'est effectué.",
-      "Les œuvres sont-elles uniques ? Oui, chaque œuvre d'artiste est une pièce unique ; les pièces « Exemple » sont fictives.",
+      "Comment acheter ?       Choisissez une création, ajoutez-la au panier, puis passez la commande simulée : aucun paiement réel n'est effectué.",
+            "Les créations sont-elles uniques ? Oui, chaque création d'artiste est une pièce unique ; les pièces « Exemple » sont fictives.",
       "Dans quelle devise paie-t-on ? Toujours en EUR ; les autres devises sont une conversion indicative.",
     ],
     en: [
-      "How do I buy? Pick an artwork, add it to the cart, then place the simulated order: no real payment is made.",
-      "Are the works unique? Yes, each artist's work is a one-of-a-kind piece; “Example” items are fictional.",
+      "How do I buy?       Pick a creation, add it to the cart, then place the simulated order: no real payment is made.",
+            "Are the creations unique? Yes, each artist's creation is a one-of-a-kind piece; “Example” items are fictional.",
       "Which currency do I pay in? Always EUR; other currencies are an indicative conversion.",
     ],
   },

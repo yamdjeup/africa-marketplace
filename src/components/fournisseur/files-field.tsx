@@ -70,7 +70,7 @@ export function PartnerFilesField({ initial, fr }: { initial: F[]; fr: boolean }
 
   return (
     <div className="space-y-2">
-      <p className="text-sm font-medium">{t("Ou joignez des fichiers de vos œuvres (JPG, PNG, WebP, PDF — 5 fichiers, 4 Mo chacun)", "Or attach files of your work (JPG, PNG, WebP, PDF — 5 files, 4 MB each)")}</p>
+      <p className="text-sm font-medium">{t("Ou joignez des fichiers de vos créations (JPG, PNG, WebP, PDF — 5 fichiers, 4 Mo chacun)", "Or attach files of your creations (JPG, PNG, WebP, PDF — 5 files, 4 MB each)")}</p>
       <input ref={input} type="file" multiple accept="image/jpeg,image/png,image/webp,application/pdf" disabled={busy || files.length >= MAX_FILES} onChange={(e) => add(e.target.files)} className="block w-full min-h-11 rounded-md border bg-background px-3 py-2 text-sm" />
       {busy && <p role="status" className="text-xs text-muted-foreground">{t("Envoi en cours…", "Uploading…")}</p>}
       {msg && <p role="alert" className="text-xs text-destructive">{msg}</p>}

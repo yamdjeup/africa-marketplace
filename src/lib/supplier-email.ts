@@ -59,7 +59,7 @@ export async function emailAdminProductSubmitted(partnerName: string, title: str
   const admins = (process.env.ADMIN_EMAILS ?? "").split(",").map((s) => s.trim()).filter(Boolean);
   const base = siteUrl();
   for (const to of admins)
-    await safeSend(to, `Œuvre à modérer : ${title}`, [`${partnerName} a soumis l'œuvre « ${title} ».`, `Modérer : ${base}/fr/admin/oeuvres`]);
+    await safeSend(to, `Création à modérer : ${title}`, [`${partnerName} a soumis la création « ${title} ».`, `Modérer : ${base}/fr/admin/oeuvres`]);
 }
 
 export async function emailPartnerProductDecision(o: Owner, title: string, approved: boolean, reason?: string | null) {
@@ -67,18 +67,18 @@ export async function emailPartnerProductDecision(o: Owner, title: string, appro
   const base = siteUrl();
   const loc = fr ? "fr" : "en";
   const lines = approved
-    ? [fr ? `Bonjour ${o.name}, votre œuvre « ${title} » est publiée dans le catalogue.` : `Hello ${o.name}, your work “${title}” is now published in the catalogue.`]
-    : [fr ? `Bonjour ${o.name}, votre œuvre « ${title} » n'a pas été publiée.` : `Hello ${o.name}, your work “${title}” was not published.`];
+    ? [fr ? `Bonjour ${o.name},     votre création « ${title} » est publiée dans le catalogue.` : `Hello ${o.name}, your creation “${title}” is now published in the catalogue.`]
+        : [fr ? `Bonjour ${o.name}, votre création « ${title} » n'a pas été publiée.` : `Hello ${o.name}, your creation “${title}” was not published.`];
   if (reason) lines.push(reason);
   lines.push(`${base}/${loc}/fournisseur/oeuvres`);
-  await safeSend(o.email, approved ? (fr ? "E póm ta’ — œuvre publiée" : "E póm ta’ — work published") : fr ? "E póm ta’ — œuvre à revoir" : "E póm ta’ — work needs changes", lines);
+  await safeSend(o.email, approved ? (fr ? "E póm ta’ — création publiée" : "E póm ta’ — creation published") : fr ? "E póm ta’ — création à revoir" : "E póm ta’ — creation needs changes", lines);
 }
 
 export async function emailPartnerStatus(o: Owner, action: "SUSPEND" | "REACTIVATE" | "REVOKE", reason: string) {
   const fr = o.locale !== "en";
   const msg = {
-    SUSPEND: fr ? `Votre espace partenaire est suspendu. Vos œuvres sont masquées du catalogue. Motif : ${reason}` : `Your partner area is suspended. Your works are hidden from the catalogue. Reason: ${reason}`,
-    REACTIVATE: fr ? "Votre espace partenaire est réactivé ; vos œuvres sont de nouveau visibles." : "Your partner area is reactivated; your works are visible again.",
+    SUSPEND: fr ? `Votre espace partenaire est suspendu. Vos créations sont masquées du catalogue. Motif : ${reason}` : `Your partner area is suspended. Your creations are hidden from the catalogue. Reason: ${reason}`,
+    REACTIVATE: fr ? "Votre espace partenaire est réactivé ; vos créations sont de nouveau visibles." : "Your partner area is reactivated; your creations are visible again.",
     REVOKE: fr ? `Votre accès partenaire est définitivement révoqué. Motif : ${reason}` : `Your partner access has been permanently revoked. Reason: ${reason}`,
   }[action];
   await safeSend(o.email, fr ? "E póm ta’ — votre statut partenaire" : "E póm ta’ — your partner status", [fr ? `Bonjour ${o.name},` : `Hello ${o.name},`, msg]);

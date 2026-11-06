@@ -86,7 +86,7 @@ export function ProductForm({ locale, categories, product, readOnly, adminFor }:
             <label className="block text-sm font-medium">{tr(locale, "Édition (« Pièce unique » ou « 3/10 »)", "Edition (“Unique piece” or “3/10”)")}<input name="edition" defaultValue={product?.edition ?? ""} className={inputCls} /></label>
             {!adminFor && <PhotoUploader name="signaturePhoto" kind="signature" max={1} fr={fr} initial={product?.signatureFileId ? [`/api/media/${product.signatureFileId}`] : []} label={tr(locale, "Photo de la signature sur l'œuvre", "Photo of the signature on the work")} />}
             {adminFor ? <p className="text-xs text-muted-foreground">{tr(locale, "Signature et attestation d'auteur : à compléter par le partenaire dans son espace.", "Signature and author attestation: to be completed by the partner in their space.")}</p> : <label className="flex items-start gap-2 text-sm"><input type="checkbox" name="attest" defaultChecked={!!product?.authorAttestedAt} className="mt-0.5 size-5" />
-              <span>{tr(locale, "Je certifie être l'auteur de cette œuvre.", "I certify that I am the author of this work.")}
+              <span>{tr(locale, "Je certifie être l'auteur de cette création.", "I certify that I am the author of this creation.")}
                 {product?.authorAttestedAt && <em className="block text-xs text-muted-foreground">{tr(locale, "Attesté le", "Attested on")}                 {product.authorAttestedAt.toLocaleDateString(fr ? "fr-FR" : "en-GB")}</em>}</span></label>}
           </div>
         </details>
@@ -96,7 +96,7 @@ export function ProductForm({ locale, categories, product, readOnly, adminFor }:
                           {adminFor && <button type="submit" name="intent" value="publish" className="min-h-11 rounded-md border-2 border-primary px-5 text-sm font-medium text-primary">{tr(locale, "Publier directement", "Publish now")}</button>}
                         </div>
       </fieldset>
-      {locked && <p className="text-sm text-muted-foreground">{tr(locale, "Œuvre en cours de modération : modification impossible.", "Work under review: editing is locked.")}</p>}
+      {locked && <p className="text-sm text-muted-foreground">{tr(locale, "Création en cours de modération : modification impossible.", "Creation under review: editing is locked.")}</p>}
     </form>
   );
 }

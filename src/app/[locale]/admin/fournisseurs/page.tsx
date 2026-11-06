@@ -58,7 +58,7 @@ export default async function SuppliersPage({ params, searchParams }: { params: 
                 </form>
               )}
               {!s.isDemo && s.status === "ACTIVE" && (
-                <Link href={`/${locale}/admin/fournisseurs/${s.id}/oeuvres`} className={buttonVariants({ variant: "outline", className: "min-h-11" })}>{tr(locale, "Gérer les œuvres", "Manage works")}</Link>
+                <Link href={`/${locale}/admin/fournisseurs/${s.id}/oeuvres`} className={buttonVariants({ variant: "outline", className: "min-h-11" })}>{tr(locale, "Gérer les créations", "Manage creations")}</Link>
               )}
             </div>
             {!s.isDemo && s.status !== "REVOKED" && (

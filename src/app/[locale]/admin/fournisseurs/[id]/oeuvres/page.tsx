@@ -26,10 +26,10 @@ export default async function AdminPartnerWorksPage({ params, searchParams }: { 
   return (
     <div className="space-y-4">
       <Link href={`/${locale}/admin/fournisseurs`} className="text-sm underline">← {tr(locale, "Partenaires", "Partners")}</Link>
-      <h1 className="font-heading text-3xl text-primary">{tr(locale, "Œuvres de", "Works by")} {supplier.displayName}</h1>
-      {sp.saved && <p role="status" className="rounded-md border border-accent bg-accent/15 p-3 text-sm">{sp.saved === "publish" ? tr(locale, "Œuvre publiée.", "Work published.") : sp.saved === "submit" ? tr(locale, "Œuvre envoyée en modération.", "Work sent to moderation.") : tr(locale, "Brouillon enregistré.", "Draft saved.")}</p>}
+      <h1 className="font-heading text-3xl text-primary">{tr(locale, "Créations de", "Creations by")} {supplier.displayName}</h1>
+      {sp.saved && <p role="status" className="rounded-md border border-accent bg-accent/15 p-3 text-sm">{sp.saved === "publish" ? tr(locale, "Création publiée.", "Creation published.") : sp.saved === "submit" ? tr(locale, "Création envoyée en modération.", "Creation sent to moderation.") : tr(locale, "Brouillon enregistré.", "Draft saved.")}</p>}
       {active ? (
-        <Link href={`/${locale}/admin/fournisseurs/${id}/oeuvres/nouvelle`} className={buttonVariants({ className: "min-h-11" })}>{tr(locale, "Nouvelle œuvre au nom du partenaire", "New work on behalf of the partner")}</Link>
+        <Link href={`/${locale}/admin/fournisseurs/${id}/oeuvres/nouvelle`} className={buttonVariants({ className: "min-h-11" })}>{tr(locale, "Nouvelle création au nom du partenaire", "New creation on behalf of the partner")}</Link>
       ) : <p className="text-sm text-muted-foreground">{tr(locale, "Partenaire non actif : saisie impossible.", "Partner not active: entry disabled.")}</p>}
       {works.length === 0 ? <p className="text-sm text-muted-foreground">—</p> : (
         <ul className="divide-y rounded-lg border">

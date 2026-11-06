@@ -8,7 +8,7 @@ import { tr } from "@/lib/tr";
 import type { Locale } from "@/lib/i18n";
 import { addVariantAction, adjustStockAction, deleteProduct } from "../../../oeuvres-actions";
 
-export const metadata = { title: "Œuvre", robots: { index: false } };
+export const metadata = { title: "Création", robots: { index: false } };
 
 type Props = { params: Promise<{ locale: Locale; slug: string }>; searchParams: Promise<{ saved?: string; error?: string }> };
 

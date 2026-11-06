@@ -65,7 +65,7 @@ export default async function ProductPage({ params }: Props) {
                 {p.isExample && <Badge variant="outline">{t.example}</Badge>}
               </div>
               <div className="flex items-center gap-2">
-                <ShareButton title={p.name} text={`${p.name} — ${creator.name}`} label={locale === "fr" ? "Partager cette œuvre" : "Share this artwork"} />
+                <ShareButton title={p.name} text={`${p.name} — ${creator.name}`} label={locale === "fr" ? "Partager cette création" : "Share this creation"} />
                 <FavoriteButton slug={p.slug} name={p.name} locale={locale} className="relative border" />
               </div>
             </div>

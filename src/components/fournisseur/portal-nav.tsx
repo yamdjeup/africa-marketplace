@@ -11,7 +11,7 @@ export function PortalNav({ locale }: { locale: Locale }) {
   const items = [
     ["/tableau-de-bord", tr(locale, "Tableau de bord", "Dashboard")],
     ["/commandes", tr(locale, "Commandes", "Orders")],
-    ["/oeuvres", tr(locale, "Œuvres et stock", "Works and stock")],
+    ["/oeuvres", tr(locale, "Créations et stock", "Creations and stock")],
     ["/paiements", tr(locale, "Paiements", "Payments")],
     ["/profil", tr(locale, "Profil", "Profile")],
   ];

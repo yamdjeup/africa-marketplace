@@ -72,8 +72,8 @@ export default async function AdminWorks({ params, searchParams }: Props) {
   return (
     <div className="space-y-8">
       <section className="space-y-4">
-        <h1 className="font-heading text-3xl text-primary">{tr(locale, "Œuvres à modérer", "Works to review")}</h1>
-        {sp.done && <p role="status" className="rounded-md border border-accent bg-accent/15 p-3 text-sm">{tr(locale, "Œuvres traitées : ", "Works processed: ")}{sp.done}</p>}
+        <h1 className="font-heading text-3xl text-primary">{tr(locale, "Créations à modérer", "Creations to review")}</h1>
+        {sp.done && <p role="status" className="rounded-md border border-accent bg-accent/15 p-3 text-sm">{tr(locale, "Créations traitées : ", "Creations processed: ")}{sp.done}</p>}
         {sp.error && <p role="alert" className="rounded-md border border-destructive p-3 text-sm text-destructive">{tr(locale, "Un motif est obligatoire pour refuser.", "A reason is required to reject.")}</p>}
         <nav aria-label={tr(locale, "Filtrer par statut", "Filter by status")} className="flex flex-wrap gap-2">
           {counts.map(([k, n]) => (
@@ -85,7 +85,7 @@ export default async function AdminWorks({ params, searchParams }: Props) {
 
         <form method="get" className="grid gap-3 rounded-lg border p-3 sm:grid-cols-2 lg:grid-cols-4">
           <input type="hidden" name="f" value={tab} />
-          <label className="text-sm font-medium">{tr(locale, "Recherche (œuvre / partenaire)", "Search (work / partner)")}<input name="q" defaultValue={sp.q ?? ""} className={inputCls} /></label>
+          <label className="text-sm font-medium">{tr(locale, "Recherche (création / partenaire)", "Search (creation / partner)")}<input name="q" defaultValue={sp.q ?? ""} className={inputCls} /></label>
           <label className="text-sm font-medium">{tr(locale, "Partenaire", "Partner")}
             <select name="sup" defaultValue={sp.sup ?? ""} className={inputCls}><option value="">{tr(locale, "Tous", "All")}</option>{sups.map((s) => <option key={s.id} value={s.id}>{s.displayName}</option>)}</select></label>
           <label className="text-sm font-medium">{tr(locale, "Catégorie", "Category")}
@@ -108,17 +108,17 @@ export default async function AdminWorks({ params, searchParams }: Props) {
         </form>
         {tab !== "pending" && mode !== "all" && hidden > 0 && (
           <p className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm">
-            {hidden} {tr(locale, "œuvre(s) masquée(s) par le filtre de date (dont les décisions sans date).", "work(s) hidden by the date filter (including undated decisions).")}{" "}
+            {hidden} {tr(locale, "création(s) masquée(s) par le filtre de date (dont les décisions sans date).", "creation(s) hidden by the date filter (including undated decisions).")}{" "}
             <Link className="underline" href={href({ d: "all", p: undefined })}>{tr(locale, "Voir toutes les dates", "Show all dates")}</Link>
           </p>
         )}
 
         {total === 0 ? (
-          <p className="rounded-md border p-4 text-sm text-muted-foreground">{tr(locale, "Aucune œuvre ne correspond à ces filtres.", "No works match these filters.")}</p>
+          <p className="rounded-md border p-4 text-sm text-muted-foreground">{tr(locale, "Aucune création ne correspond à ces filtres.", "No creations match these filters.")}</p>
         ) : (
           <form action={bulkModerateProducts} className="space-y-3">
             <input type="hidden" name="back" value={href({})} />
-            <p className="text-sm text-muted-foreground">{total} {tr(locale, "œuvre(s)", "work(s)")}{oldest && ` · ${tr(locale, "la plus ancienne en attente", "oldest pending")} : ${waitLabel(waitHours(oldest.submittedAt ?? oldest.createdAt, nowMs))}`}</p>
+            <p className="text-sm text-muted-foreground">{total} {tr(locale, "création(s)", "creation(s)")}{oldest && ` · ${tr(locale, "la plus ancienne en attente", "oldest pending")} : ${waitLabel(waitHours(oldest.submittedAt ?? oldest.createdAt, nowMs))}`}</p>
             <div className="flex flex-wrap items-end gap-2 rounded-md border p-3">
               <label className="min-w-56 flex-1 text-sm">{tr(locale, "Motif commun (obligatoire pour refuser)", "Common reason (required to reject)")}<input name="reason" className={inputCls} /></label>
               <button name="decision" value="PUBLISHED" className="min-h-11 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">{tr(locale, "Publier la sélection", "Publish selected")}</button>
@@ -131,7 +131,7 @@ export default async function AdminWorks({ params, searchParams }: Props) {
                     <th className={th}><SelectAll label={tr(locale, "Tout sélectionner", "Select all")} /></th>
                     <th className={th}>Photo</th>
                     <th className={th}><Link href={sortHref("partner")}>{tr(locale, "Partenaire", "Partner")}{arrow("partner")}</Link></th>
-                    <th className={th}>{tr(locale, "Œuvre", "Work")}</th>
+                    <th className={th}>{tr(locale, "Création", "Creation")}</th>
                     <th className={th}>{tr(locale, "Catégorie", "Category")}</th>
                     <th className={th}><Link href={sortHref("price")}>{tr(locale, "Prix (€)", "Price (€)")}{arrow("price")}</Link></th>
                     <th className={th}>Stock</th>
@@ -195,7 +195,7 @@ export default async function AdminWorks({ params, searchParams }: Props) {
         <h2 className="font-heading text-2xl text-primary">{tr(locale, "Journal des mouvements de stock", "Stock movement log")}</h2>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] text-left text-sm">
-            <thead><tr className="border-b text-xs uppercase text-muted-foreground"><th className="py-2 pr-3">Date</th><th className="pr-3">{tr(locale, "Œuvre", "Work")}</th><th className="pr-3">Type</th><th className="pr-3">Qté</th><th className="pr-3">{tr(locale, "Motif", "Reason")}</th><th>{tr(locale, "Auteur", "Author")}</th></tr></thead>
+            <thead><tr className="border-b text-xs uppercase text-muted-foreground"><th className="py-2 pr-3">Date</th><th className="pr-3">{tr(locale, "Création", "Creation")}</th><th className="pr-3">Type</th><th className="pr-3">Qté</th><th className="pr-3">{tr(locale, "Motif", "Reason")}</th><th>{tr(locale, "Auteur", "Author")}</th></tr></thead>
             <tbody>{moves.map((m) => (
               <tr key={m.id} className="border-b">
                 <td className="whitespace-nowrap py-2 pr-3">{dtf(m.createdAt)}</td>

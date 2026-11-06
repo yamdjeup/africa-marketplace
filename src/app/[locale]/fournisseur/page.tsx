@@ -10,7 +10,7 @@ export default async function SupplierLanding({ params }: { params: Promise<{ lo
   const steps = [
     [tr(locale, "Candidature", "Apply"), tr(locale, "Présentez-vous et votre portfolio.", "Introduce yourself and your portfolio.")],
     [tr(locale, "Validation", "Review"), tr(locale, "L'équipe examine votre dossier.", "Our team reviews your file.")],
-    [tr(locale, "Publication", "Publish"), tr(locale, "Déposez vos œuvres avec leur histoire.", "Upload your works with their story.")],
+    [tr(locale, "Publication", "Publish"), tr(locale, "Déposez vos créations avec leur histoire.", "Upload your creations with their story.")],
     [tr(locale, "Ventes", "Sell"), tr(locale, "Expédiez, suivez vos ventes et vos versements.", "Ship, and track your sales and payouts.")],
   ];
   return (

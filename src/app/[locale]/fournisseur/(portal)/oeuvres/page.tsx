@@ -9,7 +9,7 @@ import { PhotoLightbox } from "@/components/admin/table-widgets";
 
 const lb = (l: Locale) => ({ open: tr(l, "Agrandir la photo", "Enlarge photo"), close: tr(l, "Fermer", "Close"), prev: tr(l, "Photo précédente", "Previous photo"), next: tr(l, "Photo suivante", "Next photo") });
 
-export const metadata = { title: "Œuvres et stock", robots: { index: false } };
+export const metadata = { title: "Créations et stock", robots: { index: false } };
 
 type Props = { params: Promise<{ locale: Locale }>; searchParams: Promise<{ saved?: string; error?: string }> };
 
@@ -30,13 +30,13 @@ export default async function WorksPage({ params, searchParams }: Props) {
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-heading text-3xl text-primary">{tr(locale, "Œuvres et stock", "Works and stock")}</h1>
-        {!ctx.viewingAs && <Link href={`/${locale}/fournisseur/oeuvres/nouvelle`} className="inline-flex min-h-11 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">{tr(locale, "Ajouter une œuvre", "Add a work")}</Link>}
+        <h1 className="font-heading text-3xl text-primary">{tr(locale, "Créations et stock", "Creations and stock")}</h1>
+        {!ctx.viewingAs && <Link href={`/${locale}/fournisseur/oeuvres/nouvelle`} className="inline-flex min-h-11 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">{tr(locale, "Ajouter une création", "Add a creation")}</Link>}
       </div>
       {sp.saved && <p role="status" className="rounded-md border border-accent bg-accent/15 p-3 text-sm">{tr(locale, "Enregistré.", "Saved.")}</p>}
       {sp.error && <p role="alert" className="rounded-md border border-destructive p-3 text-sm text-destructive">{tr(locale, "Action impossible.", "Action not possible.")}</p>}
       {items.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{tr(locale, "Aucune œuvre pour le moment.", "No works yet.")}</p>
+        <p className="text-sm text-muted-foreground">{tr(locale, "Aucune création pour le moment.", "No creations yet.")}</p>
       ) : (
         <ul className="divide-y rounded-lg border">
           {items.map((p) => {

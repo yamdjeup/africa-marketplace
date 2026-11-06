@@ -104,6 +104,8 @@ Source : `.env.example` (aucune valeur dans le dépôt). Local : `.env.local` (i
 | `VAPID_SUBJECT` | Contact VAPID (`mailto:`…) | Non ; Vercel |
 | Secret GitHub `NEON_DATABASE_URL` | Utilisé par le workflow Seed Neon | Si seed via GitHub Actions |
 
+Espace partenaires : `ADMIN_EMAILS` (admins, liste séparée par des virgules). Modèles `Supplier` (userId nul = fournisseur de démo) et `SupplierApplication` ; helpers dans `src/lib/supplier.ts` (`isAdminEmail`, `getPortalContext`, cookie « voir comme » réservé aux admins et aux fournisseurs de démo, lecture seule) ; pages `/[locale]/fournisseur` et `/[locale]/admin`.
+
 ## 6. Limites connues et dette technique
 
 - Drapeaux servis par `flagcdn.com` (CDN tiers, requiert Internet).

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { Locale } from "@/lib/i18n";
-import { tr } from "@/lib/supplier-mock";
+import { tr } from "@/lib/tr";
 
 export function PortalNav({ locale }: { locale: Locale }) {
   const path = usePathname();
@@ -11,9 +11,6 @@ export function PortalNav({ locale }: { locale: Locale }) {
   const items = [
     ["/tableau-de-bord", tr(locale, "Tableau de bord", "Dashboard")],
     ["/profil", tr(locale, "Profil", "Profile")],
-    ["/oeuvres", tr(locale, "Œuvres", "Artworks")],
-    ["/commandes", tr(locale, "Commandes", "Orders")],
-    ["/paiements", tr(locale, "Paiements", "Payments")],
   ];
   return (
     <nav aria-label={tr(locale, "Espace fournisseur", "Supplier area")} className="-mx-4 overflow-x-auto px-4 md:mx-0 md:px-0">

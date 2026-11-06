@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { MockBanner } from "@/components/fournisseur/parts";
 import { PortalNav } from "@/components/fournisseur/portal-nav";
 import type { Locale } from "@/lib/i18n";
-import { tr } from "@/lib/supplier-mock";
+import { getPortalContext, isAdminEmail } from "@/lib/supplier";
+import { tr } from "@/lib/tr";
+import { setViewAs } from "../actions";
 
 export const metadata = { robots: { index: false } };
 
@@ -12,11 +13,19 @@ export default async function PortalLayout({ children, params }: { children: Rea
   const locale = (raw === "en" ? "en" : "fr") as Locale;
   const session = await auth();
   if (!session?.user?.id) redirect(`/${locale}/login?next=${encodeURIComponent(`/${locale}/fournisseur/tableau-de-bord`)}`);
+  const ctx = await getPortalContext();
+  if (!ctx) redirect(isAdminEmail(session.user.email) ? `/${locale}/admin` : `/${locale}/fournisseur/candidature`);
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <p className="text-xs uppercase tracking-widest text-muted-foreground">{tr(locale, "Espace fournisseur", "Supplier area")}</p>
-        <MockBanner locale={locale} />
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs uppercase tracking-widest text-muted-foreground">{tr(locale, "Espace fournisseur", "Supplier area")} · {ctx.supplier.displayName}</p>
+        {ctx.viewingAs && (
+          <form action={setViewAs} className="flex items-center gap-2 text-xs">
+            <input type="hidden" name="locale" value={locale} />
+            <span className="rounded bg-accent/20 px-2 py-1">{tr(locale, "Vue admin : fournisseur de démonstration (lecture seule)", "Admin view: demo supplier (read-only)")}</span>
+            <button className="min-h-11 underline" type="submit">{tr(locale, "Quitter", "Exit")}</button>
+          </form>
+        )}
       </div>
       <div className="grid gap-6 md:grid-cols-[13rem_1fr]">
         <PortalNav locale={locale} />

@@ -97,6 +97,48 @@ model User {
   lastTestEmailAt DateTime?
   favorites      Favorite[]
   pushSubscriptions PushSubscription[]
+  supplier       Supplier?
+  supplierApplications SupplierApplication[]
+}
+
+/// Fournisseur (couturier ou artiste) ; userId nul pour un fournisseur de démonstration (seed).
+/// status : ACTIVE | SUSPENDED. commissionRate : part retenue par la plateforme (0.15 = 15 %).
+model Supplier {
+  id             String   @id @default(cuid())
+  userId         String?  @unique
+  user           User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  displayName    String
+  country        String
+  craftType      String
+  bio            String   @default("")
+  bioEn          String   @default("")
+  videoUrl       String?
+  creatorSlug    String?
+  status         String   @default("ACTIVE")
+  commissionRate Float    @default(0.15)
+  isDemo         Boolean  @default(false)
+  createdAt      DateTime @default(now())
+}
+
+/// Candidature fournisseur. status : PENDING | NEEDS_INFO | ACCEPTED | REFUSED.
+model SupplierApplication {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  email        String
+  country      String
+  craftType    String
+  portfolioUrl String
+  about        String
+  locale       String    @default("fr")
+  status       String    @default("PENDING")
+  adminNote    String?
+  createdAt    DateTime  @default(now())
+  decidedAt    DateTime?
+
+  @@index([userId])
+  @@index([status])
 }
 
 /// Abonnements Web Push (un par navigateur/appareil) ; supprimés si le service push répond 404/410

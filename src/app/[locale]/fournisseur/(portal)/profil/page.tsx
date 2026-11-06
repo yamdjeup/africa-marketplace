@@ -5,7 +5,7 @@ import { COUNTRIES, tr } from "@/lib/tr";
 import type { Locale } from "@/lib/i18n";
 import { updateSupplierProfile } from "../../actions";
 
-export const metadata = { title: "Profil fournisseur", robots: { index: false } };
+export const metadata = { title: "Profil partenaire", robots: { index: false } };
 
 type Props = { params: Promise<{ locale: Locale }>; searchParams: Promise<{ saved?: string; error?: string }> };
 

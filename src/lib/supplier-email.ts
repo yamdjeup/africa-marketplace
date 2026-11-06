@@ -1,4 +1,4 @@
-﻿import "server-only";
+import "server-only";
 import { sendEmail } from "@/lib/email";
 import { siteUrl } from "@/lib/alerts-core";
 
@@ -19,7 +19,7 @@ export async function emailAdminNewApplication(app: App) {
   if (admins.length === 0) console.warn("[supplier-email] ADMIN_EMAILS vide : aucune notification admin");
   const base = siteUrl();
   for (const to of admins)
-    await safeSend(to, `Nouvelle candidature fournisseur : ${app.name}`, [
+    await safeSend(to, `Nouvelle candidature partenaire : ${app.name}`, [
       `${app.name} (${app.email}) — ${app.country} — ${app.craftType}`,
       `Portfolio : ${app.portfolioUrl}`,
       app.about,
@@ -44,7 +44,7 @@ export async function emailApplicantDecision(app: App, status: "ACCEPTED" | "REF
     NEEDS_INFO: fr ? "E póm ta’ — informations complémentaires" : "E póm ta’ — more information needed",
   }[status];
   const body = {
-    ACCEPTED: fr ? [`Bonjour ${app.name}, votre candidature est acceptée. Votre espace fournisseur est ouvert : ${base}/${loc}/fournisseur/tableau-de-bord`] : [`Hello ${app.name}, your application is accepted. Your supplier area is open: ${base}/${loc}/fournisseur/tableau-de-bord`],
+    ACCEPTED: fr ? [`Bonjour ${app.name}, votre candidature est acceptée. Votre espace partenaire est ouvert : ${base}/${loc}/fournisseur/tableau-de-bord`] : [`Hello ${app.name}, your application is accepted. Your partner area is open: ${base}/${loc}/fournisseur/tableau-de-bord`],
     REFUSED: fr ? [`Bonjour ${app.name}, après examen, nous ne pouvons pas donner suite pour le moment.`] : [`Hello ${app.name}, after review we cannot proceed at this time.`],
     NEEDS_INFO: fr ? [`Bonjour ${app.name}, il nous manque des informations pour étudier votre candidature.`] : [`Hello ${app.name}, we need more information to review your application.`],
   }[status];

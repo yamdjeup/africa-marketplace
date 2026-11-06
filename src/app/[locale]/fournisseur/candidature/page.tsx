@@ -7,7 +7,7 @@ import type { Locale } from "@/lib/i18n";
 import { COUNTRIES, CRAFTS, tr } from "@/lib/tr";
 import { submitApplication } from "../actions";
 
-export const metadata = { title: "Candidature fournisseur", robots: { index: false } };
+export const metadata = { title: "Candidature partenaire", robots: { index: false } };
 
 type Props = { params: Promise<{ locale: Locale }>; searchParams: Promise<{ sent?: string; error?: string }> };
 
@@ -38,10 +38,10 @@ export default async function ApplyPage({ params, searchParams }: Props) {
   const field = "block text-sm font-medium";
   return (
     <div className="mx-auto max-w-2xl space-y-5">
-      <h1 className="font-heading text-3xl text-primary">{tr(locale, "Candidature fournisseur", "Supplier application")}</h1>
+      <h1 className="font-heading text-3xl text-primary">{tr(locale, "Candidature partenaire", "Partner application")}</h1>
       {supplier ? (
         <p className="rounded-md border bg-card p-4 text-sm">
-          {tr(locale, "Votre espace fournisseur est ouvert.", "Your supplier area is open.")}{" "}
+          {tr(locale, "Votre espace partenaire est ouvert.", "Your partner area is open.")}{" "}
           <Link className="underline" href={`/${locale}/fournisseur/tableau-de-bord`}>{tr(locale, "Y accéder", "Go to it")}</Link>
         </p>
       ) : (

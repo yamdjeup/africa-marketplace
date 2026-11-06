@@ -3,7 +3,7 @@ import { buttonVariants } from "@/components/ui/button";
 import type { Locale } from "@/lib/i18n";
 import { tr } from "@/lib/tr";
 
-export const metadata = { title: "Devenir fournisseur", robots: { index: false } };
+export const metadata = { title: "Devenir partenaire", robots: { index: false } };
 
 export default async function SupplierLanding({ params }: { params: Promise<{ locale: Locale }> }) {
   const { locale } = await params;
@@ -17,7 +17,7 @@ export default async function SupplierLanding({ params }: { params: Promise<{ lo
     <div className="mx-auto max-w-3xl space-y-8">
       <div className="kente-band h-1" />
       <header className="space-y-3 text-center">
-        <h1 className="font-heading text-3xl text-primary md:text-4xl">{tr(locale, "Devenir fournisseur", "Become a supplier")}</h1>
+        <h1 className="font-heading text-3xl text-primary md:text-4xl">{tr(locale, "Devenir partenaire", "Become a partner")}</h1>
         <p className="text-muted-foreground">
           {tr(locale, "Artistes plasticiens et couturiers afrodescendants : présentez vos créations à E póm ta’, gardez votre voix et votre crédit.", "Afrodescendant artists and fashion makers: showcase your creations on E póm ta’, keeping your voice and credit.")}
         </p>

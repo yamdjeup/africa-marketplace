@@ -13,7 +13,7 @@ export function PortalNav({ locale }: { locale: Locale }) {
     ["/profil", tr(locale, "Profil", "Profile")],
   ];
   return (
-    <nav aria-label={tr(locale, "Espace fournisseur", "Supplier area")} className="-mx-4 overflow-x-auto px-4 md:mx-0 md:px-0">
+    <nav aria-label={tr(locale, "Espace partenaire", "Partner area")} className="-mx-4 overflow-x-auto px-4 md:mx-0 md:px-0">
       <ul className="flex gap-1 border-b md:flex-col md:border-b-0 md:border-r md:pr-2">
         {items.map(([href, label]) => {
           const active = path.startsWith(base + href);

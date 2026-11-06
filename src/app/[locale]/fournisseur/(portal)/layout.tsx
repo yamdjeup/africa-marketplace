@@ -18,11 +18,11 @@ export default async function PortalLayout({ children, params }: { children: Rea
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-xs uppercase tracking-widest text-muted-foreground">{tr(locale, "Espace fournisseur", "Supplier area")} · {ctx.supplier.displayName}</p>
+        <p className="text-xs uppercase tracking-widest text-muted-foreground">{tr(locale, "Espace partenaire", "Partner area")} · {ctx.supplier.displayName}</p>
         {ctx.viewingAs && (
           <form action={setViewAs} className="flex items-center gap-2 text-xs">
             <input type="hidden" name="locale" value={locale} />
-            <span className="rounded bg-accent/20 px-2 py-1">{tr(locale, "Vue admin : fournisseur de démonstration (lecture seule)", "Admin view: demo supplier (read-only)")}</span>
+            <span className="rounded bg-accent/20 px-2 py-1">{tr(locale, "Vue admin : partenaire de démonstration (lecture seule)", "Admin view: demo partner (read-only)")}</span>
             <button className="min-h-11 underline" type="submit">{tr(locale, "Quitter", "Exit")}</button>
           </form>
         )}

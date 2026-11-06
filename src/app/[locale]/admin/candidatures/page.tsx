@@ -16,6 +16,7 @@ const STATUS_CLS: Record<string, string> = {
 export default async function ApplicationsPage({ params }: { params: Promise<{ locale: Locale }> }) {
   const { locale } = await params;
   const apps = await db.supplierApplication.findMany({ orderBy: { createdAt: "desc" }, take: 100 });
+  const allFiles = await db.applicationFile.findMany({ where: { applicationId: { in: apps.map((a) => a.id) } }, select: { id: true, applicationId: true, name: true, mime: true }, orderBy: { createdAt: "asc" } });
   const label: Record<string, string> = {
     PENDING: tr(locale, "À traiter", "Pending"),
     NEEDS_INFO: tr(locale, "Infos demandées", "Info requested"),
@@ -36,7 +37,24 @@ export default async function ApplicationsPage({ params }: { params: Promise<{ l
             </div>
             <p className="text-sm text-muted-foreground">{a.country} · {a.craftType} · {a.createdAt.toLocaleDateString(locale === "en" ? "en-GB" : "fr-FR")}</p>
             <p className="whitespace-pre-line text-sm">{a.about}</p>
-            <a href={a.portfolioUrl} target="_blank" rel="noopener noreferrer" className="break-all text-sm underline">{a.portfolioUrl}</a>
+            {a.portfolioUrl && <a href={a.portfolioUrl} target="_blank" rel="noopener noreferrer" className="break-all text-sm underline">{a.portfolioUrl}</a>}
+            {allFiles.some((f) => f.applicationId === a.id) && (
+              <ul className="flex flex-wrap gap-3">
+                {allFiles.filter((f) => f.applicationId === a.id).map((f) => (
+                  <li key={f.id} className="w-28 text-xs">
+                    <a href={`/api/partner/files?id=${f.id}`} target="_blank" rel="noopener noreferrer" className="block space-y-1">
+                      {f.mime.startsWith("image/") ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={`/api/partner/files?id=${f.id}`} alt={f.name} className="h-24 w-28 rounded-md border object-cover" />
+                      ) : (
+                        <span className="flex h-24 w-28 items-center justify-center rounded-md border bg-background font-semibold">PDF</span>
+                      )}
+                      <span className="block truncate underline" title={f.name}>{f.mime === "application/pdf" ? tr(locale, "Télécharger", "Download") + " " : ""}{f.name}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
             {a.adminNote && <p className="text-xs text-muted-foreground">{tr(locale, "Note : ", "Note: ")}{a.adminNote}</p>}
             {a.status !== "ACCEPTED" && (
               <form action={decideApplication} className="space-y-2">

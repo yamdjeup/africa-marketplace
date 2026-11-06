@@ -18,6 +18,10 @@ URLs (remplacer `fr` par `en` pour l'anglais) : `/fr/fournisseur`, `/fr/fourniss
 - [ ] Client sur `/fr/admin` : renvoyé à l'accueil.
 - [ ] Client remplit et envoie la candidature : message « Candidature envoyée ». **E-mail** de confirmation au candidat ; **e-mail** à l'admin.
 - [ ] Renvoyer une 2e candidature en attente : message « déjà en cours d'examen ».
+- [ ] Candidature sans lien ET sans fichier : refusée avec message clair (« lien OU fichier »).
+- [ ] Candidature sans lien mais avec 1 à 5 fichiers (JPG/PNG/WebP/PDF, 4 Mo max chacun) : miniatures affichées, suppression possible, envoi accepté.
+- [ ] Fichier .exe/.txt renommé en .jpg, ou > 4 Mo : refusé. 6e fichier : refusé.
+- [ ] Admin : la fiche candidature montre les miniatures (clic = agrandi) et les PDF (téléchargeables) ; un autre client ne peut pas ouvrir ces fichiers.
 - [ ] Admin, `/fr/admin/candidatures` : la candidature apparaît « À traiter ».
 - [ ] Admin « Demander des infos » (avec message) : statut mis à jour ; **e-mail** au candidat ; le candidat voit la note et peut renvoyer.
 - [ ] Admin « Refuser » : **e-mail** de refus.

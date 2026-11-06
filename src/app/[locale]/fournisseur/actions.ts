@@ -23,19 +23,22 @@ export async function submitApplication(formData: FormData) {
     portfolioUrl: s(formData, "portfolioUrl", 300),
     about: s(formData, "about", 3000),
   };
-  if (!data.name || !data.country || !data.craftType || data.about.length < 20 || !/^https?:\/\/\S+\.\S+/.test(data.portfolioUrl)) redirect(`${base}?error=invalid`);
   const userId = session.user.id;
+  const urlOk = !data.portfolioUrl || /^https?:\/\/\S+\.\S+/.test(data.portfolioUrl);
+  if (!data.name || !data.country || !data.craftType || data.about.length < 20 || !urlOk) redirect(`${base}?error=invalid`);
   if (await db.supplier.findUnique({ where: { userId } })) redirect(`/${locale}/fournisseur/tableau-de-bord`);
   const user = await db.user.findUnique({ where: { id: userId } });
   if (!user) redirect(`/${locale}/login`);
   const open = await db.supplierApplication.findFirst({ where: { userId, status: { in: ["PENDING", "NEEDS_INFO"] } }, orderBy: { createdAt: "desc" } });
   if (open?.status === "PENDING") redirect(`${base}?error=pending`);
+  const pending = await db.applicationFile.count({ where: { userId, applicationId: null } });
+  const attached = open ? await db.applicationFile.count({ where: { applicationId: open.id } }) : 0;
+  if (!data.portfolioUrl && pending + attached === 0) redirect(`${base}?error=proof`);
   if (!open && (await db.supplierApplication.count({ where: { userId, createdAt: { gt: new Date(Date.now() - 24 * 3600_000) } } })) >= 3) redirect(`${base}?error=rate`);
-  if (open) {
-    await db.supplierApplication.update({ where: { id: open.id }, data: { ...data, status: "PENDING", locale } });
-  } else {
-    await db.supplierApplication.create({ data: { ...data, userId, email: user.email, locale } });
-  }
+  const saved = open
+    ? await db.supplierApplication.update({ where: { id: open.id }, data: { ...data, status: "PENDING", locale } })
+    : await db.supplierApplication.create({ data: { ...data, userId, email: user.email, locale } });
+  await db.applicationFile.updateMany({ where: { userId, applicationId: null }, data: { applicationId: saved.id } });
   const mail = { ...data, email: user.email, locale };
   await emailAdminNewApplication(mail);
   await emailApplicantReceived(mail);

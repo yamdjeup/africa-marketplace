@@ -140,6 +140,14 @@ Migrations additives `0005_addresses` et `0006_address_book` (tables/colonnes `A
 
 L'app native (Capacitor) charge ce site Vercel ; rien à déployer de plus côté web (`android/` et `ios/` sont ignorés par `.vercelignore`). Si le domaine change, mettre à jour `server.url` dans `capacitor.config.ts`. Voir [APP-NATIVE.md](APP-NATIVE.md).
 
+## Étape 5 septies — Espace partenaires (fournisseurs) et administration
+
+- Variable Vercel : `ADMIN_EMAILS` = adresse(s) e-mail des administrateurs, séparées par des virgules (le compte doit exister sur le site). Sans elle, personne n'est admin.
+- Notifications e-mail (candidature, décision) : réutilisent Resend/Gmail déjà configurés ; sans fournisseur d'e-mail, l'envoi est ignoré et journalisé.
+- La migration `0009_suppliers` (additive) s'applique au build.
+- Fournisseurs de démonstration (vraies lignes en base) : `DATABASE_URL=<url Neon> npm run db:seed-suppliers` (idempotent).
+- Recette pas à pas : `docs/TEST-PARTENAIRES.md`.
+
 ## Étape 6 — Tester
 
 1. Dans Vercel, cliquez sur **Visit** (ou ouvrez l'adresse du projet). Vous devez voir la page **Accès réservé** et non le site.

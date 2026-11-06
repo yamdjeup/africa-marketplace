@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import type { Locale } from "@/lib/i18n";
-import { tr } from "@/lib/supplier-mock";
+import { tr } from "@/lib/tr";
 
 export const metadata = { title: "Devenir fournisseur", robots: { index: false } };
 
@@ -21,9 +21,6 @@ export default async function SupplierLanding({ params }: { params: Promise<{ lo
         <p className="text-muted-foreground">
           {tr(locale, "Artistes plasticiens et couturiers afrodescendants : présentez vos créations à E póm ta’, gardez votre voix et votre crédit.", "Afrodescendant artists and fashion makers: showcase your creations on E póm ta’, keeping your voice and credit.")}
         </p>
-        <p role="note" className="mx-auto inline-block rounded-md border border-accent bg-accent/15 px-3 py-1 text-xs">
-          {tr(locale, "Maquette — aucune candidature réelle n'est enregistrée.", "Mockup — no real application is recorded.")}
-        </p>
       </header>
       <ol className="grid gap-3 sm:grid-cols-2">
         {steps.map(([h, p], i) => (
@@ -38,7 +35,7 @@ export default async function SupplierLanding({ params }: { params: Promise<{ lo
           {tr(locale, "Déposer ma candidature", "Apply now")}
         </Link>
         <Link href={`/${locale}/fournisseur/tableau-de-bord`} className={buttonVariants({ size: "lg", variant: "outline", className: "min-h-11" })}>
-          {tr(locale, "J'ai déjà un espace (aperçu)", "I already have an area (preview)")}
+          {tr(locale, "Accéder à mon espace", "Open my area")}
         </Link>
       </div>
     </div>

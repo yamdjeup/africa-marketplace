@@ -1,15 +1,4 @@
 import type { ReactNode } from "react";
-import type { Locale } from "@/lib/i18n";
-import { tr } from "@/lib/supplier-mock";
-
-export function MockBanner({ locale }: { locale: Locale }) {
-  return (
-    <p role="note" className="rounded-md border border-accent bg-accent/15 px-3 py-2 text-xs text-foreground">
-      <strong className="uppercase tracking-wide">{tr(locale, "Maquette", "Mockup")}</strong>{" "}
-      {tr(locale, "— données fictives, aucun paiement réel, aucun e-mail envoyé.", "— demo data, no real payment, no email sent.")}
-    </p>
-  );
-}
 
 export function Pill({ cls, children }: { cls: string; children: ReactNode }) {
   return <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${cls}`}>{children}</span>;

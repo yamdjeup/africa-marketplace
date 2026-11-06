@@ -8,6 +8,8 @@ import { ShopPrefs } from "@/components/marketplace/shop-prefs";
 import { logout } from "@/app/[locale]/account/actions";
 import { RegionRows } from "@/components/marketplace/region-rows";
 import { db } from "@/lib/db";
+import { isAdminEmail } from "@/lib/supplier";
+import { ViewSwitcher } from "@/components/marketplace/view-switcher";
 import { getDict, type Locale } from "@/lib/i18n";
 
 type Props = { params: Promise<{ locale: Locale }> };
@@ -65,6 +67,7 @@ export default async function AccountPage({ params }: Props) {
         <p className="text-sm text-muted-foreground">{user.email}</p>
       </div>
       <h1 className="sr-only md:hidden">{user.name}</h1>
+      {isAdminEmail(user.email) && <ViewSwitcher locale={locale === "en" ? "en" : "fr"} userId={user.id} />}
       <div className="space-y-8 md:hidden">
         <NotifyBanner locale={locale} title={t.f10.notifTitle} text={t.f10.notifText} />
         <Section title={t.me.sectionAccount}>

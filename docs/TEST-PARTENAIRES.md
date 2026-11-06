@@ -60,10 +60,11 @@ Comptes : partenaire actif (accepté au lot A), admin (`ADMIN_EMAILS`), client.
 
 ## Suspension / révocation d'un partenaire (`/fr/admin/fournisseurs`)
 Migration additive 0012 (`PartnerAudit`). Les partenaires de démo ne sont pas concernés.
-- [ ] Admin : « Gérer l'accès » sur un vrai partenaire ; « Suspendre » sans motif → erreur ; avec motif → statut Suspendu, e-mail au partenaire, entrée au journal d'audit (qui/quand/pourquoi).
+- [ ] Admin : sur un vrai partenaire, une seule ligne : champ « Motif » + liste « Action » (Actif : Suspendre/Révoquer ; Suspendu : Réactiver/Révoquer) + « Valider ». Sans motif (Suspendre/Révoquer) → blocage du formulaire ; avec motif → popup « Confirmer la suspension ? » (Oui/Non) ; « Non » n'exécute rien ; « Oui » → statut Suspendu, e-mail au partenaire, entrée au journal d'audit.
+- [ ] Chaque ligne affiche « Partenaire depuis le JJ/MM/AAAA » ; le journal (tableau date, partenaire, action, motif, auteur), groupé par partenaire en ordre chronologique, contient « Création du compte partenaire (candidature acceptée) » (y compris pour les anciens), puis chaque Suspension, Réactivation, Révocation avec date/heure, motif et auteur.
 - [ ] Partenaire suspendu : `/fr/fournisseur` n'ouvre plus le portail ; ses œuvres publiées disparaissent du catalogue (statut « Masquée »).
-- [ ] « Réactiver » : accès et œuvres rétablis, e-mail envoyé.
-- [ ] « Révoquer définitivement » : motif + case de confirmation obligatoires ; refusé tant qu'une œuvre a du stock réservé (commande en cours) ; option « Anonymiser le profil » (nom, bio, vidéo, signature effacés ; commandes et paiements conservés). Aucune suppression physique.
+- [ ] « Réactiver » (motif facultatif, popup « Confirmer la réactivation ? ») : accès et œuvres rétablis, e-mail envoyé.
+- [ ] « Révoquer définitivement » : motif obligatoire, popup « Confirmer la révocation définitive ? » avec case « Anonymiser le profil » (décochée par défaut) ; refusé tant qu'une œuvre a du stock réservé (commande en cours) ; anonymisation : nom, bio, vidéo, signature effacés ; commandes et paiements conservés. Aucune suppression physique.
 
 ## Lot C — Commandes par partenaire
 Migration additive 0013 (`SubOrder`, `OrderItem.subOrderId`). Vérification automatique : `npm run db:check-orders` (scission, autorisations, 48 h, relance/escalade/expiration, libération et confirmation du stock). Variables : `CRON_SECRET` (cron `/api/orders/sweep`, quotidien sur Vercel Hobby ; le balayage tourne aussi au chargement des pages Commandes et après chaque commande), `ADMIN_EMAILS`, e-mail existant.

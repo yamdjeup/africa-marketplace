@@ -15,10 +15,10 @@ export async function changePartnerStatus(formData: FormData) {
   const action = String(formData.get("action") ?? "");
   const reason = String(formData.get("reason") ?? "").trim().slice(0, 500);
   const anonymize = formData.get("anonymize") === "on";
-  const back = (q: string) => redirect(`/fr/admin/fournisseurs?${q}`);
+  const locale = formData.get("locale") === "en" ? "en" : "fr";
+  const back = (q: string) => redirect(`/${locale}/admin/fournisseurs?${q}`);
   if (!["SUSPEND", "REACTIVATE", "REVOKE"].includes(action)) return back("error=action");
   if (action !== "REACTIVATE" && !reason) return back("error=reason");
-  if (action === "REVOKE" && formData.get("confirm") !== "on") return back("error=confirm");
   const s = await db.supplier.findUnique({ where: { id }, include: { user: { select: { email: true } } } });
   if (!s || s.isDemo || s.status === "REVOKED") return back("error=invalid");
   if (action === "SUSPEND" && s.status !== "ACTIVE") return back("error=invalid");

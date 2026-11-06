@@ -1,106 +1,191 @@
 import Link from "next/link";
-import { moderateProduct } from "../actions";
+import { bulkModerateProducts } from "../actions";
 import { db } from "@/lib/db";
-import { formatLocal, type Currency } from "@/lib/currency";
 import { MOVEMENT_LABELS } from "@/lib/stock";
 import { tr } from "@/lib/tr";
 import type { Locale } from "@/lib/i18n";
 import { inputCls } from "@/components/fournisseur/parts";
+import { PhotoLightbox, SelectAll } from "@/components/admin/table-widgets";
+import { PAGE_SIZE, TABS, dateModeOf, isoDay, queryWorks, tabOf, worksWhere, type Tab, type WorkParams } from "@/lib/admin-works";
 
-type Props = { params: Promise<{ locale: Locale }>; searchParams: Promise<{ f?: string }> };
+export const dynamic = "force-dynamic";
 
-const FILTERS: Record<string, { label: [string, string]; where: Record<string, unknown> }> = {
-  pending: { label: ["En attente", "Pending"], where: { status: "SUBMITTED" } },
-  published: { label: ["Publiées", "Published"], where: { status: "PUBLISHED", supplierId: { not: null } } },
-  rejected: { label: ["Refusées", "Rejected"], where: { status: "REJECTED" } },
-  all: { label: ["Toutes", "All"], where: { status: { in: ["SUBMITTED", "PUBLISHED", "REJECTED"] }, supplierId: { not: null } } },
-};
+type Props = { params: Promise<{ locale: Locale }>; searchParams: Promise<WorkParams & { mp?: string; done?: string; error?: string }> };
+
+const TAB_LABEL: Record<Tab, [string, string]> = { pending: ["En attente", "Pending"], published: ["Publiées", "Published"], rejected: ["Refusées", "Rejected"], all: ["Toutes", "All"] };
 const BADGE: Record<string, [string, string, string]> = {
   SUBMITTED: ["En attente", "Pending", "bg-amber-100 text-amber-900"],
   PUBLISHED: ["Publiée", "Published", "bg-emerald-100 text-emerald-900"],
   REJECTED: ["Refusée", "Rejected", "bg-red-100 text-red-900"],
 };
+const KEYS = ["f", "d", "from", "to", "q", "sup", "cat", "sort", "dir"] as const;
 
 export default async function AdminWorks({ params, searchParams }: Props) {
   const { locale } = await params;
   const sp = await searchParams;
-  const fkey = sp.f && FILTERS[sp.f] ? sp.f : "pending";
+  const tab = tabOf(sp.f);
   const fr = locale !== "en";
-  const [queueRaw, moves, counts] = await Promise.all([
-    db.product.findMany({ where: FILTERS[fkey].where, orderBy: fkey === "pending" ? { submittedAt: "asc" } : { submittedAt: "desc" }, take: 100 }),
-    db.stockMovement.findMany({ orderBy: { createdAt: "desc" }, take: 30 }),
-    Promise.all(Object.entries(FILTERS).map(async ([k, v]) => [k, await db.product.count({ where: v.where })] as const)),
+  const page = Math.max(1, Math.trunc(Number(sp.p)) || 1);
+  const mpage = Math.max(1, Math.trunc(Number(sp.mp)) || 1);
+  const mode = dateModeOf(sp.d);
+  const today = isoDay(new Date());
+  const dtf = (d: Date | null) => (d ? d.toLocaleString(fr ? "fr-FR" : "en-GB", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—");
+
+  const href = (o: Record<string, string | undefined>) => {
+    const u = new URLSearchParams();
+    const merged: Record<string, string | undefined> = { ...sp, ...o };
+    for (const k of [...KEYS, "p", "mp"]) if (merged[k]) u.set(k, merged[k]!);
+    return `/${locale}/admin/oeuvres?${u.toString()}`;
+  };
+  const csvHref = `/api/admin/works?${new URLSearchParams(Object.entries(sp).filter(([k, v]) => (KEYS as readonly string[]).includes(k) && typeof v === "string" && v) as [string, string][]).toString()}`;
+  const sortHref = (key: string) => href({ sort: key, dir: sp.sort === key && sp.dir !== "asc" ? "asc" : "desc", p: undefined });
+  const arrow = (key: string) => (sp.sort === key ? (sp.dir === "asc" ? " ▲" : " ▼") : "");
+
+  const [{ list, total }, counts, sups, cats, moves, movesTotal] = await Promise.all([
+    queryWorks(sp, tab, { page }),
+    Promise.all(TABS.map(async (t) => [t, await db.product.count({ where: await worksWhere(sp, t) })] as const)),
+    db.supplier.findMany({ where: { isDemo: false }, orderBy: { displayName: "asc" }, select: { id: true, displayName: true } }),
+    db.category.findMany({ orderBy: { sortOrder: "asc" }, select: { slug: true, name: true, nameEn: true } }),
+    db.stockMovement.findMany({ orderBy: { createdAt: "desc" }, skip: (mpage - 1) * PAGE_SIZE, take: PAGE_SIZE }),
+    db.stockMovement.count(),
   ]);
-  const sups = await db.supplier.findMany({ where: { id: { in: queueRaw.map((p) => p.supplierId ?? "") } }, select: { id: true, displayName: true, country: true } });
-  const queue = queueRaw.map((p) => ({ ...p, supplier: sups.find((s) => s.id === p.supplierId) }));
+  const catName = new Map(cats.map((c) => [c.slug, fr ? c.name : c.nameEn]));
+  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const mpages = Math.max(1, Math.ceil(movesTotal / PAGE_SIZE));
+  const showReason = tab === "rejected" || tab === "all";
+  const lb = { open: tr(locale, "Agrandir la photo", "Enlarge photo"), close: tr(locale, "Fermer", "Close"), prev: tr(locale, "Photo précédente", "Previous photo"), next: tr(locale, "Photo suivante", "Next photo") };
+  const th = "whitespace-nowrap px-2 py-2";
+  const pager = (cur: number, n: number, key: "p" | "mp") => (
+    <nav aria-label="Pagination" className="flex flex-wrap items-center gap-3 text-sm">
+      {cur > 1 ? <Link className="underline" href={href({ [key]: String(cur - 1) })}>← {tr(locale, "Précédent", "Previous")}</Link> : <span className="text-muted-foreground">←</span>}
+      <span>{tr(locale, "Page", "Page")} {cur} / {n}</span>
+      {cur < n ? <Link className="underline" href={href({ [key]: String(cur + 1) })}>{tr(locale, "Suivant", "Next")} →</Link> : <span className="text-muted-foreground">→</span>}
+    </nav>
+  );
+
   return (
     <div className="space-y-8">
       <section className="space-y-4">
         <h1 className="font-heading text-3xl text-primary">{tr(locale, "Œuvres à modérer", "Works to review")}</h1>
+        {sp.done && <p role="status" className="rounded-md border border-accent bg-accent/15 p-3 text-sm">{tr(locale, "Œuvres traitées : ", "Works processed: ")}{sp.done}</p>}
+        {sp.error && <p role="alert" className="rounded-md border border-destructive p-3 text-sm text-destructive">{tr(locale, "Un motif est obligatoire pour refuser.", "A reason is required to reject.")}</p>}
         <nav aria-label={tr(locale, "Filtrer par statut", "Filter by status")} className="flex flex-wrap gap-2">
           {counts.map(([k, n]) => (
-            <Link key={k} href={`/${locale}/admin/oeuvres?f=${k}`} aria-current={k === fkey ? "page" : undefined} className={`inline-flex min-h-11 items-center rounded-md border px-3 text-sm ${k === fkey ? "bg-primary text-primary-foreground" : ""}`}>
-              {tr(locale, ...FILTERS[k].label)} ({n})
+            <Link key={k} href={href({ f: k, p: undefined, sort: undefined, dir: undefined })} aria-current={k === tab ? "page" : undefined} className={`inline-flex min-h-11 items-center rounded-md border px-3 text-sm ${k === tab ? "bg-primary text-primary-foreground" : ""}`}>
+              {tr(locale, ...TAB_LABEL[k])} ({n})
             </Link>
           ))}
         </nav>
-        {queue.length === 0 && <p className="text-sm text-muted-foreground">{tr(locale, "Aucune œuvre dans cette liste.", "No works in this list.")}</p>}
-        {queue.map((p) => {
-          const imgs = Array.isArray(p.images) ? (p.images as string[]) : [];
-          const badge = BADGE[p.status];
-          return (
-            <article key={p.slug} className="space-y-3 rounded-lg border p-4">
-              {badge && (
-                <p className="flex flex-wrap items-center gap-2 text-xs">
-                  <span className={`rounded-full px-2 py-0.5 font-medium ${badge[2]}`}>{tr(locale, badge[0], badge[1])}</span>
-                  {p.createdByAdmin && <span className="rounded-full bg-muted px-2 py-0.5">{tr(locale, "Saisie par l'administration", "Entered by administration")}</span>}
-                  {p.decidedAt && <span className="text-muted-foreground">{tr(locale, "Décision le ", "Decided on ")}{p.decidedAt.toLocaleString(fr ? "fr-FR" : "en-GB")}</span>}
-                </p>
-              )}
-              {p.status === "REJECTED" && p.rejectReason && <p className="text-sm text-destructive">{tr(locale, "Motif du refus : ", "Rejection reason: ")}{p.rejectReason}</p>}
-              <div className="flex flex-wrap gap-2">
-                {imgs.map((u) => (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img key={u} src={u} alt="" className="size-24 rounded-md object-cover" />
-                ))}
-              </div>
-              <h2 className="font-semibold">{p.name} <span className="font-normal text-muted-foreground">/ {p.nameEn}</span></h2>
-              <p className="text-sm text-muted-foreground">{p.supplier?.displayName} ({p.supplier?.country}) · {formatLocal(p.priceLocal ?? p.priceCents, p.currency as Currency, locale)} · stock {p.stock} · {p.categorySlug}</p>
-              <p className="whitespace-pre-line text-sm">{p.description}</p>
-              {(p.edition || p.signatureFileId || p.authorAttestedAt) && (
-                <p className="text-xs text-muted-foreground">
-                  {p.edition && `${tr(locale, "Édition", "Edition")} : ${p.edition} · `}
-                  {p.authorAttestedAt && `${tr(locale, "Attestation d'auteur", "Author attestation")} ${p.authorAttestedAt.toLocaleString(fr ? "fr-FR" : "en-GB")} (${p.authorAttestedBy}) · `}
-                  {p.signatureFileId && <a className="underline" href={`/api/media/${p.signatureFileId}`} target="_blank" rel="noreferrer">{tr(locale, "photo de signature", "signature photo")}</a>}
-                </p>
-              )}
-              {(p.status === "SUBMITTED" || p.status === "PUBLISHED") && (
-              <div className="flex flex-wrap items-end gap-3">
-                {p.status === "SUBMITTED" && (
-                <form action={moderateProduct}>
-                  <input type="hidden" name="slug" value={p.slug} /><input type="hidden" name="decision" value="PUBLISHED" />
-                  <button className="min-h-11 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">{tr(locale, "Publier", "Publish")}</button>
-                </form>
-                )}
-                <form action={moderateProduct} className="flex flex-1 flex-wrap items-end gap-2">
-                  <input type="hidden" name="slug" value={p.slug} /><input type="hidden" name="decision" value="REJECTED" />
-                  <label className="min-w-48 flex-1 text-sm">{tr(locale, "Motif du refus", "Rejection reason")}<input name="reason" required className={inputCls} /></label>
-                  <button className="min-h-11 rounded-md border border-destructive px-4 text-sm text-destructive">{tr(locale, "Refuser", "Reject")}</button>
-                </form>
-              </div>
-              )}
-            </article>
-          );
-        })}
+
+        <form method="get" className="grid gap-3 rounded-lg border p-3 sm:grid-cols-2 lg:grid-cols-4">
+          <input type="hidden" name="f" value={tab} />
+          <label className="text-sm font-medium">{tr(locale, "Recherche (œuvre / partenaire)", "Search (work / partner)")}<input name="q" defaultValue={sp.q ?? ""} className={inputCls} /></label>
+          <label className="text-sm font-medium">{tr(locale, "Partenaire", "Partner")}
+            <select name="sup" defaultValue={sp.sup ?? ""} className={inputCls}><option value="">{tr(locale, "Tous", "All")}</option>{sups.map((s) => <option key={s.id} value={s.id}>{s.displayName}</option>)}</select></label>
+          <label className="text-sm font-medium">{tr(locale, "Catégorie", "Category")}
+            <select name="cat" defaultValue={sp.cat ?? ""} className={inputCls}><option value="">{tr(locale, "Toutes", "All")}</option>{cats.map((c) => <option key={c.slug} value={c.slug}>{fr ? c.name : c.nameEn}</option>)}</select></label>
+          {tab !== "pending" && (
+            <>
+              <label className="text-sm font-medium">{tr(locale, "Date de décision", "Decision date")}
+                <select name="d" defaultValue={mode} className={inputCls}>
+                  <option value="today">{tr(locale, "Aujourd'hui", "Today")}</option>
+                  <option value="7">{tr(locale, "7 jours", "7 days")}</option>
+                  <option value="30">{tr(locale, "30 jours", "30 days")}</option>
+                  <option value="custom">{tr(locale, "Plage personnalisée", "Custom range")}</option>
+                  <option value="all">{tr(locale, "Toutes les dates", "All dates")}</option>
+                </select></label>
+              <label className="text-sm font-medium">{tr(locale, "Du (plage personnalisée)", "From (custom range)")}<input type="date" name="from" defaultValue={sp.from ?? today} className={inputCls} /></label>
+              <label className="text-sm font-medium">{tr(locale, "Au", "To")}<input type="date" name="to" defaultValue={sp.to ?? today} className={inputCls} /></label>
+            </>
+          )}
+          <div className="flex flex-wrap items-end gap-2 sm:col-span-2">
+            <button type="submit" className="min-h-11 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">{tr(locale, "Filtrer", "Filter")}</button>
+            <Link href={`/${locale}/admin/oeuvres?f=${tab}`} className="inline-flex min-h-11 items-center rounded-md border px-4 text-sm">{tr(locale, "Réinitialiser", "Reset")}</Link>
+            <a href={csvHref} className="inline-flex min-h-11 items-center rounded-md border px-4 text-sm">Export CSV</a>
+          </div>
+          {tab === "pending" && <p className="text-xs text-muted-foreground sm:col-span-4">{tr(locale, "L'onglet En attente n'est jamais filtré par date.", "The Pending tab is never filtered by date.")}</p>}
+        </form>
+        {tab !== "pending" && mode === "today" && <p className="text-xs text-muted-foreground">{tr(locale, "Filtre par défaut : décisions d'aujourd'hui. Choisissez « Toutes les dates » pour voir aussi les décisions sans date.", "Default filter: today's decisions. Choose “All dates” to also see undated decisions.")}</p>}
+
+        {total === 0 ? (
+          <p className="rounded-md border p-4 text-sm text-muted-foreground">{tr(locale, "Aucune œuvre ne correspond à ces filtres.", "No works match these filters.")}</p>
+        ) : (
+          <form action={bulkModerateProducts} className="space-y-3">
+            <input type="hidden" name="back" value={href({})} />
+            <p className="text-sm text-muted-foreground">{total} {tr(locale, "œuvre(s)", "work(s)")}</p>
+            <div className="flex flex-wrap items-end gap-2 rounded-md border p-3">
+              <label className="min-w-56 flex-1 text-sm">{tr(locale, "Motif commun (obligatoire pour refuser)", "Common reason (required to reject)")}<input name="reason" className={inputCls} /></label>
+              <button name="decision" value="PUBLISHED" className="min-h-11 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">{tr(locale, "Publier la sélection", "Publish selected")}</button>
+              <button name="decision" value="REJECTED" className="min-h-11 rounded-md border border-destructive px-4 text-sm text-destructive">{tr(locale, "Refuser la sélection", "Reject selected")}</button>
+            </div>
+            <div className="overflow-x-auto rounded-lg border">
+              <table className="w-full min-w-[1100px] text-left text-sm">
+                <thead className="border-b bg-muted/40 text-xs uppercase text-muted-foreground">
+                  <tr>
+                    <th className={th}><SelectAll label={tr(locale, "Tout sélectionner", "Select all")} /></th>
+                    <th className={th}>Photo</th>
+                    <th className={th}><Link href={sortHref("partner")}>{tr(locale, "Partenaire", "Partner")}{arrow("partner")}</Link></th>
+                    <th className={th}>{tr(locale, "Œuvre", "Work")}</th>
+                    <th className={th}>{tr(locale, "Catégorie", "Category")}</th>
+                    <th className={th}><Link href={sortHref("price")}>{tr(locale, "Prix (€)", "Price (€)")}{arrow("price")}</Link></th>
+                    <th className={th}>Stock</th>
+                    <th className={th}>Description</th>
+                    <th className={th}>{tr(locale, "Statut", "Status")}</th>
+                    <th className={th}><Link href={sortHref("date")}>{tr(locale, "Décision", "Decision")}{arrow("date")}</Link></th>
+                    {showReason && <th className={th}>{tr(locale, "Motif du refus", "Rejection reason")}</th>}
+                    <th className={th}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {list.map((p) => {
+                    const imgs = Array.isArray(p.images) ? (p.images as string[]) : [];
+                    const b = BADGE[p.status];
+                    const title = fr ? p.name : p.nameEn;
+                    return (
+                      <tr key={p.slug} className="border-b align-top">
+                        <td className="px-2 py-2">{(p.status === "SUBMITTED" || p.status === "PUBLISHED") && <input type="checkbox" name="slug" value={p.slug} aria-label={title} className="size-5" />}</td>
+                        <td className="px-2 py-2"><PhotoLightbox images={imgs} title={title} labels={lb} /></td>
+                        <td className="px-2 py-2">{p.partner}</td>
+                        <td className="max-w-48 px-2 py-2 font-medium">{title}
+                          {p.createdByAdmin && <span className="mt-1 block w-fit rounded-full bg-muted px-2 py-0.5 text-xs font-normal">{tr(locale, "Saisie par l'administration", "Entered by administration")}</span>}
+                          {(p.edition || p.authorAttestedAt || p.signatureFileId) && (
+                            <span className="mt-1 block text-xs font-normal text-muted-foreground">
+                              {p.edition && `${p.edition} · `}
+                              {p.authorAttestedAt && `${tr(locale, "Attestation", "Attestation")} ${p.authorAttestedAt.toLocaleDateString(fr ? "fr-FR" : "en-GB")} · `}
+                              {p.signatureFileId && <a className="underline" href={`/api/media/${p.signatureFileId}`} target="_blank" rel="noreferrer">{tr(locale, "signature", "signature")}</a>}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-2 py-2">{catName.get(p.categorySlug) ?? p.categorySlug}</td>
+                        <td className="whitespace-nowrap px-2 py-2">{(p.priceCents / 100).toFixed(2)}</td>
+                        <td className="px-2 py-2">{p.stock - p.reserved}</td>
+                        <td className="max-w-56 px-2 py-2"><span title={p.description} className="line-clamp-2">{p.description}</span></td>
+                        <td className="px-2 py-2">{b && <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ${b[2]}`}>{tr(locale, b[0], b[1])}</span>}</td>
+                        <td className="whitespace-nowrap px-2 py-2">{dtf(p.decidedAt)}</td>
+                        {showReason && <td className="max-w-48 px-2 py-2 text-destructive">{p.status === "REJECTED" ? <span title={p.rejectReason ?? ""} className="line-clamp-2">{p.rejectReason || "—"}</span> : "—"}</td>}
+                        <td className="whitespace-nowrap px-2 py-2">
+                          {p.status === "SUBMITTED" && <button name="only" value={`PUBLISHED:${p.slug}`} className="mr-1 min-h-9 rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground">{tr(locale, "Publier", "Publish")}</button>}
+                          {(p.status === "SUBMITTED" || p.status === "PUBLISHED") && <button name="only" value={`REJECTED:${p.slug}`} className="min-h-9 rounded-md border border-destructive px-3 text-xs text-destructive">{tr(locale, "Refuser", "Reject")}</button>}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            {pager(Math.min(page, pages), pages, "p")}
+          </form>
+        )}
       </section>
+
       <section className="space-y-3">
-        <h2 className="font-heading text-2xl text-primary">{tr(locale, "Derniers mouvements de stock", "Latest stock movements")}</h2>
+        <h2 className="font-heading text-2xl text-primary">{tr(locale, "Journal des mouvements de stock", "Stock movement log")}</h2>
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
+          <table className="w-full min-w-[640px] text-left text-sm">
             <thead><tr className="border-b text-xs uppercase text-muted-foreground"><th className="py-2 pr-3">Date</th><th className="pr-3">{tr(locale, "Œuvre", "Work")}</th><th className="pr-3">Type</th><th className="pr-3">Qté</th><th className="pr-3">{tr(locale, "Motif", "Reason")}</th><th>{tr(locale, "Auteur", "Author")}</th></tr></thead>
             <tbody>{moves.map((m) => (
               <tr key={m.id} className="border-b">
-                <td className="py-2 pr-3 whitespace-nowrap">{m.createdAt.toLocaleString(fr ? "fr-FR" : "en-GB")}</td>
+                <td className="whitespace-nowrap py-2 pr-3">{dtf(m.createdAt)}</td>
                 <td className="pr-3">{m.productSlug}</td>
                 <td className="pr-3">{MOVEMENT_LABELS[m.type as keyof typeof MOVEMENT_LABELS]?.[fr ? "fr" : "en"] ?? m.type}</td>
                 <td className="pr-3">{m.quantity > 0 ? `+${m.quantity}` : m.quantity}</td>
@@ -108,6 +193,7 @@ export default async function AdminWorks({ params, searchParams }: Props) {
               </tr>))}</tbody>
           </table>
         </div>
+        {pager(Math.min(mpage, mpages), mpages, "mp")}
       </section>
     </div>
   );

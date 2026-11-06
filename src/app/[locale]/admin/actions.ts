@@ -83,3 +83,32 @@ export async function moderateProduct(formData: FormData) {
   if (sup.user?.email) await emailPartnerProductDecision({ email: sup.user.email, name: sup.displayName, locale: "fr" }, p.name, ok, reason);
   revalidatePath("/[locale]/admin/oeuvres", "page");
 }
+
+// Publier / refuser une ou plusieurs œuvres (cases cochées ou bouton de ligne), motif commun pour les refus.
+export async function bulkModerateProducts(formData: FormData) {
+  const session = await auth();
+  if (!isAdminEmail(session?.user?.email)) redirect("/");
+  const decisionIn = String(formData.get("decision") ?? "");
+  const reason = String(formData.get("reason") ?? "").trim().slice(0, 500);
+  const back = String(formData.get("back") ?? "");
+  const only = String(formData.get("only") ?? "");
+  const [onlyDecision, ...onlyRest] = only.split(":");
+  const onlySlug = onlyRest.join(":");
+  const decision = only ? onlyDecision : decisionIn;
+  const slugs = (only ? [onlySlug] : formData.getAll("slug").map(String)).slice(0, 200);
+  const ok = decision === "PUBLISHED";
+  const dest = back.startsWith("/") && !back.startsWith("//") ? back : "/fr/admin/oeuvres";
+  if ((!ok && decision !== "REJECTED") || slugs.length === 0) redirect(dest);
+  if (!ok && !reason) redirect(`${dest}${dest.includes("?") ? "&" : "?"}error=reason`);
+  let done = 0;
+  for (const slug of slugs) {
+    const p = await db.product.findUnique({ where: { slug } });
+    const sup = p?.supplierId ? await db.supplier.findUnique({ where: { id: p.supplierId }, include: { user: { select: { email: true } } } }) : null;
+    if (!p || !sup || !(p.status === "SUBMITTED" || (p.status === "PUBLISHED" && !ok))) continue;
+    await db.product.update({ where: { slug }, data: { status: decision, rejectReason: ok ? null : reason, decidedAt: new Date() } });
+    if (sup.user?.email) await emailPartnerProductDecision({ email: sup.user.email, name: sup.displayName, locale: "fr" }, p.name, ok, reason);
+    done++;
+  }
+  revalidatePath("/[locale]/admin/oeuvres", "page");
+  redirect(`${dest}${dest.includes("?") ? "&" : "?"}done=${done}`);
+}

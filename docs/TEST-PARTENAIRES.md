@@ -19,7 +19,7 @@ URLs (remplacer `fr` par `en` pour l'anglais) : `/fr/fournisseur`, `/fr/fourniss
 - [ ] Client remplit et envoie la candidature : message « Candidature envoyée ». **E-mail** de confirmation au candidat ; **e-mail** à l'admin.
 - [ ] Renvoyer une 2e candidature en attente : message « déjà en cours d'examen ».
 - [ ] Candidature sans lien ET sans fichier : refusée avec message clair (« lien OU fichier »).
-- [ ] Candidature sans lien mais avec 1 à 5 fichiers (JPG/PNG/WebP/PDF, 4 Mo max chacun) : miniatures affichées, suppression possible, envoi accepté.
+- [ ] Candidature sans lien mais avec 1 à 5 fichiers (JPG/PNG/WebP/PDF, 4 Mo max chacun) : miniatures affichées, suppression possible, envoi accepté. Les erreurs sont explicites (trop lourd, format, session expirée, erreur serveur, code HTTP). Prérequis Neon : migrations appliquées jusqu'à `0010_application_files` (table `ApplicationFile`) ; sans elle l'envoi échoue avec « Erreur du serveur… ».
 - [ ] Fichier .exe/.txt renommé en .jpg, ou > 4 Mo : refusé. 6e fichier : refusé.
 - [ ] Admin : la fiche candidature montre les miniatures (clic = agrandi) et les PDF (téléchargeables) ; un autre client ne peut pas ouvrir ces fichiers.
 - [ ] Admin, `/fr/admin/candidatures` : la candidature apparaît « À traiter ».

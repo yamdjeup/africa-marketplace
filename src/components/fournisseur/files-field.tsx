@@ -33,6 +33,8 @@ export function PartnerFilesField({ initial, fr }: { initial: F[]; fr: boolean }
     size: t("Fichier trop lourd (4 Mo maximum).", "File too large (4 MB max)."),
     type: t("Format non accepté (JPG, PNG, WebP ou PDF).", "Unsupported format (JPG, PNG, WebP or PDF)."),
     count: t("5 fichiers maximum.", "5 files maximum."),
+    auth: t("Session expirée : reconnectez-vous puis réessayez.", "Session expired: sign in again and retry."),
+    server: t("Erreur du serveur lors de l'enregistrement. Réessayez ; si cela persiste, contactez-nous.", "Server error while saving. Retry; if it persists, contact us."),
   };
 
   async function add(list: FileList | null) {
@@ -44,10 +46,18 @@ export function PartnerFilesField({ initial, fr }: { initial: F[]; fr: boolean }
       if (f.size > MAX_BYTES) { setMsg(errors.size); continue; }
       const body = new FormData();
       body.set("file", f);
-      const res = await fetch("/api/partner/files", { method: "POST", body });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok) setFiles((cur) => [...cur, data]);
-      else setMsg(errors[data.error] ?? t("Envoi impossible.", "Upload failed."));
+      let data: { error?: string } = {};
+      let res: Response | null = null;
+      try {
+        res = await fetch("/api/partner/files", { method: "POST", body });
+        data = await res.json().catch(() => ({}));
+      } catch {
+        setMsg(t("Connexion perdue pendant l'envoi. Réessayez.", "Connection lost during upload. Please retry."));
+        continue;
+      }
+      if (res.ok) setFiles((cur) => [...cur, data as F]);
+      else if (res.status === 413) setMsg(errors.size);
+      else setMsg(errors[data.error ?? ""] ?? t(`Envoi impossible (erreur ${res.status}).`, `Upload failed (error ${res.status}).`));
     }
     setBusy(false);
     if (input.current) input.current.value = "";

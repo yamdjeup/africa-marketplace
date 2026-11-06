@@ -39,7 +39,6 @@ export function ProductForm({ locale, categories, product, readOnly }: { locale:
                   <summary className="cursor-pointer text-sm font-medium">
                     {tr(locale, "Version dans l'autre langue", "Version in the other language")}
                     {state === "auto" && <span className="ml-2 rounded-full bg-accent/20 px-2 py-0.5 text-xs">{tr(locale, "traduit automatiquement", "automatically translated")}</span>}
-                    {state === "pending" && <span className="ml-2 rounded-full bg-accent/20 px-2 py-0.5 text-xs">{tr(locale, "traduction à venir", "translation coming soon")}</span>}
                   </summary>
                   <div className="mt-3 space-y-4">
                     <label className="block text-sm font-medium">{tr(locale, "Titre", "Title")} ({src === "fr" ? "EN" : "FR"})<input name="titleOther" defaultValue={other.n} className={inputCls} /></label>

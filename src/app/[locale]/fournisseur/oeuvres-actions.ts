@@ -102,7 +102,7 @@ export async function saveProduct(formData: FormData) {
       otherDesc = out[1] ?? "";
       translationState = "auto";
     } else {
-      translationState = "pending";
+      translationState = "";
     }
   }
   const name = sourceLang === "fr" ? mainName : otherName;

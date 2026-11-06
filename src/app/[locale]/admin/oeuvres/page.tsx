@@ -49,6 +49,7 @@ export default async function AdminWorks({ params, searchParams }: Props) {
     db.stockMovement.findMany({ orderBy: { createdAt: "desc" }, skip: (mpage - 1) * PAGE_SIZE, take: PAGE_SIZE }),
     db.stockMovement.count(),
   ]);
+  const hidden = tab === "pending" || mode === "all" ? 0 : (await db.product.count({ where: await worksWhere(sp, tab, true) })) - total;
   const catName = new Map(cats.map((c) => [c.slug, fr ? c.name : c.nameEn]));
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const mpages = Math.max(1, Math.ceil(movesTotal / PAGE_SIZE));
@@ -84,20 +85,16 @@ export default async function AdminWorks({ params, searchParams }: Props) {
             <select name="sup" defaultValue={sp.sup ?? ""} className={inputCls}><option value="">{tr(locale, "Tous", "All")}</option>{sups.map((s) => <option key={s.id} value={s.id}>{s.displayName}</option>)}</select></label>
           <label className="text-sm font-medium">{tr(locale, "Catégorie", "Category")}
             <select name="cat" defaultValue={sp.cat ?? ""} className={inputCls}><option value="">{tr(locale, "Toutes", "All")}</option>{cats.map((c) => <option key={c.slug} value={c.slug}>{fr ? c.name : c.nameEn}</option>)}</select></label>
-          {tab !== "pending" && (
-            <>
-              <label className="text-sm font-medium">{tr(locale, "Date de décision", "Decision date")}
-                <select name="d" defaultValue={mode} className={inputCls}>
-                  <option value="today">{tr(locale, "Aujourd'hui", "Today")}</option>
-                  <option value="7">{tr(locale, "7 jours", "7 days")}</option>
-                  <option value="30">{tr(locale, "30 jours", "30 days")}</option>
-                  <option value="custom">{tr(locale, "Plage personnalisée", "Custom range")}</option>
-                  <option value="all">{tr(locale, "Toutes les dates", "All dates")}</option>
-                </select></label>
-              <label className="text-sm font-medium">{tr(locale, "Du (plage personnalisée)", "From (custom range)")}<input type="date" name="from" defaultValue={sp.from ?? today} className={inputCls} /></label>
-              <label className="text-sm font-medium">{tr(locale, "Au", "To")}<input type="date" name="to" defaultValue={sp.to ?? today} className={inputCls} /></label>
-            </>
-          )}
+          <label className="text-sm font-medium">{tr(locale, "Date de décision", "Decision date")}
+            <select name="d" defaultValue={mode} disabled={tab === "pending"} className={inputCls}>
+              <option value="today">{tr(locale, "Aujourd'hui", "Today")}</option>
+              <option value="7">{tr(locale, "7 jours", "7 days")}</option>
+              <option value="30">{tr(locale, "30 jours", "30 days")}</option>
+              <option value="custom">{tr(locale, "Plage personnalisée", "Custom range")}</option>
+              <option value="all">{tr(locale, "Toutes les dates", "All dates")}</option>
+            </select></label>
+          <label className="text-sm font-medium">{tr(locale, "Du (plage personnalisée)", "From (custom range)")}<input type="date" name="from" disabled={tab === "pending"} defaultValue={sp.from ?? today} className={inputCls} /></label>
+          <label className="text-sm font-medium">{tr(locale, "Au", "To")}<input type="date" name="to" disabled={tab === "pending"} defaultValue={sp.to ?? today} className={inputCls} /></label>
           <div className="flex flex-wrap items-end gap-2 sm:col-span-2">
             <button type="submit" className="min-h-11 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">{tr(locale, "Filtrer", "Filter")}</button>
             <Link href={`/${locale}/admin/oeuvres?f=${tab}`} className="inline-flex min-h-11 items-center rounded-md border px-4 text-sm">{tr(locale, "Réinitialiser", "Reset")}</Link>
@@ -105,7 +102,12 @@ export default async function AdminWorks({ params, searchParams }: Props) {
           </div>
           {tab === "pending" && <p className="text-xs text-muted-foreground sm:col-span-4">{tr(locale, "L'onglet En attente n'est jamais filtré par date.", "The Pending tab is never filtered by date.")}</p>}
         </form>
-        {tab !== "pending" && mode === "today" && <p className="text-xs text-muted-foreground">{tr(locale, "Filtre par défaut : décisions d'aujourd'hui. Choisissez « Toutes les dates » pour voir aussi les décisions sans date.", "Default filter: today's decisions. Choose “All dates” to also see undated decisions.")}</p>}
+        {tab !== "pending" && mode !== "all" && hidden > 0 && (
+          <p className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm">
+            {hidden} {tr(locale, "œuvre(s) masquée(s) par le filtre de date (dont les décisions sans date).", "work(s) hidden by the date filter (including undated decisions).")}{" "}
+            <Link className="underline" href={href({ d: "all", p: undefined })}>{tr(locale, "Voir toutes les dates", "Show all dates")}</Link>
+          </p>
+        )}
 
         {total === 0 ? (
           <p className="rounded-md border p-4 text-sm text-muted-foreground">{tr(locale, "Aucune œuvre ne correspond à ces filtres.", "No works match these filters.")}</p>

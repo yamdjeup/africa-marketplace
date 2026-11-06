@@ -4,4 +4,4 @@ resources/
 native-www/
 capacitor.config.ts
 docs/
-files/
+/files/

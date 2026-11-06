@@ -90,5 +90,16 @@ Comptes : client (ou invité), partenaire actif (ex. compte accepté au lot A av
 
 Limites : paiement = test (aucun débit) ; retour/litige et retour de stock après livraison au lot E ; e-mails partenaires en français.
 
+## Traduction automatique des œuvres
+
+Une seule saisie (titre + description) dans la langue choisie (« Langue de saisie », défaut = langue de l'interface) ; l'autre langue est traduite à l'enregistrement.
+- [ ] `/fr/fournisseur/oeuvres/nouvelle` : un seul titre / une seule description + sélecteur de langue. Enregistrer.
+- [ ] Sans clé de traduction : l'enregistrement réussit ; la fiche ouverte affiche, dans « Version dans l'autre langue », le badge « traduction à venir » (même texte dans les deux langues).
+- [ ] Avec clé : badge « traduit automatiquement » ; corriger la version de l'autre langue puis enregistrer → badge disparu (version manuelle conservée aux enregistrements suivants).
+- [ ] Modifier le titre/la description source → l'autre langue est retraduite (sauf correction manuelle simultanée).
+- [ ] Une panne du service de traduction ne bloque jamais l'enregistrement.
+- Variables Vercel (optionnelles) : `TRANSLATE_PROVIDER` = `deepl` ou `google` ; `DEEPL_API_KEY` (+ `DEEPL_API_URL`, défaut api-free.deepl.com) ou `GOOGLE_TRANSLATE_API_KEY`.
+- Vérif : `npm run db:check-translate`. Limite : bio du profil non traduite automatiquement.
+
 ## Lot D — Paiements (test)
 (à venir)

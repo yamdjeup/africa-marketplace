@@ -39,6 +39,9 @@ model Product {
   nameEn             String
   description        String
   descriptionEn      String
+  /// Langue saisie par le partenaire (fr|en) ; translationState : "" (manuel) | "auto" | "pending" (traduction à venir)
+  sourceLang         String      @default("fr")
+  translationState   String      @default("")
   story              String
   storyEn            String
   categorySlug       String

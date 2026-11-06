@@ -6,7 +6,7 @@ import type { Locale } from "@/lib/i18n";
 import { saveProduct } from "@/app/[locale]/fournisseur/oeuvres-actions";
 
 type P = {
-  slug: string; name: string; nameEn: string; description: string; descriptionEn: string; categorySlug: string;
+  slug: string; name: string; nameEn: string; description: string; descriptionEn: string; sourceLang?: string; translationState?: string; categorySlug: string;
   currency: string; priceLocal: number | null; priceCents: number; widthCm: number | null; heightCm: number | null; depthCm: number | null;
   weightG: number | null; material: string | null; lowStockThreshold: number; images: unknown; edition: string | null;
   signatureFileId: string | null; authorAttestedAt: Date | null; status: string;
@@ -22,12 +22,34 @@ export function ProductForm({ locale, categories, product, readOnly }: { locale:
       <input type="hidden" name="locale" value={locale} />
       {product && <input type="hidden" name="slug" value={product.slug} />}
       <fieldset disabled={readOnly || locked} className="space-y-5">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="block text-sm font-medium">{tr(locale, "Titre (FR)", "Title (FR)")}<input name="name" required defaultValue={product?.name} className={inputCls} /></label>
-          <label className="block text-sm font-medium">{tr(locale, "Titre (EN)", "Title (EN)")}<input name="nameEn" defaultValue={product?.nameEn} className={inputCls} /></label>
-          <label className="block text-sm font-medium">{tr(locale, "Description (FR)", "Description (FR)")}<textarea name="description" rows={5} defaultValue={product?.description} className={inputCls} /></label>
-          <label className="block text-sm font-medium">{tr(locale, "Description (EN)", "Description (EN)")}<textarea name="descriptionEn" rows={5} defaultValue={product?.descriptionEn} className={inputCls} /></label>
-        </div>
+        {(() => {
+          const src = product?.sourceLang ?? (fr ? "fr" : "en");
+          const main = src === "fr" ? { n: product?.name, d: product?.description } : { n: product?.nameEn, d: product?.descriptionEn };
+          const other = src === "fr" ? { n: product?.nameEn, d: product?.descriptionEn } : { n: product?.name, d: product?.description };
+          const state = product?.translationState ?? "";
+          return (
+            <div className="space-y-4">
+              <label className="block text-sm font-medium">{tr(locale, "Langue de saisie", "Writing language")}
+                <select name="sourceLang" defaultValue={src} className={inputCls}><option value="fr">Français</option><option value="en">English</option></select></label>
+              <label className="block text-sm font-medium">{tr(locale, "Titre", "Title")}<input name="title" required defaultValue={main.n} className={inputCls} /></label>
+              <label className="block text-sm font-medium">{tr(locale, "Description", "Description")}<textarea name="description" rows={5} defaultValue={main.d} className={inputCls} /></label>
+              <p className="text-xs text-muted-foreground">{tr(locale, "L'autre langue est traduite automatiquement à l'enregistrement.", "The other language is translated automatically when you save.")}</p>
+              {product && (
+                <details className="rounded-lg border border-border p-3">
+                  <summary className="cursor-pointer text-sm font-medium">
+                    {tr(locale, "Version dans l'autre langue", "Version in the other language")}
+                    {state === "auto" && <span className="ml-2 rounded-full bg-accent/20 px-2 py-0.5 text-xs">{tr(locale, "traduit automatiquement", "automatically translated")}</span>}
+                    {state === "pending" && <span className="ml-2 rounded-full bg-accent/20 px-2 py-0.5 text-xs">{tr(locale, "traduction à venir", "translation coming soon")}</span>}
+                  </summary>
+                  <div className="mt-3 space-y-4">
+                    <label className="block text-sm font-medium">{tr(locale, "Titre", "Title")} ({src === "fr" ? "EN" : "FR"})<input name="titleOther" defaultValue={other.n} className={inputCls} /></label>
+                    <label className="block text-sm font-medium">{tr(locale, "Description", "Description")} ({src === "fr" ? "EN" : "FR"})<textarea name="descriptionOther" rows={5} defaultValue={other.d} className={inputCls} /></label>
+                  </div>
+                </details>
+              )}
+            </div>
+          );
+        })()}
         <label className="block text-sm font-medium">{tr(locale, "Catégorie", "Category")}
           <select name="category" required defaultValue={product?.categorySlug ?? ""} className={inputCls}>
             <option value="" disabled>—</option>

@@ -1,0 +1,2 @@
+ALTER TABLE "Product" ADD COLUMN "sourceLang" TEXT NOT NULL DEFAULT 'fr';
+ALTER TABLE "Product" ADD COLUMN "translationState" TEXT NOT NULL DEFAULT '';

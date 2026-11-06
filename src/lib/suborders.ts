@@ -1,4 +1,5 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
+import { recordDelivery } from "./ledger";
 import { confirmSale, releaseStock, type Actor, type Db } from "./stock";
 
 // Sous-commandes par partenaire : le vendeur est la boutique (partenaire), E póm ta' est l'intermédiaire.
@@ -93,8 +94,13 @@ export async function shipSub(db: PrismaClient, id: string, supplierId: string |
 }
 
 export async function deliverSub(db: PrismaClient, id: string, supplierId: string | null) {
-  const n = await db.subOrder.updateMany({ where: guard(id, supplierId, ["SHIPPED"]), data: { status: "DELIVERED", deliveredAt: new Date() } });
-  return n.count === 1 ? db.subOrder.findUnique({ where: { id } }) : null;
+  return db.$transaction(async (tx) => {
+    const n = await tx.subOrder.updateMany({ where: guard(id, supplierId, ["SHIPPED"]), data: { status: "DELIVERED", deliveredAt: new Date() } });
+    if (n.count !== 1) return null;
+    const sub = await tx.subOrder.findUniqueOrThrow({ where: { id } });
+    await recordDelivery(tx, sub);
+    return sub;
+  });
 }
 
 /** Relance à 24 h, escalade admin à 36 h, expiration (stock libéré) à 48 h. Idempotent. */

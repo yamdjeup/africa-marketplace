@@ -102,4 +102,21 @@ Une seule saisie (titre + description) dans la langue choisie (« Langue de sais
 - Vérif : `npm run db:check-translate`. Limite : bio du profil non traduite automatiquement.
 
 ## Lot D — Paiements (test)
-(à venir)
+
+Mode test : aucun argent réel n'est encaissé ni versé (mention visible sur les pages Paiements / Versements). Le vendeur est la boutique ; la plateforme prélève sa commission.
+Registre créé à la livraison (« Marquer livrée ») : montant client = part boutique + commission (taux du partenaire, 15 % par défaut ; modifiable par l'admin, appliqué aux prochaines livraisons). Gain « en attente » pendant `LEDGER_HOLD_DAYS` jours (défaut 7, fenêtre de retour), puis « disponible », puis « versé ».
+
+### Partenaire — `/fr/fournisseur/paiements`
+- [ ] Après une livraison : 3 cartes En attente / Disponible / Versé ; tableau des ventes avec montant client, commission (−x €, taux) et « Votre part ».
+- [ ] Mention « Paiement test : aucun argent réel ».
+
+### Admin — `/fr/admin/versements`
+- [ ] Le partenaire apparaît avec ses soldes. Bouton « Rendre disponible (test) » sur un gain en attente (évite d'attendre 7 jours).
+- [ ] « Marquer le versement effectué » → solde disponible versé, référence TEST-…, e-mail au partenaire (« versement effectué (test) »).
+- [ ] Re-cliquer sans solde → « Aucun solde disponible à verser ».
+- [ ] Changer la commission (ex. 25 %) → s'applique aux livraisons suivantes (les entrées existantes gardent leur taux).
+- [ ] Côté partenaire : la ligne passe à « Versé » et le versement apparaît dans « Versements ».
+
+- Variable Vercel optionnelle : `LEDGER_HOLD_DAYS` (0 pour disponible immédiatement). Migration 0015 additive (LedgerEntry, Payout).
+- Vérif : `npm run db:check-orders` (inclut commission 15 %, attente→disponible→versé, idempotence, versements concurrents).
+- Limites : pas de remboursement/retour (écriture annulée au lot E : champ `reversedAt` prévu) ; taux unique par partenaire ; pas d'export/facture (lot H).

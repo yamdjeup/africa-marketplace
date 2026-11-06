@@ -339,6 +339,37 @@ model SubOrder {
   @@index([supplierId, status])
 }
 
+/// Registre (mode test, aucun argent réel) : créé à la livraison d'une sous-commande.
+/// grossCents = montant client, commissionCents = commission plateforme, netCents = part boutique. Disponible dès availableAt ; versé quand payoutId est renseigné.
+model LedgerEntry {
+  id              String    @id @default(cuid())
+  supplierId      String
+  subOrderId      String    @unique
+  grossCents      Int
+  commissionRate  Float
+  commissionCents Int
+  netCents        Int
+  availableAt     DateTime
+  payoutId        String?
+  reversedAt      DateTime?
+  createdAt       DateTime  @default(now())
+
+  @@index([supplierId, payoutId])
+}
+
+/// Versement (test) marqué effectué par l'admin.
+model Payout {
+  id          String   @id @default(cuid())
+  supplierId  String
+  amountCents Int
+  entryCount  Int
+  reference   String
+  paidBy      String
+  paidAt      DateTime @default(now())
+
+  @@index([supplierId])
+}
+
 model OrderItem {
   id             String  @id @default(cuid())
   orderId        String

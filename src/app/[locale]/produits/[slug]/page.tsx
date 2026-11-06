@@ -82,12 +82,12 @@ export default async function ProductPage({ params }: Props) {
               {formatEur(p.priceCents, locale)}
               <ApproxPrice cents={p.priceCents} locale={locale} />
             </p>
-            <p className="text-xs text-muted-foreground">{t.fictitiousPrice}</p>
+            {!p.isPartner && <p className="text-xs text-muted-foreground">{t.fictitiousPrice}</p>}
           </div>
           <p>{p.description}</p>
           <p className={`text-sm ${p.stock === 0 ? "text-destructive" : "text-kente"}`}>
             {p.stock === 0 ? t.outOfStock : t.inStock(p.stock)}
-            {p.edition ? ` · ${locale === "fr" ? "Édition" : "Edition"} ${p.edition}` : ""}
+            {p.edition && !(p.stock > 0 && p.stock <= 1 && /pi[eè]ce unique|unique piece/i.test(p.edition)) ? ` · ${locale === "fr" ? "Édition" : "Edition"} ${p.edition}` : ""}
           </p>
           <AddToCart
             key={p.slug}
@@ -143,7 +143,7 @@ export default async function ProductPage({ params }: Props) {
               <>
                 <dt className="font-medium">{t.dimensions}</dt>
                 <dd>
-                  {cmLabel} <span className="text-xs text-muted-foreground">({t.fictitiousDimensions})</span>
+                  {cmLabel}{!p.isPartner && <span className="text-xs text-muted-foreground"> ({t.fictitiousDimensions})</span>}
                 </dd>
               </>
             )}
@@ -171,12 +171,14 @@ export default async function ProductPage({ params }: Props) {
         </div>
       </div>
 
-      <section aria-labelledby="story" className="max-w-prose space-y-2">
-        <h2 id="story" className="font-heading text-2xl text-primary">
-          {t.story}
-        </h2>
-        <p className="text-muted-foreground">{p.story}</p>
-      </section>
+      {p.story.trim() && (
+        <section aria-labelledby="story" className="max-w-prose space-y-2">
+          <h2 id="story" className="font-heading text-2xl text-primary">
+            {t.story}
+          </h2>
+          <p className="text-muted-foreground">{p.story}</p>
+        </section>
+      )}
 
       {more.length > 0 && (
         <section aria-labelledby="more" className="space-y-4">

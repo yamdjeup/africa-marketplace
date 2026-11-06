@@ -37,6 +37,8 @@ export type ProductView = {
   isNew: boolean;
   /** Pièce fictive « Exemple » (essayage au Miroir). */
   isExample: boolean;
+  /** Œuvre d'un partenaire réel (prix et dimensions réels, pas de mention de démonstration). */
+  isPartner: boolean;
   stock: number;
   /** Variantes (taille/couleur) avec leur stock disponible ; vide si l'œuvre n'en a pas. */
   variants: { label: string; available: number }[];
@@ -90,6 +92,7 @@ export function toProductView(p: ProductRow, locale: Locale): ProductView {
     hasCertificate: p.hasCertificate,
     isNew: Date.now() - p.createdAt.getTime() < NEW_DAYS * 86_400_000,
     isExample: isExampleProduct(p.slug),
+    isPartner: !!p.supplierId,
     stock: Math.max(0, p.stock - p.reserved),
     variants: (p.variants ?? []).map((v) => ({ label: v.label, available: Math.max(0, v.stock - v.reserved) })),
     edition: p.edition,

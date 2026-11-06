@@ -76,9 +76,72 @@ model Product {
   images             Json
   createdAt          DateTime    @default(now())
   orderItems         OrderItem[]
+  /// Partenaire propriétaire ; nul pour le catalogue historique
+  supplierId         String?
+  /// DRAFT | SUBMITTED | PUBLISHED | REJECTED (seules les PUBLISHED sont publiques)
+  status             String      @default("PUBLISHED")
+  /// Stock réservé par des commandes en cours ; disponible = stock - reserved
+  reserved           Int         @default(0)
+  lowStockThreshold  Int         @default(1)
+  /// Prix saisi par le partenaire (unité mineure de la devise) ; priceCents reste le prix EUR affiché
+  currency           String      @default("EUR")
+  priceLocal         Int?
+  weightG            Int?
+  /// Art uniquement, facultatif : « Pièce unique » ou « x/y »
+  edition            String?
+  signatureFileId    String?
+  authorAttestedAt   DateTime?
+  authorAttestedBy   String?
+  rejectReason       String?
+  submittedAt        DateTime?
+  variants           ProductVariant[]
 
   @@index([categorySlug])
   @@index([creatorSlug])
+  @@index([supplierId])
+  @@index([status])
+}
+
+/// Variante (taille/couleur) avec son propre stock ; son libellé est utilisé comme « taille » dans le panier.
+model ProductVariant {
+  id          String  @id @default(cuid())
+  productSlug String
+  product     Product @relation(fields: [productSlug], references: [slug], onDelete: Cascade)
+  label       String
+  stock       Int     @default(0)
+  reserved    Int     @default(0)
+
+  @@index([productSlug])
+}
+
+/// Historique des mouvements de stock. type : ENTRY | RESERVE | RELEASE | SALE | RETURN | ADJUST ; quantity signée (effet sur le stock disponible).
+model StockMovement {
+  id          String   @id @default(cuid())
+  productSlug String
+  variantId   String?
+  type        String
+  quantity    Int
+  reason      String   @default("")
+  authorId    String?
+  authorLabel String   @default("")
+  orderNumber String?
+  createdAt   DateTime @default(now())
+
+  @@index([productSlug])
+}
+
+/// Fichier média (photo d'œuvre, signature) servi par /api/media/[id] ; remplaçable par Vercel Blob (voir lib/storage.ts).
+model MediaFile {
+  id          String   @id @default(cuid())
+  ownerUserId String?
+  name        String
+  mime        String
+  size        Int
+  isPrivate   Boolean  @default(false)
+  data        Bytes
+  createdAt   DateTime @default(now())
+
+  @@index([ownerUserId])
 }
 
 model User {
@@ -117,6 +180,8 @@ model Supplier {
   status         String   @default("ACTIVE")
   commissionRate Float    @default(0.15)
   isDemo         Boolean  @default(false)
+  /// Signature de l'artiste (MediaFile privé), enregistrée une seule fois
+  signatureFileId String?
   createdAt      DateTime @default(now())
 }
 

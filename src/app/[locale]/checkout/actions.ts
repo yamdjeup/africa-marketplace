@@ -10,6 +10,10 @@ import { db } from "@/lib/db";
 import { isLocale } from "@/lib/i18n";
 import { sendOrderEmail } from "@/lib/order-email";
 import { isAddressEditable, isOrderOwner } from "@/lib/order-edit";
+import { reserveStock } from "@/lib/stock";
+import { notifyLowStock } from "@/lib/stock-alerts";
+
+class StockError extends Error {}
 
 export type CheckoutState = { error?: "required" | "email" | "postal" | "stock" | "unknown" | "empty"; values?: Record<string, string> };
 
@@ -78,7 +82,7 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
   const cart = parseCart(formData.get("cart"));
   if (cart.length === 0) return fail("empty");
 
-  const products = await db.product.findMany({ where: { slug: { in: cart.map((l) => l.slug) } } });
+  const products = await db.product.findMany({ where: { slug: { in: cart.map((l) => l.slug) }, status: "PUBLISHED" }, include: { variants: true } });
   const bySlug = new Map(products.map((p) => [p.slug, p]));
 
   let totalCents = 0;
@@ -86,11 +90,13 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
   for (const line of cart) {
     const p = bySlug.get(line.slug);
     if (!p) return fail("unknown");
+    const variant = p.variants.find((v) => v.label === line.size);
     const sizes = Array.isArray(p.sizes) ? (p.sizes as string[]) : [];
-    if (sizes.length > 0 ? !line.size || !sizes.includes(line.size) : line.size !== null) return fail("unknown");
-    const used = (stockUsed.get(p.slug) ?? 0) + line.quantity;
-    if (used > p.stock) return fail("stock");
-    stockUsed.set(p.slug, used);
+    if (p.variants.length > 0 ? !variant : sizes.length > 0 ? !line.size || !sizes.includes(line.size) : line.size !== null) return fail("unknown");
+    const key = `${p.slug}\u0000${line.size ?? ""}`;
+    const used = (stockUsed.get(key) ?? 0) + line.quantity;
+    if (used > (variant ? variant.stock - variant.reserved : p.stock - p.reserved)) return fail("stock");
+    stockUsed.set(key, used);
     totalCents += p.priceCents * line.quantity;
   }
 
@@ -98,43 +104,47 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
   const session = await auth();
   const user = session?.user?.id ? await db.user.findUnique({ where: { id: session.user.id } }) : null;
   const editToken = randomUUID();
-  await db.$transaction([
-    db.order.create({
-      data: {
-        number,
-        locale,
-        userId: user?.id ?? null,
-        email,
-        fullName,
-        address,
-        postalCode: addr.postalCode,
-        city: addr.city,
-        country: addr.country,
-        phone: addr.phone,
-        street: addr.line1,
-        houseNumber: addr.houseNumber,
-        box: addr.box || null,
-        complement: addr.line2 || null,
-        editToken,
-        totalCents,
-        items: {
-          create: cart.map((l) => {
-            const p = bySlug.get(l.slug)!;
-            return {
-              productSlug: p.slug,
-              name: p.name,
-              size: l.size,
-              quantity: l.quantity,
-              unitPriceCents: p.priceCents,
-            };
-          }),
+  const before = new Map(products.map((p) => [p.slug, p.stock - p.reserved]));
+  try {
+    await db.$transaction(async (tx) => {
+      await tx.order.create({
+        data: {
+          number,
+          locale,
+          userId: user?.id ?? null,
+          email,
+          fullName,
+          address,
+          postalCode: addr.postalCode,
+          city: addr.city,
+          country: addr.country,
+          phone: addr.phone,
+          street: addr.line1,
+          houseNumber: addr.houseNumber,
+          box: addr.box || null,
+          complement: addr.line2 || null,
+          editToken,
+          totalCents,
+          items: {
+            create: cart.map((l) => {
+              const p = bySlug.get(l.slug)!;
+              return { productSlug: p.slug, name: p.name, size: l.size, quantity: l.quantity, unitPriceCents: p.priceCents };
+            }),
+          },
         },
-      },
-    }),
-    ...[...stockUsed].map(([slug, qty]) =>
-      db.product.update({ where: { slug }, data: { stock: { decrement: qty } } }),
-    ),
-  ]);
+      });
+      // Réservation atomique : si une pièce vient d'être prise par un autre client, tout est annulé.
+      for (const [key, qty] of stockUsed) {
+        const [slug, label] = key.split("\u0000");
+        const ok = await reserveStock(tx, { slug, label: label || null }, qty, { id: user?.id ?? null, label: email }, number);
+        if (!ok) throw new StockError();
+      }
+    });
+  } catch (e) {
+    if (e instanceof StockError) return fail("stock");
+    throw e;
+  }
+  after(() => notifyLowStock(before).catch(() => undefined));
 
   const base = (process.env.NEXT_PUBLIC_SITE_URL || process.env.AUTH_URL || "https://epomta-demo.vercel.app").replace(/\/$/, "");
   await sendOrderEmail({

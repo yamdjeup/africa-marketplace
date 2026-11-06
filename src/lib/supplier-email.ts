@@ -53,3 +53,34 @@ export async function emailApplicantDecision(app: App, status: "ACCEPTED" | "REF
   await safeSend(app.email, subject, body);
 }
 
+type Owner = { email: string; name: string; locale: string };
+
+export async function emailAdminProductSubmitted(partnerName: string, title: string) {
+  const admins = (process.env.ADMIN_EMAILS ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+  const base = siteUrl();
+  for (const to of admins)
+    await safeSend(to, `Œuvre à modérer : ${title}`, [`${partnerName} a soumis l'œuvre « ${title} ».`, `Modérer : ${base}/fr/admin/oeuvres`]);
+}
+
+export async function emailPartnerProductDecision(o: Owner, title: string, approved: boolean, reason?: string | null) {
+  const fr = o.locale !== "en";
+  const base = siteUrl();
+  const loc = fr ? "fr" : "en";
+  const lines = approved
+    ? [fr ? `Bonjour ${o.name}, votre œuvre « ${title} » est publiée dans le catalogue.` : `Hello ${o.name}, your work “${title}” is now published in the catalogue.`]
+    : [fr ? `Bonjour ${o.name}, votre œuvre « ${title} » n'a pas été publiée.` : `Hello ${o.name}, your work “${title}” was not published.`];
+  if (reason) lines.push(reason);
+  lines.push(`${base}/${loc}/fournisseur/oeuvres`);
+  await safeSend(o.email, approved ? (fr ? "E póm ta’ — œuvre publiée" : "E póm ta’ — work published") : fr ? "E póm ta’ — œuvre à revoir" : "E póm ta’ — work needs changes", lines);
+}
+
+export async function emailLowStock(o: Owner, title: string, availableQty: number, slug: string) {
+  const fr = o.locale !== "en";
+  const base = siteUrl();
+  const loc = fr ? "fr" : "en";
+  await safeSend(o.email, fr ? `E póm ta’ — stock bas : ${title}` : `E póm ta’ — low stock: ${title}`, [
+    fr ? `Bonjour ${o.name}, il ne reste que ${availableQty} pièce(s) disponible(s) pour « ${title} ».` : `Hello ${o.name}, only ${availableQty} piece(s) left available for “${title}”.`,
+    `${base}/${loc}/fournisseur/oeuvres/${slug}`,
+  ]);
+}
+

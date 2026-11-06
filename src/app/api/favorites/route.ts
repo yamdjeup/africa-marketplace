@@ -26,9 +26,9 @@ export async function PUT(req: Request) {
   await db.favorite.deleteMany({ where: { userId, productSlug: { notIn: wanted } } });
   const toAdd = wanted.filter((s) => !existing.has(s));
   if (toAdd.length) {
-    const products = await db.product.findMany({ where: { slug: { in: toAdd } }, select: { slug: true, priceCents: true, stock: true } });
+    const products = await db.product.findMany({ where: { slug: { in: toAdd } }, select: { slug: true, priceCents: true, stock: true, reserved: true } });
     for (const p of products) {
-      await db.favorite.create({ data: { userId, productSlug: p.slug, lastPriceCents: p.priceCents, lastStock: p.stock } });
+      await db.favorite.create({ data: { userId, productSlug: p.slug, lastPriceCents: p.priceCents, lastStock: Math.max(0, p.stock - p.reserved) } });
     }
   }
   return NextResponse.json({ slugs: await current(userId) });

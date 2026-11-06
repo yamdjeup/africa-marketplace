@@ -19,7 +19,7 @@ export async function runAlerts(limit = MAX_EMAILS_PER_RUN) {
 
   // 1) Favoris : baisse de prix, dernière pièce, retour en stock.
   const favs = await db.favorite.findMany({ where: { user: { OR: [{ alertFavorites: true }, { pushSubscriptions: { some: {} } }] } }, include: { user: { include: { pushSubscriptions: { select: { id: true } } } } } });
-  const products = await db.product.findMany({ where: { slug: { in: [...new Set(favs.map((f) => f.productSlug))] } }, include: { creator: true } });
+  const products = (await db.product.findMany({ where: { slug: { in: [...new Set(favs.map((f) => f.productSlug))] }, status: "PUBLISHED" }, include: { creator: true } })).map((p) => ({ ...p, stock: Math.max(0, p.stock - p.reserved) }));
   const bySlug = new Map(products.map((p) => [p.slug, p]));
   const perUser = new Map<string, { email: string; emailOn: boolean; pushOn: boolean; items: AlertItem[]; keys: { slug: string; priceCents: number; stock: number }[] }>();
   for (const f of favs) {
@@ -56,7 +56,7 @@ export async function runAlerts(limit = MAX_EMAILS_PER_RUN) {
   const subs = await db.user.findMany({ where: { alertPromo: true, promoSince: { not: null } }, include: { pushSubscriptions: { select: { id: true } } } });
   for (const u of subs) {
     if (sent + failed >= limit) break;
-    const fresh = await db.product.findMany({ where: { createdAt: { gt: u.promoSince! }, stock: { gt: 0 } }, include: { creator: true }, orderBy: { createdAt: "desc" }, take: 8 });
+    const fresh = await db.product.findMany({ where: { createdAt: { gt: u.promoSince! }, stock: { gt: 0 }, status: "PUBLISHED" }, include: { creator: true }, orderBy: { createdAt: "desc" }, take: 8 });
     if (fresh.length === 0) continue;
     const items = fresh.map((p) => ({ slug: p.slug, name: p.name, creatorName: p.creator.name, priceCents: p.priceCents }));
     let ok = false;

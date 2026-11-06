@@ -57,9 +57,23 @@ export async function updateSupplierProfile(formData: FormData) {
       bio: locale === "fr" ? s(formData, "bio", 4000) : ctx.supplier.bio,
       bioEn: locale === "en" ? s(formData, "bio", 4000) : ctx.supplier.bioEn,
       videoUrl: /^https?:\/\//.test(s(formData, "videoUrl", 300)) ? s(formData, "videoUrl", 300) : null,
+      ...(formData.has("signatureUrl") ? { signatureFileId: await ownedMediaId(s(formData, "signatureUrl", 400), ctx.supplier.userId) } : {}),
     },
   });
   redirect(`/${locale}/fournisseur/profil?saved=1`);
+}
+
+// Signature enregistrée une seule fois : le fichier doit appartenir au compte (tableau JSON d'une URL /api/media/<id>).
+async function ownedMediaId(raw: string, userId: string | null) {
+  let url = "";
+  try {
+    const arr = JSON.parse(raw);
+    url = Array.isArray(arr) ? String(arr[0] ?? "") : "";
+  } catch {}
+  const id = /^\/api\/media\/([\w-]+)$/.exec(url)?.[1];
+  if (!id || !userId) return null;
+  const row = await db.mediaFile.findUnique({ where: { id }, select: { ownerUserId: true } });
+  return row?.ownerUserId === userId ? id : null;
 }
 
 // Admin seulement : ouvre l'espace d'un partenaire de démonstration (jamais d'un vrai partenaire).

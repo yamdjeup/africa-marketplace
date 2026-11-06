@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { isAdminEmail } from "@/lib/supplier";
-import { emailApplicantDecision } from "@/lib/supplier-email";
+import { emailApplicantDecision, emailPartnerProductDecision } from "@/lib/supplier-email";
 
 export async function decideApplication(formData: FormData) {
   const session = await auth();
@@ -28,4 +28,21 @@ export async function decideApplication(formData: FormData) {
   });
   await emailApplicantDecision(app, status, note);
   revalidatePath("/[locale]/admin/candidatures", "page");
+}
+
+export async function moderateProduct(formData: FormData) {
+  const session = await auth();
+  if (!isAdminEmail(session?.user?.email)) redirect("/");
+  const slug = String(formData.get("slug") ?? "");
+  const decision = String(formData.get("decision") ?? "");
+  const reason = String(formData.get("reason") ?? "").trim().slice(0, 500);
+  const p = await db.product.findUnique({ where: { slug } });
+  const sup = p?.supplierId ? await db.supplier.findUnique({ where: { id: p.supplierId }, include: { user: { select: { email: true } } } }) : null;
+  if (!p || p.status !== "SUBMITTED" || !sup) return;
+  if (decision === "REJECTED" && !reason) return;
+  const ok = decision === "PUBLISHED";
+  if (!ok && decision !== "REJECTED") return;
+  await db.product.update({ where: { slug }, data: { status: decision, rejectReason: ok ? null : reason } });
+  if (sup.user?.email) await emailPartnerProductDecision({ email: sup.user.email, name: sup.displayName, locale: "fr" }, p.name, ok, reason);
+  revalidatePath("/[locale]/admin/oeuvres", "page");
 }

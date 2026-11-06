@@ -2,6 +2,11 @@ import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 
 export const PAGE_SIZE = 25;
+// Seuils de priorité des œuvres en attente (heures).
+export const WAIT_WARN_H = 24;
+export const WAIT_ALERT_H = 72;
+export const waitHours = (since: Date | null, now = Date.now()) => (since ? Math.max(0, (now - since.getTime()) / 3600_000) : 0);
+export const waitLabel = (h: number) => (h < 1 ? "< 1 h" : h < 48 ? `${Math.floor(h)} h` : `${Math.floor(h / 24)} j`);
 
 export type WorkParams = { f?: string; d?: string; from?: string; to?: string; q?: string; sup?: string; cat?: string; sort?: string; dir?: string; p?: string };
 
@@ -55,12 +60,13 @@ function worksOrder(sp: WorkParams, tab: Tab): Prisma.ProductOrderByWithRelation
   const dir = sp.dir === "asc" ? "asc" : "desc";
   if (sp.sort === "price") return { priceCents: dir };
   if (sp.sort === "date") return { decidedAt: dir };
+  if (sp.sort === "wait") return { submittedAt: dir };
   return tab === "pending" ? { submittedAt: "asc" } : { decidedAt: "desc" };
 }
 
 const WORK_SELECT = {
   slug: true, name: true, nameEn: true, description: true, categorySlug: true, priceCents: true, stock: true, reserved: true,
-  images: true, status: true, decidedAt: true, rejectReason: true, createdByAdmin: true, supplierId: true, submittedAt: true,
+  images: true, status: true, decidedAt: true, rejectReason: true, createdByAdmin: true, supplierId: true, submittedAt: true, createdAt: true,
   edition: true, signatureFileId: true, authorAttestedAt: true, authorAttestedBy: true,
 } satisfies Prisma.ProductSelect;
 
@@ -80,7 +86,7 @@ export async function queryWorks(sp: WorkParams, tab: Tab, opts: { page?: number
   });
   const sups = await db.supplier.findMany({ where: { id: { in: [...new Set(rows.map((r) => r.supplierId ?? ""))] } }, select: { id: true, displayName: true } });
   const nameOf = new Map(sups.map((s) => [s.id, s.displayName]));
-  let list = rows.map((r) => ({ ...r, partner: nameOf.get(r.supplierId ?? "") ?? "" }));
+  let list = rows.map((r) => ({ ...r, submittedAt: r.submittedAt ?? r.createdAt, partner: nameOf.get(r.supplierId ?? "") ?? "" }));
   if (byPartner) {
     list.sort((a, b) => a.partner.localeCompare(b.partner) * dir);
     if (!opts.all) list = list.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);

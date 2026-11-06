@@ -10,7 +10,7 @@ export default async function AdminLayout({ children, params }: { children: Reac
   const locale = (raw === "en" ? "en" : "fr") as Locale;
   await requireAdmin(locale);
   const base = `/${locale}/admin`;
-  const items = [[`${base}/candidatures`, tr(locale, "Candidatures", "Applications")], [`${base}/fournisseurs`, tr(locale, "Partenaires", "Partners")], [`${base}/oeuvres`, tr(locale, "Œuvres à modérer", "Works to review")], [`${base}/commandes`, tr(locale, "Commandes", "Orders")]];
+  const items = [[`${base}/candidatures`, tr(locale, "Candidatures", "Applications")], [`${base}/fournisseurs`, tr(locale, "Partenaires", "Partners")], [`${base}/oeuvres`, tr(locale, "Œuvres à modérer", "Works to review")], [`${base}/commandes`, tr(locale, "Commandes", "Orders")], [`${base}/versements`, tr(locale, "Versements", "Payouts")]];
   return (
     <div className="space-y-4">
       <p className="text-xs uppercase tracking-widest text-muted-foreground">{tr(locale, "Administration", "Administration")}</p>

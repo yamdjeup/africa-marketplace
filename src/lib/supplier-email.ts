@@ -84,6 +84,16 @@ export async function emailPartnerStatus(o: Owner, action: "SUSPEND" | "REACTIVA
   await safeSend(o.email, fr ? "E póm ta’ — votre statut partenaire" : "E póm ta’ — your partner status", [fr ? `Bonjour ${o.name},` : `Hello ${o.name},`, msg]);
 }
 
+export async function emailPartnerPayout(o: Owner, amountCents: number, reference: string) {
+  const fr = o.locale !== "en";
+  const amount = new Intl.NumberFormat(fr ? "fr-FR" : "en-GB", { style: "currency", currency: "EUR" }).format(amountCents / 100);
+  await safeSend(o.email, fr ? "E póm ta’ — versement effectué (test)" : "E póm ta’ — payout made (test)", [
+    fr ? `Bonjour ${o.name}, un versement de ${amount} a été enregistré (référence ${reference}).` : `Hello ${o.name}, a payout of ${amount} has been recorded (reference ${reference}).`,
+    fr ? "Mode test : aucun argent réel n'a été transféré." : "Test mode: no real money was transferred.",
+    `${siteUrl()}/${fr ? "fr" : "en"}/fournisseur/paiements`,
+  ]);
+}
+
 export async function emailLowStock(o: Owner, title: string, availableQty: number, slug: string) {
   const fr = o.locale !== "en";
   const base = siteUrl();

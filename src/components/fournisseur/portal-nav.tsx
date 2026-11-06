@@ -12,6 +12,7 @@ export function PortalNav({ locale }: { locale: Locale }) {
     ["/tableau-de-bord", tr(locale, "Tableau de bord", "Dashboard")],
     ["/commandes", tr(locale, "Commandes", "Orders")],
     ["/oeuvres", tr(locale, "Œuvres et stock", "Works and stock")],
+    ["/paiements", tr(locale, "Paiements", "Payments")],
     ["/profil", tr(locale, "Profil", "Profile")],
   ];
   return (

@@ -7,6 +7,7 @@ import { auth } from "@/auth";
 import { slugify } from "@/lib/category-rules";
 import { isCurrency, toEurCents, toMinor, type Currency } from "@/lib/currency";
 import { db } from "@/lib/db";
+import { translateTexts, type Lang } from "@/lib/translate";
 import { adjustStock, syncProductTotals } from "@/lib/stock";
 import { notifyLowStock } from "@/lib/stock-alerts";
 import { getPortalContext } from "@/lib/supplier";
@@ -75,13 +76,42 @@ export async function saveProduct(formData: FormData) {
   const back = existing ? `/${locale}/fournisseur/oeuvres/${existing.slug}` : `/${locale}/fournisseur/oeuvres/nouvelle`;
   const fail = (code: string) => redirect(`${back}?error=${code}`);
 
-  const name = s(formData, "name", 140);
-  const nameEn = s(formData, "nameEn", 140) || name;
-  const description = s(formData, "description", 4000);
-  const descriptionEn = s(formData, "descriptionEn", 4000) || description;
+  const sourceLang: Lang = s(formData, "sourceLang", 2) === "en" ? "en" : "fr";
+  const otherLang: Lang = sourceLang === "fr" ? "en" : "fr";
+  const mainName = s(formData, "title", 140);
+  const mainDesc = s(formData, "description", 4000);
+  const subName = s(formData, "titleOther", 140);
+  const subDesc = s(formData, "descriptionOther", 4000);
+  const exOther = existing ? (sourceLang === "fr" ? { n: existing.nameEn, d: existing.descriptionEn } : { n: existing.name, d: existing.description }) : null;
+  const exMain = existing ? (sourceLang === "fr" ? { n: existing.name, d: existing.description } : { n: existing.nameEn, d: existing.descriptionEn }) : null;
+  let otherName = mainName;
+  let otherDesc = mainDesc;
+  let translationState = "";
+  if (existing && exOther && exMain && existing.sourceLang === sourceLang && ((subName && subName !== exOther.n) || (subDesc && subDesc !== exOther.d))) {
+    // l'autre langue a été corrigée à la main : on la respecte
+    otherName = subName || mainName;
+    otherDesc = subDesc || mainDesc;
+  } else if (existing && exOther && exMain && existing.sourceLang === sourceLang && existing.translationState !== "pending" && exMain.n === mainName && exMain.d === mainDesc) {
+    otherName = exOther.n;
+    otherDesc = exOther.d;
+    translationState = existing.translationState;
+  } else if (mainName) {
+    const out = await translateTexts(mainDesc ? [mainName, mainDesc] : [mainName], sourceLang, otherLang);
+    if (out) {
+      otherName = out[0] || mainName;
+      otherDesc = out[1] ?? "";
+      translationState = "auto";
+    } else {
+      translationState = "pending";
+    }
+  }
+  const name = sourceLang === "fr" ? mainName : otherName;
+  const nameEn = sourceLang === "fr" ? otherName : mainName;
+  const description = sourceLang === "fr" ? mainDesc : otherDesc;
+  const descriptionEn = sourceLang === "fr" ? otherDesc : mainDesc;
   const categorySlug = s(formData, "category", 60);
   const intent = s(formData, "intent", 10) === "submit" ? "submit" : "draft";
-  if (!name || !(await db.category.findUnique({ where: { slug: categorySlug } }))) fail("invalid");
+  if (!mainName || !(await db.category.findUnique({ where: { slug: categorySlug } }))) fail("invalid");
 
   const currencyRaw = s(formData, "currency", 5);
   const currency: Currency = isCurrency(currencyRaw) ? currencyRaw : "EUR";
@@ -92,7 +122,7 @@ export async function saveProduct(formData: FormData) {
   if (priceCents < 100) fail("price");
 
   const photos = await ownedUrls(s(formData, "photos", 4000), userId, 6);
-  if (intent === "submit" && (photos.length === 0 || description.length < 20)) fail("incomplete");
+  if (intent === "submit" && (photos.length === 0 || mainDesc.length < 20)) fail("incomplete");
 
   const isArt = ART_CATEGORIES.includes(categorySlug);
   const edition = isArt ? s(formData, "edition", 40) || null : null;
@@ -104,6 +134,8 @@ export async function saveProduct(formData: FormData) {
     nameEn,
     description,
     descriptionEn,
+    sourceLang,
+    translationState,
     story: s(formData, "story", 4000),
     storyEn: s(formData, "storyEn", 4000) || s(formData, "story", 4000),
     categorySlug,

@@ -2,6 +2,7 @@
 import { join } from "node:path";
 import { PrismaClient } from "@prisma/client";
 import { reserveStock } from "../src/lib/stock";
+import { balances, createPayout, recordDelivery } from "../src/lib/ledger";
 import { acceptSub, cancelSub, createSubOrders, deliverSub, prepareSub, refuseSub, shipSub, sweepSubOrders } from "../src/lib/suborders";
 
 if (!process.env.DATABASE_URL) process.env.DATABASE_URL = `file:${join(process.cwd(), "prisma", ".dev", "dev.db").replace(/\\/g, "/")}`;
@@ -63,6 +64,22 @@ async function main() {
     const mv = await db.stockMovement.count({ where: { productSlug: pb.slug, type: "SALE" } });
     ok("mouvement SALE journalisé", mv === 1);
 
+    // Ledger (test) : commission 15 %, solde en attente → disponible → versé
+    const le = await db.ledgerEntry.findUnique({ where: { subOrderId: subB.id } });
+    ok("ledger : 100 € → commission 15 € / part boutique 85 €", le?.grossCents === 10000 && le.commissionCents === 1500 && le.netCents === 8500);
+    ok("ledger : en attente (délai de retour)", (await balances(db, sb.id)).pending === 8500 && (await balances(db, sb.id)).available === 0);
+    ok("versement impossible tant que rien n'est disponible", (await createPayout(db, sb.id, "admin")) === null);
+    await db.ledgerEntry.update({ where: { id: le!.id }, data: { availableAt: new Date(Date.now() - 1000) } });
+    ok("ledger : disponible", (await balances(db, sb.id)).available === 8500);
+    await recordDelivery(db, subB);
+    ok("enregistrement idempotent (une seule entrée)", (await db.ledgerEntry.count({ where: { subOrderId: subB.id } })) === 1);
+    const [p1, p2] = await Promise.allSettled([createPayout(db, sb.id, "admin"), createPayout(db, sb.id, "admin")]);
+    const paid = [p1, p2].filter((x) => x.status === "fulfilled" && x.value).length;
+    ok("versement : un seul des deux appels concurrents paie", paid === 1);
+    const bal = await balances(db, sb.id);
+    ok("ledger : versé 85 €, disponible 0", bal.paid === 8500 && bal.available === 0);
+    ok("refus de A : aucune écriture de ledger", (await db.ledgerEntry.count({ where: { subOrderId: subA.id } })) === 0);
+
     // Relance 24 h, escalade 36 h, expiration 48 h
     const o2 = await mkOrder("2", [{ p: pa, q: 2 }]);
     const s2 = o2.subs[0];
@@ -85,6 +102,8 @@ async function main() {
     await acceptSub(db, o3.subs[0].id, sa.id);
     ok("annulation admin libère le stock", !!(await cancelSub(db, o3.subs[0].id, "litige", actor)) && (await st(pa.slug)) === "3/0");
   } finally {
+    await db.ledgerEntry.deleteMany({ where: { supplierId: { in: [sa.id, sb.id] } } });
+    await db.payout.deleteMany({ where: { supplierId: { in: [sa.id, sb.id] } } });
     await db.orderItem.deleteMany({ where: { orderId: { in: created } } });
     await db.subOrder.deleteMany({ where: { orderId: { in: created } } });
     await db.order.deleteMany({ where: { id: { in: created } } });

@@ -9,9 +9,9 @@ export const TABS = ["pending", "published", "rejected", "all"] as const;
 export type Tab = (typeof TABS)[number];
 
 const STATUS: Record<Tab, Prisma.ProductWhereInput> = {
-  pending: { status: "SUBMITTED" },
+  pending: { status: "SUBMITTED", supplierId: { not: null } },
   published: { status: "PUBLISHED", supplierId: { not: null } },
-  rejected: { status: "REJECTED" },
+  rejected: { status: "REJECTED", supplierId: { not: null } },
   all: { status: { in: ["SUBMITTED", "PUBLISHED", "REJECTED"] }, supplierId: { not: null } },
 };
 
@@ -32,8 +32,15 @@ function dateRange(sp: WorkParams): { gte?: Date; lt?: Date } | null {
   return { gte: from, lt: new Date(to.getTime() + 86400_000) };
 }
 
-export async function worksWhere(sp: WorkParams, tab: Tab): Promise<Prisma.ProductWhereInput> {
-  const and: Prisma.ProductWhereInput[] = [STATUS[tab]];
+export async function worksWhere(sp: WorkParams, tab: Tab, ignoreDate = false): Promise<Prisma.ProductWhereInput> {
+  const range = tab === "pending" || ignoreDate ? null : dateRange(sp);
+  const decided: Prisma.ProductWhereInput = range ? { decidedAt: range } : {};
+  // « Toutes » = en attente (jamais filtrées par date) + publiées/refusées filtrées par date de décision.
+  const base: Prisma.ProductWhereInput =
+    tab === "all"
+      ? { OR: [{ status: "SUBMITTED", supplierId: { not: null } }, { status: { in: ["PUBLISHED", "REJECTED"] }, supplierId: { not: null }, ...decided }] }
+      : { ...STATUS[tab], ...decided };
+  const and: Prisma.ProductWhereInput[] = [base];
   const q = (sp.q ?? "").trim().slice(0, 80);
   if (q) {
     const sups = await db.supplier.findMany({ where: { displayName: { contains: q } }, select: { id: true } });
@@ -41,8 +48,6 @@ export async function worksWhere(sp: WorkParams, tab: Tab): Promise<Prisma.Produ
   }
   if (sp.sup) and.push({ supplierId: sp.sup });
   if (sp.cat) and.push({ categorySlug: sp.cat });
-  const range = tab === "pending" ? null : dateRange(sp);
-  if (range) and.push({ decidedAt: range });
   return { AND: and };
 }
 

@@ -1,4 +1,5 @@
 import { buttonVariants } from "@/components/ui/button";
+import { PhotoUploader } from "@/components/fournisseur/media-fields";
 import { inputCls } from "@/components/fournisseur/parts";
 import { getPortalContext } from "@/lib/supplier";
 import { COUNTRIES, tr } from "@/lib/tr";
@@ -33,6 +34,18 @@ export default async function ProfilePage({ params, searchParams }: Props) {
             <textarea name="bio" rows={6} defaultValue={locale === "en" ? s.bioEn : s.bio} className={inputCls} /></label>
           <label className="block text-sm font-medium">{tr(locale, "Vidéo de présentation (lien https)", "Intro video (https link)")}
             <input name="videoUrl" type="url" defaultValue={s.videoUrl ?? ""} placeholder="https://" className={inputCls} /></label>
+          {!readOnly && (
+            <PhotoUploader
+              name="signatureUrl"
+              kind="signature"
+              max={1}
+              fr={locale !== "en"}
+              initial={s.signatureFileId ? [`/api/media/${s.signatureFileId}`] : []}
+              label={tr(locale, "Ma signature (enregistrée une seule fois, pour les œuvres d'art)", "My signature (saved once, for artworks)")}
+              hint={tr(locale, "Facultatif. Dessinez-la ou téléversez une image.", "Optional. Draw it or upload an image.")}
+              extra
+            />
+          )}
           <button type="submit" className={buttonVariants({ size: "lg", className: "min-h-11" })}>{tr(locale, "Enregistrer", "Save")}</button>
         </fieldset>
       </form>

@@ -15,10 +15,12 @@ type Props = {
   priceCents: number;
   stock: number;
   sizes?: string[];
+  /** Stock disponible par variante (taille/couleur) ; absent si l'œuvre n'a pas de variantes. */
+  sizeStock?: Record<string, number>;
   sizeLabel?: string;
 };
 
-export function AddToCart({ locale, slug, name, creatorName, image, priceCents, stock, sizes = [], sizeLabel }: Props) {
+export function AddToCart({ locale, slug, name, creatorName, image, priceCents, stock, sizes = [], sizeStock, sizeLabel }: Props) {
   const t = getDict(locale).product;
   const { add } = useCart();
   const [added, setAdded] = useState(false);
@@ -32,10 +34,12 @@ export function AddToCart({ locale, slug, name, creatorName, image, priceCents, 
         <fieldset className="space-y-2">
           <legend className="text-sm font-medium">{sizeLabel ?? t.size}</legend>
           <div className="flex flex-wrap gap-2">
-            {sizes.map((s) => (
+            {sizes.map((s) => {
+              const out = sizeStock ? (sizeStock[s] ?? 0) <= 0 : false;
+              return (
               <label
                 key={s}
-                className={`flex h-11 min-w-11 cursor-pointer items-center justify-center rounded-md border px-3 text-sm has-[:focus-visible]:ring-2 ${
+                className={`flex h-11 min-w-11 items-center justify-center rounded-md border px-3 text-sm has-[:focus-visible]:ring-2 ${out ? "cursor-not-allowed text-muted-foreground line-through opacity-60" : "cursor-pointer"} ${
                   size === s ? "border-primary bg-primary text-primary-foreground" : "bg-background"
                 }`}
               >
@@ -44,6 +48,7 @@ export function AddToCart({ locale, slug, name, creatorName, image, priceCents, 
                   name={`size-${slug}`}
                   value={s}
                   checked={size === s}
+                  disabled={out}
                   onChange={() => {
                     setSize(s);
                     setMissing(false);
@@ -52,7 +57,8 @@ export function AddToCart({ locale, slug, name, creatorName, image, priceCents, 
                 />
                 {s}
               </label>
-            ))}
+              );
+            })}
           </div>
           {missing && (
             <p role="alert" className="text-sm text-destructive">
@@ -70,7 +76,7 @@ export function AddToCart({ locale, slug, name, creatorName, image, priceCents, 
             setMissing(true);
             return;
           }
-          add({ slug, size, name, creatorName, image, priceCents, maxQuantity: stock });
+          add({ slug, size, name, creatorName, image, priceCents, maxQuantity: sizeStock && size ? sizeStock[size] ?? stock : stock });
           setAdded(true);
         }}
       >

@@ -38,6 +38,9 @@ export type ProductView = {
   /** Pièce fictive « Exemple » (essayage au Miroir). */
   isExample: boolean;
   stock: number;
+  /** Variantes (taille/couleur) avec leur stock disponible ; vide si l'œuvre n'en a pas. */
+  variants: { label: string; available: number }[];
+  edition: string | null;
 };
 
 export type CreatorView = {
@@ -51,7 +54,10 @@ export type CreatorView = {
   sourceUrl: string;
 };
 
-type ProductRow = Product & { creator: Pick<Creator, "name"> };
+type ProductRow = Product & { creator: Pick<Creator, "name">; variants?: { label: string; stock: number; reserved: number }[] };
+
+/** Filtre commun : seules les œuvres publiées sont visibles du public. */
+const live = { status: "PUBLISHED" } as const;
 
 const strings = (v: unknown): string[] => (Array.isArray(v) ? (v as string[]) : []);
 
@@ -84,7 +90,9 @@ export function toProductView(p: ProductRow, locale: Locale): ProductView {
     hasCertificate: p.hasCertificate,
     isNew: Date.now() - p.createdAt.getTime() < NEW_DAYS * 86_400_000,
     isExample: isExampleProduct(p.slug),
-    stock: p.stock,
+    stock: Math.max(0, p.stock - p.reserved),
+    variants: (p.variants ?? []).map((v) => ({ label: v.label, available: Math.max(0, v.stock - v.reserved) })),
+    edition: p.edition,
   };
 }
 
@@ -106,13 +114,13 @@ export function toCreatorView(c: Creator, locale: Locale, cats: { slug: string; 
   };
 }
 
-const withCreator = { creator: { select: { name: true } } } as const;
+const withCreator = { creator: { select: { name: true } }, variants: true } as const;
 
 const getSearchIndexRaw = async (): Promise<SearchIndex> => {
   const [creators, categories, products] = await Promise.all([
-    db.creator.findMany({ orderBy: { name: "asc" } }),
+    db.creator.findMany({ where: { products: { some: live } }, orderBy: { name: "asc" } }),
     db.category.findMany({ orderBy: { sortOrder: "asc" } }),
-    db.product.findMany({ include: withCreator }),
+    db.product.findMany({ where: live, include: withCreator }),
   ]);
   return {
     creators: creators.map((c) => ({
@@ -161,6 +169,7 @@ export type CatalogParams = {
 export async function searchProducts(params: CatalogParams, locale: Locale) {
   const rows = await db.product.findMany({
     where: {
+      ...live,
       ...(params.category ? { categorySlug: params.category } : {}),
       ...(params.artist ? { creatorSlug: params.artist } : {}),
       priceCents: {
@@ -226,9 +235,9 @@ async function getFilterOptionsRaw(locale: Locale, category?: string) {
     db.creator.findMany({
       orderBy: { name: "asc" },
       select: { slug: true, name: true },
-      ...(category ? { where: { products: { some: { categorySlug: category } } } } : {}),
+      where: { products: { some: category ? { ...live, categorySlug: category } : { ...live } } },
     }),
-    db.product.findMany({ where: category ? { categorySlug: category } : {} }),
+    db.product.findMany({ where: { ...live, ...(category ? { categorySlug: category } : {}) } }),
   ]);
   return {
     categories: categories.map((c) => ({ value: c.slug, label: pick(locale, c.name, c.nameEn) })),
@@ -244,8 +253,8 @@ async function getFilterOptionsRaw(locale: Locale, category?: string) {
 }
 
 export async function getProduct(slug: string, locale: Locale) {
-  const p = await db.product.findUnique({ where: { slug }, include: { creator: true, category: true } });
-  if (!p) return null;
+  const p = await db.product.findUnique({ where: { slug }, include: { creator: true, category: true, variants: true } });
+  if (!p || p.status !== "PUBLISHED") return null;
   return {
     product: toProductView(p, locale),
     creator: toCreatorView(p.creator, locale),
@@ -254,14 +263,14 @@ export async function getProduct(slug: string, locale: Locale) {
 }
 
 export async function getFeaturedProducts(locale: Locale, take = 8) {
-  const rows = await db.product.findMany({ include: withCreator, orderBy: { createdAt: "desc" }, take });
+  const rows = await db.product.findMany({ where: live, include: withCreator, orderBy: { createdAt: "desc" }, take });
   return rows.map((p) => toProductView(p, locale));
 }
 
 /** Visuel du bandeau d'accueil : une œuvre d'art (pas de pièce de couture), la plus récente. */
 export async function getHeroProduct(locale: Locale) {
   const row = await db.product.findFirst({
-    where: { categorySlug: { in: ["peinture", "sculpture", "photographie"] } },
+    where: { ...live, categorySlug: { in: ["peinture", "sculpture", "photographie"] } },
     include: withCreator,
     orderBy: { createdAt: "desc" },
   });
@@ -270,7 +279,7 @@ export async function getHeroProduct(locale: Locale) {
 
 export async function getCreators(locale: Locale, take?: number) {
   const [rows, cats] = await Promise.all([
-    db.creator.findMany({ orderBy: { name: "asc" }, take, include: { products: { select: { categorySlug: true } } } }),
+    db.creator.findMany({ where: { products: { some: live } }, orderBy: { name: "asc" }, take, include: { products: { where: live, select: { categorySlug: true } } } }),
     getCategories(locale),
   ]);
   return rows.map((c) => toCreatorView(c, locale, creatorCats(c.products, cats)));
@@ -285,7 +294,7 @@ export async function getCreatorWithProducts(slug: string, locale: Locale) {
   const [c, cats] = await Promise.all([
     db.creator.findUnique({
       where: { slug },
-      include: { products: { include: withCreator, orderBy: { createdAt: "desc" } } },
+      include: { products: { where: live, include: withCreator, orderBy: { createdAt: "desc" } } },
     }),
     getCategories(locale),
   ]);
@@ -308,7 +317,7 @@ async function getCategoriesRaw(locale: Locale) {
 async function getCategoryMenuRaw(locale: Locale) {
   const [cats, rows] = await Promise.all([
     db.category.findMany({ orderBy: { sortOrder: "asc" } }),
-    db.product.findMany({ select: { categorySlug: true, country: true, countryEn: true, creator: { select: { slug: true, name: true } } } }),
+    db.product.findMany({ where: live, select: { categorySlug: true, country: true, countryEn: true, creator: { select: { slug: true, name: true } } } }),
   ]);
   return cats.map((c) => {
     const own = rows.filter((r) => r.categorySlug === c.slug);
@@ -332,7 +341,7 @@ async function getCategoryMenuRaw(locale: Locale) {
 async function getCategoryShowcaseRaw(locale: Locale) {
   const [cats, rows] = await Promise.all([
     db.category.findMany({ orderBy: { sortOrder: "asc" } }),
-    db.product.findMany({ orderBy: { createdAt: "desc" }, select: { categorySlug: true, images: true, name: true, nameEn: true } }),
+    db.product.findMany({ where: live, orderBy: { createdAt: "desc" }, select: { categorySlug: true, images: true, name: true, nameEn: true } }),
   ]);
   return cats.map((c) => {
     const own = rows.filter((r) => r.categorySlug === c.slug);
@@ -350,7 +359,7 @@ async function getCategoryShowcaseRaw(locale: Locale) {
 export async function getRelatedProducts(slug: string, locale: Locale, take = 4) {
   const cur = await db.product.findUnique({ where: { slug } });
   if (!cur) return [];
-  const rows = await db.product.findMany({ where: { slug: { not: slug } }, include: withCreator, orderBy: { createdAt: "desc" } });
+  const rows = await db.product.findMany({ where: { ...live, slug: { not: slug } }, include: withCreator, orderBy: { createdAt: "desc" } });
   const score = (p: Product) =>
     (p.creatorSlug === cur.creatorSlug ? 4 : 0) +
     (p.categorySlug === cur.categorySlug ? 2 : 0) +

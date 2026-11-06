@@ -86,7 +86,8 @@ export default async function ProductPage({ params }: Props) {
           </div>
           <p>{p.description}</p>
           <p className={`text-sm ${p.stock === 0 ? "text-destructive" : "text-kente"}`}>
-            {p.stock === 0 ? t.outOfStock : t.inStock()}
+            {p.stock === 0 ? t.outOfStock : t.inStock(p.stock)}
+            {p.edition ? ` · ${locale === "fr" ? "Édition" : "Edition"} ${p.edition}` : ""}
           </p>
           <AddToCart
             key={p.slug}
@@ -97,8 +98,9 @@ export default async function ProductPage({ params }: Props) {
             image={p.images[0]}
             priceCents={p.priceCents}
             stock={p.stock}
-            sizes={sizeKind ? p.sizes : []}
-            sizeLabel={sizeKind === "ring" ? t.sizeRing : t.size}
+            sizes={p.variants.length > 0 ? p.variants.map((v) => v.label) : sizeKind ? p.sizes : []}
+            sizeStock={p.variants.length > 0 ? Object.fromEntries(p.variants.map((v) => [v.label, v.available])) : undefined}
+            sizeLabel={p.variants.length > 0 ? (locale === "fr" ? "Taille / couleur" : "Size / colour") : sizeKind === "ring" ? t.sizeRing : t.size}
           />
           {roomOk && (
             <RoomPreview

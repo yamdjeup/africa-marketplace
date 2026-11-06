@@ -27,8 +27,8 @@ URLs (remplacer `fr` par `en` pour l'anglais) : `/fr/fournisseur`, `/fr/fourniss
 - [ ] Admin « Refuser » : **e-mail** de refus.
 - [ ] Admin « Accepter » : **e-mail** de bienvenue ; le candidat accède à `/fr/fournisseur/tableau-de-bord`.
 - [ ] Partenaire : modifier le profil (nom, pays, bio, vidéo) puis recharger : valeurs conservées.
-- [ ] Admin, `/fr/account` : bloc « Vue (admin) » (absent pour un non-admin).
-- [ ] Admin : choisir un partenaire de démo puis « Ouvrir la vue Partenaire » : espace affiché en lecture seule (bandeau « Vue admin »), « Quitter » ramène au compte.
+- [ ] Admin, `/fr/account` : plus de bloc « Vue (admin) » ; l'accès se fait par les lignes « Administration » / « Mon espace partenaire » de « Mon compte ».
+- [ ] Admin : `/fr/admin/fournisseurs`, « Voir son espace » sur un partenaire de démo : espace affiché en lecture seule (bandeau « Vue admin »), « Quitter » ferme la vue.
 - [ ] Un admin ne peut pas ouvrir l'espace d'un vrai partenaire (seules les démos sont proposées).
 
 ## Lot B — Œuvres et stock

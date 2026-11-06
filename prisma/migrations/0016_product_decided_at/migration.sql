@@ -1,0 +1,1 @@
+ALTER TABLE "Product" ADD COLUMN "decidedAt" TIMESTAMP(3);

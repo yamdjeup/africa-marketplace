@@ -97,6 +97,7 @@ model Product {
   authorAttestedBy   String?
   rejectReason       String?
   submittedAt        DateTime?
+  decidedAt          DateTime?
   variants           ProductVariant[]
 
   @@index([categorySlug])

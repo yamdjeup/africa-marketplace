@@ -98,6 +98,8 @@ model Product {
   rejectReason       String?
   submittedAt        DateTime?
   decidedAt          DateTime?
+  /// E-mail de l'admin qui a saisi l'œuvre au nom du partenaire (null = saisie par le partenaire).
+  createdByAdmin     String?
   variants           ProductVariant[]
 
   @@index([categorySlug])

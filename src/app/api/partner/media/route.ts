@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { MAX_PHOTO_BYTES, photoStorage, sniffImage } from "@/lib/storage";
+import { isAdminEmail } from "@/lib/supplier";
 
 export const runtime = "nodejs";
 
@@ -12,7 +13,8 @@ export async function POST(req: Request) {
   if (!session?.user?.id) return json({ error: "auth" }, 401);
   const userId = session.user.id;
   const supplier = await db.supplier.findUnique({ where: { userId } });
-  if (!supplier || supplier.status !== "ACTIVE") return json({ error: "forbidden" }, 403);
+  const isAdmin = isAdminEmail(session.user.email);
+  if (!isAdmin && (!supplier || supplier.status !== "ACTIVE")) return json({ error: "forbidden" }, 403);
   const form = await req.formData().catch(() => null);
   const file = form?.get("file");
   const kind = form?.get("kind") === "signature" ? "signature" : "photo";

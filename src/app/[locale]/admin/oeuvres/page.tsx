@@ -6,7 +6,8 @@ import { tr } from "@/lib/tr";
 import type { Locale } from "@/lib/i18n";
 import { inputCls } from "@/components/fournisseur/parts";
 import { PhotoLightbox, SelectAll } from "@/components/admin/table-widgets";
-import { PAGE_SIZE, TABS, WAIT_ALERT_H, WAIT_WARN_H, dateModeOf, isoDay, queryWorks, tabOf, waitHours, waitLabel, worksWhere, type Tab, type WorkParams } from "@/lib/admin-works";
+import { DateRangeFields } from "@/components/admin/date-range-fields";
+import { PAGE_SIZE, TABS, WAIT_ALERT_H, WAIT_WARN_H, dateModeOf, isoDay, queryWorks, rangeFields, tabOf, waitHours, waitLabel, worksWhere, type Tab, type WorkParams } from "@/lib/admin-works";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +30,8 @@ export default async function AdminWorks({ params, searchParams }: Props) {
   const mpage = Math.max(1, Math.trunc(Number(sp.mp)) || 1);
   const mode = dateModeOf(sp.d);
   const today = isoDay(new Date());
-  const dtf = (d: Date | null) => (d ? d.toLocaleString(fr ? "fr-FR" : "en-GB", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—");
+  const range = rangeFields(sp);
+  const dtf = (d: Date | null) => (d ? d.toLocaleString(fr ? "fr-FR" : "en-GB", { timeZone: "Europe/Paris", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—");
 
   const href = (o: Record<string, string | undefined>) => {
     const u = new URLSearchParams();
@@ -88,16 +90,15 @@ export default async function AdminWorks({ params, searchParams }: Props) {
             <select name="sup" defaultValue={sp.sup ?? ""} className={inputCls}><option value="">{tr(locale, "Tous", "All")}</option>{sups.map((s) => <option key={s.id} value={s.id}>{s.displayName}</option>)}</select></label>
           <label className="text-sm font-medium">{tr(locale, "Catégorie", "Category")}
             <select name="cat" defaultValue={sp.cat ?? ""} className={inputCls}><option value="">{tr(locale, "Toutes", "All")}</option>{cats.map((c) => <option key={c.slug} value={c.slug}>{fr ? c.name : c.nameEn}</option>)}</select></label>
-          <label className="text-sm font-medium">{tr(locale, "Date de décision", "Decision date")}
-            <select name="d" defaultValue={mode} disabled={tab === "pending"} className={inputCls}>
-              <option value="today">{tr(locale, "Aujourd'hui", "Today")}</option>
-              <option value="7">{tr(locale, "7 jours", "7 days")}</option>
-              <option value="30">{tr(locale, "30 jours", "30 days")}</option>
-              <option value="custom">{tr(locale, "Plage personnalisée", "Custom range")}</option>
-              <option value="all">{tr(locale, "Toutes les dates", "All dates")}</option>
-            </select></label>
-          <label className="text-sm font-medium">{tr(locale, "Du (plage personnalisée)", "From (custom range)")}<input type="date" name="from" disabled={tab === "pending"} defaultValue={sp.from ?? today} className={inputCls} /></label>
-          <label className="text-sm font-medium">{tr(locale, "Au", "To")}<input type="date" name="to" disabled={tab === "pending"} defaultValue={sp.to ?? today} className={inputCls} /></label>
+          <DateRangeFields
+            mode={mode} from={range.from} to={range.to} today={today} disabled={tab === "pending"} inputCls={inputCls}
+            labels={{
+              decision: tr(locale, "Date de décision", "Decision date"), today: tr(locale, "Aujourd'hui", "Today"), d7: tr(locale, "7 jours", "7 days"), d30: tr(locale, "30 jours", "30 days"),
+              custom: tr(locale, "Plage personnalisée", "Custom range"), all: tr(locale, "Toutes les dates", "All dates"), from: tr(locale, "Du", "From"), to: tr(locale, "Au", "To"),
+              invalid: tr(locale, "La date de début doit être antérieure ou égale à la date de fin.", "The start date must be on or before the end date."),
+            }}
+          />
+          {range.swapped && <p className="text-xs text-orange-700 sm:col-span-4">{tr(locale, "Dates inversées : plage corrigée automatiquement.", "Dates were reversed: range corrected automatically.")}</p>}
           <div className="flex flex-wrap items-end gap-2 sm:col-span-2">
             <button type="submit" className="min-h-11 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">{tr(locale, "Filtrer", "Filter")}</button>
             <Link href={`/${locale}/admin/oeuvres?f=${tab}`} className="inline-flex min-h-11 items-center rounded-md border px-4 text-sm">{tr(locale, "Réinitialiser", "Reset")}</Link>

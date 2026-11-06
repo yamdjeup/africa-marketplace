@@ -22,19 +22,37 @@ const STATUS: Record<Tab, Prisma.ProductWhereInput> = {
 
 export const tabOf = (f?: string): Tab => ((TABS as readonly string[]).includes(f ?? "") ? (f as Tab) : "pending");
 export const dateModeOf = (d?: string) => (["today", "7", "30", "custom", "all"].includes(d ?? "") ? (d as string) : "today");
-export const isoDay = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const TZ = "Europe/Paris";
+// Jour calendaire (aaaa-mm-jj) d'un instant, en heure de Paris.
+export const isoDay = (d: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
+const addDays = (ymd: string, n: number) => new Date(Date.UTC(+ymd.slice(0, 4), +ymd.slice(5, 7) - 1, +ymd.slice(8, 10) + n)).toISOString().slice(0, 10);
+const validDay = (v?: string) => (v && /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v)) ? v : null);
+
+// Minuit (heure de Paris) d'un jour donné, en instant UTC.
+function parisMidnight(ymd: string): Date {
+  const guess = new Date(`${ymd}T00:00:00Z`);
+  const parts = new Intl.DateTimeFormat("en-US", { timeZone: TZ, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).formatToParts(guess);
+  const g = (t: string) => Number(parts.find((p) => p.type === t)?.value);
+  const asUtc = Date.UTC(g("year"), g("month") - 1, g("day"), g("hour"), g("minute"));
+  return new Date(guess.getTime() - (asUtc - guess.getTime()));
+}
+
+// Valeurs Du/Au reflétant la période choisie ("" = champs vides pour « Toutes les dates »).
+export function rangeFields(sp: WorkParams, now = new Date()): { from: string; to: string; swapped: boolean } {
+  const mode = dateModeOf(sp.d);
+  const today = isoDay(now);
+  if (mode === "all") return { from: "", to: "", swapped: false };
+  if (mode === "today") return { from: today, to: today, swapped: false };
+  if (mode === "7" || mode === "30") return { from: addDays(today, -(Number(mode) - 1)), to: today, swapped: false };
+  const from = validDay(sp.from) ?? validDay(sp.to) ?? today;
+  const to = validDay(sp.to) ?? from;
+  return from > to ? { from: to, to: from, swapped: true } : { from, to, swapped: false };
+}
 
 function dateRange(sp: WorkParams): { gte?: Date; lt?: Date } | null {
-  const mode = dateModeOf(sp.d);
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
-  if (mode === "all") return null;
-  if (mode === "today") return { gte: start, lt: new Date(start.getTime() + 86400_000) };
-  if (mode === "7" || mode === "30") return { gte: new Date(start.getTime() - (Number(mode) - 1) * 86400_000), lt: new Date(start.getTime() + 86400_000) };
-  const parse = (v?: string) => (v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? new Date(`${v}T00:00:00`) : null);
-  const from = parse(sp.from) ?? start;
-  const to = parse(sp.to) ?? from;
-  return { gte: from, lt: new Date(to.getTime() + 86400_000) };
+  if (dateModeOf(sp.d) === "all") return null;
+  const { from, to } = rangeFields(sp);
+  return { gte: parisMidnight(from), lt: parisMidnight(addDays(to, 1)) };
 }
 
 export async function worksWhere(sp: WorkParams, tab: Tab, ignoreDate = false): Promise<Prisma.ProductWhereInput> {

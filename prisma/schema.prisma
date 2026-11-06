@@ -306,8 +306,34 @@ model Order {
   status     String      @default("PLACED")
   createdAt  DateTime    @default(now())
   items      OrderItem[]
+  subOrders  SubOrder[]
 
   @@index([userId])
+}
+
+/// Sous-commande par partenaire (le vendeur est la boutique). status : PENDING | ACCEPTED | PREPARING | SHIPPED | DELIVERED | REFUSED | EXPIRED | CANCELLED.
+model SubOrder {
+  id             String    @id @default(cuid())
+  orderId        String
+  order          Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  supplierId     String
+  number         String    @unique
+  status         String    @default("PENDING")
+  subtotalCents  Int
+  /// Échéance de réponse du partenaire (48 h)
+  acceptBy       DateTime
+  reminderSentAt DateTime?
+  escalatedAt    DateTime?
+  decidedAt      DateTime?
+  reason         String    @default("")
+  carrier        String    @default("")
+  trackingNumber String    @default("")
+  shippedAt      DateTime?
+  deliveredAt    DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@index([orderId])
+  @@index([supplierId, status])
 }
 
 model OrderItem {
@@ -320,6 +346,8 @@ model OrderItem {
   size           String?
   quantity       Int
   unitPriceCents Int
+  subOrderId     String?
 
   @@index([orderId])
+  @@index([subOrderId])
 }

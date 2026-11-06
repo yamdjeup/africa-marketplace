@@ -66,7 +66,29 @@ Migration additive 0012 (`PartnerAudit`). Les partenaires de démo ne sont pas c
 - [ ] « Révoquer définitivement » : motif + case de confirmation obligatoires ; refusé tant qu'une œuvre a du stock réservé (commande en cours) ; option « Anonymiser le profil » (nom, bio, vidéo, signature effacés ; commandes et paiements conservés). Aucune suppression physique.
 
 ## Lot C — Commandes par partenaire
-(à venir)
+Migration additive 0013 (`SubOrder`, `OrderItem.subOrderId`). Vérification automatique : `npm run db:check-orders` (scission, autorisations, 48 h, relance/escalade/expiration, libération et confirmation du stock). Variables : `CRON_SECRET` (cron `/api/orders/sweep`, quotidien sur Vercel Hobby ; le balayage tourne aussi au chargement des pages Commandes et après chaque commande), `ADMIN_EMAILS`, e-mail existant.
+Comptes : client (ou invité), partenaire actif (ex. compte accepté au lot A avec une œuvre publiée au lot B), admin (`ADMIN_EMAILS`).
+
+### Client — achat
+- [ ] Acheter 2 œuvres de 2 partenaires différents (panier → paiement test). Page de confirmation et `/fr/account/orders/<n°>` : un bloc « Vendu et expédié par [boutique] (pays) » par partenaire, état « À accepter », mention « E póm ta’ est l'intermédiaire ».
+- [ ] Stock : l'œuvre est réservée (disponible −1). E-mail « nouvelle commande » à chaque partenaire (échéance 48 h).
+
+### Partenaire — `/fr/fournisseur/commandes`
+- [ ] Tableau de bord : compteurs « À accepter », « À préparer / expédier », « En livraison ». Liste filtrable (À accepter, À expédier, Expédiées, Clôturées) ; un partenaire ne voit que ses sous-commandes (URL d'un autre → 404).
+- [ ] Ouvrir la commande : articles, adresse de livraison, échéance. « Accepter » → état Acceptée, e-mail au client.
+- [ ] « Marquer en préparation » puis « Marquer expédiée » : transporteur et suivi obligatoires. Stock confirmé (mouvement « Vente » dans l'historique de l'œuvre, stock physique −1, réservé −1). E-mail au client avec le suivi.
+- [ ] « Marquer livrée » → e-mail au client ; le client voit « Livrée ».
+- [ ] Refus : refuser avec motif (obligatoire) → commande annulée, stock libéré (mouvement « Libération »), e-mail au client. La pièce unique redevient achetable.
+
+### 48 h, relance, escalade
+- [ ] Sans réponse : relance e-mail au partenaire à 24 h, e-mail d'escalade aux admins à 36 h (et badge « Sans réponse » dans `/fr/admin/commandes`), annulation automatique à 48 h (stock libéré, client prévenu). Pour tester sans attendre : `npm run db:check-orders` simule ces délais ; en manuel, appeler `/api/orders/sweep` avec `Authorization: Bearer <CRON_SECRET>`.
+
+### Admin — `/fr/admin/commandes`
+- [ ] Toutes les sous-commandes avec boutique, état, suivi. « Annuler et libérer le stock » (motif obligatoire) sur une commande non expédiée → client prévenu.
+- [ ] Suspension/révocation : la révocation est refusée tant que le partenaire a des commandes ouvertes.
+- [ ] « Voir comme » un partenaire de démo : commandes en lecture seule.
+
+Limites : paiement = test (aucun débit) ; retour/litige et retour de stock après livraison au lot E ; e-mails partenaires en français.
 
 ## Lot D — Paiements (test)
 (à venir)

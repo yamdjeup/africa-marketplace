@@ -1,0 +1,60 @@
+import { Pill, inputCls } from "@/components/fournisseur/parts";
+import { db } from "@/lib/db";
+import type { Locale } from "@/lib/i18n";
+import { runSubOrderSweep } from "@/lib/order-notify";
+import { isOpenStatus, subLabel } from "@/lib/suborders";
+import { tr } from "@/lib/tr";
+import { adminCancelSubOrder } from "../commandes-actions";
+
+export const metadata = { title: "Commandes (admin)", robots: { index: false } };
+
+export default async function AdminOrders({ params, searchParams }: { params: Promise<{ locale: Locale }>; searchParams: Promise<{ ok?: string; error?: string }> }) {
+  const { locale } = await params;
+  const sp = await searchParams;
+  await runSubOrderSweep().catch(() => undefined);
+  const subs = await db.subOrder.findMany({ include: { order: true }, orderBy: [{ createdAt: "desc" }], take: 100 });
+  const shops = await db.supplier.findMany({ where: { id: { in: [...new Set(subs.map((s) => s.supplierId))] } } });
+  const name = new Map(shops.map((s) => [s.id, s.displayName]));
+  const fmt = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "fr-FR", { dateStyle: "medium", timeStyle: "short" });
+  const eur = (c: number) => new Intl.NumberFormat(locale === "en" ? "en-GB" : "fr-FR", { style: "currency", currency: "EUR" }).format(c / 100);
+  const late = (s: (typeof subs)[number]) => s.status === "PENDING" && s.escalatedAt;
+  return (
+    <>
+      <h1 className="font-heading text-3xl text-primary">{tr(locale, "Commandes par partenaire", "Orders by partner")}</h1>
+      {sp.ok && <p role="status" className="rounded-md border border-accent bg-accent/15 p-3 text-sm">{tr(locale, "Commande annulée, stock libéré, client prévenu.", "Order cancelled, stock released, customer notified.")}</p>}
+      {sp.error && <p role="alert" className="rounded-md border border-destructive p-3 text-sm text-destructive">{tr(locale, "Action impossible (motif requis ou état changé).", "Not possible (reason required or state changed).")}</p>}
+      {subs.length === 0 ? (
+        <p className="text-sm text-muted-foreground">{tr(locale, "Aucune commande.", "No orders.")}</p>
+      ) : (
+        <ul className="divide-y rounded-lg border">
+          {subs.map((s) => {
+            const st = subLabel(s.status);
+            return (
+              <li key={s.id} className="space-y-2 p-3 text-sm">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="font-medium">{s.number} · {name.get(s.supplierId) ?? "—"}</span>
+                  <span className="flex gap-2">
+                    {late(s) && <Pill cls="bg-red-100 text-red-900">{tr(locale, "Sans réponse (escalade)", "No reply (escalated)")}</Pill>}
+                    <Pill cls={st.cls}>{locale === "en" ? st.en : st.fr}</Pill>
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {fmt.format(s.createdAt)} · {s.order.fullName} · {eur(s.subtotalCents)}
+                  {s.status === "PENDING" ? ` · ${tr(locale, "échéance", "due")} ${fmt.format(s.acceptBy)}` : ""}
+                  {s.trackingNumber ? ` · ${s.carrier} ${s.trackingNumber}` : ""}
+                </p>
+                {isOpenStatus(s.status) && s.status !== "SHIPPED" && (
+                  <form action={adminCancelSubOrder} className="flex flex-wrap items-end gap-2">
+                    <input type="hidden" name="id" value={s.id} />
+                    <label className="text-xs">{tr(locale, "Motif d'annulation", "Cancellation reason")}<input name="reason" required minLength={3} className={inputCls} /></label>
+                    <button className="inline-flex min-h-11 items-center rounded-md border border-destructive px-3 text-sm text-destructive" type="submit">{tr(locale, "Annuler et libérer le stock", "Cancel and release stock")}</button>
+                  </form>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </>
+  );
+}

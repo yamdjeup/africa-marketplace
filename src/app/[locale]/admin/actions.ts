@@ -25,7 +25,7 @@ export async function changePartnerStatus(formData: FormData) {
   if (action === "REACTIVATE" && s.status !== "SUSPENDED") return back("error=invalid");
   if (action === "REVOKE") {
     // Commandes en cours : du stock encore réservé signifie une commande non clôturée.
-    const open = await db.product.count({ where: { supplierId: id, reserved: { gt: 0 } } });
+    const open = (await db.product.count({ where: { supplierId: id, reserved: { gt: 0 } } })) + (await db.subOrder.count({ where: { supplierId: id, status: { in: ["PENDING", "ACCEPTED", "PREPARING", "SHIPPED"] } } }));
     if (open > 0) return back("error=open");
   }
   const status = action === "SUSPEND" ? "SUSPENDED" : action === "REACTIVATE" ? "ACTIVE" : "REVOKED";

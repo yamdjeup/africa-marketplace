@@ -10,6 +10,8 @@ import { db } from "@/lib/db";
 import { isLocale } from "@/lib/i18n";
 import { sendOrderEmail } from "@/lib/order-email";
 import { isAddressEditable, isOrderOwner } from "@/lib/order-edit";
+import { notifySubOrder, runSubOrderSweep } from "@/lib/order-notify";
+import { createSubOrders } from "@/lib/suborders";
 import { reserveStock } from "@/lib/stock";
 import { notifyLowStock } from "@/lib/stock-alerts";
 
@@ -105,9 +107,10 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
   const user = session?.user?.id ? await db.user.findUnique({ where: { id: session.user.id } }) : null;
   const editToken = randomUUID();
   const before = new Map(products.map((p) => [p.slug, p.stock - p.reserved]));
+  let subs: { id: string }[] = [];
   try {
     await db.$transaction(async (tx) => {
-      await tx.order.create({
+      const created = await tx.order.create({
         data: {
           number,
           locale,
@@ -133,6 +136,14 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
           },
         },
       });
+      subs = await createSubOrders(
+        tx,
+        created,
+        cart.map((l) => {
+          const p = bySlug.get(l.slug)!;
+          return { slug: p.slug, supplierId: p.supplierId, quantity: l.quantity, unitPriceCents: p.priceCents };
+        }),
+      );
       // Réservation atomique : si une pièce vient d'être prise par un autre client, tout est annulé.
       for (const [key, qty] of stockUsed) {
         const [slug, label] = key.split("\u0000");
@@ -145,6 +156,10 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
     throw e;
   }
   after(() => notifyLowStock(before).catch(() => undefined));
+  after(async () => {
+    for (const s of subs) await notifySubOrder("NEW", s.id);
+    await runSubOrderSweep().catch(() => undefined);
+  });
 
   const base = (process.env.NEXT_PUBLIC_SITE_URL || process.env.AUTH_URL || "https://epomta-demo.vercel.app").replace(/\/$/, "");
   await sendOrderEmail({

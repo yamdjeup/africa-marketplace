@@ -12,16 +12,20 @@ async function withTimeout(url: string, init: RequestInit) {
 }
 
 export function translationConfigured() {
-  const p = (process.env.TRANSLATE_PROVIDER ?? "").toLowerCase();
+  const p = provider();
   return (p === "deepl" && !!process.env.DEEPL_API_KEY) || (p === "google" && !!process.env.GOOGLE_TRANSLATE_API_KEY);
+}
+
+// DeepL (API Free) par défaut ; quota atteint (456) ou erreur : pas de traduction, sans message.
+function provider() {
+  return (process.env.TRANSLATE_PROVIDER || "deepl").toLowerCase();
 }
 
 /** Traduit une liste de textes ; ne lève jamais d'erreur : retourne null si indisponible ou en échec. */
 export async function translateTexts(texts: string[], from: Lang, to: Lang): Promise<string[] | null> {
   if (!translationConfigured() || texts.every((t) => !t.trim())) return null;
-  const provider = (process.env.TRANSLATE_PROVIDER ?? "").toLowerCase();
   try {
-    if (provider === "deepl") {
+    if (provider() === "deepl") {
       const base = process.env.DEEPL_API_URL || "https://api-free.deepl.com";
       const res = await withTimeout(`${base}/v2/translate`, {
         method: "POST",

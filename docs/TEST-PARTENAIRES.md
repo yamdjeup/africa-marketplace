@@ -101,6 +101,11 @@ Une seule saisie (titre + description) dans la langue choisie (« Langue de sais
 - Variable Vercel (optionnelle) : `DEEPL_API_KEY` (DeepL API Free, endpoint api-free.deepl.com ; `DEEPL_API_URL` pour surcharger). Sans elle, pas de traduction.
 - Vérif : `npm run db:check-translate`. Limite : bio du profil non traduite automatiquement.
 
+## Fiche œuvre d'un partenaire réel
+
+- [ ] `/fr/produits/<slug>` d'une œuvre publiée par un partenaire : pas de « Prix fictif de démonstration », dimensions sans mention « fictives », « Pièce unique » affiché une seule fois (pas de « Édition Pièce unique »), section « À propos de l'œuvre » absente si l'histoire est vide.
+- [ ] Les pièces du catalogue de démo historique (« exemple-… ») gardent leurs mentions de démonstration.
+
 ## Lot D — Paiements (test)
 
 Mode test : aucun argent réel n'est encaissé ni versé (mention visible sur les pages Paiements / Versements). Le vendeur est la boutique ; la plateforme prélève sa commission.

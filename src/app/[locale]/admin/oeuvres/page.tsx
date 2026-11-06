@@ -53,6 +53,7 @@ export default async function AdminWorks({ params, searchParams }: Props) {
               {badge && (
                 <p className="flex flex-wrap items-center gap-2 text-xs">
                   <span className={`rounded-full px-2 py-0.5 font-medium ${badge[2]}`}>{tr(locale, badge[0], badge[1])}</span>
+                  {p.createdByAdmin && <span className="rounded-full bg-muted px-2 py-0.5">{tr(locale, "Saisie par l'administration", "Entered by administration")}</span>}
                   {p.decidedAt && <span className="text-muted-foreground">{tr(locale, "Décision le ", "Decided on ")}{p.decidedAt.toLocaleString(fr ? "fr-FR" : "en-GB")}</span>}
                 </p>
               )}

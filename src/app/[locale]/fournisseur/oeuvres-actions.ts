@@ -10,7 +10,7 @@ import { db } from "@/lib/db";
 import { translateTexts, type Lang } from "@/lib/translate";
 import { adjustStock, syncProductTotals } from "@/lib/stock";
 import { notifyLowStock } from "@/lib/stock-alerts";
-import { getPortalContext } from "@/lib/supplier";
+import { getPortalContext, isAdminEmail } from "@/lib/supplier";
 import { emailAdminProductSubmitted } from "@/lib/supplier-email";
 
 const s = (f: FormData, k: string, max = 4000) => String(f.get(k) ?? "").trim().slice(0, max);
@@ -28,12 +28,21 @@ const num = (f: FormData, k: string) => {
 
 const ART_CATEGORIES = ["peinture", "sculpture", "photographie"];
 
-async function requirePartner(locale: string) {
+async function requirePartner(locale: string, formData?: FormData) {
+  const asId = formData ? s(formData, "asSupplier", 40) : "";
+  if (asId) {
+    // Saisie par l'admin au nom d'un partenaire actif (ADMIN_EMAILS uniquement).
+    const session = await auth();
+    if (!session?.user?.id || !isAdminEmail(session.user.email)) redirect("/");
+    const supplier = await db.supplier.findUnique({ where: { id: asId } });
+    if (!supplier || supplier.status !== "ACTIVE") redirect(`/${locale}/admin/fournisseurs?error=invalid`);
+    return { supplier, userId: session.user.id, session, admin: true, ownerIds: [session.user.id, supplier.userId].filter((x): x is string => !!x) };
+  }
   const ctx = await getPortalContext();
   if (!ctx) redirect(`/${locale}/fournisseur`);
   if (ctx.viewingAs || !ctx.supplier.userId) redirect(`/${locale}/fournisseur/oeuvres?error=readonly`);
   const session = await auth();
-  return { supplier: ctx.supplier, userId: ctx.supplier.userId, session };
+  return { supplier: ctx.supplier, userId: ctx.supplier.userId, session, admin: false, ownerIds: [ctx.supplier.userId] };
 }
 
 async function ownedProduct(slug: string, supplierId: string) {
@@ -42,7 +51,7 @@ async function ownedProduct(slug: string, supplierId: string) {
 }
 
 // Garde uniquement les URL /api/media/<id> appartenant au compte (aucune URL externe).
-async function ownedUrls(raw: string, userId: string, max: number) {
+async function ownedUrls(raw: string, ownerIds: string | string[], max: number, keep: string[] = []) {
   let list: unknown = [];
   try {
     list = JSON.parse(raw);
@@ -50,8 +59,9 @@ async function ownedUrls(raw: string, userId: string, max: number) {
   const urls = (Array.isArray(list) ? list : []).map(String).filter((u) => /^\/api\/media\/[\w-]+$/.test(u)).slice(0, max);
   if (urls.length === 0) return [];
   const ids = urls.map((u) => u.split("/").pop()!);
-  const rows = await db.mediaFile.findMany({ where: { id: { in: ids }, ownerUserId: userId }, select: { id: true } });
-  const ok = new Set(rows.map((r) => r.id));
+  const rows = await db.mediaFile.findMany({ where: { id: { in: ids }, ownerUserId: { in: Array.isArray(ownerIds) ? ownerIds : [ownerIds] } }, select: { id: true } });
+  // `keep` : médias déjà attachés à l'œuvre (ex. saisis par l'admin), conservés lors d'une modification par le partenaire.
+  const ok = new Set([...rows.map((r) => r.id), ...keep.map((u) => u.split("/").pop()!)]);
   return urls.filter((u) => ok.has(u.split("/").pop()!));
 }
 
@@ -69,11 +79,11 @@ async function ensureCreator(supplier: { id: string; displayName: string; bio: s
 
 export async function saveProduct(formData: FormData) {
   const locale = loc(formData);
-  const { supplier, userId, session } = await requirePartner(locale);
-  const slugIn = s(formData, "slug", 120);
+  const { supplier, userId, session, admin, ownerIds } = await requirePartner(locale, formData);
+  const slugIn = admin ? "" : s(formData, "slug", 120);
   const existing = slugIn ? await ownedProduct(slugIn, supplier.id) : null;
   if (slugIn && !existing) redirect(`/${locale}/fournisseur/oeuvres`);
-  const back = existing ? `/${locale}/fournisseur/oeuvres/${existing.slug}` : `/${locale}/fournisseur/oeuvres/nouvelle`;
+  const back = existing ? `/${locale}/fournisseur/oeuvres/${existing.slug}` : admin ? `/${locale}/admin/fournisseurs/${supplier.id}/oeuvres/nouvelle` : `/${locale}/fournisseur/oeuvres/nouvelle`;
   const fail = (code: string) => redirect(`${back}?error=${code}`);
 
   const sourceLang: Lang = s(formData, "sourceLang", 2) === "en" ? "en" : "fr";
@@ -110,7 +120,8 @@ export async function saveProduct(formData: FormData) {
   const description = sourceLang === "fr" ? mainDesc : otherDesc;
   const descriptionEn = sourceLang === "fr" ? otherDesc : mainDesc;
   const categorySlug = s(formData, "category", 60);
-  const intent = s(formData, "intent", 10) === "submit" ? "submit" : "draft";
+  const intentRaw = s(formData, "intent", 10);
+  const intent = intentRaw === "publish" && admin ? "publish" : intentRaw === "submit" ? "submit" : "draft";
   if (!mainName || !(await db.category.findUnique({ where: { slug: categorySlug } }))) fail("invalid");
 
   const currencyRaw = s(formData, "currency", 5);
@@ -121,13 +132,13 @@ export async function saveProduct(formData: FormData) {
   const priceCents = toEurCents(priceLocal, currency);
   if (priceCents < 100) fail("price");
 
-  const photos = await ownedUrls(s(formData, "photos", 4000), userId, 6);
-  if (intent === "submit" && (photos.length === 0 || mainDesc.length < 20)) fail("incomplete");
+  const photos = await ownedUrls(s(formData, "photos", 4000), ownerIds, 6, Array.isArray(existing?.images) ? (existing!.images as string[]) : []);
+  if (intent !== "draft" && (photos.length === 0 || mainDesc.length < 20)) fail("incomplete");
 
   const isArt = ART_CATEGORIES.includes(categorySlug);
   const edition = isArt ? s(formData, "edition", 40) || null : null;
-  const signaturePhoto = isArt ? (await ownedUrls(s(formData, "signaturePhoto", 400), userId, 1))[0]?.split("/").pop() ?? null : null;
-  const attest = isArt && formData.get("attest") === "on";
+  const signaturePhoto = isArt ? (await ownedUrls(s(formData, "signaturePhoto", 400), ownerIds, 1))[0]?.split("/").pop() ?? null : null;
+  const attest = !admin && isArt && formData.get("attest") === "on";
 
   const data = {
     name,
@@ -186,6 +197,7 @@ export async function saveProduct(formData: FormData) {
     if (variants.length === 0 && (!Number.isFinite(stock) || stock < 0 || stock > 100000)) fail("stock");
     const total = variants.length > 0 ? variants.reduce((n, v) => n + v.qty, 0) : stock;
     const actor = session?.user?.email ?? supplier.displayName;
+    const initReason = admin ? `Stock initial — créé par l'admin pour le compte de ${supplier.displayName}` : "Stock initial";
     await db.$transaction(async (tx) => {
       await tx.product.create({
         data: {
@@ -194,8 +206,10 @@ export async function saveProduct(formData: FormData) {
           slug,
           creatorSlug,
           supplierId: supplier.id,
-          status: intent === "submit" ? "SUBMITTED" : "DRAFT",
+          status: intent === "publish" ? "PUBLISHED" : intent === "submit" ? "SUBMITTED" : "DRAFT",
           submittedAt: intent === "submit" ? new Date() : null,
+          decidedAt: intent === "publish" ? new Date() : null,
+          createdByAdmin: admin ? actor : null,
           materials: [],
           sizes: variants.map((v) => v.label),
           stock: total,
@@ -205,13 +219,15 @@ export async function saveProduct(formData: FormData) {
       });
       for (const v of variants) {
         const row = await tx.productVariant.create({ data: { productSlug: slug, label: v.label, stock: v.qty } });
-        if (v.qty > 0) await tx.stockMovement.create({ data: { productSlug: slug, variantId: row.id, type: "ENTRY", quantity: v.qty, reason: "Stock initial", authorId: userId, authorLabel: actor } });
+        if (v.qty > 0) await tx.stockMovement.create({ data: { productSlug: slug, variantId: row.id, type: "ENTRY", quantity: v.qty, reason: initReason, authorId: userId, authorLabel: actor } });
       }
-      if (variants.length === 0 && total > 0) await tx.stockMovement.create({ data: { productSlug: slug, type: "ENTRY", quantity: total, reason: "Stock initial", authorId: userId, authorLabel: actor } });
+      if (variants.length === 0 && total > 0) await tx.stockMovement.create({ data: { productSlug: slug, type: "ENTRY", quantity: total, reason: initReason, authorId: userId, authorLabel: actor } });
     });
     if (intent === "submit") await emailAdminProductSubmitted(supplier.displayName, name);
   }
   revalidatePath("/[locale]/fournisseur/oeuvres", "page");
+  revalidatePath("/[locale]/admin/oeuvres", "page");
+  if (admin) redirect(`/${locale}/admin/fournisseurs/${supplier.id}/oeuvres?saved=${intent}`);
   redirect(`/${locale}/fournisseur/oeuvres/${slug}?saved=${intent}`);
 }
 

@@ -12,7 +12,7 @@ type P = {
   signatureFileId: string | null; authorAttestedAt: Date | null; status: string;
 };
 
-export function ProductForm({ locale, categories, product, readOnly }: { locale: Locale; categories: { slug: string; name: string; nameEn: string }[]; product?: P; readOnly: boolean }) {
+export function ProductForm({ locale, categories, product, readOnly, adminFor }: { locale: Locale; categories: { slug: string; name: string; nameEn: string }[]; product?: P; readOnly: boolean; adminFor?: { id: string; name: string } }) {
   const fr = locale !== "en";
   const images = Array.isArray(product?.images) ? (product!.images as string[]) : [];
   const price = product ? ((product.priceLocal ?? product.priceCents) / 100).toString() : "";
@@ -20,6 +20,7 @@ export function ProductForm({ locale, categories, product, readOnly }: { locale:
   return (
     <form action={saveProduct} className="max-w-3xl space-y-5">
       <input type="hidden" name="locale" value={locale} />
+      {adminFor && <input type="hidden" name="asSupplier" value={adminFor.id} />}
       {product && <input type="hidden" name="slug" value={product.slug} />}
       <fieldset disabled={readOnly || locked} className="space-y-5">
         {(() => {
@@ -83,16 +84,17 @@ export function ProductForm({ locale, categories, product, readOnly }: { locale:
           <summary className="cursor-pointer text-sm font-semibold">{tr(locale, "Œuvre d'art : authenticité (facultatif, peinture / sculpture / photographie)", "Artwork authenticity (optional, painting / sculpture / photography)")}</summary>
           <div className="mt-3 space-y-4">
             <label className="block text-sm font-medium">{tr(locale, "Édition (« Pièce unique » ou « 3/10 »)", "Edition (“Unique piece” or “3/10”)")}<input name="edition" defaultValue={product?.edition ?? ""} className={inputCls} /></label>
-            <PhotoUploader name="signaturePhoto" kind="signature" max={1} fr={fr} initial={product?.signatureFileId ? [`/api/media/${product.signatureFileId}`] : []} label={tr(locale, "Photo de la signature sur l'œuvre", "Photo of the signature on the work")} />
-            <label className="flex items-start gap-2 text-sm"><input type="checkbox" name="attest" defaultChecked={!!product?.authorAttestedAt} className="mt-0.5 size-5" />
+            {!adminFor && <PhotoUploader name="signaturePhoto" kind="signature" max={1} fr={fr} initial={product?.signatureFileId ? [`/api/media/${product.signatureFileId}`] : []} label={tr(locale, "Photo de la signature sur l'œuvre", "Photo of the signature on the work")} />}
+            {adminFor ? <p className="text-xs text-muted-foreground">{tr(locale, "Signature et attestation d'auteur : à compléter par le partenaire dans son espace.", "Signature and author attestation: to be completed by the partner in their space.")}</p> : <label className="flex items-start gap-2 text-sm"><input type="checkbox" name="attest" defaultChecked={!!product?.authorAttestedAt} className="mt-0.5 size-5" />
               <span>{tr(locale, "Je certifie être l'auteur de cette œuvre.", "I certify that I am the author of this work.")}
-                {product?.authorAttestedAt && <em className="block text-xs text-muted-foreground">{tr(locale, "Attesté le", "Attested on")} {product.authorAttestedAt.toLocaleDateString(fr ? "fr-FR" : "en-GB")}</em>}</span></label>
+                {product?.authorAttestedAt && <em className="block text-xs text-muted-foreground">{tr(locale, "Attesté le", "Attested on")}                 {product.authorAttestedAt.toLocaleDateString(fr ? "fr-FR" : "en-GB")}</em>}</span></label>}
           </div>
         </details>
         <div className="flex flex-wrap gap-3">
           <button type="submit" name="intent" value="draft" className="min-h-11 rounded-md border px-5 text-sm font-medium">{tr(locale, "Enregistrer le brouillon", "Save draft")}</button>
-          <button type="submit" name="intent" value="submit" className="min-h-11 rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground">{tr(locale, "Enregistrer et soumettre à validation", "Save and submit for review")}</button>
-        </div>
+                          <button type="submit" name="intent" value="submit" className="min-h-11 rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground">{adminFor ? tr(locale, "Envoyer en modération", "Send to moderation") : tr(locale, "Enregistrer et soumettre à validation", "Save and submit for review")}</button>
+                          {adminFor && <button type="submit" name="intent" value="publish" className="min-h-11 rounded-md border-2 border-primary px-5 text-sm font-medium text-primary">{tr(locale, "Publier directement", "Publish now")}</button>}
+                        </div>
       </fieldset>
       {locked && <p className="text-sm text-muted-foreground">{tr(locale, "Œuvre en cours de modération : modification impossible.", "Work under review: editing is locked.")}</p>}
     </form>

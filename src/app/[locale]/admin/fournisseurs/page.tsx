@@ -57,6 +57,9 @@ export default async function SuppliersPage({ params, searchParams }: { params: 
                   <button className={buttonVariants({ variant: "outline", className: "min-h-11" })}>{tr(locale, "Voir son espace", "View its area")}</button>
                 </form>
               )}
+              {!s.isDemo && s.status === "ACTIVE" && (
+                <Link href={`/${locale}/admin/fournisseurs/${s.id}/oeuvres`} className={buttonVariants({ variant: "outline", className: "min-h-11" })}>{tr(locale, "Gérer les œuvres", "Manage works")}</Link>
+              )}
             </div>
             {!s.isDemo && s.status !== "REVOKED" && (
               <PartnerActionForm id={s.id} status={s.status as "ACTIVE" | "SUSPENDED"} locale={locale} action={changePartnerStatus} />

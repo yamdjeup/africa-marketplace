@@ -58,6 +58,7 @@ export default async function WorksPage({ params, searchParams }: Props) {
                     {p.status === "PUBLISHED" && avail > 0 && avail <= p.lowStockThreshold && <Pill cls="bg-amber-100 text-amber-900">{tr(locale, "Stock bas", "Low stock")}</Pill>}
                   </span>
                 </Link>
+                {p.status === "PUBLISHED" && <a href={`/${locale}/produits/${p.slug}`} target="_blank" rel="noopener noreferrer" title={tr(locale, "Ouvrir la fiche publique", "Open public page")} aria-label={tr(locale, "Ouvrir la fiche publique", "Open public page")} className="mr-3 inline-flex min-h-11 min-w-11 items-center justify-center text-muted-foreground hover:text-foreground">↗</a>}
               </li>
             );
           })}

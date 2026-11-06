@@ -31,7 +31,13 @@ export async function POST(req: Request) {
   const mime = sniff(bytes);
   if (!mime) return json({ error: "type" }, 415);
   const name = file.name.replace(/[^\w.\- ()]/g, "_").slice(0, 120) || "fichier";
-  const row = await db.applicationFile.create({ data: { userId, name, mime, size: bytes.length, data: bytes } });
+  let row;
+  try {
+    row = await db.applicationFile.create({ data: { userId, name, mime, size: bytes.length, data: bytes } });
+  } catch (e) {
+    console.error("partner file upload failed", e);
+    return json({ error: "server" }, 500);
+  }
   return json({ id: row.id, name: row.name, mime: row.mime, size: row.size });
 }
 

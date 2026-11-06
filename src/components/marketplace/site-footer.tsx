@@ -30,6 +30,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
           <ul className={col}>
             <li><Link href={l("/catalogue")}>{t.nav.catalog}</Link></li>
             <li><Link href={l("/createurs")}>{t.nav.creators}</Link></li>
+            <li><Link href={l("/fournisseur")}>{locale === "en" ? "Become a supplier" : "Devenir fournisseur"}</Link></li>
           </ul>
         </nav>
         <nav aria-label={f.footerAccount}>
@@ -94,6 +95,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
             <li><Link href={l("/support/about")}>{ft.aboutLink}</Link></li>
             <li><span className="opacity-60">{ft.press} ({ft.soon})</span></li>
             <li><Link href={l("/createurs")}>{ft.partners}</Link></li>
+            <li><Link href={l("/fournisseur")}>{locale === "en" ? "Become a supplier" : "Devenir fournisseur"}</Link></li>
             <li><span className="opacity-60">{ft.careers} ({ft.soon})</span></li>
           </ul>
         </nav>

@@ -47,7 +47,13 @@ export default async function AccountPage({ params }: Props) {
   if (!user) redirect(`/${locale}/login`);
   const t = getDict(locale);
   const base = `/${locale}`;
-
+  const partner = await db.supplier.findUnique({ where: { userId: user.id }, select: { id: true } });
+  const spaceRows = (
+    <>
+      {partner && <Row href={`${base}/fournisseur/tableau-de-bord`} label={locale === "en" ? "My partner area" : "Mon espace partenaire"} />}
+      {isAdminEmail(user.email) && <Row href={`${base}/admin`} label={locale === "en" ? "Administration" : "Administration"} />}
+    </>
+  );
   return (
     <div data-account className="mx-auto max-w-xl space-y-8">
       <div className="-mx-4 -mt-6 flex items-center justify-between border-b px-4 py-2 md:hidden">
@@ -71,6 +77,7 @@ export default async function AccountPage({ params }: Props) {
       <div className="space-y-8 md:hidden">
         <NotifyBanner locale={locale} title={t.f10.notifTitle} text={t.f10.notifText} />
         <Section title={t.me.sectionAccount}>
+          {spaceRows}
           <Row href={`${base}/account/orders`} label={t.f10.ordersReturns} />
           <Row href={`${base}/support/credits`} label={`${t.f10.credits} (${t.f10.provisional})`} />
           <Row href={`${base}/account/security`} label={t.me.security} />
@@ -108,6 +115,7 @@ export default async function AccountPage({ params }: Props) {
       </div>
       <div className="space-y-8 max-md:hidden">
       <Section title={t.me.sectionAccount}>
+        {spaceRows}
         <Row href={`${base}/account/orders`} label={t.account.orders.title} />
         <Row href={`${base}/account/addresses`} label={t.me.addresses} />
         <Row href={`${base}/account/security`} label={t.me.security} />

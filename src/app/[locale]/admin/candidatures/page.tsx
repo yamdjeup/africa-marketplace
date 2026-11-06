@@ -25,7 +25,7 @@ export default async function ApplicationsPage({ params }: { params: Promise<{ l
   const btn = "min-h-11 rounded-md border px-3 text-sm";
   return (
     <>
-      <h1 className="font-heading text-3xl text-primary">{tr(locale, "Candidatures fournisseurs", "Supplier applications")}</h1>
+      <h1 className="font-heading text-3xl text-primary">{tr(locale, "Candidatures partenaires", "Partner applications")}</h1>
       {apps.length === 0 && <p className="text-sm text-muted-foreground">{tr(locale, "Aucune candidature pour le moment.", "No applications yet.")}</p>}
       <ul className="space-y-3">
         {apps.map((a) => (

@@ -5,7 +5,7 @@ import { getPortalContext } from "@/lib/supplier";
 import { tr } from "@/lib/tr";
 import type { Locale } from "@/lib/i18n";
 
-export const metadata = { title: "Tableau de bord fournisseur", robots: { index: false } };
+export const metadata = { title: "Tableau de bord partenaire", robots: { index: false } };
 
 export default async function Dashboard({ params }: { params: Promise<{ locale: Locale }> }) {
   const { locale } = await params;

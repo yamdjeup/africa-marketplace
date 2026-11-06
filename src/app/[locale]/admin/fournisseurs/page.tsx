@@ -12,8 +12,8 @@ export default async function SuppliersPage({ params }: { params: Promise<{ loca
   const list = await db.supplier.findMany({ orderBy: { createdAt: "asc" }, include: { user: { select: { email: true } } } });
   return (
     <>
-      <h1 className="font-heading text-3xl text-primary">{tr(locale, "Fournisseurs", "Suppliers")}</h1>
-      <p className="text-sm text-muted-foreground">{tr(locale, "Les fournisseurs de démonstration peuvent être ouverts en vue admin (lecture seule).", "Demo suppliers can be opened in admin view (read-only).")}</p>
+      <h1 className="font-heading text-3xl text-primary">{tr(locale, "Partenaires", "Partners")}</h1>
+      <p className="text-sm text-muted-foreground">{tr(locale, "Les partenaires de démonstration peuvent être ouverts en vue admin (lecture seule).", "Demo partners can be opened in admin view (read-only).")}</p>
       <ul className="divide-y rounded-lg border bg-card">
         {list.map((s) => (
           <li key={s.id} className="flex flex-wrap items-center justify-between gap-2 p-3 text-sm">

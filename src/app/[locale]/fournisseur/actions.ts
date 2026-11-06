@@ -59,7 +59,7 @@ export async function updateSupplierProfile(formData: FormData) {
   redirect(`/${locale}/fournisseur/profil?saved=1`);
 }
 
-// Admin seulement : ouvre l'espace d'un fournisseur de démonstration (jamais d'un vrai fournisseur).
+// Admin seulement : ouvre l'espace d'un partenaire de démonstration (jamais d'un vrai partenaire).
 export async function setViewAs(formData: FormData) {
   const locale = loc(formData);
   const session = await auth();

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import Image from "next/image";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
+import { CreatorAvatar } from "@/components/marketplace/creator-avatar";
+import { db } from "@/lib/db";
 import { ProductCard } from "@/components/marketplace/product-card";
 import { getCreatorWithProducts } from "@/lib/catalog";
 import { getDict, type Locale } from "@/lib/i18n";
@@ -28,7 +29,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function CreatorPage({ params }: Props) {
   const { locale, slug } = await params;
   const data = await getCreatorWithProducts(slug, locale);
-  if (!data) notFound();
+  if (!data) {
+    // Ancien slug (page renommée) : redirection permanente vers le slug actuel.
+    const alias = await db.creatorSlugAlias.findUnique({ where: { oldSlug: slug } });
+    if (alias) permanentRedirect(`/${locale}/partenaires/${alias.creatorSlug}`);
+    notFound();
+  }
   const { creator: c, products } = data;
   const t = getDict(locale).creator;
   const video = CREATOR_VIDEOS[slug];
@@ -40,12 +46,10 @@ export default async function CreatorPage({ params }: Props) {
   return (
     <div className="space-y-10">
       <header className="flex flex-col items-center gap-5 text-center md:flex-row md:items-start md:text-left">
-        <Image
-          src={c.image}
-          alt={c.name}
-          width={160}
-          height={160}
-          unoptimized
+        <CreatorAvatar
+          name={c.name}
+          image={c.image}
+          size={160}
           priority
           className="size-32 rounded-full object-cover ring-4 ring-accent md:size-40"
         />

@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import { CreatorAvatar } from "@/components/marketplace/creator-avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import type { CreatorView } from "@/lib/catalog";
 import { getDict, type Locale } from "@/lib/i18n";
@@ -9,16 +9,14 @@ export function CreatorCard({ creator, locale }: { creator: CreatorView; locale:
   return (
     <Card className="relative h-full focus-within:ring-2 focus-within:ring-ring hover:shadow-md">
       <CardContent className="flex flex-col items-center gap-3 text-center">
-        <Image
-          src={creator.image}
-          alt=""
-          width={80}
-          height={80}
-          unoptimized
+        <CreatorAvatar
+          name={creator.name}
+          image={creator.image}
+          size={80}
           className="size-20 rounded-full object-cover ring-4 ring-accent"
         />
         <h3 className="font-heading text-lg">
-          <Link href={`/${locale}/createurs/${creator.slug}`} className="after:absolute after:inset-0">
+          <Link href={`/${locale}/partenaires/${creator.slug}`} className="after:absolute after:inset-0">
             {creator.name}
           </Link>
         </h3>

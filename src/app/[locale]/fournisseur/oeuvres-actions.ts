@@ -10,6 +10,7 @@ import { db } from "@/lib/db";
 import { translateTexts, type Lang } from "@/lib/translate";
 import { adjustStock, syncProductTotals } from "@/lib/stock";
 import { notifyLowStock } from "@/lib/stock-alerts";
+import { ensureCreator } from "@/lib/partner-creator";
 import { getPortalContext, isAdminEmail } from "@/lib/supplier";
 import { emailAdminProductSubmitted } from "@/lib/supplier-email";
 
@@ -63,18 +64,6 @@ async function ownedUrls(raw: string, ownerIds: string | string[], max: number, 
   // `keep` : médias déjà attachés à l'œuvre (ex. saisis par l'admin), conservés lors d'une modification par le partenaire.
   const ok = new Set([...rows.map((r) => r.id), ...keep.map((u) => u.split("/").pop()!)]);
   return urls.filter((u) => ok.has(u.split("/").pop()!));
-}
-
-async function ensureCreator(supplier: { id: string; displayName: string; bio: string; bioEn: string; craftType: string; creatorSlug: string | null }) {
-  if (supplier.creatorSlug) return supplier.creatorSlug;
-  const base = slugify(supplier.displayName) || "partenaire";
-  let slug = base;
-  while (await db.creator.findUnique({ where: { slug } })) slug = `${base}-${randomBytes(2).toString("hex")}`;
-  await db.creator.create({
-    data: { slug, name: supplier.displayName, specialty: supplier.craftType, specialtyEn: supplier.craftType, bio: supplier.bio, bioEn: supplier.bioEn || supplier.bio, image: "", sourceUrl: "" },
-  });
-  await db.supplier.update({ where: { id: supplier.id }, data: { creatorSlug: slug } });
-  return slug;
 }
 
 export async function saveProduct(formData: FormData) {

@@ -64,7 +64,7 @@ flowchart TD
   API --> DB
 ```
 
-- **Routes** (`src/app/[locale]/`) : accueil, `catalogue`, `produits/[slug]`, `createurs`, `boutique/**` (navigation mobile), `cart`, `checkout`, `account`, `favoris`, `alertes`, `login`, `register`, `support`, `design`. API (`src/app/api/`) : `alerts`, `auth`, `catalog` (comptage Affiner + options), `favorites`.
+- **Routes** (`src/app/[locale]/`) : accueil, `catalogue`, `produits/[slug]`, `partenaires`, `boutique/**` (navigation mobile), `cart`, `checkout`, `account`, `favoris`, `alertes`, `login`, `register`, `support`, `design`. API (`src/app/api/`) : `alerts`, `auth`, `catalog` (comptage Affiner + options), `favorites`.
 - **i18n** : dictionnaires FR/EN dans `src/lib/i18n.ts` ; contenu UI en français, anglais en second ; pays/région dans `src/lib/region.ts`.
 - **Données** : Prisma. Modèles : `Category`, `Creator`, `Product`, `User` (préférences d'alertes `alertFavorites`, `alertPromo`, `promoSince`), `Favorite`, `Address`, `Order`, `OrderItem`. Migrations `0001_init` → `0007_alerts` (init, comptes, galerie, catalogue lot A, adresses, carnet d'adresses, alertes). Sans `DATABASE_URL`, le développement local utilise une base SQLite dérivée du schéma par `scripts/db.mjs` (ne pas lancer `prisma generate` directement).
 - **Authentification** : Auth.js (`next-auth` v5 beta), comptes e-mail/mot de passe (`bcryptjs`) et Google si `AUTH_GOOGLE_*` renseignés.

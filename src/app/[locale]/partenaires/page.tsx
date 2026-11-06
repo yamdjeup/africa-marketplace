@@ -61,7 +61,7 @@ export default async function CreatorsPage({
       <Button type="submit" className="h-11">
         {t.apply}
       </Button>
-      <Link href={`/${locale}/createurs`} className={buttonVariants({ variant: "ghost", className: "h-11" })}>
+      <Link href={`/${locale}/partenaires`} className={buttonVariants({ variant: "ghost", className: "h-11" })}>
         {t.reset}
       </Link>
     </form>
@@ -81,7 +81,7 @@ export default async function CreatorsPage({
       {creators.length === 0 && (
         <div className="rounded-lg border border-dashed p-10 text-center">
           <p className="text-muted-foreground">{t.empty}</p>
-          <Link href={`/${locale}/createurs`} className={buttonVariants({ variant: "outline", className: "mt-4" })}>
+          <Link href={`/${locale}/partenaires`} className={buttonVariants({ variant: "outline", className: "mt-4" })}>
             {t.reset}
           </Link>
         </div>

@@ -80,11 +80,11 @@ test.describe.serial("Parcours client", () => {
   });
 
   test("fiche artiste : biographie G3A et lien source", async ({ page }) => {
-    await page.goto("/fr/createurs/kenof");
+    await page.goto("/fr/partenaires/kenof");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("KeNoF");
     await expect(page.getByText("bamiléké").first()).toBeVisible();
     await expect(page.getByRole("link", { name: /article source/ })).toHaveAttribute("href", /g3a\.org/);
-    await page.goto("/en/createurs/kenof");
+    await page.goto("/en/partenaires/kenof");
     await expect(page.getByText("Bamileke heritage").first()).toBeVisible();
   });
 

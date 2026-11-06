@@ -29,7 +29,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
           <h2 className={head}><Link href={l("/support/about")} className="hover:underline">{f.footerAbout}</Link></h2>
           <ul className={col}>
             <li><Link href={l("/catalogue")}>{t.nav.catalog}</Link></li>
-            <li><Link href={l("/createurs")}>{t.nav.creators}</Link></li>
+            <li><Link href={l("/partenaires")}>{t.nav.creators}</Link></li>
             <li><Link href={l("/fournisseur")}>{locale === "en" ? "Become a partner" : "Devenir partenaire"}</Link></li>
           </ul>
         </nav>
@@ -94,7 +94,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
           <ul className={dCol}>
             <li><Link href={l("/support/about")}>{ft.aboutLink}</Link></li>
             <li><span className="opacity-60">{ft.press} ({ft.soon})</span></li>
-            <li><Link href={l("/createurs")}>{ft.partners}</Link></li>
+            <li><Link href={l("/partenaires")}>{ft.partners}</Link></li>
             <li><Link href={l("/fournisseur")}>{locale === "en" ? "Become a partner" : "Devenir partenaire"}</Link></li>
             <li><span className="opacity-60">{ft.careers} ({ft.soon})</span></li>
           </ul>

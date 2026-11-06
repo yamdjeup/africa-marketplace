@@ -21,7 +21,7 @@ export async function emailAdminNewApplication(app: App) {
   for (const to of admins)
     await safeSend(to, `Nouvelle candidature partenaire : ${app.name}`, [
       `${app.name} (${app.email}) — ${app.country} — ${app.craftType}`,
-      `Portfolio : ${app.portfolioUrl}`,
+      `Portfolio : ${app.portfolioUrl || "(aucun lien — fichiers joints, voir l'espace admin)"}`,
       app.about,
       `Traiter : ${base}/fr/admin/candidatures`,
     ]);

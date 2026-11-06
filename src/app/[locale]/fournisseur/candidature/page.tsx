@@ -2,6 +2,7 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { buttonVariants } from "@/components/ui/button";
 import { inputCls } from "@/components/fournisseur/parts";
+import { PartnerFilesField } from "@/components/fournisseur/files-field";
 import { db } from "@/lib/db";
 import type { Locale } from "@/lib/i18n";
 import { COUNTRIES, CRAFTS, tr } from "@/lib/tr";
@@ -24,8 +25,10 @@ export default async function ApplyPage({ params, searchParams }: Props) {
         db.user.findUnique({ where: { id: uid } }),
       ])
     : [null, null, null];
+  const pendingFiles = uid ? await db.applicationFile.findMany({ where: { userId: uid, applicationId: null }, select: { id: true, name: true, mime: true, size: true }, orderBy: { createdAt: "asc" } }) : [];
   const errors: Record<string, string> = {
-    invalid: tr(locale, "Vérifiez les champs : lien du portfolio valide et présentation d'au moins 20 caractères.", "Please check the fields: valid portfolio link and at least 20 characters of description."),
+    invalid: tr(locale, "Vérifiez les champs : lien du portfolio valide (s'il est renseigné) et présentation d'au moins 20 caractères.", "Please check the fields: valid portfolio link (if provided) and at least 20 characters of description."),
+    proof: tr(locale, "Indiquez un lien (portfolio, réseau social) OU joignez au moins un fichier de vos œuvres.", "Provide a link (portfolio, social profile) OR attach at least one file of your work."),
     pending: tr(locale, "Votre candidature est déjà en cours d'examen.", "Your application is already under review."),
     rate: tr(locale, "Trop de candidatures aujourd'hui, réessayez demain.", "Too many applications today, please try again tomorrow."),
   };
@@ -71,8 +74,9 @@ export default async function ApplyPage({ params, searchParams }: Props) {
                 <select required name="country" defaultValue={last?.country ?? "Cameroun"} className={inputCls}>{COUNTRIES.map((c) => <option key={c}>{c}</option>)}</select></label>
               <label className={field}>{tr(locale, "Type d'œuvres", "Type of work")}
                 <select required name="craftType" defaultValue={last?.craftType ?? CRAFTS[0]} className={inputCls}>{CRAFTS.map((c) => <option key={c}>{c}</option>)}</select></label>
-              <label className={field}>{tr(locale, "Lien vers votre portfolio ou réseau social", "Link to your portfolio or social profile")}
-                <input required type="url" name="portfolioUrl" defaultValue={last?.portfolioUrl ?? ""} placeholder="https://" className={inputCls} /></label>
+              <label className={field}>{tr(locale, "Lien vers votre portfolio ou réseau social (facultatif si vous joignez des fichiers)", "Link to your portfolio or social profile (optional if you attach files)")}
+                <input type="url" name="portfolioUrl" defaultValue={last?.portfolioUrl ?? ""} placeholder="https://" className={inputCls} /></label>
+              <PartnerFilesField fr={locale !== "en"} initial={pendingFiles} />
               <label className={field}>{tr(locale, "Présentez-vous et votre travail", "Tell us about you and your work")}
                 <textarea required name="about" rows={5} minLength={20} maxLength={3000} defaultValue={last?.about ?? ""} className={inputCls} /></label>
               <button type="submit" className={buttonVariants({ size: "lg", className: "min-h-11" })}>{tr(locale, "Envoyer ma candidature", "Submit application")}</button>

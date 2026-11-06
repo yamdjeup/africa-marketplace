@@ -45,7 +45,7 @@ export default async function ApplyPage({ params, searchParams }: Props) {
   const field = "block text-sm font-medium";
   return (
     <div className="mx-auto max-w-2xl space-y-5">
-      <h1 className="font-heading text-3xl text-primary">{tr(locale, "Candidature partenaire", "Partner application")}</h1>
+      <h1 className="font-heading text-3xl text-primary">{supplier ? tr(locale, "Mon espace partenaire", "My partner space") : tr(locale, "Candidature partenaire", "Partner application")}</h1>
       {supplier && supplier.status !== "ACTIVE" ? (
         <div role="alert" className="space-y-2 rounded-md border border-destructive bg-card p-4 text-sm">
           <p className="font-medium text-destructive">

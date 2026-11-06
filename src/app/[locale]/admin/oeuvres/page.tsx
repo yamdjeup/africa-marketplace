@@ -6,7 +6,7 @@ import { tr } from "@/lib/tr";
 import type { Locale } from "@/lib/i18n";
 import { inputCls } from "@/components/fournisseur/parts";
 import { PhotoLightbox, SelectAll } from "@/components/admin/table-widgets";
-import { PAGE_SIZE, TABS, dateModeOf, isoDay, queryWorks, tabOf, worksWhere, type Tab, type WorkParams } from "@/lib/admin-works";
+import { PAGE_SIZE, TABS, WAIT_ALERT_H, WAIT_WARN_H, dateModeOf, isoDay, queryWorks, tabOf, waitHours, waitLabel, worksWhere, type Tab, type WorkParams } from "@/lib/admin-works";
 
 export const dynamic = "force-dynamic";
 
@@ -50,6 +50,9 @@ export default async function AdminWorks({ params, searchParams }: Props) {
     db.stockMovement.count(),
   ]);
   const hidden = tab === "pending" || mode === "all" ? 0 : (await db.product.count({ where: await worksWhere(sp, tab, true) })) - total;
+  const showWait = tab === "pending" || tab === "all";
+  const nowMs = new Date().getTime();
+  const oldest = showWait ? await db.product.findFirst({ where: await worksWhere(sp, "pending"), orderBy: { submittedAt: "asc" }, select: { submittedAt: true, createdAt: true } }) : null;
   const catName = new Map(cats.map((c) => [c.slug, fr ? c.name : c.nameEn]));
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const mpages = Math.max(1, Math.ceil(movesTotal / PAGE_SIZE));
@@ -114,7 +117,7 @@ export default async function AdminWorks({ params, searchParams }: Props) {
         ) : (
           <form action={bulkModerateProducts} className="space-y-3">
             <input type="hidden" name="back" value={href({})} />
-            <p className="text-sm text-muted-foreground">{total} {tr(locale, "œuvre(s)", "work(s)")}</p>
+            <p className="text-sm text-muted-foreground">{total} {tr(locale, "œuvre(s)", "work(s)")}{oldest && ` · ${tr(locale, "la plus ancienne en attente", "oldest pending")} : ${waitLabel(waitHours(oldest.submittedAt ?? oldest.createdAt, nowMs))}`}</p>
             <div className="flex flex-wrap items-end gap-2 rounded-md border p-3">
               <label className="min-w-56 flex-1 text-sm">{tr(locale, "Motif commun (obligatoire pour refuser)", "Common reason (required to reject)")}<input name="reason" className={inputCls} /></label>
               <button name="decision" value="PUBLISHED" className="min-h-11 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">{tr(locale, "Publier la sélection", "Publish selected")}</button>
@@ -133,6 +136,7 @@ export default async function AdminWorks({ params, searchParams }: Props) {
                     <th className={th}>Stock</th>
                     <th className={th}>Description</th>
                     <th className={th}>{tr(locale, "Statut", "Status")}</th>
+                    {showWait && <th className={th}><Link href={sortHref("wait")}>{tr(locale, "En attente depuis", "Waiting since")}{arrow("wait")}</Link></th>}
                     <th className={th}><Link href={sortHref("date")}>{tr(locale, "Décision", "Decision")}{arrow("date")}</Link></th>
                     {showReason && <th className={th}>{tr(locale, "Motif du refus", "Rejection reason")}</th>}
                     <th className={th}>Actions</th>
@@ -163,6 +167,12 @@ export default async function AdminWorks({ params, searchParams }: Props) {
                         <td className="px-2 py-2">{p.stock - p.reserved}</td>
                         <td className="max-w-56 px-2 py-2"><span title={p.description} className="line-clamp-2">{p.description}</span></td>
                         <td className="px-2 py-2">{b && <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ${b[2]}`}>{tr(locale, b[0], b[1])}</span>}</td>
+                        {showWait && (() => {
+                          if (p.status !== "SUBMITTED") return <td className="px-2 py-2">—</td>;
+                          const h = waitHours(p.submittedAt, nowMs);
+                          const cls = h > WAIT_ALERT_H ? "bg-red-100 text-red-900" : h > WAIT_WARN_H ? "bg-orange-100 text-orange-900" : "bg-muted";
+                          return <td className="whitespace-nowrap px-2 py-2">{dtf(p.submittedAt)} <span className={`ml-1 rounded-full px-2 py-0.5 text-xs font-medium ${cls}`}>{waitLabel(h)}{h > WAIT_ALERT_H ? " ⚠" : ""}</span></td>;
+                        })()}
                         <td className="whitespace-nowrap px-2 py-2">{dtf(p.decidedAt)}</td>
                         {showReason && <td className="max-w-48 px-2 py-2 text-destructive">{p.status === "REJECTED" ? <span title={p.rejectReason ?? ""} className="line-clamp-2">{p.rejectReason || "—"}</span> : "—"}</td>}
                         <td className="whitespace-nowrap px-2 py-2">

@@ -15,6 +15,7 @@ const STATUS: Record<string, [string, string, string]> = {
   SUBMITTED: ["En modération", "Under review", "bg-amber-100 text-amber-900"],
   PUBLISHED: ["Publiée", "Published", "bg-emerald-100 text-emerald-900"],
   REJECTED: ["Refusée", "Rejected", "bg-red-100 text-red-900"],
+  HELD: ["Masquée (compte suspendu)", "Hidden (account suspended)", "bg-red-100 text-red-900"],
 };
 
 export default async function WorksPage({ params, searchParams }: Props) {

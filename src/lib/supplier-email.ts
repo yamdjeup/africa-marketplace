@@ -74,6 +74,16 @@ export async function emailPartnerProductDecision(o: Owner, title: string, appro
   await safeSend(o.email, approved ? (fr ? "E póm ta’ — œuvre publiée" : "E póm ta’ — work published") : fr ? "E póm ta’ — œuvre à revoir" : "E póm ta’ — work needs changes", lines);
 }
 
+export async function emailPartnerStatus(o: Owner, action: "SUSPEND" | "REACTIVATE" | "REVOKE", reason: string) {
+  const fr = o.locale !== "en";
+  const msg = {
+    SUSPEND: fr ? `Votre espace partenaire est suspendu. Vos œuvres sont masquées du catalogue. Motif : ${reason}` : `Your partner area is suspended. Your works are hidden from the catalogue. Reason: ${reason}`,
+    REACTIVATE: fr ? "Votre espace partenaire est réactivé ; vos œuvres sont de nouveau visibles." : "Your partner area is reactivated; your works are visible again.",
+    REVOKE: fr ? `Votre accès partenaire est définitivement révoqué. Motif : ${reason}` : `Your partner access has been permanently revoked. Reason: ${reason}`,
+  }[action];
+  await safeSend(o.email, fr ? "E póm ta’ — votre statut partenaire" : "E póm ta’ — your partner status", [fr ? `Bonjour ${o.name},` : `Hello ${o.name},`, msg]);
+}
+
 export async function emailLowStock(o: Owner, title: string, availableQty: number, slug: string) {
   const fr = o.locale !== "en";
   const base = siteUrl();

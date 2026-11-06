@@ -58,6 +58,13 @@ Comptes : partenaire actif (accepté au lot A), admin (`ADMIN_EMAILS`), client.
 - [ ] Stock bas : après l'achat, e-mail « stock bas » au partenaire si le disponible passe sous son seuil.
 - [ ] Confirmation à l'expédition, libération au refus/expiration/annulation, retour de stock : lot C.
 
+## Suspension / révocation d'un partenaire (`/fr/admin/fournisseurs`)
+Migration additive 0012 (`PartnerAudit`). Les partenaires de démo ne sont pas concernés.
+- [ ] Admin : « Gérer l'accès » sur un vrai partenaire ; « Suspendre » sans motif → erreur ; avec motif → statut Suspendu, e-mail au partenaire, entrée au journal d'audit (qui/quand/pourquoi).
+- [ ] Partenaire suspendu : `/fr/fournisseur` n'ouvre plus le portail ; ses œuvres publiées disparaissent du catalogue (statut « Masquée »).
+- [ ] « Réactiver » : accès et œuvres rétablis, e-mail envoyé.
+- [ ] « Révoquer définitivement » : motif + case de confirmation obligatoires ; refusé tant qu'une œuvre a du stock réservé (commande en cours) ; option « Anonymiser le profil » (nom, bio, vidéo, signature effacés ; commandes et paiements conservés). Aucune suppression physique.
+
 ## Lot C — Commandes par partenaire
 (à venir)
 

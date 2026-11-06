@@ -185,6 +185,18 @@ model Supplier {
   createdAt      DateTime @default(now())
 }
 
+/// Journal d'audit des actions admin sur un partenaire : SUSPEND | REACTIVATE | REVOKE.
+model PartnerAudit {
+  id         String   @id @default(cuid())
+  supplierId String
+  action     String
+  reason     String   @default("")
+  actorEmail String
+  createdAt  DateTime @default(now())
+
+  @@index([supplierId])
+}
+
 /// Candidature fournisseur. status : PENDING | NEEDS_INFO | ACCEPTED | REFUSED.
 model SupplierApplication {
   id           String    @id @default(cuid())

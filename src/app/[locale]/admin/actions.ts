@@ -5,7 +5,44 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { isAdminEmail } from "@/lib/supplier";
-import { emailApplicantDecision, emailPartnerProductDecision } from "@/lib/supplier-email";
+import { emailApplicantDecision, emailPartnerProductDecision, emailPartnerStatus } from "@/lib/supplier-email";
+
+// Suspendre / réactiver / révoquer un partenaire. Œuvres publiées : PUBLISHED <-> HELD (masquées du catalogue).
+export async function changePartnerStatus(formData: FormData) {
+  const session = await auth();
+  if (!isAdminEmail(session?.user?.email)) redirect("/");
+  const id = String(formData.get("id") ?? "");
+  const action = String(formData.get("action") ?? "");
+  const reason = String(formData.get("reason") ?? "").trim().slice(0, 500);
+  const anonymize = formData.get("anonymize") === "on";
+  const back = (q: string) => redirect(`/fr/admin/fournisseurs?${q}`);
+  if (!["SUSPEND", "REACTIVATE", "REVOKE"].includes(action)) return back("error=action");
+  if (action !== "REACTIVATE" && !reason) return back("error=reason");
+  if (action === "REVOKE" && formData.get("confirm") !== "on") return back("error=confirm");
+  const s = await db.supplier.findUnique({ where: { id }, include: { user: { select: { email: true } } } });
+  if (!s || s.isDemo || s.status === "REVOKED") return back("error=invalid");
+  if (action === "SUSPEND" && s.status !== "ACTIVE") return back("error=invalid");
+  if (action === "REACTIVATE" && s.status !== "SUSPENDED") return back("error=invalid");
+  if (action === "REVOKE") {
+    // Commandes en cours : du stock encore réservé signifie une commande non clôturée.
+    const open = await db.product.count({ where: { supplierId: id, reserved: { gt: 0 } } });
+    if (open > 0) return back("error=open");
+  }
+  const status = action === "SUSPEND" ? "SUSPENDED" : action === "REACTIVATE" ? "ACTIVE" : "REVOKED";
+  await db.$transaction(async (tx) => {
+    await tx.supplier.update({ where: { id }, data: { status } });
+    if (action === "REACTIVATE") await tx.product.updateMany({ where: { supplierId: id, status: "HELD" }, data: { status: "PUBLISHED" } });
+    else await tx.product.updateMany({ where: { supplierId: id, status: "PUBLISHED" }, data: { status: "HELD" } });
+    await tx.partnerAudit.create({ data: { supplierId: id, action, reason, actorEmail: session?.user?.email ?? "" } });
+    if (action === "REVOKE" && anonymize) {
+      if (s.signatureFileId) await tx.mediaFile.deleteMany({ where: { id: s.signatureFileId } });
+      await tx.supplier.update({ where: { id }, data: { displayName: "Partenaire retiré", bio: "", bioEn: "", videoUrl: null, signatureFileId: null } });
+    }
+  });
+  if (s.user?.email) await emailPartnerStatus({ email: s.user.email, name: s.displayName, locale: "fr" }, action as "SUSPEND" | "REACTIVATE" | "REVOKE", reason);
+  revalidatePath("/[locale]/admin/fournisseurs", "page");
+  back(`done=${action}`);
+}
 
 export async function decideApplication(formData: FormData) {
   const session = await auth();

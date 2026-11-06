@@ -26,6 +26,10 @@ export default async function ApplyPage({ params, searchParams }: Props) {
       ])
     : [null, null, null];
   const pendingFiles = uid ? await db.applicationFile.findMany({ where: { userId: uid, applicationId: null }, select: { id: true, name: true, mime: true, size: true }, orderBy: { createdAt: "asc" } }) : [];
+  const blockReason =
+    supplier && supplier.status !== "ACTIVE"
+      ? (await db.partnerAudit.findFirst({ where: { supplierId: supplier.id, action: supplier.status === "SUSPENDED" ? "SUSPEND" : "REVOKE" }, orderBy: { createdAt: "desc" } }))?.reason
+      : null;
   const errors: Record<string, string> = {
     invalid: tr(locale, "Vérifiez les champs : lien du portfolio valide (s'il est renseigné) et présentation d'au moins 20 caractères.", "Please check the fields: valid portfolio link (if provided) and at least 20 characters of description."),
     proof: tr(locale, "Indiquez un lien (portfolio, réseau social) OU joignez au moins un fichier de vos œuvres.", "Provide a link (portfolio, social profile) OR attach at least one file of your work."),
@@ -42,7 +46,23 @@ export default async function ApplyPage({ params, searchParams }: Props) {
   return (
     <div className="mx-auto max-w-2xl space-y-5">
       <h1 className="font-heading text-3xl text-primary">{tr(locale, "Candidature partenaire", "Partner application")}</h1>
-      {supplier ? (
+      {supplier && supplier.status !== "ACTIVE" ? (
+        <div role="alert" className="space-y-2 rounded-md border border-destructive bg-card p-4 text-sm">
+          <p className="font-medium text-destructive">
+            {supplier.status === "SUSPENDED"
+              ? tr(locale, "Votre espace partenaire est suspendu.", "Your partner area is suspended.")
+              : tr(locale, "Votre accès partenaire a été révoqué.", "Your partner access has been revoked.")}
+          </p>
+          {blockReason && <p>{tr(locale, "Motif : ", "Reason: ")}{blockReason}</p>}
+          <p>
+            {supplier.status === "SUSPENDED"
+              ? tr(locale, "Vos œuvres sont masquées du catalogue le temps de la suspension. ", "Your works are hidden from the catalogue during the suspension. ")
+              : ""}
+            <Link className="underline" href={`/${locale}/support/contact`}>{tr(locale, "Contactez-nous", "Contact us")}</Link>
+            {tr(locale, " pour en discuter.", " to discuss it.")}
+          </p>
+        </div>
+      ) : supplier ? (
         <p className="rounded-md border bg-card p-4 text-sm">
           {tr(locale, "Votre espace partenaire est ouvert.", "Your partner area is open.")}{" "}
           <Link className="underline" href={`/${locale}/fournisseur/tableau-de-bord`}>{tr(locale, "Y accéder", "Go to it")}</Link>

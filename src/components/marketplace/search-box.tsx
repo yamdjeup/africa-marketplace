@@ -28,7 +28,7 @@ export function SearchBox({ id, locale, placeholder, className, labels }: { id: 
         if (!r.ok) return;
         const d = (await r.json()) as Result;
         setItems([
-          ...d.artists.map((a) => ({ href: `/${locale}/createurs/${a.slug}`, label: a.name, hint: labels.artist })),
+          ...d.artists.map((a) => ({ href: `/${locale}/partenaires/${a.slug}`, label: a.name, hint: labels.artist })),
           ...d.categories.map((c) => ({ href: `/${locale}/catalogue?category=${c.slug}`, label: c.label, hint: labels.category })),
           ...d.products.map((p) => ({ href: `/${locale}/produits/${p.slug}`, label: p.name, hint: `${labels.work} · ${p.creator}` })),
         ]);

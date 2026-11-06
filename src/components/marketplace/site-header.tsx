@@ -25,7 +25,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           <Link href={`/${locale}/catalogue`} className="hidden min-h-11 items-center hover:text-terracotta md:inline-flex">
             {t.nav.catalog}
           </Link>
-          <Link href={`/${locale}/createurs`} className="hidden min-h-11 items-center hover:text-terracotta md:inline-flex">
+          <Link href={`/${locale}/partenaires`} className="hidden min-h-11 items-center hover:text-terracotta md:inline-flex">
             {t.nav.creators}
           </Link>
           <form action={`/${locale}/catalogue`} role="search" className="relative flex w-full md:w-auto lg:hidden">

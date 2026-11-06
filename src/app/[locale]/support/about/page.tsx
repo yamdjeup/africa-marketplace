@@ -98,7 +98,7 @@ export default async function AboutPage({ params }: Props) {
         <Link href={`/${locale}/catalogue`} className="rounded-md bg-primary px-6 py-3 text-sm text-primary-foreground hover:opacity-90">
           {c.works}
         </Link>
-        <Link href={`/${locale}/createurs`} className="rounded-md border border-primary px-6 py-3 text-sm text-primary hover:bg-primary/5">
+        <Link href={`/${locale}/partenaires`} className="rounded-md border border-primary px-6 py-3 text-sm text-primary hover:bg-primary/5">
           {c.artists}
         </Link>
       </nav>

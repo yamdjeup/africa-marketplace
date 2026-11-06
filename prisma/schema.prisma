@@ -33,6 +33,14 @@ model Creator {
   products    Product[]
 }
 
+/// Anciens slugs de pages boutique (renommées) : redirection permanente vers le slug actuel.
+model CreatorSlugAlias {
+  oldSlug     String @id
+  creatorSlug String
+
+  @@index([creatorSlug])
+}
+
 model Product {
   slug               String      @id
   name               String

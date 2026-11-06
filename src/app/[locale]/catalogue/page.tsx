@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { CreatorAvatar } from "@/components/marketplace/creator-avatar";
 import { ProductCard } from "@/components/marketplace/product-card";
 import { RefineSheet } from "@/components/marketplace/refine-sheet";
 import { ShopTopBar } from "@/components/marketplace/shop-topbar";
@@ -178,7 +179,7 @@ export default async function CatalogPage({
             <p className="mt-3 text-sm">
               {t.didYouMean}{" "}
               <Link
-                href={extras.didYouMean.kind === "artist" ? `/${locale}/createurs/${extras.didYouMean.slug}` : `/${locale}/catalogue?category=${extras.didYouMean.slug}`}
+                href={extras.didYouMean.kind === "artist" ? `/${locale}/partenaires/${extras.didYouMean.slug}` : `/${locale}/catalogue?category=${extras.didYouMean.slug}`}
                 className="font-medium underline underline-offset-4"
               >
                 {extras.didYouMean.label} ?
@@ -233,9 +234,8 @@ function ArtistCards({ artists, locale }: { artists: { slug: string; name: strin
     <ul className="flex gap-3 overflow-x-auto pb-1">
       {artists.map((a) => (
         <li key={a.slug} className="shrink-0">
-          <Link href={`/${locale}/createurs/${a.slug}`} className="flex min-h-11 w-56 items-center gap-3 rounded-lg border bg-background p-3 hover:border-accent">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={a.image} alt="" width={48} height={48} loading="lazy" className="h-12 w-12 rounded-full object-cover" />
+          <Link href={`/${locale}/partenaires/${a.slug}`} className="flex min-h-11 w-56 items-center gap-3 rounded-lg border bg-background p-3 hover:border-accent">
+            <CreatorAvatar name={a.name} image={a.image} size={48} className="h-12 w-12 rounded-full object-cover" />
             <span className="min-w-0">
               <span className="block truncate font-heading text-primary">{a.name}</span>
               <span className="block truncate text-xs text-muted-foreground">{a.label}</span>

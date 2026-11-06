@@ -2,6 +2,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { PhotoUploader } from "@/components/fournisseur/media-fields";
 import { inputCls } from "@/components/fournisseur/parts";
 import { getPortalContext } from "@/lib/supplier";
+import { db } from "@/lib/db";
 import { COUNTRIES, tr } from "@/lib/tr";
 import type { Locale } from "@/lib/i18n";
 import { updateSupplierProfile } from "../../actions";
@@ -16,6 +17,7 @@ export default async function ProfilePage({ params, searchParams }: Props) {
   const ctx = await getPortalContext();
   if (!ctx) return null;
   const s = ctx.supplier;
+  const avatar = s.creatorSlug ? (await db.creator.findUnique({ where: { slug: s.creatorSlug }, select: { image: true } }))?.image : "";
   const readOnly = ctx.viewingAs;
   const countries = COUNTRIES.includes(s.country) ? COUNTRIES : [s.country, ...COUNTRIES];
   return (
@@ -34,6 +36,16 @@ export default async function ProfilePage({ params, searchParams }: Props) {
             <textarea name="bio" rows={6} defaultValue={locale === "en" ? s.bioEn : s.bio} className={inputCls} /></label>
           <label className="block text-sm font-medium">{tr(locale, "Vidéo de présentation (lien https)", "Intro video (https link)")}
             <input name="videoUrl" type="url" defaultValue={s.videoUrl ?? ""} placeholder="https://" className={inputCls} /></label>
+          {!readOnly && (
+            <PhotoUploader
+              name="avatarUrl"
+              max={1}
+              fr={locale !== "en"}
+              initial={avatar ? [avatar] : []}
+              label={tr(locale, "Photo de profil", "Profile photo")}
+              hint={tr(locale, "Affichée sur votre page boutique. À défaut, vos initiales sont utilisées.", "Shown on your shop page. Otherwise your initials are used.")}
+            />
+          )}
           {!readOnly && (
             <PhotoUploader
               name="signatureUrl"

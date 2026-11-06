@@ -2,7 +2,7 @@ import type { Creator, Product } from "./types";
 
 // Jeu d'exemple SÉPARÉ du seed principal (voir prisma/seed.examples.ts et prisma/seed.examples*.sql).
 // Pièces de démonstration : prix, tailles et stock fictifs. Visuels protégés (démo privée uniquement, voir docs/BACKLOG.md).
-// Ces créateurs sont listés dans « Nos artistes » et ont une page /createurs/<slug>.
+// Ces créateurs sont listés dans « Nos artistes » et ont une page /partenaires/<slug>.
 export const exampleCreators: Creator[] = [
   {
     slug: "imane-ayissi",

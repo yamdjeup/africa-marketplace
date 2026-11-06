@@ -69,7 +69,7 @@ export function ArtistDirectory({ locale, artists }: { locale: Locale; artists: 
           <ul>
             {list.map((a) => (
               <li key={a.slug}>
-                <Link href={`/${locale}/createurs/${a.slug}`} className="flex min-h-12 items-center justify-between border-b px-1 text-sm hover:text-terracotta">
+                <Link href={`/${locale}/partenaires/${a.slug}`} className="flex min-h-12 items-center justify-between border-b px-1 text-sm hover:text-terracotta">
                   <span>{a.name}</span>
                   <span aria-hidden="true" className="text-muted-foreground">›</span>
                 </Link>

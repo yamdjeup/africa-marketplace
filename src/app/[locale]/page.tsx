@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { CreatorAvatar } from "@/components/marketplace/creator-avatar";
 import { Newsletter } from "@/components/marketplace/newsletter";
 import { ScrollRow } from "@/components/marketplace/scroll-row";
 import { ProductCard } from "@/components/marketplace/product-card";
@@ -175,7 +176,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: L
             {videoArtists.map((v) => (
               <li key={v.slug}>
                 <Link
-                  href={`/${locale}/createurs/${v.slug}`}
+                  href={`/${locale}/partenaires/${v.slug}`}
                   className="group block overflow-hidden rounded-lg border border-accent/60 bg-card"
                 >
                   <span className="relative block aspect-video bg-muted">
@@ -205,12 +206,12 @@ export default async function HomePage({ params }: { params: Promise<{ locale: L
         </section>
       )}
 
-      <Carousel id="cre" title={f.artists} sub={f.artistsSub} href={`/${locale}/createurs`}       seeAll={f.seeAll} hint={f.carousel} prev={f.prev} next={f.next}>
+      <Carousel id="cre" title={f.artists} sub={f.artistsSub} href={`/${locale}/partenaires`}     seeAll={f.seeAll} hint={f.carousel} prev={f.prev} next={f.next}>
         {allCreators.map((c) => (
           <li key={c.slug} className="w-40 shrink-0 snap-start md:w-48 lg:w-64">
-            <Link href={`/${locale}/createurs/${c.slug}`} className="group block space-y-2">
+            <Link href={`/${locale}/partenaires/${c.slug}`} className="group block space-y-2">
               <span className="relative block aspect-square overflow-hidden bg-muted">
-                <Image src={c.image} alt="" fill unoptimized sizes="192px" className="object-cover transition-transform group-hover:scale-105" />
+                <CreatorAvatar name={c.name} image={c.image} fill className="object-cover transition-transform group-hover:scale-105" />
               </span>
               <span className="block text-center text-sm font-semibold group-hover:underline">{c.name}</span>
             </Link>

@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { ensureCreator } from "@/lib/partner-creator";
 import { isAdminEmail, VIEW_AS_COOKIE, getPortalContext } from "@/lib/supplier";
 import { emailAdminNewApplication, emailApplicantReceived } from "@/lib/supplier-email";
 
@@ -60,7 +61,15 @@ export async function updateSupplierProfile(formData: FormData) {
       ...(formData.has("signatureUrl") ? { signatureFileId: await ownedMediaId(s(formData, "signatureUrl", 400), ctx.supplier.userId) } : {}),
     },
   });
+  if (formData.has("avatarUrl")) await saveAvatar(ctx.supplier, s(formData, "avatarUrl", 400));
   redirect(`/${locale}/fournisseur/profil?saved=1`);
+}
+
+// Photo de profil (page boutique) : image du compte, publique (≤ 300 Ko, contrôlée à l'envoi).
+async function saveAvatar(supplier: Parameters<typeof ensureCreator>[0] & { userId: string | null }, raw: string) {
+  const id = await ownedMediaId(raw, supplier.userId);
+  const slug = await ensureCreator(supplier);
+  await db.creator.update({ where: { slug }, data: { image: id ? `/api/media/${id}` : "" } });
 }
 
 // Signature enregistrée une seule fois : le fichier doit appartenir au compte (tableau JSON d'une URL /api/media/<id>).

@@ -21,7 +21,8 @@
     "db:examples-remove": "node scripts/db.mjs examples-remove",
     "db:seed-examples-sql": "tsx scripts/seed-examples-sql.ts",
     "db:seed-suppliers": "tsx scripts/seed-suppliers.ts",
-    "db:check-stock": "tsx scripts/check-stock.ts"
+    "db:check-stock": "tsx scripts/check-stock.ts",
+    "db:check-orders": "tsx scripts/check-orders.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

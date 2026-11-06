@@ -4,7 +4,7 @@ import { siteUrl } from "@/lib/alerts-core";
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-async function safeSend(to: string, subject: string, lines: string[]) {
+export async function safeSend(to: string, subject: string, lines: string[]) {
   try {
     await sendEmail({ to, subject, text: lines.join("\n\n"), html: lines.map((l) => `<p>${esc(l)}</p>`).join("") });
   } catch (e) {

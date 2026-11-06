@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { ClearCartOnMount } from "@/components/marketplace/clear-cart-on-mount";
+import { SubOrderTracking } from "@/components/marketplace/sub-order-tracking";
 import { buttonVariants } from "@/components/ui/button";
 import { formatStreet } from "@/lib/address";
 import { db } from "@/lib/db";
@@ -57,6 +58,7 @@ export default async function ConfirmationPage({ params, searchParams }: Props) 
           <span>{formatEur(order.totalCents, locale)}</span>
         </p>
       </section>
+      {owner && <SubOrderTracking orderId={order.id} locale={locale} />}
       <section aria-labelledby="ship" className="space-y-2 rounded-lg border p-4 text-sm">
         <h2 id="ship" className="font-heading text-xl">
           {t.to}

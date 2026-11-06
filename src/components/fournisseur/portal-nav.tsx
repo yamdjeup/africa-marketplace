@@ -10,6 +10,7 @@ export function PortalNav({ locale }: { locale: Locale }) {
   const base = `/${locale}/fournisseur`;
   const items = [
     ["/tableau-de-bord", tr(locale, "Tableau de bord", "Dashboard")],
+    ["/commandes", tr(locale, "Commandes", "Orders")],
     ["/oeuvres", tr(locale, "Œuvres et stock", "Works and stock")],
     ["/profil", tr(locale, "Profil", "Profile")],
   ];

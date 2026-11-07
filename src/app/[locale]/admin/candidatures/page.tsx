@@ -13,8 +13,9 @@ const STATUS_CLS: Record<string, string> = {
   REFUSED: "bg-rose-100 text-rose-900",
 };
 
-export default async function ApplicationsPage({ params }: { params: Promise<{ locale: Locale }> }) {
+export default async function ApplicationsPage({ params, searchParams }: { params: Promise<{ locale: Locale }>; searchParams: Promise<{ error?: string }> }) {
   const { locale } = await params;
+  const sp = await searchParams;
   const apps = await db.supplierApplication.findMany({ orderBy: { createdAt: "desc" }, take: 100 });
   const allFiles = await db.applicationFile.findMany({ where: { applicationId: { in: apps.map((a) => a.id) } }, select: { id: true, applicationId: true, name: true, mime: true }, orderBy: { createdAt: "asc" } });
   const label: Record<string, string> = {
@@ -27,6 +28,7 @@ export default async function ApplicationsPage({ params }: { params: Promise<{ l
   return (
     <>
       <h1 className="font-heading text-3xl text-primary">{tr(locale, "Candidatures partenaires", "Partner applications")}</h1>
+      {sp.error === "name" && <p role="alert" className="rounded-md border border-destructive p-3 text-sm text-destructive">{tr(locale, "Ce nom est déjà utilisé par un partenaire.", "This name is already used by a partner.")}</p>}
       {apps.length === 0 && <p className="text-sm text-muted-foreground">{tr(locale, "Aucune candidature pour le moment.", "No applications yet.")}</p>}
       <ul className="space-y-3">
         {apps.map((a) => (

@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { ensureCreator } from "@/lib/partner-creator";
 import { isAdminEmail, VIEW_AS_COOKIE, getPortalContext } from "@/lib/supplier";
 import { emailAdminNewApplication, emailApplicantReceived } from "@/lib/supplier-email";
+import { partnerNameTaken } from "@/lib/partner-name";
 
 const s = (f: FormData, k: string, max = 2000) => String(f.get(k) ?? "").trim().slice(0, max);
 const loc = (f: FormData) => (s(f, "locale") === "en" ? "en" : "fr");
@@ -28,6 +29,7 @@ export async function submitApplication(formData: FormData) {
   const urlOk = !data.portfolioUrl || /^https?:\/\/\S+\.\S+/.test(data.portfolioUrl);
   if (!data.name || !data.country || !data.craftType || data.about.length < 20 || !urlOk) redirect(`${base}?error=invalid`);
   if (await db.supplier.findUnique({ where: { userId } })) redirect(`/${locale}/fournisseur/tableau-de-bord`);
+  if (await partnerNameTaken(data.name)) redirect(`${base}?error=name`);
   const user = await db.user.findUnique({ where: { id: userId } });
   if (!user) redirect(`/${locale}/login`);
   const open = await db.supplierApplication.findFirst({ where: { userId, status: { in: ["PENDING", "NEEDS_INFO"] } }, orderBy: { createdAt: "desc" } });
@@ -50,6 +52,8 @@ export async function updateSupplierProfile(formData: FormData) {
   const locale = loc(formData);
   const ctx = await getPortalContext();
   if (!ctx || ctx.viewingAs) redirect(`/${locale}/fournisseur/profil?error=readonly`);
+  const newName = s(formData, "displayName", 120);
+  if (newName && (await partnerNameTaken(newName, ctx.supplier.id))) redirect(`/${locale}/fournisseur/profil?error=name`);
   await db.supplier.update({
     where: { id: ctx.supplier.id },
     data: {

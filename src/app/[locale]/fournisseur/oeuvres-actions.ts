@@ -9,7 +9,7 @@ import { isCurrency, toEurCents, toMinor, type Currency } from "@/lib/currency";
 import { db } from "@/lib/db";
 import { translateTexts, type Lang } from "@/lib/translate";
 import { adjustStock, syncProductTotals } from "@/lib/stock";
-import { notifyLowStock } from "@/lib/stock-alerts";
+import { notifyLowStock, snapshotAvail } from "@/lib/stock-alerts";
 import { ensureCreator } from "@/lib/partner-creator";
 import { getPortalContext, isAdminEmail } from "@/lib/supplier";
 import { emailAdminProductSubmitted } from "@/lib/supplier-email";
@@ -162,8 +162,10 @@ export async function saveProduct(formData: FormData) {
 
   let slug = existing?.slug ?? "";
   if (existing) {
-    const nextStatus = intent === "submit" && (existing.status === "DRAFT" || existing.status === "REJECTED") ? "SUBMITTED" : existing.status;
-    await db.product.update({ where: { slug }, data: { ...data, ...attestData, status: nextStatus, submittedAt: nextStatus === "SUBMITTED" && existing.status !== "SUBMITTED" ? new Date() : existing.submittedAt, rejectReason: nextStatus === "SUBMITTED" ? null : existing.rejectReason } });
+    // Modification d'une création publiée par le partenaire : retour en modération (l'admin, lui, ne dépublie pas).
+    const backToReview = !admin && existing.status === "PUBLISHED";
+    const nextStatus = backToReview || (intent === "submit" && (existing.status === "DRAFT" || existing.status === "REJECTED")) ? "SUBMITTED" : existing.status;
+    await db.product.update({ where: { slug }, data: { ...data, ...attestData, status: nextStatus, submittedAt: nextStatus === "SUBMITTED" && existing.status !== "SUBMITTED" ? new Date() : existing.submittedAt, rejectReason: nextStatus === "SUBMITTED" ? null : existing.rejectReason, ...(nextStatus === "SUBMITTED" && existing.status !== "SUBMITTED" ? { decidedAt: null } : {}) } });
     if (nextStatus === "SUBMITTED" && existing.status !== "SUBMITTED") await emailAdminProductSubmitted(supplier.displayName, name);
   } else {
     const creatorSlug = await ensureCreator(supplier);
@@ -227,7 +229,7 @@ export async function submitProduct(formData: FormData) {
   const back = `/${locale}/fournisseur/oeuvres`;
   if (!p) redirect(back);
   if ((p.status !== "DRAFT" && p.status !== "REJECTED") || (Array.isArray(p.images) ? p.images.length : 0) === 0 || p.description.length < 20) redirect(`${back}/${p.slug}?error=incomplete`);
-  await db.product.update({ where: { slug: p.slug }, data: { status: "SUBMITTED", submittedAt: new Date(), rejectReason: null } });
+  await db.product.update({ where: { slug: p.slug }, data: { status: "SUBMITTED", submittedAt: new Date(), rejectReason: null, decidedAt: null } });
   await emailAdminProductSubmitted(supplier.displayName, p.name);
   redirect(`${back}?saved=submit`);
 }
@@ -258,7 +260,7 @@ export async function adjustStockAction(formData: FormData) {
   if (type === "ENTRY") delta = Math.abs(delta);
   const reason = s(formData, "reason", 200) || (type === "ENTRY" ? "Entrée de stock" : "");
   if (!reason) redirect(back("error=reason"));
-  const before = new Map([[p.slug, p.stock - p.reserved]]);
+  const before = await snapshotAvail([p.slug]);
   const ok = await db.$transaction((tx) => adjustStock(tx, { slug: p.slug, label: s(formData, "variant", 60) || null }, delta, type, reason, { id: userId, label: session?.user?.email ?? supplier.displayName }));
   if (!ok) redirect(back("error=below"));
   if (delta < 0) await notifyLowStock(before).catch(() => undefined);

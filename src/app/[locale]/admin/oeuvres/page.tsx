@@ -5,7 +5,7 @@ import { MOVEMENT_LABELS } from "@/lib/stock";
 import { tr } from "@/lib/tr";
 import type { Locale } from "@/lib/i18n";
 import { inputCls } from "@/components/fournisseur/parts";
-import { PhotoLightbox, SelectAll } from "@/components/admin/table-widgets";
+import { ConfirmButton, PhotoLightbox, SelectAll } from "@/components/admin/table-widgets";
 import { DateRangeFields } from "@/components/admin/date-range-fields";
 import { PAGE_SIZE, TABS, WAIT_ALERT_H, WAIT_WARN_H, dateModeOf, isoDay, queryWorks, rangeFields, tabOf, waitHours, waitLabel, worksWhere, type Tab, type WorkParams } from "@/lib/admin-works";
 
@@ -19,7 +19,7 @@ const BADGE: Record<string, [string, string, string]> = {
   PUBLISHED: ["Publiée", "Published", "bg-emerald-100 text-emerald-900"],
   REJECTED: ["Refusée", "Rejected", "bg-red-100 text-red-900"],
 };
-const KEYS = ["f", "d", "from", "to", "q", "sup", "cat", "sort", "dir"] as const;
+const KEYS = ["f", "d", "from", "to", "q", "sup", "cat", "st", "sort", "dir"] as const;
 
 export default async function AdminWorks({ params, searchParams }: Props) {
   const { locale } = await params;
@@ -90,6 +90,8 @@ export default async function AdminWorks({ params, searchParams }: Props) {
             <select name="sup" defaultValue={sp.sup ?? ""} className={inputCls}><option value="">{tr(locale, "Tous", "All")}</option>{sups.map((s) => <option key={s.id} value={s.id}>{s.displayName}</option>)}</select></label>
           <label className="text-sm font-medium">{tr(locale, "Catégorie", "Category")}
             <select name="cat" defaultValue={sp.cat ?? ""} className={inputCls}><option value="">{tr(locale, "Toutes", "All")}</option>{cats.map((c) => <option key={c.slug} value={c.slug}>{fr ? c.name : c.nameEn}</option>)}</select></label>
+          <label className="text-sm font-medium">{tr(locale, "Statut", "Status")}
+            <select name="st" defaultValue={sp.st ?? ""} className={inputCls}><option value="">{tr(locale, "Tous", "All")}</option>{Object.entries(BADGE).map(([k, b]) => <option key={k} value={k}>{tr(locale, b[0], b[1])}</option>)}</select></label>
           <DateRangeFields
             mode={mode} from={range.from} to={range.to} today={today} disabled={tab === "pending"} inputCls={inputCls}
             labels={{
@@ -131,12 +133,12 @@ export default async function AdminWorks({ params, searchParams }: Props) {
                     <th className={th}><SelectAll label={tr(locale, "Tout sélectionner", "Select all")} /></th>
                     <th className={th}>Photo</th>
                     <th className={th}><Link href={sortHref("partner")}>{tr(locale, "Partenaire", "Partner")}{arrow("partner")}</Link></th>
-                    <th className={th}>{tr(locale, "Création", "Creation")}</th>
-                    <th className={th}>{tr(locale, "Catégorie", "Category")}</th>
+                    <th className={th}><Link href={sortHref("name")}>{tr(locale, "Création", "Creation")}{arrow("name")}</Link></th>
+                    <th className={th}><Link href={sortHref("cat")}>{tr(locale, "Catégorie", "Category")}{arrow("cat")}</Link></th>
                     <th className={th}><Link href={sortHref("price")}>{tr(locale, "Prix (€)", "Price (€)")}{arrow("price")}</Link></th>
-                    <th className={th}>Stock</th>
+                    <th className={th}><Link href={sortHref("stock")}>Stock{arrow("stock")}</Link></th>
                     <th className={th}>Description</th>
-                    <th className={th}>{tr(locale, "Statut", "Status")}</th>
+                    <th className={th}><Link href={sortHref("status")}>{tr(locale, "Statut", "Status")}{arrow("status")}</Link></th>
                     {showWait && <th className={th}><Link href={sortHref("wait")}>{tr(locale, "En attente depuis", "Waiting since")}{arrow("wait")}</Link></th>}
                     <th className={th}><Link href={sortHref("date")}>{tr(locale, "Décision", "Decision")}{arrow("date")}</Link></th>
                     {showReason && <th className={th}>{tr(locale, "Motif du refus", "Rejection reason")}</th>}
@@ -150,7 +152,7 @@ export default async function AdminWorks({ params, searchParams }: Props) {
                     const title = fr ? p.name : p.nameEn;
                     return (
                       <tr key={p.slug} className="border-b align-top">
-                        <td className="px-2 py-2">{(p.status === "SUBMITTED" || p.status === "PUBLISHED") && <input type="checkbox" name="slug" value={p.slug} aria-label={title} className="size-5" />}</td>
+                        <td className="px-2 py-2"><input type="checkbox" name="slug" value={p.slug} aria-label={title} className="size-5" /></td>
                         <td className="px-2 py-2"><PhotoLightbox images={imgs} title={title} labels={lb} /></td>
                         <td className="px-2 py-2">{p.partner}</td>
                         <td className="max-w-48 px-2 py-2                         font-medium">
@@ -183,6 +185,7 @@ export default async function AdminWorks({ params, searchParams }: Props) {
                         {showReason && <td className="max-w-48 px-2 py-2 text-destructive">{p.status === "REJECTED" ? <span title={p.rejectReason ?? ""} className="line-clamp-2">{p.rejectReason || "—"}</span> : "—"}</td>}
                         <td className="whitespace-nowrap px-2 py-2">
                           {p.status === "SUBMITTED" && <button name="only" value={`PUBLISHED:${p.slug}`} className="mr-1 min-h-9 rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground">{tr(locale, "Publier", "Publish")}</button>}
+                          {p.status === "REJECTED" && <ConfirmButton name="only" value={`PUBLISHED:${p.slug}`} message={tr(locale, "Publier cette création refusée ?", "Publish this rejected creation?")} className="mr-1 min-h-9 rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground">{tr(locale, "Publier", "Publish")}</ConfirmButton>}
                           {(p.status === "SUBMITTED" || p.status === "PUBLISHED") && <button name="only" value={`REJECTED:${p.slug}`} className="min-h-9 rounded-md border border-destructive px-3 text-xs text-destructive">{tr(locale, "Refuser", "Reject")}</button>}
                         </td>
                       </tr>

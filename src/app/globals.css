@@ -136,6 +136,31 @@
   html {
     @apply font-sans;
   }
+  /* Curseur « main » sur tout élément cliquable ; « interdit » sur les éléments désactivés. */
+  a[href],
+  button,
+  summary,
+  select,
+  label[for],
+  [role="button"],
+  [role="tab"],
+  [role="link"],
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="file"],
+  input[type="submit"],
+  input[type="button"],
+  tr[data-href] {
+    cursor: pointer;
+  }
+  button:disabled,
+  select:disabled,
+  input:disabled,
+  [aria-disabled="true"],
+  :disabled + label,
+  label:has(input:disabled) {
+    cursor: not-allowed;
+  }
 }
 @layer utilities {
   /* Bandeau inspire des motifs kente (bandes ocre / indigo / vert / terracotta) */

@@ -62,16 +62,23 @@ export async function emailAdminProductSubmitted(partnerName: string, title: str
     await safeSend(to, `Création à modérer : ${title}`, [`${partnerName} a soumis la création « ${title} ».`, `Modérer : ${base}/fr/admin/oeuvres`]);
 }
 
-export async function emailPartnerProductDecision(o: Owner, title: string, approved: boolean, reason?: string | null) {
+export async function emailPartnerProductDecision(o: Owner, title: string, approved: boolean, reason?: string | null, wasPublished = false) {
   const fr = o.locale !== "en";
   const base = siteUrl();
   const loc = fr ? "fr" : "en";
   const lines = approved
-    ? [fr ? `Bonjour ${o.name},     votre création « ${title} » est publiée dans le catalogue.` : `Hello ${o.name}, your creation “${title}” is now published in the catalogue.`]
-        : [fr ? `Bonjour ${o.name}, votre création « ${title} » n'a pas été publiée.` : `Hello ${o.name}, your creation “${title}” was not published.`];
+    ? [fr ? `Bonjour ${o.name}, votre création « ${title} » est publiée dans le catalogue.` : `Hello ${o.name}, your creation “${title}” is now published in the catalogue.`]
+    : wasPublished
+      ? [fr ? `Bonjour ${o.name}, votre création « ${title} » a été retirée du catalogue et n'est plus visible des clients.` : `Hello ${o.name}, your creation “${title}” has been removed from the catalogue and is no longer visible to customers.`]
+      : [fr ? `Bonjour ${o.name}, votre création « ${title} » n'a pas été publiée.` : `Hello ${o.name}, your creation “${title}” was not published.`];
   if (reason) lines.push(reason);
   lines.push(`${base}/${loc}/fournisseur/oeuvres`);
-  await safeSend(o.email, approved ? (fr ? "E póm ta’ — création publiée" : "E póm ta’ — creation published") : fr ? "E póm ta’ — création à revoir" : "E póm ta’ — creation needs changes", lines);
+  const subject = approved
+    ? fr ? "E póm ta’ — création publiée" : "E póm ta’ — creation published"
+    : wasPublished
+      ? fr ? `Création retirée du catalogue : ${title}` : `Creation removed from the catalogue: ${title}`
+      : fr ? `Création à revoir : ${title}` : `Creation needs changes: ${title}`;
+  await safeSend(o.email, subject, lines);
 }
 
 export async function emailPartnerStatus(o: Owner, action: "SUSPEND" | "REACTIVATE" | "REVOKE", reason: string) {

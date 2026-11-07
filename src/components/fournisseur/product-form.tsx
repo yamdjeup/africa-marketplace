@@ -1,4 +1,5 @@
 import { PhotoUploader } from "@/components/fournisseur/media-fields";
+import { ConfirmButton } from "@/components/admin/table-widgets";
 import { inputCls } from "@/components/fournisseur/parts";
 import { CURRENCIES } from "@/lib/currency";
 import { tr } from "@/lib/tr";
@@ -17,6 +18,7 @@ export function ProductForm({ locale, categories, product, readOnly, adminFor }:
   const images = Array.isArray(product?.images) ? (product!.images as string[]) : [];
   const price = product ? ((product.priceLocal ?? product.priceCents) / 100).toString() : "";
   const locked = product?.status === "SUBMITTED";
+  const republish = product?.status === "PUBLISHED" && !adminFor && !readOnly;
   return (
     <form action={saveProduct} className="max-w-3xl space-y-5">
       <input type="hidden" name="locale" value={locale} />
@@ -90,10 +92,19 @@ export function ProductForm({ locale, categories, product, readOnly, adminFor }:
                 {product?.authorAttestedAt && <em className="block text-xs text-muted-foreground">{tr(locale, "Attesté le", "Attested on")}                 {product.authorAttestedAt.toLocaleDateString(fr ? "fr-FR" : "en-GB")}</em>}</span></label>}
           </div>
         </details>
+        {republish && <p role="note" className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm">{tr(locale, "Attention : cette création est publiée. Toute modification (hors stock) la remet « En modération » : elle disparaît du catalogue jusqu'à nouvelle validation.", "Warning: this creation is published. Any change (except stock) sends it back to moderation: it is hidden from the catalogue until approved again.")}</p>}
         <div className="flex flex-wrap gap-3">
+          {republish ? (
+            <>
+              <ConfirmButton name="intent" value="submit" message={tr(locale, "Enregistrer ? La création repassera « En modération » et sera retirée du catalogue jusqu'à validation.", "Save? The creation will go back to moderation and be removed from the catalogue until approved.")} className="min-h-11 rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground">{tr(locale, "Enregistrer et renvoyer en modération", "Save and resubmit for review")}</ConfirmButton>
+            </>
+          ) : (
+            <>
           <button type="submit" name="intent" value="draft" className="min-h-11 rounded-md border px-5 text-sm font-medium">{tr(locale, "Enregistrer le brouillon", "Save draft")}</button>
                           <button type="submit" name="intent" value="submit" className="min-h-11 rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground">{adminFor ? tr(locale, "Envoyer en modération", "Send to moderation") : tr(locale, "Enregistrer et soumettre à validation", "Save and submit for review")}</button>
                           {adminFor && <button type="submit" name="intent" value="publish" className="min-h-11 rounded-md border-2 border-primary px-5 text-sm font-medium text-primary">{tr(locale, "Publier directement", "Publish now")}</button>}
+            </>
+          )}
                         </div>
       </fieldset>
       {locked && <p className="text-sm text-muted-foreground">{tr(locale, "Création en cours de modération : modification impossible.", "Creation under review: editing is locked.")}</p>}

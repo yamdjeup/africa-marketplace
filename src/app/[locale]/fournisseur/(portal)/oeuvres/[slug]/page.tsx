@@ -30,7 +30,7 @@ export default async function EditWorkPage({ params, searchParams }: Props) {
     <>
       <h1 className="font-heading text-3xl text-primary">{fr ? p.name : p.nameEn}</h1>
       {sp.saved && <p role="status" className="rounded-md border border-accent bg-accent/15 p-3 text-sm">{tr(locale, "Enregistré.", "Saved.")}</p>}
-      {sp.error && <p role="alert" className="rounded-md border border-destructive p-3 text-sm text-destructive">{tr(locale, "Action impossible (vérifiez les champs, ou le stock réservé).", "Action not possible (check fields, or reserved stock).")}</p>}
+      {sp.error && <p role="alert" className="rounded-md border border-destructive p-3 text-sm text-destructive">{sp.error === "reason" ? tr(locale, "Le motif est obligatoire.", "A reason is required.") : sp.error === "delta" ? tr(locale, "Quantité invalide (entier non nul).", "Invalid quantity (non-zero integer).") : sp.error === "below" ? tr(locale, "Correction impossible : le stock deviendrait inférieur au stock réservé ou négatif.", "Correction impossible: stock would drop below the reserved or negative.") : tr(locale, "Action impossible (vérifiez les champs, ou le stock réservé).", "Action not possible (check fields, or reserved stock).")}</p>}
       {p.status === "REJECTED" && p.rejectReason && <p className="rounded-md border border-destructive p-3 text-sm"><strong>{tr(locale, "Refusée : ", "Rejected: ")}</strong>{p.rejectReason}</p>}
       <ProductForm locale={locale} categories={categories} product={p} readOnly={ro} />
 

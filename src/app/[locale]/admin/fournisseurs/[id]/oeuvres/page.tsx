@@ -21,17 +21,19 @@ export default async function AdminPartnerWorksPage({ params, searchParams }: { 
   const supplier = await db.supplier.findUnique({ where: { id } });
   if (!supplier || supplier.isDemo) notFound();
   const works = await db.product.findMany({ where: { supplierId: id }, orderBy: { createdAt: "desc" }, select: { slug: true, name: true, nameEn: true, status: true, stock: true, reserved: true, createdByAdmin: true } });
+  const owner = supplier.userId ? await db.user.findUnique({ where: { id: supplier.userId }, select: { email: true } }) : null;
   const fr = locale !== "en";
   const active = supplier.status === "ACTIVE";
   return (
     <div className="space-y-4">
       <Link href={`/${locale}/admin/fournisseurs`} className="text-sm underline">← {tr(locale, "Partenaires", "Partners")}</Link>
       <h1 className="font-heading text-3xl text-primary">{tr(locale, "Créations de", "Creations by")} {supplier.displayName}</h1>
+      {owner?.email && <p className="text-sm text-muted-foreground">{owner.email}</p>}
       {sp.saved && <p role="status" className="rounded-md border border-accent bg-accent/15 p-3 text-sm">{sp.saved === "publish" ? tr(locale, "Création publiée.", "Creation published.") : sp.saved === "submit" ? tr(locale, "Création envoyée en modération.", "Creation sent to moderation.") : tr(locale, "Brouillon enregistré.", "Draft saved.")}</p>}
       {active ? (
         <Link href={`/${locale}/admin/fournisseurs/${id}/oeuvres/nouvelle`} className={buttonVariants({ className: "min-h-11" })}>{tr(locale, "Nouvelle création au nom du partenaire", "New creation on behalf of the partner")}</Link>
       ) : <p className="text-sm text-muted-foreground">{tr(locale, "Partenaire non actif : saisie impossible.", "Partner not active: entry disabled.")}</p>}
-      {works.length === 0 ? <p className="text-sm text-muted-foreground">—</p> : (
+      {works.length === 0 ? <p className="rounded-md border p-4 text-sm text-muted-foreground">{tr(locale, "Aucune création pour le moment.", "No creations yet.")}</p> : (
         <ul className="divide-y rounded-lg border">
           {works.map((w) => (
             <li key={w.slug} className="flex flex-wrap items-center justify-between gap-2 p-3 text-sm">

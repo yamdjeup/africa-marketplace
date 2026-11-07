@@ -120,5 +120,5 @@ export const MOVEMENT_LABELS: Record<MovementType, { fr: string; en: string }> =
   RELEASE: { fr: "Libération", en: "Release" },
   SALE: { fr: "Vente (sortie physique)", en: "Sale (physical out)" },
   RETURN: { fr: "Retour", en: "Return" },
-  ADJUST: { fr: "Ajustement", en: "Adjustment" },
+  ADJUST: { fr: "Correction (+/−)", en: "Correction (+/−)" },
 };

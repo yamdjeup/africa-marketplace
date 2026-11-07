@@ -1,8 +1,8 @@
 import { db } from "@/lib/db";
-import { PAGE_SIZE } from "@/lib/admin-works";
+import { PAGE_SIZE, fold } from "@/lib/admin-works";
 
 export { PAGE_SIZE };
-export const PTABS = ["all", "SUBMITTED", "PUBLISHED", "REJECTED", "DRAFT", "low"] as const;
+export const PTABS = ["all", "SUBMITTED", "PUBLISHED", "REJECTED", "DRAFT", "low", "out"] as const;
 export type PTab = (typeof PTABS)[number];
 export type PWorkParams = { f?: string; q?: string; cat?: string; st?: string; sort?: string; dir?: string; p?: string };
 
@@ -10,26 +10,29 @@ export const ptabOf = (f?: string): PTab => ((PTABS as readonly string[]).includ
 
 type Row = Awaited<ReturnType<typeof loadRows>>[number];
 
-const loadRows = (supplierId: string) => db.product.findMany({ where: { supplierId }, orderBy: { name: "asc" } });
+const loadRows = (supplierId: string) => db.product.findMany({ where: { supplierId }, orderBy: { name: "asc" }, include: { variants: { orderBy: { id: "asc" } } } });
 
-const isLow = (p: Row) => p.status === "PUBLISHED" && p.stock - p.reserved <= p.lowStockThreshold;
+// Disponible = somme des variantes quand il y en a, sinon stock du produit.
+export const availOf = (p: Row) => (p.variants.length > 0 ? p.variants.reduce((n, v) => n + v.stock - v.reserved, 0) : p.stock - p.reserved);
+const isOut = (p: Row) => p.status === "PUBLISHED" && availOf(p) <= 0;
+const isLow = (p: Row) => p.status === "PUBLISHED" && availOf(p) > 0 && availOf(p) <= p.lowStockThreshold;
 
 // Toujours limité au partenaire (supplierId) ; filtres, tri et pagination en mémoire (volume par partenaire modeste).
 export async function queryPartnerWorks(supplierId: string, sp: PWorkParams, opts: { page?: number; all?: boolean; locale?: string }) {
   const rows = await loadRows(supplierId);
-  const q = (sp.q ?? "").trim().toLowerCase().slice(0, 80);
+  const q = fold((sp.q ?? "").slice(0, 80));
   const matches = (p: Row, tab: PTab) =>
-    (tab === "all" || (tab === "low" ? isLow(p) : p.status === tab)) &&
+    (tab === "all" || (tab === "low" ? isLow(p) : tab === "out" ? isOut(p) : p.status === tab)) &&
     (!sp.cat || p.categorySlug === sp.cat) &&
     (!sp.st || p.status === sp.st) &&
-    (!q || p.name.toLowerCase().includes(q) || p.nameEn.toLowerCase().includes(q));
+    (!q || fold(`${p.name} ${p.nameEn} ${p.description}`).includes(q));
   const counts = Object.fromEntries(PTABS.map((t) => [t, rows.filter((p) => matches(p, t)).length])) as Record<PTab, number>;
   const tab = ptabOf(sp.f);
   const dir = sp.dir === "asc" ? 1 : -1;
   const t = (d: Date | null) => d?.getTime() ?? 0;
   const list = rows.filter((p) => matches(p, tab));
   if (sp.sort === "price") list.sort((a, b) => (a.priceCents - b.priceCents) * dir);
-  else if (sp.sort === "stock") list.sort((a, b) => (a.stock - a.reserved - (b.stock - b.reserved)) * dir);
+  else if (sp.sort === "stock") list.sort((a, b) => (availOf(a) - availOf(b)) * dir);
   else if (sp.sort === "date") list.sort((a, b) => (t(a.decidedAt) - t(b.decidedAt)) * dir);
   else if (sp.sort === "wait") list.sort((a, b) => (t(a.submittedAt ?? a.createdAt) - t(b.submittedAt ?? b.createdAt)) * dir);
   else if (sp.sort === "name") list.sort((a, b) => a.name.localeCompare(b.name) * dir);

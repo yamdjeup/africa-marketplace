@@ -35,6 +35,7 @@ export default async function ApplyPage({ params, searchParams }: Props) {
     proof: tr(locale, "Indiquez un lien (portfolio, réseau social) OU joignez au moins un fichier de vos créations.", "Provide a link (portfolio, social profile) OR attach at least one file of your creations."),
     pending: tr(locale, "Votre candidature est déjà en cours d'examen.", "Your application is already under review."),
     rate: tr(locale, "Trop de candidatures aujourd'hui, réessayez demain.", "Too many applications today, please try again tomorrow."),
+    name: tr(locale, "Ce nom est déjà utilisé par un partenaire.", "This name is already used by a partner."),
   };
   const statusLabel: Record<string, string> = {
     PENDING: tr(locale, "en cours d'examen", "under review"),

@@ -8,7 +8,7 @@ export const WAIT_ALERT_H = 72;
 export const waitHours = (since: Date | null, now = Date.now()) => (since ? Math.max(0, (now - since.getTime()) / 3600_000) : 0);
 export const waitLabel = (h: number) => (h < 1 ? "< 1 h" : h < 48 ? `${Math.floor(h)} h` : `${Math.floor(h / 24)} j`);
 
-export type WorkParams = { f?: string; d?: string; from?: string; to?: string; q?: string; sup?: string; cat?: string; sort?: string; dir?: string; p?: string };
+export type WorkParams = { f?: string; d?: string; from?: string; to?: string; q?: string; sup?: string; cat?: string; st?: string; sort?: string; dir?: string; p?: string };
 
 export const TABS = ["pending", "published", "rejected", "all"] as const;
 export type Tab = (typeof TABS)[number];
@@ -44,16 +44,27 @@ export function rangeFields(sp: WorkParams, now = new Date()): { from: string; t
   if (mode === "all") return { from: "", to: "", swapped: false };
   if (mode === "today") return { from: today, to: today, swapped: false };
   if (mode === "7" || mode === "30") return { from: addDays(today, -(Number(mode) - 1)), to: today, swapped: false };
-  const from = validDay(sp.from) ?? validDay(sp.to) ?? today;
-  const to = validDay(sp.to) ?? from;
-  return from > to ? { from: to, to: from, swapped: true } : { from, to, swapped: false };
+  // Plage personnalisée : une borne seule reste ouverte de l'autre côté (pas de remplissage automatique).
+  const from = validDay(sp.from) ?? "";
+  const to = validDay(sp.to) ?? "";
+  if (!from && !to) return { from: today, to: today, swapped: false };
+  return from && to && from > to ? { from: to, to: from, swapped: true } : { from, to, swapped: false };
 }
 
 function dateRange(sp: WorkParams): { gte?: Date; lt?: Date } | null {
   if (dateModeOf(sp.d) === "all") return null;
   const { from, to } = rangeFields(sp);
-  return { gte: parisMidnight(from), lt: parisMidnight(addDays(to, 1)) };
+  return { ...(from ? { gte: parisMidnight(from) } : {}), ...(to ? { lt: parisMidnight(addDays(to, 1)) } : {}) };
 }
+
+export const CSV_STATUS: Record<string, string> = { DRAFT: "Brouillon", SUBMITTED: "En modération", PUBLISHED: "Publiée", REJECTED: "Refusée" };
+export const parisFmt = (d: Date | null) => (d ? d.toLocaleString("fr-FR", { timeZone: TZ, day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "");
+export async function categoryLabels(): Promise<Map<string, string>> {
+  const cats = await db.category.findMany({ select: { slug: true, name: true } });
+  return new Map(cats.map((c) => [c.slug, c.name]));
+}
+// Normalisation pour les recherches insensibles à la casse et aux accents.
+export const fold = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
 
 export async function worksWhere(sp: WorkParams, tab: Tab, ignoreDate = false): Promise<Prisma.ProductWhereInput> {
   const range = tab === "pending" || ignoreDate ? null : dateRange(sp);
@@ -64,13 +75,20 @@ export async function worksWhere(sp: WorkParams, tab: Tab, ignoreDate = false): 
       ? { OR: [{ status: "SUBMITTED", supplierId: { not: null } }, { status: { in: ["PUBLISHED", "REJECTED"] }, supplierId: { not: null }, ...decided }] }
       : { ...STATUS[tab], ...decided };
   const and: Prisma.ProductWhereInput[] = [base];
-  const q = (sp.q ?? "").trim().slice(0, 80);
+  const q = fold((sp.q ?? "").slice(0, 80));
   if (q) {
-    const sups = await db.supplier.findMany({ where: { displayName: { contains: q } }, select: { id: true } });
-    and.push({ OR: [{ name: { contains: q } }, { nameEn: { contains: q } }, { supplierId: { in: sups.map((s) => s.id) } }] });
+    const [cands, sups, cats] = await Promise.all([
+      db.product.findMany({ where: { supplierId: { not: null } }, select: { slug: true, name: true, nameEn: true, description: true, categorySlug: true, supplierId: true } }),
+      db.supplier.findMany({ select: { id: true, displayName: true } }),
+      categoryLabels(),
+    ]);
+    const sName = new Map(sups.map((s) => [s.id, s.displayName]));
+    const slugs = cands.filter((c) => fold(`${c.name} ${c.nameEn} ${c.description} ${sName.get(c.supplierId ?? "") ?? ""} ${cats.get(c.categorySlug) ?? ""} ${c.categorySlug}`).includes(q)).map((c) => c.slug);
+    and.push({ slug: { in: slugs } });
   }
   if (sp.sup) and.push({ supplierId: sp.sup });
   if (sp.cat) and.push({ categorySlug: sp.cat });
+  if (sp.st && ["SUBMITTED", "PUBLISHED", "REJECTED"].includes(sp.st)) and.push({ status: sp.st });
   return { AND: and };
 }
 
@@ -79,6 +97,10 @@ function worksOrder(sp: WorkParams, tab: Tab): Prisma.ProductOrderByWithRelation
   if (sp.sort === "price") return { priceCents: dir };
   if (sp.sort === "date") return { decidedAt: dir };
   if (sp.sort === "wait") return { submittedAt: dir };
+  if (sp.sort === "name") return { name: dir };
+  if (sp.sort === "cat") return { categorySlug: dir };
+  if (sp.sort === "stock") return { stock: dir };
+  if (sp.sort === "status") return { status: dir };
   return tab === "pending" ? { submittedAt: "asc" } : { decidedAt: "desc" };
 }
 

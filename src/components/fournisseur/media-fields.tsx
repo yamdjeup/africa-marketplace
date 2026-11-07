@@ -33,9 +33,9 @@ async function upload(file: File, kind: "photo" | "signature") {
   return (await res.json()) as { id: string; url: string };
 }
 
-type Props = { name: string; initial: string[]; max: number; kind?: "photo" | "signature"; fr: boolean; label: string; hint?: string; extra?: React.ReactNode };
+type Props = { name: string; initial: string[]; max: number; kind?: "photo" | "signature"; fr: boolean; label: string; hint?: string; extra?: React.ReactNode; strictSize?: boolean };
 
-export function PhotoUploader({ name, initial, max, kind = "photo", fr, label, hint, extra }: Props) {
+export function PhotoUploader({ name, initial, max, kind = "photo", fr, label, hint, extra, strictSize }: Props) {
   const [urls, setUrls] = useState<string[]>(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -52,6 +52,10 @@ export function PhotoUploader({ name, initial, max, kind = "photo", fr, label, h
       }
       if (!/^image\/(jpeg|png|webp)$/.test(raw.type)) {
         setError(fr ? "Formats acceptés : JPG, PNG, WebP." : "Accepted formats: JPG, PNG, WebP.");
+        continue;
+      }
+      if (strictSize && raw.size > 300 * 1024) {
+        setError(fr ? "Photo trop lourde (max 300 Ko)." : "Photo too large (max 300 KB).");
         continue;
       }
       try {

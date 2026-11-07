@@ -71,7 +71,11 @@ export function PartnerFilesField({ initial, fr }: { initial: F[]; fr: boolean }
   return (
     <div className="space-y-2">
       <p className="text-sm font-medium">{t("Ou joignez des fichiers de vos créations (JPG, PNG, WebP, PDF — 5 fichiers, 4 Mo chacun)", "Or attach files of your creations (JPG, PNG, WebP, PDF — 5 files, 4 MB each)")}</p>
-      <input ref={input} type="file" multiple accept="image/jpeg,image/png,image/webp,application/pdf" disabled={busy || files.length >= MAX_FILES} onChange={(e) => add(e.target.files)} className="block w-full min-h-11 rounded-md border bg-background px-3 py-2 text-sm" />
+      <input id="partner-files" ref={input} type="file" multiple accept="image/jpeg,image/png,image/webp,application/pdf" disabled={busy || files.length >= MAX_FILES} onChange={(e) => add(e.target.files)} className="sr-only" />
+      <div className="flex flex-wrap items-center gap-3">
+        <label htmlFor="partner-files" className={`inline-flex min-h-11 items-center rounded-md border bg-background px-4 text-sm font-medium ${busy || files.length >= MAX_FILES ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}>{t("Choisir des fichiers", "Choose files")}</label>
+        <span className="text-sm text-muted-foreground">{files.length === 0 ? t("0 fichier choisi", "0 files chosen") : t(`${files.length} fichier${files.length > 1 ? "s" : ""} choisi${files.length > 1 ? "s" : ""}`, `${files.length} file${files.length > 1 ? "s" : ""} chosen`)}</span>
+      </div>
       {busy && <p role="status" className="text-xs text-muted-foreground">{t("Envoi en cours…", "Uploading…")}</p>}
       {msg && <p role="alert" className="text-xs text-destructive">{msg}</p>}
       <ul className="flex flex-wrap gap-3">

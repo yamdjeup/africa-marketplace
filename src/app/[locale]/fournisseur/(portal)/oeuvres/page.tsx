@@ -7,7 +7,7 @@ import { MOVEMENT_LABELS } from "@/lib/stock";
 import type { Locale } from "@/lib/i18n";
 import { PhotoLightbox } from "@/components/admin/table-widgets";
 import { PAGE_SIZE, WAIT_ALERT_H, WAIT_WARN_H, waitHours, waitLabel } from "@/lib/admin-works";
-import { PTABS, ptabOf, queryPartnerWorks, type PTab, type PWorkParams } from "@/lib/partner-works";
+import { PTABS, ptabOf, queryPartnerWorks, availOf, type PTab, type PWorkParams } from "@/lib/partner-works";
 
 export const metadata = { title: "Créations et stock", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -21,7 +21,8 @@ const STATUS: Record<string, [string, string, string]> = {
   REJECTED: ["Refusée", "Rejected", "bg-red-100 text-red-900"],
   HELD: ["Masquée (compte suspendu)", "Hidden (account suspended)", "bg-red-100 text-red-900"],
 };
-const TAB_LABEL: Record<PTab, [string, string]> = { all: ["Toutes", "All"], SUBMITTED: ["En modération", "Under review"], PUBLISHED: ["Publiées", "Published"], REJECTED: ["Refusées", "Rejected"], DRAFT: ["Brouillons", "Drafts"], low: ["Stock bas", "Low stock"] };
+const TAB_LABEL: Record<PTab, [string, string]> = { all: ["Toutes", "All"], SUBMITTED: ["En modération", "Under review"], PUBLISHED: ["Publiées", "Published"], REJECTED: ["Refusées", "Rejected"], DRAFT: ["Brouillons", "Drafts"], low: ["Stock bas", "Low stock"], out: ["Épuisées", "Sold out"] };
+const ART = ["peinture", "sculpture", "photographie"];
 const KEYS = ["f", "q", "cat", "st", "sort", "dir"] as const;
 
 export default async function WorksPage({ params, searchParams }: Props) {
@@ -126,7 +127,9 @@ export default async function WorksPage({ params, searchParams }: Props) {
               </thead>
               <tbody>
                 {list.map((p) => {
-                  const avail = p.stock - p.reserved;
+                  const avail = availOf(p);
+                  const reservedTotal = p.variants.length > 0 ? p.variants.reduce((n, v) => n + v.reserved, 0) : p.reserved;
+                  const noAttest = p.status === "PUBLISHED" && ART.includes(p.categorySlug) && !p.authorAttestedAt;
                   const st = STATUS[p.status] ?? STATUS.DRAFT;
                   const imgs = Array.isArray(p.images) ? (p.images as string[]) : [];
                   const title = fr ? p.name : p.nameEn;
@@ -139,11 +142,19 @@ export default async function WorksPage({ params, searchParams }: Props) {
                       <td className="max-w-56 px-2 py-2 font-medium">
                         <Link href={`${base}/${p.slug}`} className="hover:underline">{title}</Link>
                         {p.status === "PUBLISHED" && <a href={`/${locale}/produits/${p.slug}`} target="_blank" rel="noopener noreferrer" title={tr(locale, "Ouvrir la fiche publique", "Open public page")} aria-label={tr(locale, "Ouvrir la fiche publique", "Open public page")} className="ml-1 text-muted-foreground hover:text-foreground">↗</a>}
+                        {p.createdByAdmin && <span className="mt-1 block w-fit rounded-full bg-muted px-2 py-0.5 text-xs font-normal">{tr(locale, "Saisie par l'administration", "Entered by administration")}</span>}
+                        {noAttest && <Link href={`${base}/${p.slug}`} className="mt-1 block text-xs font-normal text-orange-700 underline">{tr(locale, "Ajoutez l'attestation pour valoriser votre œuvre.", "Add the attestation to showcase your work.")}</Link>}
                       </td>
                       <td className="px-2 py-2">{catName.get(p.categorySlug) ?? p.categorySlug}</td>
                       <td className="whitespace-nowrap px-2 py-2">{(p.priceCents / 100).toFixed(2)}</td>
                       <td className="whitespace-nowrap px-2 py-2">
-                        {avail}{p.reserved > 0 ? ` (${p.reserved} ${tr(locale, "réservé(s)", "reserved")})` : ""}
+                        {avail}{reservedTotal > 0 ? ` (${reservedTotal} ${tr(locale, "réservé(s)", "reserved")})` : ""}
+                        {p.variants.length > 0 && (
+                          <details className="text-xs text-muted-foreground">
+                            <summary className="whitespace-nowrap">{p.variants.map((v) => `${v.label} ${v.stock - v.reserved}`).join(" · ")}</summary>
+                            <ul className="mt-1">{p.variants.map((v) => <li key={v.id}>{v.label} : {v.stock - v.reserved}{v.reserved > 0 ? ` (${v.reserved} ${tr(locale, "réservé(s)", "reserved")})` : ""}</li>)}</ul>
+                          </details>
+                        )}
                         {p.status === "PUBLISHED" && avail <= 0 && <Pill cls="ml-1 bg-red-100 text-red-900">{tr(locale, "Épuisée", "Sold out")}</Pill>}
                         {p.status === "PUBLISHED" && avail > 0 && isLow(p) && <Pill cls="ml-1 bg-amber-100 text-amber-900">{tr(locale, "Stock bas", "Low stock")}</Pill>}
                       </td>

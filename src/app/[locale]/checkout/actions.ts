@@ -13,7 +13,7 @@ import { isAddressEditable, isOrderOwner } from "@/lib/order-edit";
 import { notifySubOrder, runSubOrderSweep } from "@/lib/order-notify";
 import { createSubOrders } from "@/lib/suborders";
 import { reserveStock } from "@/lib/stock";
-import { notifyLowStock } from "@/lib/stock-alerts";
+import { notifyLowStock, snapshotAvail } from "@/lib/stock-alerts";
 
 class StockError extends Error {}
 
@@ -106,7 +106,7 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
   const session = await auth();
   const user = session?.user?.id ? await db.user.findUnique({ where: { id: session.user.id } }) : null;
   const editToken = randomUUID();
-  const before = new Map(products.map((p) => [p.slug, p.stock - p.reserved]));
+  const before = await snapshotAvail(products.map((p) => p.slug));
   let subs: { id: string }[] = [];
   try {
     await db.$transaction(async (tx) => {

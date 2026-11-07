@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 export function Pill({ cls, children }: { cls: string; children: ReactNode }) {
-  return <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${cls}`}>{children}</span>;
+  return <span className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ${cls}`}>{children}</span>;
 }
 
 export function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {

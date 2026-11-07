@@ -24,7 +24,7 @@ export default async function ProfilePage({ params, searchParams }: Props) {
     <>
       <h1 className="font-heading text-3xl text-primary">{tr(locale, "Profil", "Profile")}</h1>
       {sp.saved && <p role="status" className="rounded-md border border-accent bg-accent/15 p-3 text-sm">{tr(locale, "Profil enregistré.", "Profile saved.")}</p>}
-      {sp.error && <p role="alert" className="rounded-md border border-destructive p-3 text-sm text-destructive">{tr(locale, "Modification impossible en vue admin.", "Editing is not possible in admin view.")}</p>}
+      {sp.error && <p role="alert" className="rounded-md border border-destructive p-3 text-sm text-destructive">{sp.error === "name" ? tr(locale, "Ce nom est déjà utilisé par un partenaire.", "This name is already used by a partner.") : tr(locale, "Modification impossible en vue admin.", "Editing is not possible in admin view.")}</p>}
       <form action={updateSupplierProfile} className="max-w-2xl space-y-4">
         <input type="hidden" name="locale" value={locale} />
         <fieldset disabled={readOnly} className="space-y-4">
@@ -39,6 +39,7 @@ export default async function ProfilePage({ params, searchParams }: Props) {
           {!readOnly && (
             <PhotoUploader
               name="avatarUrl"
+              strictSize
               max={1}
               fr={locale !== "en"}
               initial={avatar ? [avatar] : []}

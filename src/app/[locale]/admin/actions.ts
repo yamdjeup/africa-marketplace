@@ -6,6 +6,7 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { isAdminEmail } from "@/lib/supplier";
 import { emailApplicantDecision, emailPartnerProductDecision, emailPartnerStatus } from "@/lib/supplier-email";
+import { partnerNameTaken } from "@/lib/partner-name";
 
 // Suspendre / réactiver / révoquer un partenaire. Œuvres publiées : PUBLISHED <-> HELD (masquées du catalogue).
 export async function changePartnerStatus(formData: FormData) {
@@ -54,6 +55,10 @@ export async function decideApplication(formData: FormData) {
   const app = await db.supplierApplication.findUnique({ where: { id } });
   if (!app || app.status === "ACCEPTED") return;
   const status = decision as "ACCEPTED" | "REFUSED" | "NEEDS_INFO";
+  if (status === "ACCEPTED") {
+    const mine = await db.supplier.findUnique({ where: { userId: app.userId }, select: { id: true } });
+    if (await partnerNameTaken(app.name, mine?.id)) redirect("/fr/admin/candidatures?error=name");
+  }
   await db.$transaction(async (tx) => {
     await tx.supplierApplication.update({ where: { id }, data: { status, adminNote: note, decidedAt: new Date() } });
     if (status === "ACCEPTED") {
@@ -75,12 +80,12 @@ export async function moderateProduct(formData: FormData) {
   const reason = String(formData.get("reason") ?? "").trim().slice(0, 500);
   const p = await db.product.findUnique({ where: { slug } });
   const sup = p?.supplierId ? await db.supplier.findUnique({ where: { id: p.supplierId }, include: { user: { select: { email: true } } } }) : null;
-  if (!p || !sup || !(p.status === "SUBMITTED" || (p.status === "PUBLISHED" && decision === "REJECTED"))) return;
+  if (!p || !sup || !(p.status === "SUBMITTED" || (p.status === "PUBLISHED" && decision === "REJECTED") || (p.status === "REJECTED" && decision === "PUBLISHED"))) return;
   if (decision === "REJECTED" && !reason) return;
   const ok = decision === "PUBLISHED";
   if (!ok && decision !== "REJECTED") return;
   await db.product.update({ where: { slug }, data: { status: decision, rejectReason: ok ? null : reason, decidedAt: new Date() } });
-  if (sup.user?.email) await emailPartnerProductDecision({ email: sup.user.email, name: sup.displayName, locale: "fr" }, p.name, ok, reason);
+  if (sup.user?.email) await emailPartnerProductDecision({ email: sup.user.email, name: sup.displayName, locale: "fr" }, p.name, ok, reason, p.status === "PUBLISHED");
   revalidatePath("/[locale]/admin/oeuvres", "page");
 }
 
@@ -104,9 +109,9 @@ export async function bulkModerateProducts(formData: FormData) {
   for (const slug of slugs) {
     const p = await db.product.findUnique({ where: { slug } });
     const sup = p?.supplierId ? await db.supplier.findUnique({ where: { id: p.supplierId }, include: { user: { select: { email: true } } } }) : null;
-    if (!p || !sup || !(p.status === "SUBMITTED" || (p.status === "PUBLISHED" && !ok))) continue;
+    if (!p || !sup || !(p.status === "SUBMITTED" || (p.status === "PUBLISHED" && !ok) || (p.status === "REJECTED" && ok))) continue;
     await db.product.update({ where: { slug }, data: { status: decision, rejectReason: ok ? null : reason, decidedAt: new Date() } });
-    if (sup.user?.email) await emailPartnerProductDecision({ email: sup.user.email, name: sup.displayName, locale: "fr" }, p.name, ok, reason);
+    if (sup.user?.email) await emailPartnerProductDecision({ email: sup.user.email, name: sup.displayName, locale: "fr" }, p.name, ok, reason, p.status === "PUBLISHED");
     done++;
   }
   revalidatePath("/[locale]/admin/oeuvres", "page");

@@ -19,6 +19,15 @@ export function SelectAll({ label }: { label: string }) {
   );
 }
 
+// Bouton de soumission demandant une confirmation avant envoi.
+export function ConfirmButton({ message, className, name, value, children }: { message: string; className?: string; name: string; value: string; children: React.ReactNode }) {
+  return (
+    <button name={name} value={value} className={className} onClick={(e) => { if (!window.confirm(message)) e.preventDefault(); }}>
+      {children}
+    </button>
+  );
+}
+
 // Miniature cliquable ouvrant une visionneuse (Échap / clic extérieur / bouton, précédent/suivant, balayage tactile).
 export function PhotoLightbox({ images, title, labels }: { images: string[]; title: string; labels: { open: string; close: string; prev: string; next: string } }) {
   const [i, setI] = useState<number | null>(null);

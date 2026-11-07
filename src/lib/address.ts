@@ -1,4 +1,5 @@
 import { REGIONS } from "@/data/regions";
+import { dialOf, isE164 } from "@/lib/phone";
 
 export type Country = { code: string; fr: string; en: string };
 
@@ -106,6 +107,9 @@ export const EMPTY_ADDRESS: AddressFieldValues = {
 // Contrôle serveur commun (carnet d'adresses et commande).
 export function checkAddress(v: AddressFieldValues): "required" | "postal" | null {
   if (!v.firstName || !v.lastName || !v.line1 || !v.city || !v.country || !v.phone) return "required";
+  // Téléphone attendu en E.164 (le champ à indicatif l'envoie ainsi) ; pays sans indicatif connu : saisie libre.
+  const cc = countryByName(v.country)?.code;
+  if (cc && dialOf(cc) && !isE164(v.phone)) return "required";
   const p = validatePostal(v.country, v.postalCode);
   if (p.required && !v.postalCode) return "required";
   if (!p.ok) return "postal";

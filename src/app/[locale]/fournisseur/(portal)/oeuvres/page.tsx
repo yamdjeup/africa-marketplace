@@ -48,6 +48,8 @@ export default async function WorksPage({ params, searchParams }: Props) {
     db.category.findMany({ orderBy: { sortOrder: "asc" }, select: { slug: true, name: true, nameEn: true } }),
   ]);
   const catName = new Map(cats.map((c) => [c.slug, fr ? c.name : c.nameEn]));
+  const variantIds = [...new Set(moves.map((m) => m.variantId).filter((x): x is string => !!x))];
+  const variantLabel = new Map((await db.productVariant.findMany({ where: { id: { in: variantIds } }, select: { id: true, label: true } })).map((v) => [v.id, v.label]));
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const mpages = Math.max(1, Math.ceil(movesTotal / PAGE_SIZE));
 
@@ -109,7 +111,28 @@ export default async function WorksPage({ params, searchParams }: Props) {
       ) : (
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">{total} {tr(locale, "création(s)", "creation(s)")}</p>
-          <div className="overflow-x-auto rounded-lg border">
+          <ul className="space-y-2 md:hidden">
+            {list.map((p) => {
+              const imgs = Array.isArray(p.images) ? (p.images as string[]) : [];
+              const title = fr ? p.name : p.nameEn;
+              const st = STATUS[p.status] ?? STATUS.DRAFT;
+              return (
+                <li key={p.slug} className="flex gap-3 rounded-lg border p-3 text-sm">
+                  <PhotoLightbox images={imgs} title={title} labels={lb} />
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <Link href={`${base}/${p.slug}`} className="block font-medium">{title}</Link>
+                    <p className="flex flex-wrap items-center gap-2"><Pill cls={st[2]}>{tr(locale, st[0], st[1])}</Pill><span>{(p.priceCents / 100).toFixed(2)} €</span><span>Stock {availOf(p)}</span></p>
+                    {p.status === "REJECTED" && p.rejectReason && <p className="line-clamp-2 text-xs text-destructive/80">{p.rejectReason}</p>}
+                    <p className="flex gap-2">
+                      <Link href={`${base}/${p.slug}`} className="inline-flex min-h-9 items-center rounded-md border px-3 text-xs">{tr(locale, "Modifier", "Edit")}</Link>
+                      <Link href={`${base}/${p.slug}#stock`} className="inline-flex min-h-9 items-center rounded-md border px-3 text-xs">{tr(locale, "Ajuster le stock", "Adjust stock")}</Link>
+                    </p>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+          <div className="hidden overflow-x-auto rounded-lg border md:block">
             <table className="w-full min-w-[1000px] text-left text-sm">
               <thead className="border-b bg-muted/40 text-xs uppercase text-muted-foreground">
                 <tr>
@@ -181,19 +204,31 @@ export default async function WorksPage({ params, searchParams }: Props) {
       <section className="space-y-3">
         <h2 className="font-heading text-2xl text-primary">{tr(locale, "Journal des mouvements de stock", "Stock movement log")}</h2>
         {moves.length === 0 ? <p className="text-sm text-muted-foreground">{tr(locale, "Aucun mouvement.", "No movements.")}</p> : (
-          <div className="overflow-x-auto">
+          <>
+          <ul className="space-y-2 md:hidden">
+            {moves.map((m) => (
+              <li key={m.id} className="rounded-lg border p-3 text-sm">
+                <p className="font-medium">{titleOf.get(m.productSlug) ?? m.productSlug}{m.variantId && variantLabel.get(m.variantId) ? ` — ${variantLabel.get(m.variantId)}` : ""}</p>
+                <p>{MOVEMENT_LABELS[m.type as keyof typeof MOVEMENT_LABELS]?.[fr ? "fr" : "en"] ?? m.type} · {m.quantity > 0 ? `+${m.quantity}` : m.quantity}</p>
+                <p className="text-xs text-muted-foreground">{dtf(m.createdAt)} · {m.authorLabel}{m.reason ? ` · ${m.reason}` : ""}</p>
+              </li>
+            ))}
+          </ul>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[640px] text-left text-sm">
-              <thead><tr className="border-b text-xs uppercase text-muted-foreground"><th className="py-2 pr-3">Date</th><th className="pr-3">{tr(locale, "Création", "Creation")}</th><th className="pr-3">Type</th><th className="pr-3">Qté</th><th className="pr-3">{tr(locale, "Motif", "Reason")}</th><th>{tr(locale, "Auteur", "Author")}</th></tr></thead>
+              <thead><tr className="border-b text-xs uppercase text-muted-foreground"><th className="py-2 pr-3">Date</th><th className="pr-3">{tr(locale, "Création", "Creation")}</th><th className="pr-3">{tr(locale, "Variante", "Variant")}</th><th className="pr-3">Type</th><th className="pr-3">Qté</th><th className="pr-3">{tr(locale, "Motif", "Reason")}</th><th>{tr(locale, "Auteur", "Author")}</th></tr></thead>
               <tbody>{moves.map((m) => (
                 <tr key={m.id} className="border-b">
                   <td className="whitespace-nowrap py-2 pr-3">{dtf(m.createdAt)}</td>
                   <td className="pr-3">{titleOf.get(m.productSlug) ?? m.productSlug}</td>
+                  <td className="pr-3">{(m.variantId && variantLabel.get(m.variantId)) || "—"}</td>
                   <td className="pr-3">{MOVEMENT_LABELS[m.type as keyof typeof MOVEMENT_LABELS]?.[fr ? "fr" : "en"] ?? m.type}</td>
                   <td className="pr-3">{m.quantity > 0 ? `+${m.quantity}` : m.quantity}</td>
                   <td className="pr-3">{m.reason}</td><td>{m.authorLabel}</td>
                 </tr>))}</tbody>
             </table>
           </div>
+          </>
         )}
         {pager(Math.min(mpage, mpages), mpages, "mp")}
       </section>

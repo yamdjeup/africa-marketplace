@@ -8,7 +8,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { formatStreet } from "@/lib/address";
 import { db } from "@/lib/db";
 import { formatEur, getDict, type Locale } from "@/lib/i18n";
-import { isAddressEditable, isOrderOwner } from "@/lib/order-edit";
+import { hasLockedSubOrder, isAddressEditable, isOrderOwner } from "@/lib/order-edit";
 
 type Props = { params: Promise<{ locale: Locale; number: string }>; searchParams: Promise<{ t?: string; updated?: string }> };
 
@@ -25,7 +25,7 @@ export default async function ConfirmationPage({ params, searchParams }: Props) 
   const session = await auth();
   const t = getDict(locale).confirmation;
   const owner = isOrderOwner(order, token, session?.user?.id);
-  const editable = isAddressEditable(order.createdAt);
+  const editable = isAddressEditable(order.createdAt) && !(await hasLockedSubOrder(order.id));
   const street = order.street ? formatStreet({ line1: order.street, houseNumber: order.houseNumber, box: order.box, line2: order.complement, country: order.country }, locale) : order.address;
 
   return (

@@ -109,6 +109,7 @@ export default async function ProductPage({ params }: Props) {
             image={p.images[0]}
             priceCents={p.priceCents}
             stock={p.stock}
+            unique={!!p.edition && /pi[eè]ce unique|unique piece/i.test(p.edition)}
             sizes={p.variants.length > 0 ? p.variants.map((v) => v.label) : sizeKind ? p.sizes : []}
             sizeStock={p.variants.length > 0 ? Object.fromEntries(p.variants.map((v) => [v.label, v.available])) : undefined}
             sizeLabel={p.variants.length > 0 ? (locale === "fr" ? "Taille / couleur" : "Size / colour") : sizeKind === "ring" ? t.sizeRing : t.size}
@@ -138,7 +139,7 @@ export default async function ProductPage({ params }: Props) {
                 <dd>{p.technique}</dd>
               </>
             )}
-            {!p.material && !p.technique && (
+            {!p.material && !p.technique && p.materials.length > 0 && (
               <>
                 <dt className="font-medium">{t.materials}</dt>
                 <dd>{p.materials.join(", ")}</dd>
@@ -165,6 +166,23 @@ export default async function ProductPage({ params }: Props) {
               </>
             )}
           </dl>
+          {p.attestedAt && (
+            <section aria-labelledby="authenticity" className="space-y-2 rounded-md border border-secondary/60 bg-secondary/10 p-3 text-sm">
+              <h2 id="authenticity" className="font-medium">{locale === "fr" ? "Authenticité" : "Authenticity"}</h2>
+              <p>
+                {locale === "fr"
+                  ? `Œuvre d'art originale, certifiée par l'artiste le ${new Date(p.attestedAt).toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" })}`
+                  : `Original artwork, certified by the artist on ${new Date(p.attestedAt).toLocaleDateString("en-GB", { timeZone: "Europe/Paris" })}`}
+                {p.edition ? ` · ${locale === "fr" ? "Édition" : "Edition"} ${p.edition}` : ""}
+              </p>
+              {p.signatureUrl && (
+                <a href={p.signatureUrl} target="_blank" rel="noopener noreferrer" className="block w-fit" title={locale === "fr" ? "Agrandir la signature" : "Enlarge signature"}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={p.signatureUrl} alt={locale === "fr" ? "Signature de l'artiste" : "Artist's signature"} className="h-20 w-auto rounded border bg-background object-contain" />
+                </a>
+              )}
+            </section>
+          )}
           {p.hasCertificate && (
             <p className="flex items-center gap-2 rounded-md border border-secondary/60 bg-secondary/10 px-3 py-2 text-sm">
               <span aria-hidden="true">✓</span>

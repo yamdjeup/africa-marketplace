@@ -56,6 +56,7 @@ export function CartView({ locale }: { locale: Locale }) {
                 <p className="text-xs text-muted-foreground">
                   {l.creatorName}
                 </p>
+                {l.size && <p className="text-sm font-medium">{locale === "fr" ? "Taille / variante" : "Size / variant"} : {l.size}</p>}
                 <p className="text-sm font-semibold">
                   {formatEur(l.priceCents, locale)}
                   <ApproxPrice cents={l.priceCents} locale={locale} />

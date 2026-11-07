@@ -1,4 +1,5 @@
 import { Pill, inputCls } from "@/components/fournisseur/parts";
+import Link from "next/link";
 import { db } from "@/lib/db";
 import type { Locale } from "@/lib/i18n";
 import { runSubOrderSweep } from "@/lib/order-notify";
@@ -32,7 +33,7 @@ export default async function AdminOrders({ params, searchParams }: { params: Pr
             return (
               <li key={s.id} className="space-y-2 p-3 text-sm">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="font-medium">{s.number} · {name.get(s.supplierId) ?? "—"}</span>
+                  <Link href={`/${locale}/admin/commandes/${s.id}`} className="font-medium underline-offset-4 hover:underline">{s.number} · {name.get(s.supplierId) ?? "—"}</Link>
                   <span className="flex gap-2">
                     {late(s) && <Pill cls="bg-red-100 text-red-900">{tr(locale, "Sans réponse (escalade)", "No reply (escalated)")}</Pill>}
                     <Pill cls={st.cls}>{locale === "en" ? st.en : st.fr}</Pill>

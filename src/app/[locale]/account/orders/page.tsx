@@ -30,7 +30,6 @@ export default async function OrdersPage({ params }: Props) {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <h1 className="font-heading text-3xl text-primary">{t.title}</h1>
-      <p className="text-sm text-muted-foreground">{t.simulated}</p>
       {orders.length === 0 ? (
         <div className="rounded-lg border border-dashed p-10 text-center">
           <p className="font-heading text-xl">{t.empty}</p>

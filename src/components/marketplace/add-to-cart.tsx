@@ -18,15 +18,25 @@ type Props = {
   /** Stock disponible par variante (taille/couleur) ; absent si l'œuvre n'a pas de variantes. */
   sizeStock?: Record<string, number>;
   sizeLabel?: string;
+  /** Pièce unique : pas de sélecteur de quantité. */
+  unique?: boolean;
 };
 
-export function AddToCart({ locale, slug, name, creatorName, image, priceCents, stock, sizes = [], sizeStock, sizeLabel }: Props) {
+export function AddToCart({ locale, slug, name, creatorName, image, priceCents, stock, sizes = [], sizeStock, sizeLabel, unique }: Props) {
   const t = getDict(locale).product;
   const { add } = useCart();
   const [added, setAdded] = useState(false);
   const [size, setSize] = useState<string | null>(null);
   const [missing, setMissing] = useState(false);
   const disabled = stock === 0 || added;
+  const [qty, setQty] = useState(1);
+  const fr = locale === "fr";
+  const cap = sizeStock && size ? sizeStock[size] ?? stock : stock;
+  const maxQty = Math.max(1, cap);
+  const q = Math.min(qty, maxQty);
+  const LOW = 3;
+  const lowN = (n: number) => (fr ? `Plus que ${n}` : n === 1 ? "Only 1 left" : `Only ${n} left`);
+  const showQty = stock > 1 && !unique;
 
   return (
     <div className="space-y-4">
@@ -56,6 +66,7 @@ export function AddToCart({ locale, slug, name, creatorName, image, priceCents, 
                   className="sr-only"
                 />
                 {s}
+                {!out && sizeStock && (sizeStock[s] ?? 0) <= LOW && <span className="ml-2 text-xs text-destructive">{lowN(sizeStock[s] ?? 0)}</span>}
               </label>
               );
             })}
@@ -67,6 +78,14 @@ export function AddToCart({ locale, slug, name, creatorName, image, priceCents, 
           )}
         </fieldset>
       )}
+      {sizes.length === 0 && stock > 0 && stock <= LOW && <p className="text-sm text-destructive">{lowN(stock)}</p>}
+      {showQty && (
+        <div className="inline-flex items-center rounded-md border" role="group" aria-label={fr ? "Quantité" : "Quantity"}>
+          <button type="button" className="size-11 text-lg disabled:opacity-40" aria-label={fr ? "Diminuer" : "Decrease"} disabled={q <= 1} onClick={() => setQty(q - 1)}>−</button>
+          <span className="min-w-8 text-center text-sm" aria-live="polite">{q}</span>
+          <button type="button" className="size-11 text-lg disabled:opacity-40" aria-label={fr ? "Augmenter" : "Increase"} disabled={q >= maxQty} onClick={() => setQty(q + 1)}>+</button>
+        </div>
+      )}
       <Button
         size="lg"
         className="h-12 w-full"
@@ -76,7 +95,7 @@ export function AddToCart({ locale, slug, name, creatorName, image, priceCents, 
             setMissing(true);
             return;
           }
-          add({ slug, size, name, creatorName, image, priceCents, maxQuantity: sizeStock && size ? sizeStock[size] ?? stock : stock });
+          add({ slug, size, name, creatorName, image, priceCents, maxQuantity: sizeStock && size ? sizeStock[size] ?? stock : stock }, showQty ? q : 1);
           setAdded(true);
         }}
       >

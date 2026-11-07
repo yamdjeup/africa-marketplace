@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { COUNTRIES, countryByName, postalRule, type AddressFieldValues } from "@/lib/address";
 import { getDict, pick, type Locale } from "@/lib/i18n";
 import { useRegion } from "@/lib/region";
+import { PhoneField } from "@/components/marketplace/phone-field";
 
 type Suggestion = { label: string; placeId?: string; street: string; houseNumber: string; postalCode: string; city: string; countryCode: string };
 
@@ -157,10 +158,7 @@ export function AddressFields({ locale, values, onChange }: { locale: Locale; va
         })}
         {input("city", t.city, "address-level2", { required: true })}
       </div>
-      <div className="space-y-1">
-        {input("phone", t.phone, "tel", { required: true, type: "tel", inputMode: "tel" })}
-        <p className="text-xs text-muted-foreground">{t.phoneNote}</p>
-      </div>
+      <PhoneField locale={locale} country={country} value={values.phone} onChange={(phone) => onChange({ phone })} label={t.phone} note={t.phoneNote} />
     </div>
   );
 }

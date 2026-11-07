@@ -43,6 +43,9 @@ export type ProductView = {
   /** Variantes (taille/couleur) avec leur stock disponible ; vide si l'œuvre n'en a pas. */
   variants: { label: string; available: number }[];
   edition: string | null;
+  /** Attestation d'auteur (bloc « Authenticité ») ; null si non renseignée. */
+  attestedAt: string | null;
+  signatureUrl: string | null;
 };
 
 export type CreatorView = {
@@ -96,6 +99,8 @@ export function toProductView(p: ProductRow, locale: Locale): ProductView {
     stock: Math.max(0, p.stock - p.reserved),
     variants: (p.variants ?? []).map((v) => ({ label: v.label, available: Math.max(0, v.stock - v.reserved) })),
     edition: p.edition,
+    attestedAt: p.authorAttestedAt ? p.authorAttestedAt.toISOString() : null,
+    signatureUrl: p.signatureFileId && p.authorAttestedAt ? `/api/media/${p.signatureFileId}` : null,
   };
 }
 

@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { COUNTRIES, countryByName, postalRule, type AddressFieldValues } from "@/lib/address";
+import { COUNTRIES, postalRule, type AddressFieldValues } from "@/lib/address";
 import { getDict, pick, type Locale } from "@/lib/i18n";
 import { useRegion } from "@/lib/region";
-import { PhoneField } from "@/components/marketplace/phone-field";
+import { PhoneField, CountryField } from "@/components/marketplace/phone-field";
 
 type Suggestion = { label: string; placeId?: string; street: string; houseNumber: string; postalCode: string; city: string; countryCode: string };
 
@@ -94,26 +94,11 @@ export function AddressFields({ locale, values, onChange }: { locale: Locale; va
     </div>
   );
 
-  const sorted = [...COUNTRIES].sort((a, b) => pick(locale, a.fr, a.en).localeCompare(pick(locale, b.fr, b.en), locale));
-  const known = countryByName(country);
-
   return (
     <div className="space-y-4">
       {input("firstName", t.firstName, "given-name", { required: true })}
       {input("lastName", t.lastName, "family-name", { required: true })}
-      <div className="space-y-1">
-        <label htmlFor="af-country" className="text-xs text-muted-foreground">
-          {t.countryRegion} *
-        </label>
-        <select id="af-country" name="country" required value={country} onChange={(e) => onChange({ country: e.target.value })} className={fieldClass}>
-          {!known && <option value={country}>{country}</option>}
-          {sorted.map((c) => (
-            <option key={c.code} value={pick(locale, c.fr, c.en)}>
-              {pick(locale, c.fr, c.en)}
-            </option>
-          ))}
-        </select>
-      </div>
+      <CountryField locale={locale} value={country} onChange={(c) => onChange({ country: c })} label={t.countryRegion} />
       <div className="relative space-y-1">
         <label htmlFor="af-search" className="text-xs text-muted-foreground">
           {t.searchAddress}

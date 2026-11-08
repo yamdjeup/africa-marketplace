@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { formatPhone } from "@/lib/phone";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
@@ -51,7 +52,7 @@ export default async function AddressesPage({ params }: Props) {
                 {a.phone && (
                   <>
                     <br />
-                    {a.phone}
+                    {formatPhone(a.phone)}
                   </>
                 )}
               </address>

@@ -11,7 +11,7 @@ import { PAGE_SIZE, TABS, WAIT_ALERT_H, WAIT_WARN_H, dateModeOf, isoDay, queryWo
 
 export const dynamic = "force-dynamic";
 
-type Props = { params: Promise<{ locale: Locale }>; searchParams: Promise<WorkParams & { mp?: string; done?: string; error?: string }> };
+type Props = { params: Promise<{ locale: Locale }>; searchParams: Promise<WorkParams & { mp?: string; done?: string; dec?: string; error?: string }> };
 
 const TAB_LABEL: Record<Tab, [string, string]> = { pending: ["En attente", "Pending"], published: ["Publiées", "Published"], rejected: ["Refusées", "Rejected"], all: ["Toutes", "All"] };
 const BADGE: Record<string, [string, string, string]> = {
@@ -73,7 +73,7 @@ export default async function AdminWorks({ params, searchParams }: Props) {
     <div className="space-y-8">
       <section className="space-y-4">
         <h1 className="font-heading text-3xl text-primary">{tr(locale, "Créations à modérer", "Creations to review")}</h1>
-        {sp.done && <p role="status" className="rounded-md border border-accent bg-accent/15 p-3 text-sm">{tr(locale, "Créations traitées : ", "Creations processed: ")}{sp.done}</p>}
+        {sp.done && <p role="status" className="rounded-md border border-accent bg-accent/15 p-3 text-sm">{sp.done === "1" && sp.dec === "P" ? tr(locale, "Création publiée.", "Creation published.") : sp.done === "1" && sp.dec === "R" ? tr(locale, "Création refusée.", "Creation rejected.") : <>{tr(locale, "Créations traitées : ", "Creations processed: ")}{sp.done}</>}</p>}
         {sp.error && <p role="alert" className="rounded-md border border-destructive p-3 text-sm text-destructive">{tr(locale, "Un motif est obligatoire pour refuser.", "A reason is required to reject.")}</p>}
         <nav aria-label={tr(locale, "Filtrer par statut", "Filter by status")} className="flex flex-wrap gap-2">
           {counts.map(([k, n]) => (

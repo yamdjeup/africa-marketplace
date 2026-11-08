@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { formatPhone } from "@/lib/phone";
 import { Pill, inputCls } from "@/components/fournisseur/parts";
 import { db } from "@/lib/db";
 import type { Locale } from "@/lib/i18n";
@@ -74,7 +75,7 @@ export default async function PartnerOrder({ params, searchParams }: { params: P
         <h2 className="font-heading text-xl">{tr(locale, "Livrer à", "Ship to")}</h2>
         <p>{o.fullName}</p>
         <p>{o.address}, {o.postalCode} {o.city}, {o.country}</p>
-        {o.phone && <p>{o.phone}</p>}
+        {o.phone && <p>{formatPhone(o.phone)}</p>}
       </section>
 
       {sub.status === "PENDING" && (

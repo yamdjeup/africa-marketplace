@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { formatPhone } from "@/lib/phone";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
@@ -79,7 +80,7 @@ export default async function ConfirmationPage({ params, searchParams }: Props) 
           {order.phone && (
             <>
               <br />
-              {t.phone} : {order.phone}
+              {t.phone} : {formatPhone(order.phone)}
             </>
           )}
         </address>

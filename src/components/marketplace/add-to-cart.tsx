@@ -61,12 +61,13 @@ export function AddToCart({ locale, slug, name, creatorName, image, priceCents, 
                   disabled={out}
                   onChange={() => {
                     setSize(s);
+                    setAdded(false);
                     setMissing(false);
                   }}
                   className="sr-only"
                 />
                 {s}
-                {!out && sizeStock && (sizeStock[s] ?? 0) <= LOW && <span className="ml-2 text-xs text-destructive">{lowN(sizeStock[s] ?? 0)}</span>}
+                {!out && sizeStock && (sizeStock[s] ?? 0) <= LOW && <span className={`ml-2 text-xs font-medium ${size === s ? "text-primary-foreground/90" : "text-destructive"}`}>{lowN(sizeStock[s] ?? 0)}</span>}
               </label>
               );
             })}
@@ -81,9 +82,9 @@ export function AddToCart({ locale, slug, name, creatorName, image, priceCents, 
       {sizes.length === 0 && stock > 0 && stock <= LOW && <p className="text-sm text-destructive">{lowN(stock)}</p>}
       {showQty && (
         <div className="inline-flex items-center rounded-md border" role="group" aria-label={fr ? "Quantité" : "Quantity"}>
-          <button type="button" className="size-11 text-lg disabled:opacity-40" aria-label={fr ? "Diminuer" : "Decrease"} disabled={q <= 1} onClick={() => setQty(q - 1)}>−</button>
+          <button type="button" className="size-11 text-lg disabled:opacity-40" aria-label={fr ? "Diminuer" : "Decrease"} disabled={q <= 1} onClick={() => { setAdded(false); setQty(q - 1); }}>−</button>
           <span className="min-w-8 text-center text-sm" aria-live="polite">{q}</span>
-          <button type="button" className="size-11 text-lg disabled:opacity-40" aria-label={fr ? "Augmenter" : "Increase"} disabled={q >= maxQty} onClick={() => setQty(q + 1)}>+</button>
+          <button type="button" className="size-11 text-lg disabled:opacity-40" aria-label={fr ? "Augmenter" : "Increase"} disabled={q >= maxQty} onClick={() => { setAdded(false); setQty(q + 1); }}>+</button>
         </div>
       )}
       <Button

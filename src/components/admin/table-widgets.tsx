@@ -34,9 +34,10 @@ export function ConfirmButton({ message, className, name, value, children, askRe
   const ok = !askReason || reason.trim().length >= 3;
   return (
     <>
-      <button ref={ref} type="button" name={name} value={value} className={className} onClick={() => setOpen(true)}>
+      <button ref={ref} type="submit" name={name} value={value} className={className} onClick={(e) => { e.preventDefault(); setOpen(true); }}>
         {children}
       </button>
+      {askReason && <input type="hidden" name="reason" value={reason.trim()} />}
       {open && (
         <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setOpen(false)}>
           <div className="w-full max-w-sm space-y-3 rounded-lg bg-background p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
@@ -44,7 +45,7 @@ export function ConfirmButton({ message, className, name, value, children, askRe
             <p className="text-sm">{message}</p>
             {askReason && (
               <label className="block text-sm">{en ? "Reason (required)" : "Motif (obligatoire)"}
-                <input name="reason" value={reason} onChange={(e) => setReason(e.target.value)} required minLength={3} className="mt-1 w-full rounded-md border px-3 py-2" autoFocus />
+                <input value={reason} onChange={(e) => setReason(e.target.value)} minLength={3} className="mt-1 w-full rounded-md border px-3 py-2" autoFocus />
               </label>
             )}
             <div className="flex justify-end gap-2">

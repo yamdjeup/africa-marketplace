@@ -1,4 +1,5 @@
-import { Pill, inputCls } from "@/components/fournisseur/parts";
+import { ConfirmButton } from "@/components/admin/table-widgets";
+import { Pill } from "@/components/fournisseur/parts";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import type { Locale } from "@/lib/i18n";
@@ -33,7 +34,7 @@ export default async function AdminOrders({ params, searchParams }: { params: Pr
             return (
               <li key={s.id} className="space-y-2 p-3 text-sm">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <Link href={`/${locale}/admin/commandes/${s.id}`} className="font-medium underline-offset-4 hover:underline">{s.number} · {name.get(s.supplierId) ?? "—"}</Link>
+                  <Link href={`/${locale}/admin/commandes/${s.id}`} className="font-medium underline-offset-4 hover:underline">{s.number} · {name.get(s.supplierId) ?? "—"} ›</Link>
                   <span className="flex gap-2">
                     {late(s) && <Pill cls="bg-red-100 text-red-900">{tr(locale, "Sans réponse (escalade)", "No reply (escalated)")}</Pill>}
                     <Pill cls={st.cls}>{locale === "en" ? st.en : st.fr}</Pill>
@@ -47,8 +48,7 @@ export default async function AdminOrders({ params, searchParams }: { params: Pr
                 {isOpenStatus(s.status) && s.status !== "SHIPPED" && (
                   <form action={adminCancelSubOrder} className="flex flex-wrap items-end gap-2">
                     <input type="hidden" name="id" value={s.id} />
-                    <label className="text-xs">{tr(locale, "Motif d'annulation", "Cancellation reason")}<input name="reason" required minLength={3} className={inputCls} /></label>
-                    <button className="inline-flex min-h-11 items-center rounded-md border border-destructive px-3 text-sm text-destructive" type="submit">{tr(locale, "Annuler et libérer le stock", "Cancel and release stock")}</button>
+                    <ConfirmButton askReason en={locale === "en"} title={tr(locale, "Annuler cette commande ?", "Cancel this order?")} message={tr(locale, "Le stock sera libéré et le client prévenu.", "Stock will be released and the customer notified.")} className="inline-flex min-h-11 items-center rounded-md border border-destructive px-3 text-sm text-destructive">{tr(locale, "Annuler et libérer le stock", "Cancel and release stock")}</ConfirmButton>
                   </form>
                 )}
               </li>

@@ -6,7 +6,7 @@ export const PAGE_SIZE = 25;
 export const WAIT_WARN_H = 24;
 export const WAIT_ALERT_H = 72;
 export const waitHours = (since: Date | null, now = Date.now()) => (since ? Math.max(0, (now - since.getTime()) / 3600_000) : 0);
-export const waitLabel = (h: number) => (h < 1 ? "< 1 h" : h < 48 ? `${Math.floor(h)} h` : `${Math.floor(h / 24)} j`);
+export const waitLabel = (h: number) => (h < 1 ? "moins d'1 h" : h < 48 ? `${Math.floor(h)} h` : `${Math.floor(h / 24)} j`);
 
 export type WorkParams = { f?: string; d?: string; from?: string; to?: string; q?: string; sup?: string; cat?: string; st?: string; sort?: string; dir?: string; p?: string };
 

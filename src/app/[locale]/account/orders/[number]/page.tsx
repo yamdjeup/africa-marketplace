@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { formatPhone } from "@/lib/phone";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
@@ -70,7 +71,7 @@ export default async function OrderDetailPage({ params }: Props) {
         </p>
         <p className="text-sm text-muted-foreground">
           {t.shipTo} {order.fullName}, {order.address}, {order.postalCode} {order.city}, {order.country}
-          {order.phone ? ` — ${order.phone}` : ""}
+          {order.phone ? ` — ${formatPhone(order.phone)}` : ""}
         </p>
         {isAddressEditable(order.createdAt) && !(await hasLockedSubOrder(order.id)) && (
           <Link href={`/${locale}/checkout/confirmation/${order.number}/address`} className="inline-flex min-h-11 items-center text-sm underline underline-offset-4 hover:text-terracotta">

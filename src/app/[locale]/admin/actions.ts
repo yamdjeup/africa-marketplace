@@ -115,5 +115,5 @@ export async function bulkModerateProducts(formData: FormData) {
     done++;
   }
   revalidatePath("/[locale]/admin/oeuvres", "page");
-  redirect(`${dest}${dest.includes("?") ? "&" : "?"}done=${done}`);
+  redirect(`${dest}${dest.includes("?") ? "&" : "?"}done=${done}&dec=${ok ? "P" : "R"}`);
 }

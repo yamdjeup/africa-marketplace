@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { formatPhone } from "@/lib/phone";
 import { useActionState, useRef, useState } from "react";
 import { placeOrder, type CheckoutState } from "@/app/[locale]/checkout/actions";
 import { AddressFields } from "@/components/marketplace/address-fields";
@@ -106,7 +107,7 @@ export function CheckoutForm({
               <br />
               {review.address.country}
               <br />
-              {getDict(locale).confirmation.phone} : {review.address.phone}
+              {getDict(locale).confirmation.phone} : {formatPhone(review.address.phone)}
               <br />
               {review.email}
             </address>

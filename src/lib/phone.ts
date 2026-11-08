@@ -35,6 +35,21 @@ export function toE164(code: string, raw: string): string | null {
 
 export const isE164 = (v: string) => /^\+\d{7,15}$/.test(v);
 
+/** Numéro national formaté pour l'affichage (FR : « 6 68 97 30 76 »). */
+export function formatNational(code: string, n: string): string {
+  const d = n.replace(/\D/g, "").replace(/^0+/, "");
+  if (code.toUpperCase() === "FR" || code.toUpperCase() === "BE") return d.replace(/^(\d)(\d{0,2})(\d{0,2})(\d{0,2})(\d{0,2}).*$/, (_m, a, b, c, e, f) => [a, b, c, e, f].filter(Boolean).join(" "));
+  return d.replace(/(\d{2,3})(?=\d)/g, "$1 ").trim();
+}
+
+/** E.164 → « +33 6 68 97 30 76 » ; valeur non E.164 renvoyée telle quelle. */
+export function formatPhone(v: string | null | undefined): string {
+  if (!v) return "";
+  if (!isE164(v)) return v;
+  const { code, national } = splitE164(v, "");
+  return code ? `+${DIAL[code]} ${formatNational(code, national)}` : v;
+}
+
 /** Sépare un E.164 en [indicatif pays ISO, numéro national] pour pré-remplir le champ. */
 export function splitE164(v: string, fallback: string): { code: string; national: string } {
   if (!isE164(v)) return { code: fallback, national: v };

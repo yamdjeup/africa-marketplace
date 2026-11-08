@@ -26,7 +26,7 @@ export default async function OrderDetailPage({ params }: Props) {
   if (!order) notFound();
   const hasSubs = (await db.subOrder.count({ where: { orderId: order.id } })) > 0;
   const t = getDict(locale).account.orders;
-  const status = simulatedStatus(order.createdAt);
+  const status = hasSubs ? simulatedStatus(order.createdAt) : "CONFIRMED";
   const date = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "fr-FR", { dateStyle: "long", timeStyle: "short" }).format(order.createdAt);
 
   return (

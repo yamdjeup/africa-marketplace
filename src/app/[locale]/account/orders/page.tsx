@@ -6,7 +6,8 @@ import { OrderStatusBadge } from "@/components/marketplace/order-status";
 import { buttonVariants } from "@/components/ui/button";
 import { db } from "@/lib/db";
 import { formatEur, getDict, type Locale } from "@/lib/i18n";
-import { simulatedStatus } from "@/lib/order-status";
+import { subLabel } from "@/lib/suborders";
+import { Pill } from "@/components/fournisseur/parts";
 
 type Props = { params: Promise<{ locale: Locale }> };
 
@@ -21,7 +22,7 @@ export default async function OrdersPage({ params }: Props) {
   if (!session?.user?.id) redirect(`/${locale}/login?next=${encodeURIComponent(`/${locale}/account/orders`)}`);
   const orders = await db.order.findMany({
     where: { userId: session.user.id },
-    include: { items: true },
+    include: { items: true, subOrders: true },
     orderBy: { createdAt: "desc" },
   });
   const t = getDict(locale).account.orders;
@@ -46,9 +47,13 @@ export default async function OrdersPage({ params }: Props) {
                   {t.number} {o.number}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {t.date} {fmt.format(o.createdAt)} · {o.items.reduce((n, i) => n + i.quantity, 0)} {t.items.toLowerCase()}
+                  {t.date} {fmt.format(o.createdAt)} · {(() => { const n = o.items.reduce((s, i) => s + i.quantity, 0); return locale === "en" ? `${n} ${n === 1 ? "item" : "items"}` : `${n} ${n === 1 ? "article" : "articles"}`; })()}
                 </p>
-                <OrderStatusBadge status={simulatedStatus(o.createdAt)} t={t} />
+                {o.subOrders.length > 0 ? (
+                  <p className="flex flex-wrap gap-1">{o.subOrders.map((s) => { const l = subLabel(s.status); return <Pill key={s.id} cls={l.cls}>{locale === "en" ? l.en : l.fr}</Pill>; })}</p>
+                ) : (
+                  <OrderStatusBadge status="CONFIRMED" t={t} />
+                )}
               </div>
               <div className="flex items-center gap-4">
                 <span className="font-semibold">{formatEur(o.totalCents, locale)}</span>

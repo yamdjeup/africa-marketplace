@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Pill, inputCls } from "@/components/fournisseur/parts";
+import { ConfirmButton } from "@/components/admin/table-widgets";
+import { Pill } from "@/components/fournisseur/parts";
 import { db } from "@/lib/db";
 import type { Locale } from "@/lib/i18n";
 import { MOVEMENT_LABELS } from "@/lib/stock";
@@ -27,7 +28,7 @@ export default async function AdminOrderDetail({ params }: { params: Promise<{ l
   const eur = (c: number) => new Intl.NumberFormat(fr ? "fr-FR" : "en-GB", { style: "currency", currency: "EUR" }).format(c / 100);
   const history = [
     [tr(locale, "Commande passée", "Order placed"), sub.createdAt],
-    [tr(locale, "Réponse du partenaire", "Partner decision"), sub.decidedAt],
+    [sub.status === "CANCELLED" ? tr(locale, `Commande annulée par l'administration${sub.reason ? ` — motif : ${sub.reason}` : ""}`, `Order cancelled by admin${sub.reason ? ` — reason: ${sub.reason}` : ""}`) : tr(locale, "Réponse du partenaire", "Partner decision"), sub.decidedAt],
     [tr(locale, "Expédiée", "Shipped"), sub.shippedAt],
     [tr(locale, "Livrée", "Delivered"), sub.deliveredAt],
   ].filter((h): h is [string, Date] => !!h[1]);
@@ -78,8 +79,7 @@ export default async function AdminOrderDetail({ params }: { params: Promise<{ l
       {isOpenStatus(sub.status) && sub.status !== "SHIPPED" && (
         <form action={adminCancelSubOrder} className="flex flex-wrap items-end gap-2 rounded-lg border p-4">
           <input type="hidden" name="id" value={sub.id} />
-          <label className="text-xs">{tr(locale, "Motif d'annulation", "Cancellation reason")}<input name="reason" required minLength={3} className={inputCls} /></label>
-          <button className="inline-flex min-h-11 items-center rounded-md border border-destructive px-3 text-sm text-destructive" type="submit">{tr(locale, "Annuler et libérer le stock", "Cancel and release stock")}</button>
+          <ConfirmButton askReason en={!fr} title={tr(locale, "Annuler cette commande ?", "Cancel this order?")} message={tr(locale, "Le stock sera libéré et le client prévenu.", "Stock will be released and the customer notified.")} className="inline-flex min-h-11 items-center rounded-md border border-destructive px-3 text-sm text-destructive">{tr(locale, "Annuler et libérer le stock", "Cancel and release stock")}</ConfirmButton>
         </form>
       )}
     </>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // Case « tout sélectionner » pour les cases `slug` du formulaire parent.
 export function SelectAll({ label }: { label: string }) {
@@ -20,11 +20,41 @@ export function SelectAll({ label }: { label: string }) {
 }
 
 // Bouton de soumission demandant une confirmation avant envoi.
-export function ConfirmButton({ message, className, name, value, children }: { message: string; className?: string; name: string; value: string; children: React.ReactNode }) {
+// Fenêtre du site (Confirmer / Annuler) ; `askReason` ajoute un motif obligatoire (champ « reason » du formulaire parent).
+export function ConfirmButton({ message, className, name, value, children, askReason, title, en }: { message: string; className?: string; name?: string; value?: string; children: React.ReactNode; askReason?: boolean; title?: string; en?: boolean }) {
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState("");
+  const ref = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+  const ok = !askReason || reason.trim().length >= 3;
   return (
-    <button name={name} value={value} className={className} onClick={(e) => { if (!window.confirm(message)) e.preventDefault(); }}>
-      {children}
-    </button>
+    <>
+      <button ref={ref} type="button" name={name} value={value} className={className} onClick={() => setOpen(true)}>
+        {children}
+      </button>
+      {open && (
+        <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setOpen(false)}>
+          <div className="w-full max-w-sm space-y-3 rounded-lg bg-background p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            {title && <h2 className="font-heading text-xl">{title}</h2>}
+            <p className="text-sm">{message}</p>
+            {askReason && (
+              <label className="block text-sm">{en ? "Reason (required)" : "Motif (obligatoire)"}
+                <input name="reason" value={reason} onChange={(e) => setReason(e.target.value)} required minLength={3} className="mt-1 w-full rounded-md border px-3 py-2" autoFocus />
+              </label>
+            )}
+            <div className="flex justify-end gap-2">
+              <button type="button" className="inline-flex min-h-11 items-center rounded-md border px-4 text-sm" onClick={() => setOpen(false)}>{en ? "Cancel" : "Annuler"}</button>
+              <button type="button" disabled={!ok} className="inline-flex min-h-11 items-center rounded-md bg-primary px-4 text-sm text-primary-foreground disabled:opacity-50" onClick={() => { const b = ref.current; setOpen(false); b?.form?.requestSubmit(b); }}>{en ? "Confirm" : "Confirmer"}</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 

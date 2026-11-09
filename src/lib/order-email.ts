@@ -1,12 +1,12 @@
 import { sendEmail } from "@/lib/email";
-import { renderEmailHtml } from "@/lib/email-layout";
+import { absoluteImageUrl, renderEmailHtml } from "@/lib/email-layout";
 
 export type OrderEmailInput = {
   to: string;
   locale: "fr" | "en";
   number: string;
   fullName: string;
-  items: { name: string; quantity: number; unitPriceCents: number }[];
+  items: { name: string; quantity: number; unitPriceCents: number; image?: string }[];
   totalCents: number;
   shipping?: { lines: string[]; phone: string; editUrl?: string };
 };
@@ -57,7 +57,7 @@ export function buildOrderEmail(o: OrderEmailInput) {
     paragraphs: [t.hello, t.intro],
     cta: ship?.editUrl ? { label: t.edit, url: ship.editUrl } : undefined,
     summary: {
-      items: o.items.map((i) => ({ name: i.name, detail: `× ${i.quantity}`, priceLabel: money(i.unitPriceCents * i.quantity) })),
+      items: o.items.map((i) => ({ name: i.name, detail: `× ${i.quantity}`, priceLabel: money(i.unitPriceCents * i.quantity), image: i.image ? absoluteImageUrl(i.image) : undefined })),
       rows: [{ label: t.total, value: money(o.totalCents), bold: true }],
     },
     address: ship ? { title: t.shipTo, lines: [...ship.lines, `${t.phone} : ${ship.phone}`] } : undefined,

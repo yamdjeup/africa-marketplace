@@ -169,7 +169,7 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
     fullName,
     items: cart.map((l) => {
       const p = bySlug.get(l.slug)!;
-      return { name: p.name, quantity: l.quantity, unitPriceCents: p.priceCents };
+      return { name: p.name, quantity: l.quantity, unitPriceCents: p.priceCents, image: Array.isArray(p.images) ? (p.images as string[])[0] : undefined };
     }),
     totalCents,
     shipping: {

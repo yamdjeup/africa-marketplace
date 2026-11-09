@@ -1,6 +1,6 @@
 import "server-only";
 import { siteUrl } from "@/lib/alerts-core";
-import { renderEmailHtml } from "@/lib/email-layout";
+import { absoluteImageUrl, renderEmailHtml } from "@/lib/email-layout";
 import { db } from "@/lib/db";
 import { safeSend } from "@/lib/supplier-email";
 import { sweepSubOrders } from "@/lib/suborders";
@@ -60,6 +60,8 @@ export async function notifySubOrder(event: SubEvent, subOrderId: string) {
       DELIVERED: fr ? "Votre commande est livrée" : "Your order has been delivered",
       ACCEPTED: fr ? "Votre commande est acceptée" : "Your order is accepted",
     };
+    const prods = await db.product.findMany({ where: { slug: { in: items.map((i) => i.productSlug) } }, select: { slug: true, images: true } });
+    const imgOf = new Map(prods.map((p) => [p.slug, absoluteImageUrl(p.images)]));
     const html = renderEmailHtml({
       locale: loc,
       title: titles[event] ?? m[0],
@@ -67,7 +69,7 @@ export async function notifySubOrder(event: SubEvent, subOrderId: string) {
       accountUrl: o.userId ? link : undefined,
       paragraphs: [hello, m[1]],
       cta: { label: fr ? "Suivre ma commande" : "Track my order", url: link },
-      summary: { items: items.map((i) => ({ name: i.name, detail: `× ${i.quantity}${i.size ? ` · ${i.size}` : ""}`, priceLabel: eur(i.unitPriceCents * i.quantity) })), rows: [{ label: fr ? "Sous-total" : "Subtotal", value: eur(sub.subtotalCents), bold: true }] },
+      summary: { items: items.map((i) => ({ name: i.name, detail: `× ${i.quantity}${i.size ? ` · ${i.size}` : ""}`, priceLabel: eur(i.unitPriceCents * i.quantity), image: imgOf.get(i.productSlug) })), rows: [{ label: fr ? "Sous-total" : "Subtotal", value: eur(sub.subtotalCents), bold: true }] },
       notice: sold,
     });
     await safeSend(o.email, `E póm ta’ — ${m[0]} ${sub.number}`, [hello, m[1], list, sold, link], html);

@@ -1,12 +1,11 @@
 "use client";
 
 import { useCart } from "@/lib/cart";
-import { getDict, type Locale } from "@/lib/i18n";
+import type { Locale } from "@/lib/i18n";
 
 // Un colis par créateur : articles, délai de préparation et frais de livraison de chaque envoi.
 export function ParcelSummary({ locale }: { locale: Locale }) {
   const { lines, ready } = useCart();
-  const f9 = getDict(locale).f9;
   const en = locale === "en";
   if (!ready || lines.length === 0) return null;
   const parcels = new Map<string, typeof lines>();
@@ -37,16 +36,9 @@ export function ParcelSummary({ locale }: { locale: Locale }) {
               ))}
             </ul>
             <p>{en ? "Prepared within 2 business days" : "Préparation sous 2 jours ouvrés"}</p>
-            <p>
-              {f9.shipping} : {f9.shippingValue}
-            </p>
           </li>
         ))}
       </ul>
-      <p className="flex justify-between font-semibold">
-        <span>{en ? "Total delivery" : "Total livraison"}</span>
-        <span>{f9.shippingValue}</span>
-      </p>
     </section>
   );
 }

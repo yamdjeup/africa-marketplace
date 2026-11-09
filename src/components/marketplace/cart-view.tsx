@@ -119,15 +119,10 @@ export function CartView({ locale }: { locale: Locale }) {
             <ApproxPrice cents={totalCents} locale={locale} />
           </strong>
         </p>
-        <p className="hidden justify-between text-sm lg:flex">
-          <span>{f9.shipping}</span>
-          <span>{f9.shippingValue}</span>
-        </p>
         <p className="hidden justify-between border-t pt-3 text-base font-semibold lg:flex">
           <span>{f9.total}</span>
           <span>{formatEur(totalCents, locale)}</span>
         </p>
-        <p className="text-xs text-muted-foreground">{t.shippingNote}</p>
         <ParcelSummary locale={locale} />
         <Link href={`/${locale}/checkout`} className={buttonVariants({ size: "lg", className: "h-12 w-full" })}>
           {t.checkout}

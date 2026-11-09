@@ -27,6 +27,7 @@ export default async function OrderDetailPage({ params }: Props) {
   const subStatuses = await db.subOrder.findMany({ where: { orderId: order.id }, select: { status: true } });
   const hasSubs = subStatuses.length > 0;
   const allDelivered = hasSubs && subStatuses.every((s) => s.status === "DELIVERED");
+  const allCancelled = hasSubs && subStatuses.every((s) => ["CANCELLED", "REFUSED", "EXPIRED"].includes(s.status));
   const t = getDict(locale).account.orders;
   const status = hasSubs ? simulatedStatus(order.createdAt) : "CONFIRMED";
   const date = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "fr-FR", { dateStyle: "long", timeStyle: "short" }).format(order.createdAt);
@@ -43,7 +44,9 @@ export default async function OrderDetailPage({ params }: Props) {
         {!hasSubs && <OrderStatusBadge status={status} t={t} />}
         {hasSubs && (
           <p className="text-sm font-medium">
-            {allDelivered
+            {allCancelled
+              ? locale === "en" ? "Order cancelled" : "Commande annulée"
+              : allDelivered
               ? locale === "en" ? "Order delivered" : "Commande livrée"
               : locale === "en"
                 ? `${subStatuses.filter((s) => s.status === "DELIVERED").length} of ${subStatuses.length} parcels delivered`
@@ -60,7 +63,7 @@ export default async function OrderDetailPage({ params }: Props) {
         <p className="text-xs text-muted-foreground">{t.simulated}</p>
       </section>
       )}
-      <SubOrderTracking orderId={order.id} locale={locale} />
+      <SubOrderTracking orderId={order.id} locale={locale} canCancel />
       <section aria-labelledby="items" className="space-y-3 rounded-lg border p-4">
         <h2 id="items" className="font-heading text-xl">
           {t.items}

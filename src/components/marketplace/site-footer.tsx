@@ -1,3 +1,4 @@
+import { CookieSettingsLink } from "@/components/marketplace/cookie-consent";
 import Link from "next/link";
 import { InstallApp } from "@/components/marketplace/install-app";
 import { getDict, type Locale } from "@/lib/i18n";
@@ -81,9 +82,9 @@ export function SiteFooter({ locale }: { locale: Locale }) {
           <ul className={dCol}>
             <li><Link href={l("/support/contact")}>{t.footer.contact}</Link></li>
             <li><Link href={l("/support/faq")}>FAQ</Link></li>
-            <li><Link href={l("/support/faq")}>{ft.orders}</Link></li>
-            <li><Link href={l("/support/faq")}>{ft.returns}</Link></li>
-            <li><Link href={l("/support/faq")}>{ft.payment}</Link></li>
+            <li><Link href={l("/support/orders")}>{ft.orders}</Link></li>
+            <li><Link href={l("/support/returns")}>{ft.returns}</Link></li>
+            <li><Link href={l("/support/payment")}>{ft.payment}</Link></li>
             <li><Link href={l("/support/terms")}>{f.terms}</Link></li>
             <li><Link href={l("/support/privacy")}>{f.privacy}</Link></li>
           </ul>
@@ -125,6 +126,8 @@ export function SiteFooter({ locale }: { locale: Locale }) {
           <Link href={l("/support/privacy")}>{f.privacy}</Link>
           <span aria-hidden="true">·</span>
           <Link href={l("/support/terms")}>{f.terms}</Link>
+          <span aria-hidden="true">·</span>
+          <CookieSettingsLink href={l("/support/cookies")} label={locale === "en" ? "Cookie management" : "Gestion des cookies"} />
           <span aria-hidden="true">·</span>
           <span className="opacity-60">{ft.accessibility} ({ft.soon})</span>
         </p>

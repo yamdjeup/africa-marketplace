@@ -50,7 +50,10 @@ export default async function OrdersPage({ params }: Props) {
                   {t.date} {fmt.format(o.createdAt)} · {(() => { const n = o.items.reduce((s, i) => s + i.quantity, 0); return locale === "en" ? `${n} ${n === 1 ? "item" : "items"}` : `${n} ${n === 1 ? "article" : "articles"}`; })()}
                 </p>
                 {o.subOrders.length > 0 ? (
-                  <p className="flex flex-wrap gap-1">{o.subOrders.map((s) => { const l = subLabel(s.status); return <Pill key={s.id} cls={l.cls}>{locale === "en" ? l.en : l.fr}</Pill>; })}</p>
+                  <p className="flex flex-wrap gap-1">
+                    {o.subOrders.every((s) => s.status === "DELIVERED") && <Pill cls="bg-emerald-100 text-emerald-900">{locale === "en" ? "Order delivered" : "Commande livrée"}</Pill>}
+                    {o.subOrders.map((s, i) => { const l = subLabel(s.status); return <Pill key={s.id} cls={l.cls}>{`${locale === "en" ? "Parcel" : "Colis"} ${i + 1}/${o.subOrders.length} · ${locale === "en" ? l.en : l.fr}`}</Pill>; })}
+                  </p>
                 ) : (
                   <OrderStatusBadge status="CONFIRMED" t={t} />
                 )}

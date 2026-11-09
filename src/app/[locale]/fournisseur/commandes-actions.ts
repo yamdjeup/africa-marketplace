@@ -53,7 +53,8 @@ export async function prepareOrderAction(f: FormData) {
 
 export async function shipOrderAction(f: FormData) {
   const { id, supplierId, back, actor } = await ctxOf(f);
-  const carrier = s(f, "carrier", 80);
+  const rawCarrier = s(f, "carrier", 80);
+  const carrier = rawCarrier === "__other" ? s(f, "carrierOther", 80) : rawCarrier;
   const tracking = s(f, "tracking", 80);
   if (!carrier || !tracking) redirect(back("?error=tracking"));
   let sub = null;

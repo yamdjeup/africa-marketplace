@@ -11,6 +11,7 @@ import { isLocale } from "@/lib/i18n";
 import { sendOrderEmail } from "@/lib/order-email";
 import { isAddressEditable, isOrderOwner } from "@/lib/order-edit";
 import { notifySubOrder, runSubOrderSweep } from "@/lib/order-notify";
+import { createCheckoutSession, stripeEnabled } from "@/lib/stripe-checkout";
 import { createSubOrders } from "@/lib/suborders";
 import { reserveStock } from "@/lib/stock";
 import { notifyLowStock, snapshotAvail } from "@/lib/stock-alerts";
@@ -156,6 +157,20 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
     throw e;
   }
   after(() => notifyLowStock(before).catch(() => undefined));
+
+  if (stripeEnabled()) {
+    await db.order.update({ where: { number }, data: { paymentPending: true } });
+    const url = await createCheckoutSession(
+      { number, email, locale, editToken },
+      cart.map((l) => {
+        const p = bySlug.get(l.slug)!;
+        return { name: l.size ? `${p.name} (${l.size})` : p.name, quantity: l.quantity, unitPriceCents: p.priceCents };
+      }),
+    );
+    if (url) redirect(url);
+    // Échec de création de session : on revient au comportement sans paiement en ligne.
+    await db.order.update({ where: { number }, data: { paymentPending: false } });
+  }
   after(async () => {
     for (const s of subs) await notifySubOrder("NEW", s.id);
     await runSubOrderSweep().catch(() => undefined);

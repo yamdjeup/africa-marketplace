@@ -3,6 +3,7 @@ import { siteUrl } from "@/lib/alerts-core";
 import { absoluteImageUrl, renderEmailHtml } from "@/lib/email-layout";
 import { db } from "@/lib/db";
 import { safeSend } from "@/lib/supplier-email";
+import { trackingUrl } from "@/lib/tracking";
 import { sweepSubOrders } from "@/lib/suborders";
 
 export type SubEvent = "NEW" | "REMINDER" | "ESCALATION" | "ACCEPTED" | "REFUSED" | "EXPIRED" | "CANCELLED" | "SHIPPED" | "DELIVERED";
@@ -42,11 +43,13 @@ export async function notifySubOrder(event: SubEvent, subOrderId: string) {
       return;
     }
 
+    const refundFr = sub.refundStatus === "DONE" ? " Le remboursement de ce colis a été effectué sur votre moyen de paiement." : sub.refundStatus ? " Votre remboursement est en cours de traitement." : "";
+    const refundEn = sub.refundStatus === "DONE" ? " The refund for this parcel has been issued to your payment method." : sub.refundStatus ? " Your refund is being processed." : "";
     const msgs: Record<string, [string, string]> = {
       ACCEPTED: [fr ? "commande acceptée" : "order accepted", fr ? `${shop} a accepté votre commande et la prépare.` : `${shop} accepted your order and is preparing it.`],
       REFUSED: [fr ? "commande annulée" : "order cancelled", fr ? `${shop} ne peut pas honorer votre commande. Elle est annulée et le stock libéré. Motif : ${sub.reason || "non précisé"}.` : `${shop} cannot fulfil your order. It is cancelled. Reason: ${sub.reason || "not specified"}.`],
       EXPIRED: [fr ? "commande annulée" : "order cancelled", fr ? `${shop} n'a pas répondu sous 48 h : votre commande est annulée.` : `${shop} did not reply within 48 h: your order is cancelled.`],
-      CANCELLED: [fr ? "commande annulée" : "order cancelled", fr ? `Votre commande est annulée. Motif : ${sub.reason || "non précisé"}.` : `Your order is cancelled. Reason: ${sub.reason || "not specified"}.`],
+      CANCELLED: [fr ? "commande annulée" : "order cancelled", fr ? `Votre commande est annulée. Motif : ${sub.reason || "non précisé"}.${refundFr}` : `Your order is cancelled. Reason: ${sub.reason || "not specified"}.${refundEn}`],
       SHIPPED: [fr ? "commande expédiée" : "order shipped", fr ? `${shop} a expédié votre commande${sub.carrier ? ` (${sub.carrier}` : ""}${sub.trackingNumber ? `${sub.carrier ? ", " : " ("}suivi ${sub.trackingNumber}` : ""}${sub.carrier || sub.trackingNumber ? ")" : ""}.` : `${shop} shipped your order${sub.carrier ? ` (${sub.carrier}` : ""}${sub.trackingNumber ? `${sub.carrier ? ", " : " ("}tracking ${sub.trackingNumber}` : ""}${sub.carrier || sub.trackingNumber ? ")" : ""}.`],
       DELIVERED: [fr ? "commande livrée" : "order delivered", fr ? "Votre commande est livrée. Merci !" : "Your order is delivered. Thank you!"],
     };
@@ -55,6 +58,11 @@ export async function notifySubOrder(event: SubEvent, subOrderId: string) {
     const loc = fr ? "fr" : "en";
     const link = o.userId ? `${base}/${loc}/account/orders/${o.number}` : `${base}/${loc}/checkout/confirmation/${o.number}?t=${o.editToken ?? ""}`;
     const hello = fr ? `Bonjour ${o.fullName},` : `Hello ${o.fullName},`;
+    const siblings = await db.subOrder.findMany({ where: { orderId: o.id }, orderBy: { createdAt: "asc" }, select: { id: true } });
+    const idx = siblings.findIndex((s) => s.id === sub.id) + 1;
+    const parcel = idx > 0 ? (fr ? `Colis ${idx} sur ${siblings.length}` : `Parcel ${idx} of ${siblings.length}`) : "";
+    const parcelNote = parcel && (event === "SHIPPED" || event === "DELIVERED") ? parcel : "";
+    const trackUrl = trackingUrl(sub.carrier, sub.trackingNumber);
     const titles: Record<string, string> = {
       SHIPPED: fr ? "Votre commande est en route" : "Your order is on its way",
       DELIVERED: fr ? "Votre commande est livrée" : "Your order has been delivered",
@@ -67,13 +75,14 @@ export async function notifySubOrder(event: SubEvent, subOrderId: string) {
       title: titles[event] ?? m[0],
       orderNumber: sub.number,
       accountUrl: o.userId ? link : undefined,
-      paragraphs: [hello, m[1]],
+      paragraphs: [hello, ...(parcelNote ? [`**${parcelNote}**`] : []), m[1]],
       cta: event === "DELIVERED" ? { label: fr ? "Voir ma commande" : "View my order", url: link } : { label: fr ? "Suivre ma commande" : "Track my order", url: link },
+      trackLink: trackUrl && (event === "SHIPPED" || event === "DELIVERED") ? { label: fr ? "Suivre mon colis" : "Track my parcel", url: trackUrl } : undefined,
       summary: { items: items.map((i) => ({ name: i.name, detail: `× ${i.quantity}${i.size ? ` · ${i.size}` : ""}`, priceLabel: eur(i.unitPriceCents * i.quantity), image: imgOf.get(i.productSlug) })), rows: [{ label: fr ? "Sous-total" : "Subtotal", value: eur(sub.subtotalCents), bold: true }] },
       notice: sold,
       address: event === "SHIPPED" || event === "DELIVERED" ? { title: fr ? "Adresse de livraison" : "Delivery address", lines: [o.fullName, o.address, `${o.postalCode} ${o.city}`.trim(), o.country, ...(o.phone ? [`${fr ? "Téléphone" : "Phone"} : ${o.phone}`] : [])] } : undefined,
     });
-    await safeSend(o.email, `E póm ta’ — ${m[0]} ${sub.number}`, [hello, m[1], list, sold, link], html);
+    await safeSend(o.email, `E póm ta’ — ${m[0]} ${sub.number}`, [hello, ...(parcelNote ? [parcelNote] : []), m[1], list, sold, link, ...(trackUrl && (event === "SHIPPED" || event === "DELIVERED") ? [`${fr ? "Suivre mon colis" : "Track my parcel"} : ${trackUrl}`] : [])], html);
   } catch (e) {
     console.warn("[order-notify]", (e as Error).message);
   }

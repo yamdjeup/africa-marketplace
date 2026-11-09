@@ -4,6 +4,7 @@ import Link from "next/link";
 import { formatPhone } from "@/lib/phone";
 import { useActionState, useRef, useState } from "react";
 import { placeOrder, type CheckoutState } from "@/app/[locale]/checkout/actions";
+import { ParcelSummary } from "@/components/marketplace/parcel-summary";
 import { AddressFields } from "@/components/marketplace/address-fields";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { EMPTY_ADDRESS, formatStreet, readAddress, type AddressFieldValues } from "@/lib/address";
@@ -220,6 +221,7 @@ export function CheckoutForm({
           <span>{getDict(locale).cart.subtotal}</span>
           <span>{formatEur(totalCents, locale)}</span>
         </p>
+        <ParcelSummary locale={locale} />
       </aside>
     </div>
   );

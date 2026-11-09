@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { CARRIERS } from "@/lib/tracking";
 import { formatPhone } from "@/lib/phone";
 import { Pill, inputCls } from "@/components/fournisseur/parts";
 import { db } from "@/lib/db";
@@ -99,7 +100,13 @@ export default async function PartnerOrder({ params, searchParams }: { params: P
           {sub.status === "ACCEPTED" && <form action={prepareOrderAction}>{hidden}<button className="inline-flex min-h-11 items-center rounded-md border px-4 text-sm" type="submit">{tr(locale, "Marquer en préparation", "Mark as preparing")}</button></form>}
           <form action={shipOrderAction} className="grid gap-3 sm:grid-cols-2">
             {hidden}
-            <label className="block text-sm">{tr(locale, "Transporteur", "Carrier")}<input name="carrier" required className={inputCls} placeholder="DHL, La Poste…" /></label>
+            <label className="block text-sm">{tr(locale, "Transporteur", "Carrier")}
+              <select name="carrier" required className={inputCls} defaultValue="UPS">
+                {CARRIERS.map((c) => <option key={c} value={c}>{c}</option>)}
+                <option value="__other">{tr(locale, "Autre", "Other")}</option>
+              </select>
+            </label>
+            <label className="block text-sm">{tr(locale, "Autre transporteur (si « Autre »)", "Other carrier (if “Other”)")}<input name="carrierOther" maxLength={80} className={inputCls} /></label>
             <label className="block text-sm">{tr(locale, "Numéro de suivi", "Tracking number")}<input name="tracking" required className={inputCls} /></label>
             <div className="sm:col-span-2"><button className={btn} type="submit">{tr(locale, "Marquer expédiée", "Mark as shipped")}</button></div>
           </form>

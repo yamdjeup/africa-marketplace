@@ -68,7 +68,7 @@ export async function notifySubOrder(event: SubEvent, subOrderId: string) {
       orderNumber: sub.number,
       accountUrl: o.userId ? link : undefined,
       paragraphs: [hello, m[1]],
-      cta: { label: fr ? "Suivre ma commande" : "Track my order", url: link },
+      cta: event === "DELIVERED" ? { label: fr ? "Voir ma commande" : "View my order", url: link } : { label: fr ? "Suivre ma commande" : "Track my order", url: link },
       summary: { items: items.map((i) => ({ name: i.name, detail: `× ${i.quantity}${i.size ? ` · ${i.size}` : ""}`, priceLabel: eur(i.unitPriceCents * i.quantity), image: imgOf.get(i.productSlug) })), rows: [{ label: fr ? "Sous-total" : "Subtotal", value: eur(sub.subtotalCents), bold: true }] },
       notice: sold,
     });

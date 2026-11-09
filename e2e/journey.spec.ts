@@ -136,7 +136,7 @@ test.describe.serial("Parcours client", () => {
     await expect(page.getByText("Vous n'avez pas encore de commande.")).toBeVisible();
   });
 
-  test("checkout simulé connecté : commande visible dans Mes commandes (FR/EN)", async ({ page }) => {
+  test("checkout connecté : commande visible dans Mes commandes (FR/EN)", async ({ page }) => {
     await login(page);
     await addArtworkToCart(page, "profil-points-et-texte");
     await page.goto("/fr/checkout");

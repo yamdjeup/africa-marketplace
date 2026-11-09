@@ -17,10 +17,10 @@ export function buildOrderEmail(o: OrderEmailInput) {
     new Intl.NumberFormat(fr ? "fr-FR" : "en-GB", { style: "currency", currency: "EUR" }).format(cents / 100);
   const t = fr
     ? {
-        subject: `E póm ta’ — confirmation de la commande ${o.number} (simulée)`,
+        subject: `E póm ta’ — confirmation de la commande ${o.number}`,
         hello: `Bonjour ${o.fullName},`,
         intro: "Merci pour votre commande sur E póm ta’.",
-        notice: "Commande simulée, aucun paiement n'a été effectué.",
+        notice: "Votre paiement par carte a bien été enregistré.",
         num: "Numéro de commande",
         works: "Créations",
         total: "Total",
@@ -28,13 +28,13 @@ export function buildOrderEmail(o: OrderEmailInput) {
         phone: "Téléphone",
         mistake: "Une erreur ? Modifiez l'adresse tant que la commande n'est pas expédiée, ou contactez-nous.",
         edit: "Modifier l'adresse",
-        bye: "Démonstration privée — prix fictifs de démonstration.",
+        bye: "Merci de votre confiance.",
       }
     : {
-        subject: `E póm ta’ — order ${o.number} confirmation (simulated)`,
+        subject: `E póm ta’ — order ${o.number} confirmation`,
         hello: `Hello ${o.fullName},`,
         intro: "Thank you for your order on E póm ta’.",
-        notice: "Simulated order, no payment has been made.",
+        notice: "Your card payment has been recorded.",
         num: "Order number",
         works: "Creations",
         total: "Total",
@@ -42,7 +42,7 @@ export function buildOrderEmail(o: OrderEmailInput) {
         phone: "Phone",
         mistake: "A mistake? Edit the address until the order has shipped, or contact us.",
         edit: "Edit address",
-        bye: "Private demonstration — fictional demo prices.",
+        bye: "Thank you for your trust.",
       };
   const lines = o.items.map((i) => `${i.name} × ${i.quantity} — ${money(i.unitPriceCents * i.quantity)}`);
   const ship = o.shipping;

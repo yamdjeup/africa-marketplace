@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import { notFound } from "next/navigation";
+import { CookieConsent } from "@/components/marketplace/cookie-consent";
 import { SiteFooter } from "@/components/marketplace/site-footer";
 import { auth } from "@/auth";
 import { MobileTabBar } from "@/components/marketplace/mobile-tab-bar";
@@ -49,6 +50,8 @@ export default async function LocaleLayout({
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
   const t = getDict(locale);
+  const gaRaw = process.env.NEXT_PUBLIC_GA_ID?.trim() ?? "";
+  const gaId = /^G-[A-Z0-9]{4,20}$/.test(gaRaw) ? gaRaw : "";
 
   return (
     <html lang={locale} className={`${display.variable} ${body.variable} h-full antialiased`}>
@@ -73,6 +76,7 @@ export default async function LocaleLayout({
           <MobileTabBar locale={locale} loggedIn={Boolean((await auth())?.user)} />
           </FavoritesProvider>
         </CartProvider>
+        {gaId && <CookieConsent locale={locale} gaId={gaId} />}
       </body>
     </html>
   );

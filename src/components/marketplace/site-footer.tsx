@@ -1,3 +1,4 @@
+import { CookieSettingsLink } from "@/components/marketplace/cookie-consent";
 import Link from "next/link";
 import { InstallApp } from "@/components/marketplace/install-app";
 import { getDict, type Locale } from "@/lib/i18n";
@@ -126,7 +127,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
           <span aria-hidden="true">·</span>
           <Link href={l("/support/terms")}>{f.terms}</Link>
           <span aria-hidden="true">·</span>
-          <Link href={l("/support/cookies")}>{locale === "en" ? "Cookie management" : "Gestion des cookies"}</Link>
+          <CookieSettingsLink href={l("/support/cookies")} label={locale === "en" ? "Cookie management" : "Gestion des cookies"} />
           <span aria-hidden="true">·</span>
           <span className="opacity-60">{ft.accessibility} ({ft.soon})</span>
         </p>

@@ -317,6 +317,10 @@ model Order {
   editToken  String?
   /// Identifiant du paiement Stripe (pi_…) lorsqu'un paiement Stripe est enregistré ; null sinon
   stripePaymentIntentId String?
+  /// Session Stripe Checkout ; renseignée tant que le paiement n'est pas confirmé
+  stripeSessionId String?
+  /// Vrai entre la création de la commande et la confirmation du paiement par Stripe
+  paymentPending Boolean @default(false)
   totalCents Int
   /// Statut simulé ; étendu en partie 2 (suivi de commande)
   status     String      @default("PLACED")

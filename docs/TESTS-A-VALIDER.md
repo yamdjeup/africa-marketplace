@@ -12,6 +12,7 @@ Mis à jour à chaque lot (même commit). Statut : Testé (validé par l'utilisa
 | T-MAILS | E-mails Farfetch | 10 min | À tester | — |
 | T-AIDE | Pages d'aide FR/EN | 10 min | À tester | — |
 | T24 | Parcours de commande complet (achat → livraison) | 20 min | À tester | — |
+| T-STRIPE | Paiement Stripe Checkout + webhook (lot 0) | 15 min | À tester | — |
 | T-HIST | Lots A à D, traduction, fiche création | 60 min | À tester | voir TEST-PARTENAIRES.md |
 
 ### T-GA4 — GA4 et bandeau de consentement
@@ -56,6 +57,17 @@ Prérequis : migration 0020 appliquée.
 2. Marquer expédié : e-mail « en route » avec bouton « Suivre ma commande », adresse, « Colis X sur N ».
 3. Marquer livré : bouton « Voir ma commande ».
 4. Vérifier : aucune mention démo/fictif/simulé, pas de « Livraison : Offerte », nom propre du créateur, rendu mobile.
+
+### T-STRIPE — paiement Stripe (lot 0)
+Prérequis : migration 0021 appliquée ; clés Stripe de test ; webhook `/api/stripe/webhook` (événement checkout.session.completed) déclaré dans Stripe avec STRIPE_WEBHOOK_SECRET.
+1. Sans STRIPE_SECRET_KEY : passer commande, confirmation et e-mails immédiats comme avant.
+2. Avec les clés : Client, panier, « Commander » : redirection vers la page Stripe, montant correct.
+3. Payer avec la carte de test 4242 4242 4242 4242 : retour sur la confirmation de commande.
+4. Vérifier : e-mail « reçue » et notification au créateur arrivent après le paiement (webhook), une seule fois.
+5. En base : `stripePaymentIntentId` renseigné, `paymentPending` = false.
+6. Abandonner sur la page Stripe : aucun e-mail envoyé, commande en attente de paiement.
+7. Annuler ensuite un colis payé : remboursement Stripe automatique (voir T-SUIVI).
+8. Webhook avec signature invalide (curl) : réponse 400.
 
 ### T-AIDE — pages d'aide
 1. Ouvrir `/fr/support/faq`, `orders`, `payment`, `returns`, `terms`, `privacy`, `cookies`, `contact` : contenu complet, menu latéral commun.

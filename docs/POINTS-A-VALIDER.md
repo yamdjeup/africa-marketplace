@@ -22,6 +22,7 @@ Statut : À faire / En cours / Validé. Responsables suggérés : Juriste, DPO, 
 | Délais annoncés : préparation 2 j ouvrés, remboursement 14-21 j (annulation) / ~14 j (retour) | Textes d'aide et CGV | Promesses non tenues | Valider avec les partenaires et la finance | Finance / Produit | À faire |
 | Remboursement à l'annulation | Remboursement Stripe automatique (API, idempotent par colis) si la commande porte un `stripePaymentIntentId` et que `STRIPE_SECRET_KEY` est définie ; sinon statut « remboursement à traiter » (admin). Aucun code n'enregistre encore le paiement Stripe à la commande (checkout) : le champ reste vide tant que ce n'est pas branché | Remboursement oublié ou en retard ; échec Stripe | Brancher l'enregistrement du PaymentIntent au checkout, définir le process admin pour les statuts MANUAL/FAILED | Finance / Dev | À faire |
 | 3D Secure / Stripe | Mentionné dans la page Paiement | Texte à aligner sur la config Stripe réelle | Vérifier la configuration et le texte | Dev / Finance | À faire |
+| Paiement Stripe Checkout (lot 0) | Commande créée « en attente » puis confirmée par webhook ; stock réservé tant que non payé, sans libération automatique des sessions abandonnées | Stock bloqué par paiements abandonnés ; webhook non configuré = e-mails jamais envoyés | Déclarer le webhook et STRIPE_WEBHOOK_SECRET sur Vercel ; décider d'un délai de libération du stock | Dev / Finance | À faire |
 
 ## 3. Livraison / transporteurs
 

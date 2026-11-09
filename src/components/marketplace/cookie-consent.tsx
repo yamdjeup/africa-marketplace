@@ -83,10 +83,11 @@ export function CookieConsent({ locale, gaId }: { locale: string; gaId: string }
     const w = window as unknown as GaWindow;
     w.dataLayer = w.dataLayer ?? [];
     // gtag.js attend l'objet `arguments`, pas un tableau
-    (function () {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    (function (..._args: unknown[]) {
       // eslint-disable-next-line prefer-rest-params
       w.dataLayer!.push(arguments);
-    }).apply(null, args);
+    })(...args);
   }, []);
 
   const apply = useCallback(

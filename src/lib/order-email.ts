@@ -1,4 +1,5 @@
 import { sendEmail } from "@/lib/email";
+import { renderEmailHtml } from "@/lib/email-layout";
 
 export type OrderEmailInput = {
   to: string;
@@ -9,9 +10,6 @@ export type OrderEmailInput = {
   totalCents: number;
   shipping?: { lines: string[]; phone: string; editUrl?: string };
 };
-
-const esc = (s: string) =>
-  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 export function buildOrderEmail(o: OrderEmailInput) {
   const fr = o.locale === "fr";
@@ -51,21 +49,20 @@ export function buildOrderEmail(o: OrderEmailInput) {
   const shipText = ship
     ? ["", `${t.shipTo} :`, ...ship.lines, `${t.phone} : ${ship.phone}`, t.mistake, ...(ship.editUrl ? [`${t.edit} : ${ship.editUrl}`] : [])]
     : [];
-  const shipHtml = ship
-    ? `<p>${esc(t.shipTo)} :<br><strong>${ship.lines.map(esc).join("<br>")}</strong><br>${esc(t.phone)} : ${esc(ship.phone)}</p><p style="font-size:13px">${esc(t.mistake)}${
-        ship.editUrl ? ` <a href="${esc(ship.editUrl)}">${esc(t.edit)}</a>` : ""
-      }</p>`
-    : "";
   const text = [t.hello, "", t.intro, t.notice, "", `${t.num} : ${o.number}`, `${t.works} :`, ...lines.map((l) => `- ${l}`), "", `${t.total} : ${money(o.totalCents)}`, ...shipText, "", t.bye].join("\n");
-  const html = `<div style="font-family:Georgia,serif;color:#1c3060;background:#faf6ee;padding:24px;max-width:560px">
-<h1 style="font-size:22px;margin:0 0 16px">E póm ta’</h1>
-<p>${esc(t.hello)}</p><p>${esc(t.intro)}</p>
-<p style="border-left:3px solid #eba941;padding-left:12px"><strong>${esc(t.notice)}</strong></p>
-<p>${esc(t.num)} : <strong>${esc(o.number)}</strong></p>
-<p>${esc(t.works)} :</p><ul>${lines.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>
-<p><strong>${esc(t.total)} : ${esc(money(o.totalCents))}</strong></p>
-${shipHtml}
-<p style="font-size:12px;opacity:.7">${esc(t.bye)}</p></div>`;
+  const html = renderEmailHtml({
+    locale: o.locale,
+    title: fr ? "Votre commande est bien reçue" : "Your order has been received",
+    orderNumber: o.number,
+    paragraphs: [t.hello, t.intro],
+    cta: ship?.editUrl ? { label: t.edit, url: ship.editUrl } : undefined,
+    summary: {
+      items: o.items.map((i) => ({ name: i.name, detail: `× ${i.quantity}`, priceLabel: money(i.unitPriceCents * i.quantity) })),
+      rows: [{ label: t.total, value: money(o.totalCents), bold: true }],
+    },
+    address: ship ? { title: t.shipTo, lines: [...ship.lines, `${t.phone} : ${ship.phone}`] } : undefined,
+    notice: `**${t.notice}** ${ship ? t.mistake : ""} ${t.bye}`,
+  });
   return { subject: t.subject, text, html };
 }
 

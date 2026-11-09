@@ -1,5 +1,6 @@
 import "server-only";
 import { siteUrl } from "@/lib/alerts-core";
+import { renderEmailHtml } from "@/lib/email-layout";
 import { db } from "@/lib/db";
 import { safeSend } from "@/lib/supplier-email";
 import { sweepSubOrders } from "@/lib/suborders";
@@ -53,7 +54,23 @@ export async function notifySubOrder(event: SubEvent, subOrderId: string) {
     if (!m || !o.email) return;
     const loc = fr ? "fr" : "en";
     const link = o.userId ? `${base}/${loc}/account/orders/${o.number}` : `${base}/${loc}/checkout/confirmation/${o.number}?t=${o.editToken ?? ""}`;
-    await safeSend(o.email, `E póm ta’ — ${m[0]} ${sub.number}`, [fr ? `Bonjour ${o.fullName},` : `Hello ${o.fullName},`, m[1], list, sold, link]);
+    const hello = fr ? `Bonjour ${o.fullName},` : `Hello ${o.fullName},`;
+    const titles: Record<string, string> = {
+      SHIPPED: fr ? "Votre commande est en route" : "Your order is on its way",
+      DELIVERED: fr ? "Votre commande est livrée" : "Your order has been delivered",
+      ACCEPTED: fr ? "Votre commande est acceptée" : "Your order is accepted",
+    };
+    const html = renderEmailHtml({
+      locale: loc,
+      title: titles[event] ?? m[0],
+      orderNumber: sub.number,
+      accountUrl: o.userId ? link : undefined,
+      paragraphs: [hello, m[1]],
+      cta: { label: fr ? "Suivre ma commande" : "Track my order", url: link },
+      summary: { items: items.map((i) => ({ name: i.name, detail: `× ${i.quantity}${i.size ? ` · ${i.size}` : ""}`, priceLabel: eur(i.unitPriceCents * i.quantity) })), rows: [{ label: fr ? "Sous-total" : "Subtotal", value: eur(sub.subtotalCents), bold: true }] },
+      notice: sold,
+    });
+    await safeSend(o.email, `E póm ta’ — ${m[0]} ${sub.number}`, [hello, m[1], list, sold, link], html);
   } catch (e) {
     console.warn("[order-notify]", (e as Error).message);
   }

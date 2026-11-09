@@ -58,7 +58,7 @@ export function buildOrderEmail(o: OrderEmailInput) {
     cta: ship?.editUrl ? { label: t.edit, url: ship.editUrl } : undefined,
     summary: {
       items: o.items.map((i) => ({ name: i.name, detail: `× ${i.quantity}${i.size ? ` · ${i.size}` : ""}`, priceLabel: money(i.unitPriceCents * i.quantity), image: i.image ? absoluteImageUrl(i.image) : undefined })),
-            rows: [{ label: fr ? "Livraison" : "Shipping", value: fr ? "Offerte" : "Free" }, { label: t.total, value: money(o.totalCents), bold: true }],
+            rows: [{ label: t.total, value: money(o.totalCents), bold: true }],
     },
     address: ship ? { title: t.shipTo, lines: [...ship.lines, `${t.phone} : ${ship.phone}`] } : undefined,
     notice: `**${t.notice}** ${ship ? t.mistake : ""} ${t.bye}`,

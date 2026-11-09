@@ -1,5 +1,42 @@
 # Backlog — E póm ta’ (POC)
 
+## Suivi du périmètre (à mettre à jour à chaque lot, dans le même commit)
+
+Statuts : Implémenté / À implémenter ; Testé / À tester (« Testé » = validé par l'utilisateur ; en cas de doute : À tester). Détail des tests : `docs/TESTS-A-VALIDER.md`. Points juridiques/produit : `docs/POINTS-A-VALIDER.md`.
+
+| Lot / Fonction | Implémentation | Test | Commit | Notes |
+|---|---|---|---|---|
+| Socle POC (US-01 à US-14, comptes US-27, suivi US-28) | Implémenté | À tester | historique git | Voir HISTORY.md |
+| Pivot galerie E póm ta’ (artistes, créations, filtres) | Implémenté | À tester | historique git | GAL-01 à GAL-06 ci-dessous |
+| Lot A — candidature partenaire + validation admin | Implémenté | À tester | historique git | TEST-PARTENAIRES.md |
+| Lot B — créations et stock | Implémenté | À tester | historique git | |
+| Lot C — commandes par partenaire (48 h, relance, escalade) | Implémenté | À tester | historique git | |
+| Lot D — paiements (registre en mode test, versements) | Implémenté | À tester | historique git | Aucun argent réel |
+| Traduction automatique des créations (DeepL) | Implémenté | À tester | historique git | Nécessite DEEPL_API_KEY |
+| Lots F2 à F34 (corrections, tableaux admin/partenaire, avatars, audit) | Implémenté | À tester | 4f125ef, c678751, f6cecf5… | Recette manuelle partielle par l'utilisateur |
+| Lot 3 / 3 bis / 3 ter / 3 quater | Implémenté | À tester | c144153, d2aa19f, 8d6983f, 5fef63c | Merge 0bd23eb |
+| E-mails clients style Farfetch (reçue, en route, livrée) + vignettes, adresse, taille | Implémenté | À tester | 64c2405, f47b896, 0989687, 99973ae, 25b2158 | Aperçus HTML régénérables |
+| Retrait des mentions démo/fictif/simulé/provisoire | Implémenté | À tester | be40799, 5d96dd3 | |
+| Pages d'aide (FAQ, CGV, contact, confidentialité, commandes, paiement, retours, cookies) | Implémenté | À tester | 6f7466d, 946b1a7, b7117fe, cd9ee14 | À valider par un juriste |
+| GA4 + bandeau de consentement (Consent Mode v2) | Implémenté | À tester | 395fb4b, c8ced75 | NEXT_PUBLIC_GA_ID à configurer |
+| Livraison multi-partenaires en colis séparés | Implémenté | À tester | 08f6b9a | Pas de frais par colis |
+| Annulation par colis depuis le compte | Implémenté | À tester | 003a511 | |
+| Retrait « Offerte » + docs/POINTS-A-VALIDER.md | Implémenté | À tester | 6dd4987 | |
+| Suivi de livraison (transporteur + lien de suivi) | Implémenté | À tester | 41abaa4 | Saisie admin non faite |
+| Remboursement Stripe à l'annulation | Implémenté (code présent) | À tester | c7c4366 | Paiement Stripe non branché : reste MANUAL |
+| Branchement du paiement Stripe au checkout (PaymentIntent enregistré) | À implémenter | À tester | — | Prérequis du remboursement auto |
+| Lot E — retours / remboursements / litiges | À implémenter | À tester | — | |
+| Lot F — livraison / étiquettes / douane | À implémenter | À tester | — | |
+| Lot G — messagerie / notifications | À implémenter | À tester | — | |
+| Lot H — finance / KYC / Stripe Connect | À implémenter | À tester | — | |
+| Lot I — stats / avis / sous-comptes | À implémenter | À tester | — | |
+| Lot J — certificat PDF + QR + /verifier | À implémenter | À tester | — | |
+| Lot 4 — modération + Vitest | À implémenter | À tester | — | |
+| Nettoyage prod : domaine, contacts provisoires, Playwright, NEXT_PUBLIC_SITE_URL, GA_ID, DeepL, TVA/DSA/DAC7 | À implémenter | À tester | — | Voir DEPLOIEMENT.md |
+| Décision : option livraison offerte | À décider | — | — | « On verra plus tard » |
+| Décision : frais de port fixe / calculé | À décider | — | — | « On verra plus tard » |
+| Saisie du transporteur côté admin | À implémenter | À tester | — | Optionnel |
+
 Ordre = priorité d'exécution. Statut initial : À faire. Chaque story est autonome et livrable ; « DoD » commun : lint + typecheck + build OK, aucun secret commité.
 
 > **Mise à jour du périmètre (2026-11-01)** : le POC inclut aussi les comptes utilisateurs (inscription, connexion, profil — US-27) et le suivi de commande (page Mes commandes, statuts simulés — US-28). Sont exclus : vrai paiement Stripe (US-14 devient un checkout simulé sans Stripe), back-office vendeur (US-15 à US-17 abandonnées), avis et liste de souhaits. Partie 1 développée : US-06 (hors table Variant), US-07 (seed), US-08, US-09 à US-14 (version simulée) ; comptes et suivi = partie 2 (faite, voir HISTORY).

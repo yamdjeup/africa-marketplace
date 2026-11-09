@@ -24,7 +24,9 @@ export default async function OrderDetailPage({ params }: Props) {
   if (!session?.user?.id) redirect(`/${locale}/login?next=${encodeURIComponent(`/${locale}/account/orders/${number}`)}`);
   const order = await db.order.findFirst({ where: { number, userId: session.user.id }, include: { items: true } });
   if (!order) notFound();
-  const hasSubs = (await db.subOrder.count({ where: { orderId: order.id } })) > 0;
+  const subStatuses = await db.subOrder.findMany({ where: { orderId: order.id }, select: { status: true } });
+  const hasSubs = subStatuses.length > 0;
+  const allDelivered = hasSubs && subStatuses.every((s) => s.status === "DELIVERED");
   const t = getDict(locale).account.orders;
   const status = hasSubs ? simulatedStatus(order.createdAt) : "CONFIRMED";
   const date = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "fr-FR", { dateStyle: "long", timeStyle: "short" }).format(order.createdAt);
@@ -39,6 +41,15 @@ export default async function OrderDetailPage({ params }: Props) {
           {t.date} {date}
         </p>
         {!hasSubs && <OrderStatusBadge status={status} t={t} />}
+        {hasSubs && (
+          <p className="text-sm font-medium">
+            {allDelivered
+              ? locale === "en" ? "Order delivered" : "Commande livrée"
+              : locale === "en"
+                ? `${subStatuses.filter((s) => s.status === "DELIVERED").length} of ${subStatuses.length} parcels delivered`
+                : `${subStatuses.filter((s) => s.status === "DELIVERED").length} colis livré(s) sur ${subStatuses.length}`}
+          </p>
+        )}
       </div>
       {!hasSubs && (
       <section aria-labelledby="tracking" className="space-y-3">

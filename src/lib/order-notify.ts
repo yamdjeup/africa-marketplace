@@ -55,6 +55,10 @@ export async function notifySubOrder(event: SubEvent, subOrderId: string) {
     const loc = fr ? "fr" : "en";
     const link = o.userId ? `${base}/${loc}/account/orders/${o.number}` : `${base}/${loc}/checkout/confirmation/${o.number}?t=${o.editToken ?? ""}`;
     const hello = fr ? `Bonjour ${o.fullName},` : `Hello ${o.fullName},`;
+    const siblings = await db.subOrder.findMany({ where: { orderId: o.id }, orderBy: { createdAt: "asc" }, select: { id: true } });
+    const idx = siblings.findIndex((s) => s.id === sub.id) + 1;
+    const parcel = idx > 0 ? (fr ? `Colis ${idx} sur ${siblings.length}` : `Parcel ${idx} of ${siblings.length}`) : "";
+    const parcelNote = parcel && (event === "SHIPPED" || event === "DELIVERED") ? parcel : "";
     const titles: Record<string, string> = {
       SHIPPED: fr ? "Votre commande est en route" : "Your order is on its way",
       DELIVERED: fr ? "Votre commande est livrée" : "Your order has been delivered",
@@ -67,13 +71,13 @@ export async function notifySubOrder(event: SubEvent, subOrderId: string) {
       title: titles[event] ?? m[0],
       orderNumber: sub.number,
       accountUrl: o.userId ? link : undefined,
-      paragraphs: [hello, m[1]],
+      paragraphs: [hello, ...(parcelNote ? [`**${parcelNote}**`] : []), m[1]],
       cta: event === "DELIVERED" ? { label: fr ? "Voir ma commande" : "View my order", url: link } : { label: fr ? "Suivre ma commande" : "Track my order", url: link },
       summary: { items: items.map((i) => ({ name: i.name, detail: `× ${i.quantity}${i.size ? ` · ${i.size}` : ""}`, priceLabel: eur(i.unitPriceCents * i.quantity), image: imgOf.get(i.productSlug) })), rows: [{ label: fr ? "Sous-total" : "Subtotal", value: eur(sub.subtotalCents), bold: true }] },
       notice: sold,
       address: event === "SHIPPED" || event === "DELIVERED" ? { title: fr ? "Adresse de livraison" : "Delivery address", lines: [o.fullName, o.address, `${o.postalCode} ${o.city}`.trim(), o.country, ...(o.phone ? [`${fr ? "Téléphone" : "Phone"} : ${o.phone}`] : [])] } : undefined,
     });
-    await safeSend(o.email, `E póm ta’ — ${m[0]} ${sub.number}`, [hello, m[1], list, sold, link], html);
+    await safeSend(o.email, `E póm ta’ — ${m[0]} ${sub.number}`, [hello, ...(parcelNote ? [parcelNote] : []), m[1], list, sold, link], html);
   } catch (e) {
     console.warn("[order-notify]", (e as Error).message);
   }

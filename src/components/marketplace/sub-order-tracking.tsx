@@ -14,11 +14,12 @@ export async function SubOrderTracking({ orderId, locale }: { orderId: string; l
   return (
     <section aria-labelledby="by-shop" className="space-y-3">
       <h2 id="by-shop" className="font-heading text-xl">{tr(locale, "Suivi par boutique", "Tracking by shop")}</h2>
-      {subs.map((s) => {
+      {subs.map((s, idx) => {
         const shop = shops.find((x) => x.id === s.supplierId);
         const st = subLabel(s.status);
         return (
           <div key={s.id} className="space-y-1 rounded-lg border p-4 text-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide">{tr(locale, "Colis", "Parcel")} {idx + 1} {tr(locale, "sur", "of")} {subs.length}</p>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="font-medium">
                 {tr(locale, "Vendu et expédié par", "Sold and shipped by")} {shop?.displayName ?? "—"}

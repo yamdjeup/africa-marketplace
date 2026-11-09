@@ -81,6 +81,7 @@ const PAGES: Record<string, { fr: string[]; en: string[] }> = {
   },
   returns: {
     fr: [
+      "Un retour par colis. Chaque colis est expédié par un créateur différent et le contrat de vente est conclu avec ce partenaire : retours et remboursements sont traités colis par colis, à partir de la livraison de chaque colis.",
       "Délai. Vous pouvez retourner un article sous 30 jours à compter de sa livraison.",
       "Conditions. L'article doit être non porté, non utilisé et dans son emballage d'origine, avec ses étiquettes.",
       "Pièces sur mesure. Les créations réalisées sur mesure ou personnalisées à votre demande ne sont ni reprises ni échangées, sauf défaut.",
@@ -90,6 +91,7 @@ const PAGES: Record<string, { fr: string[]; en: string[] }> = {
       "Article défectueux ou non conforme. Contactez-nous rapidement avec des photos ; nous trouvons une solution avec le partenaire.",
     ],
     en: [
+      "One return per parcel. Each parcel is shipped by a different creator and the sales contract is with that partner: returns and refunds are handled parcel by parcel, from the delivery of each parcel.",
       "Time limit. You may return an item within 30 days of its delivery.",
       "Conditions. The item must be unworn, unused and in its original packaging, with its tags.",
       "Made-to-measure pieces. Creations made to measure or personalised at your request cannot be returned or exchanged, except if defective.",
@@ -107,7 +109,7 @@ const PAGES: Record<string, { fr: string[]; en: string[] }> = {
       "4. Paiement. Le paiement s'effectue par carte bancaire au moment de la commande, avec authentification 3D Secure le cas échéant. La commande n'est traitée qu'après enregistrement du paiement.",
       "5. Livraison. Chaque créateur prépare la commande sous 2 jours ouvrés et l'expédie à l'adresse indiquée. Le transporteur et le numéro de suivi sont communiqués par e-mail. Selon le transporteur (UPS, DHL, etc.) et la valeur de la commande, une signature peut être demandée à la livraison. Elle est recueillie par le transporteur, pas par le site. Si le colis ne peut être remis faute de signataire, le transporteur propose une nouvelle présentation ou le retourne à l'expéditeur ; le remboursement des frais de livraison dans ce cas est soumis aux conditions du transporteur. L'adresse reste modifiable tant que la commande n'est pas expédiée.",
       "6. Annulation. Une commande peut être annulée tant qu'elle n'est pas expédiée ; elle est alors remboursée intégralement sous 14 à 21 jours.",
-      "7. Retours. Vous pouvez retourner un article sous 30 jours à compter de sa livraison, non porté et dans son emballage d'origine. Les pièces sur mesure ne sont pas retournables, sauf défaut. L'article retourné est remboursé sous environ 14 jours, hors frais de livraison initiaux.",
+      "7. Retours. Vous pouvez retourner un article sous 30 jours à compter de sa livraison, non porté et dans son emballage d'origine. Les pièces sur mesure ne sont pas retournables, sauf défaut. L'article retourné est remboursé sous environ 14 jours, hors frais de livraison initiaux. Une commande pouvant comporter plusieurs colis, expédiés par des créateurs différents, retours et remboursements sont traités par colis, le contrat de vente étant conclu avec chaque partenaire.",
       "8. Droit de rétractation. Vous disposez de 14 jours à compter de la réception pour vous rétracter sans avoir à justifier de motif, sauf pour les créations personnalisées à votre demande.",
       "9. Responsabilité. E póm ta’ agit comme intermédiaire entre les acheteurs et les créateurs. Notre responsabilité ne saurait être engagée en cas de retard ou d'indisponibilité du transporteur ou de force majeure.",
       "10. Droit applicable. Les présentes conditions sont soumises au droit français. En cas de litige, une solution amiable sera recherchée avant toute action, à défaut de quoi les tribunaux compétents seront saisis.",
@@ -120,7 +122,7 @@ const PAGES: Record<string, { fr: string[]; en: string[] }> = {
       "4. Payment. Payment is made by card when you order, with 3D Secure authentication where applicable. The order is processed only once payment has been recorded.",
       "5. Delivery. Each creator prepares the order within 2 business days and ships it to the address provided. The carrier and tracking number are sent by email. Depending on the carrier (UPS, DHL, etc.) and the order value, a signature may be requested on delivery. It is collected by the carrier, not by the site. If the parcel cannot be handed over for lack of a signatory, the carrier offers a new delivery attempt or returns it to the sender; any refund of delivery fees in that case is subject to the carrier's conditions. The address can be changed as long as the order has not shipped.",
       "6. Cancellation. An order can be cancelled as long as it has not shipped; it is then refunded in full within 14 to 21 days.",
-      "7. Returns. You may return an item within 30 days of delivery, unworn and in its original packaging. Made-to-measure pieces cannot be returned, except if defective. The returned item is refunded within about 14 days, excluding original delivery fees.",
+      "7. Returns. You may return an item within 30 days of delivery, unworn and in its original packaging. Made-to-measure pieces cannot be returned, except if defective. The returned item is refunded within about 14 days, excluding original delivery fees. As an order may include several parcels shipped by different creators, returns and refunds are handled per parcel, the sales contract being with each partner.",
       "8. Right of withdrawal. You have 14 days from receipt to withdraw without giving a reason, except for creations personalised at your request.",
       "9. Liability. E póm ta’ acts as an intermediary between buyers and creators. We cannot be held liable for carrier delays or unavailability, or force majeure.",
       "10. Governing law. These terms are governed by French law. In the event of a dispute, an amicable solution will be sought first, failing which the competent courts will have jurisdiction.",

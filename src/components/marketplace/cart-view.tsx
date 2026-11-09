@@ -6,6 +6,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { useCart } from "@/lib/cart";
 import { useFavorites } from "@/lib/favorites";
 import { formatEur, getDict, type Locale } from "@/lib/i18n";
+import { ParcelSummary } from "@/components/marketplace/parcel-summary";
 import { ApproxPrice } from "@/components/marketplace/approx-price";
 
 export function CartView({ locale }: { locale: Locale }) {
@@ -127,6 +128,7 @@ export function CartView({ locale }: { locale: Locale }) {
           <span>{formatEur(totalCents, locale)}</span>
         </p>
         <p className="text-xs text-muted-foreground">{t.shippingNote}</p>
+        <ParcelSummary locale={locale} />
         <Link href={`/${locale}/checkout`} className={buttonVariants({ size: "lg", className: "h-12 w-full" })}>
           {t.checkout}
         </Link>

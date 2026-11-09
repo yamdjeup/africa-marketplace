@@ -8,6 +8,7 @@ export type EmailLayoutInput = {
   /** Paragraphes ; **gras** supporté (le reste est échappé). */
   paragraphs: string[];
   cta?: { label: string; url: string };
+  trackLink?: { label: string; url: string };
   deliveryLine?: { label: string; value: string };
   summary?: {
     items: { name: string; detail?: string; priceLabel: string; image?: string | null }[];
@@ -52,6 +53,9 @@ export function renderEmailHtml(o: EmailLayoutInput): string {
   const cta = o.cta
     ? `<tr><td align="center" style="padding:20px 24px"><a href="${esc(o.cta.url)}" style="display:inline-block;background:#000;color:#fff;font-family:${FONT};font-size:13px;font-weight:700;text-decoration:none;padding:14px 36px;text-transform:uppercase;letter-spacing:1px">${esc(o.cta.label)}</a></td></tr>`
     : "";
+  const track = o.trackLink
+    ? `<tr><td style="${center};padding:0 24px 16px;font-size:14px"><a href="${esc(o.trackLink.url)}" style="color:#000;text-decoration:underline;font-weight:700">${esc(o.trackLink.label)}</a></td></tr>`
+    : "";
   const del = o.deliveryLine
     ? `<tr><td style="${center};padding:4px 24px 16px;font-size:14px">${esc(o.deliveryLine.label)} <strong>${esc(o.deliveryLine.value)}</strong></td></tr>`
     : "";
@@ -83,6 +87,6 @@ ${o.summary.rows
 
   return `<!DOCTYPE html><html lang="${loc}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#fff"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fff"><tr><td align="center">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#fff">${head}${num}${paras}${cta}${del}${sum}${addr}${notice}${help}${foot}</table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#fff">${head}${num}${paras}${cta}${track}${del}${sum}${addr}${notice}${help}${foot}</table>
 </td></tr></table></body></html>`;
 }

@@ -3,6 +3,7 @@ import { CancelSubOrderButton } from "@/components/marketplace/cancel-sub-order-
 import { db } from "@/lib/db";
 import type { Locale } from "@/lib/i18n";
 import { subLabel } from "@/lib/suborders";
+import { trackingUrl } from "@/lib/tracking";
 import { tr } from "@/lib/tr";
 
 // Suivi client par boutique : « Vendu et expédié par [boutique] », état et suivi d'expédition réels.
@@ -35,6 +36,7 @@ export async function SubOrderTracking({ orderId, locale, canCancel = false }: {
             </ul>
             {s.status === "PENDING" && <p className="text-xs text-muted-foreground">{tr(locale, "En attente de la réponse de la boutique (48 h maximum).", "Waiting for the shop's reply (48 h maximum).")}</p>}
             {s.trackingNumber && <p>{tr(locale, "Expédiée le", "Shipped on")} {s.shippedAt ? fmt.format(s.shippedAt) : ""} — {s.carrier} · {tr(locale, "suivi", "tracking")} {s.trackingNumber}</p>}
+            {s.trackingNumber && trackingUrl(s.carrier, s.trackingNumber) && <p><a href={trackingUrl(s.carrier, s.trackingNumber)!} target="_blank" rel="noopener noreferrer" className="font-medium underline">{tr(locale, "Suivre mon colis", "Track my parcel")}</a></p>}
             {s.deliveredAt && <p>{tr(locale, "Livrée le", "Delivered on")} {fmt.format(s.deliveredAt)}</p>}
             {s.reason && ["REFUSED", "CANCELLED"].includes(s.status) && <p>{tr(locale, "Motif : ", "Reason: ")}{s.reason}</p>}
             {["REFUSED", "EXPIRED", "CANCELLED"].includes(s.status) && <p className="text-xs">{tr(locale, "Commande annulée : le remboursement intégral est en cours de traitement.", "Order cancelled: the full refund is being processed.")}</p>}

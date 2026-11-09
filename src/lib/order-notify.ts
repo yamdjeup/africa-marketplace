@@ -3,6 +3,7 @@ import { siteUrl } from "@/lib/alerts-core";
 import { absoluteImageUrl, renderEmailHtml } from "@/lib/email-layout";
 import { db } from "@/lib/db";
 import { safeSend } from "@/lib/supplier-email";
+import { trackingUrl } from "@/lib/tracking";
 import { sweepSubOrders } from "@/lib/suborders";
 
 export type SubEvent = "NEW" | "REMINDER" | "ESCALATION" | "ACCEPTED" | "REFUSED" | "EXPIRED" | "CANCELLED" | "SHIPPED" | "DELIVERED";
@@ -59,6 +60,7 @@ export async function notifySubOrder(event: SubEvent, subOrderId: string) {
     const idx = siblings.findIndex((s) => s.id === sub.id) + 1;
     const parcel = idx > 0 ? (fr ? `Colis ${idx} sur ${siblings.length}` : `Parcel ${idx} of ${siblings.length}`) : "";
     const parcelNote = parcel && (event === "SHIPPED" || event === "DELIVERED") ? parcel : "";
+    const trackUrl = trackingUrl(sub.carrier, sub.trackingNumber);
     const titles: Record<string, string> = {
       SHIPPED: fr ? "Votre commande est en route" : "Your order is on its way",
       DELIVERED: fr ? "Votre commande est livrée" : "Your order has been delivered",
@@ -73,11 +75,12 @@ export async function notifySubOrder(event: SubEvent, subOrderId: string) {
       accountUrl: o.userId ? link : undefined,
       paragraphs: [hello, ...(parcelNote ? [`**${parcelNote}**`] : []), m[1]],
       cta: event === "DELIVERED" ? { label: fr ? "Voir ma commande" : "View my order", url: link } : { label: fr ? "Suivre ma commande" : "Track my order", url: link },
+      trackLink: trackUrl && (event === "SHIPPED" || event === "DELIVERED") ? { label: fr ? "Suivre mon colis" : "Track my parcel", url: trackUrl } : undefined,
       summary: { items: items.map((i) => ({ name: i.name, detail: `× ${i.quantity}${i.size ? ` · ${i.size}` : ""}`, priceLabel: eur(i.unitPriceCents * i.quantity), image: imgOf.get(i.productSlug) })), rows: [{ label: fr ? "Sous-total" : "Subtotal", value: eur(sub.subtotalCents), bold: true }] },
       notice: sold,
       address: event === "SHIPPED" || event === "DELIVERED" ? { title: fr ? "Adresse de livraison" : "Delivery address", lines: [o.fullName, o.address, `${o.postalCode} ${o.city}`.trim(), o.country, ...(o.phone ? [`${fr ? "Téléphone" : "Phone"} : ${o.phone}`] : [])] } : undefined,
     });
-    await safeSend(o.email, `E póm ta’ — ${m[0]} ${sub.number}`, [hello, ...(parcelNote ? [parcelNote] : []), m[1], list, sold, link], html);
+    await safeSend(o.email, `E póm ta’ — ${m[0]} ${sub.number}`, [hello, ...(parcelNote ? [parcelNote] : []), m[1], list, sold, link, ...(trackUrl && (event === "SHIPPED" || event === "DELIVERED") ? [`${fr ? "Suivre mon colis" : "Track my parcel"} : ${trackUrl}`] : [])], html);
   } catch (e) {
     console.warn("[order-notify]", (e as Error).message);
   }

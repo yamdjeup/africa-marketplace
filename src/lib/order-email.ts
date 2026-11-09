@@ -6,7 +6,7 @@ export type OrderEmailInput = {
   locale: "fr" | "en";
   number: string;
   fullName: string;
-  items: { name: string; quantity: number; unitPriceCents: number; image?: string }[];
+  items: { name: string; quantity: number; size?: string | null; unitPriceCents: number; image?: string }[];
   totalCents: number;
   shipping?: { lines: string[]; phone: string; editUrl?: string };
 };
@@ -44,7 +44,7 @@ export function buildOrderEmail(o: OrderEmailInput) {
         edit: "Edit address",
         bye: "Thank you for your trust.",
       };
-  const lines = o.items.map((i) => `${i.name} × ${i.quantity} — ${money(i.unitPriceCents * i.quantity)}`);
+  const lines = o.items.map((i) => `${i.name}${i.size ? ` (${i.size})` : ""} × ${i.quantity} — ${money(i.unitPriceCents * i.quantity)}`);
   const ship = o.shipping;
   const shipText = ship
     ? ["", `${t.shipTo} :`, ...ship.lines, `${t.phone} : ${ship.phone}`, t.mistake, ...(ship.editUrl ? [`${t.edit} : ${ship.editUrl}`] : [])]
@@ -57,8 +57,8 @@ export function buildOrderEmail(o: OrderEmailInput) {
     paragraphs: [t.hello, t.intro],
     cta: ship?.editUrl ? { label: t.edit, url: ship.editUrl } : undefined,
     summary: {
-      items: o.items.map((i) => ({ name: i.name, detail: `× ${i.quantity}`, priceLabel: money(i.unitPriceCents * i.quantity), image: i.image ? absoluteImageUrl(i.image) : undefined })),
-      rows: [{ label: t.total, value: money(o.totalCents), bold: true }],
+      items: o.items.map((i) => ({ name: i.name, detail: `× ${i.quantity}${i.size ? ` · ${i.size}` : ""}`, priceLabel: money(i.unitPriceCents * i.quantity), image: i.image ? absoluteImageUrl(i.image) : undefined })),
+            rows: [{ label: fr ? "Livraison" : "Shipping", value: fr ? "Offerte" : "Free" }, { label: t.total, value: money(o.totalCents), bold: true }],
     },
     address: ship ? { title: t.shipTo, lines: [...ship.lines, `${t.phone} : ${ship.phone}`] } : undefined,
     notice: `**${t.notice}** ${ship ? t.mistake : ""} ${t.bye}`,

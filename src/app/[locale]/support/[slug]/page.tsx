@@ -2,57 +2,124 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDict, type Locale } from "@/lib/i18n";
+import { HelpFeedback } from "@/components/marketplace/help-feedback";
 
 type Props = { params: Promise<{ locale: Locale; slug: string }> };
 
 const PAGES: Record<string, { fr: string[]; en: string[] }> = {
   faq: {
     fr: [
-      "Comment acheter ? Choisissez une cr?ation, ajoutez-la au panier, puis passez commande en quelques clics. Un e-mail de confirmation vous est envoy? imm?diatement.",
-      "Les cr?ations sont-elles uniques ? Oui, chaque cr?ation d'artiste est une pi?ce unique.",
-      "Comment suivre ma commande ? Depuis votre compte, rubrique Mes commandes, ou via le lien de suivi re?u par e-mail d?s l'exp?dition.",
-      "Quels sont les d?lais de livraison ? Chaque cr?ateur pr?pare et exp?die sa commande ; le transporteur et le num?ro de suivi vous sont indiqu?s dans l'e-mail d'exp?dition.",
-      "Puis-je modifier mon adresse de livraison ? Oui, tant que la commande n'est pas exp?di?e, via le lien pr?sent dans l'e-mail de confirmation.",
-      "Puis-je retourner un article ? Oui, vous disposez de 30 jours apr?s la livraison pour retourner une cr?ation, dans son ?tat d'origine. Contactez-nous pour organiser le retour.",
-      "Quels moyens de paiement sont accept?s ? Le paiement par carte bancaire, s?curis?. Les prix sont toujours en euros (EUR) ; les autres devises sont une conversion indicative.",
-      "Comment choisir ma taille ? Chaque fiche produit indique les tailles disponibles et les dimensions. En cas de doute, ?crivez-nous avant de commander.",
-      "Qui sont les cr?ateurs ? Des artistes et cr?ateurs afrodescendants ind?pendants. Leur page pr?sente leur parcours et l'ensemble de leurs cr?ations.",
+      "Comment acheter ? Choisissez une création, ajoutez-la au panier, puis passez commande en quelques clics. Un e-mail de confirmation vous est envoyé immédiatement.",
+      "Les créations sont-elles uniques ? Oui, chaque création d'artiste est une pièce unique.",
+      "Comment suivre ma commande ? Depuis votre compte, rubrique Mes commandes, ou via le lien de suivi reçu par e-mail dès l'expédition. Voir Commandes et livraison.",
+      "Puis-je modifier mon adresse de livraison ? Oui, tant que la commande n'est pas expédiée, via le lien présent dans l'e-mail de confirmation.",
+      "Puis-je annuler ma commande ? Oui, tant qu'elle n'est pas expédiée : écrivez-nous et vous êtes remboursé intégralement.",
+      "Puis-je retourner un article ? Oui, sous 30 jours après la livraison, dans son état d'origine. Voir Retours et remboursements.",
+      "Quels moyens de paiement sont acceptés ? Le paiement par carte bancaire, sécurisé. Les prix sont en euros (EUR) ; les autres devises sont une conversion indicative. Voir Paiement et tarification.",
+      "Comment choisir ma taille ? Chaque fiche produit indique les tailles disponibles et les dimensions. En cas de doute, écrivez-nous avant de commander.",
+      "Qui sont les créateurs ? Des artistes et créateurs afrodescendants indépendants. Leur page présente leur parcours et l'ensemble de leurs créations.",
+      "Comment vous contacter ? Via la page Contact ; nous répondons sous 48 heures ouvrées.",
     ],
     en: [
       "How do I buy? Pick a creation, add it to the cart, then place your order in a few clicks. A confirmation email is sent to you right away.",
       "Are the creations unique? Yes, each artist's creation is a one-of-a-kind piece.",
-      "How do I track my order? From your account under My orders, or via the tracking link in the email you receive once it ships.",
-      "What are the delivery times? Each creator prepares and ships their own order; the carrier and tracking number are given in the shipping email.",
+      "How do I track my order? From your account under My orders, or via the tracking link in the email you receive once it ships. See Orders and delivery.",
       "Can I change my delivery address? Yes, as long as the order has not shipped, using the link in the confirmation email.",
-      "Can I return an item? Yes, you have 30 days after delivery to return a creation in its original condition. Contact us to arrange the return.",
-      "Which payment methods are accepted? Secure card payment. Prices are always in euros (EUR); other currencies are an indicative conversion.",
+      "Can I cancel my order? Yes, as long as it has not shipped: write to us and you will be refunded in full.",
+      "Can I return an item? Yes, within 30 days of delivery, in its original condition. See Returns and refunds.",
+      "Which payment methods are accepted? Secure card payment. Prices are in euros (EUR); other currencies are an indicative conversion. See Payment and pricing.",
       "How do I choose my size? Each product page lists the available sizes and dimensions. If in doubt, write to us before ordering.",
       "Who are the creators? Independent artists and designers of African descent. Their page presents their story and all their creations.",
+      "How can I contact you? Via the Contact page; we reply within 48 business hours.",
+    ],
+  },
+  orders: {
+    fr: [
+      "Préparation. Chaque création est préparée et expédiée par l'artiste ou le partenaire qui la propose. La commande est préparée sous 2 jours ouvrés.",
+      "Suivi. Dès l'expédition, vous recevez un e-mail indiquant le transporteur et le numéro de suivi. Vous retrouvez aussi vos commandes dans votre compte, rubrique Mes commandes.",
+      "Commande de plusieurs partenaires. Si votre panier réunit des créations de plusieurs partenaires, elles peuvent être expédiées séparément et arriver à des dates différentes ; vous recevez un e-mail de suivi par envoi.",
+      "Délais et frais. Les délais dépendent du partenaire, du transporteur et du pays de destination. Les éventuels frais de livraison sont affichés avant la validation de la commande.",
+      "Livraison. Une signature peut être demandée à la remise du colis. Vérifiez que quelqu'un est disponible à l'adresse indiquée.",
+      "Adresse. Vous pouvez modifier l'adresse de livraison tant que la commande n'est pas expédiée, via le lien de l'e-mail de confirmation.",
+      "Annulation. Vous pouvez annuler une commande tant qu'elle n'est pas expédiée : écrivez-nous via la page Contact en indiquant votre numéro de commande. Vous êtes alors remboursé intégralement, sous 14 à 21 jours.",
+      "Colis non reçu ou endommagé. Contactez-nous avec votre numéro de commande ; nous étudions la situation avec le partenaire et le transporteur.",
+    ],
+    en: [
+      "Preparation. Each creation is prepared and shipped by the artist or partner who offers it. Orders are prepared within 2 business days.",
+      "Tracking. Once your order ships, you receive an email with the carrier and tracking number. You can also find your orders in your account under My orders.",
+      "Orders from several partners. If your cart contains creations from several partners, they may ship separately and arrive on different dates; you receive one tracking email per shipment.",
+      "Times and fees. Delivery times depend on the partner, the carrier and the destination country. Any delivery fees are shown before you confirm your order.",
+      "Delivery. A signature may be required on delivery. Make sure someone is available at the address provided.",
+      "Address. You can change the delivery address as long as the order has not shipped, using the link in the confirmation email.",
+      "Cancellation. You can cancel an order as long as it has not shipped: write to us via the Contact page with your order number. You are then refunded in full, within 14 to 21 days.",
+      "Parcel not received or damaged. Contact us with your order number; we look into it with the partner and the carrier.",
+    ],
+  },
+  payment: {
+    fr: [
+      "Prix. Les prix sont fixés par chaque partenaire, en euros (€), toutes taxes comprises. Le prix applicable est celui affiché au moment de la commande.",
+      "Moyen de paiement. Le paiement s'effectue par carte bancaire au moment de la commande ; votre carte est débitée à la validation. Nous ne conservons aucune donnée de carte.",
+      "Plusieurs partenaires. Même si votre panier contient des créations de plusieurs partenaires, vous ne réalisez qu'une seule transaction.",
+      "Sécurité. Les paiements sont sécurisés et peuvent nécessiter une authentification 3D Secure auprès de votre banque.",
+      "Devises. Seul l'euro est débité ; l'affichage dans une autre devise n'est qu'une conversion indicative, et votre banque peut appliquer ses propres frais de change.",
+      "Confirmation. Un e-mail de confirmation vous est envoyé une fois le paiement enregistré.",
+      "Paiement refusé. Vérifiez les informations de votre carte, contactez votre banque, ou essayez un autre moyen de paiement ; si le problème persiste, écrivez-nous.",
+    ],
+    en: [
+      "Prices. Prices are set by each partner, in euros (€), all taxes included. The price that applies is the one displayed when you order.",
+      "Payment method. Payment is made by card when you order; your card is charged on confirmation. We store no card data.",
+      "Several partners. Even if your cart contains creations from several partners, you make a single transaction.",
+      "Security. Payments are secure and may require 3D Secure authentication with your bank.",
+      "Currencies. Only euros are charged; display in another currency is an indicative conversion only, and your bank may apply its own foreign-exchange fees.",
+      "Confirmation. A confirmation email is sent once payment has been recorded.",
+      "Payment declined. Check your card details, contact your bank or try another payment method; if the problem persists, write to us.",
+    ],
+  },
+  returns: {
+    fr: [
+      "Délai. Vous pouvez retourner un article sous 30 jours à compter de sa livraison.",
+      "Conditions. L'article doit être non porté, non utilisé et dans son emballage d'origine, avec ses étiquettes.",
+      "Pièces sur mesure. Les créations réalisées sur mesure ou personnalisées à votre demande ne sont ni reprises ni échangées, sauf défaut.",
+      "Droit de rétractation. Conformément au Code de la consommation, vous disposez de 14 jours à compter de la réception pour vous rétracter sans justifier de motif, sauf pour les créations personnalisées.",
+      "Comment faire. Écrivez-nous via la page Contact en indiquant votre numéro de commande et l'article concerné ; nous vous indiquons la marche à suivre pour le retour.",
+      "Remboursement. Une fois le retour reçu et vérifié, vous êtes remboursé sous environ 14 jours, sur le moyen de paiement utilisé à la commande. Les frais de livraison initiaux ne sont pas remboursés, sauf article défectueux ou non conforme.",
+      "Article défectueux ou non conforme. Contactez-nous rapidement avec des photos ; nous trouvons une solution avec le partenaire.",
+    ],
+    en: [
+      "Time limit. You may return an item within 30 days of its delivery.",
+      "Conditions. The item must be unworn, unused and in its original packaging, with its tags.",
+      "Made-to-measure pieces. Creations made to measure or personalised at your request cannot be returned or exchanged, except if defective.",
+      "Right of withdrawal. In accordance with consumer law, you have 14 days from receipt to withdraw without giving a reason, except for personalised creations.",
+      "How to proceed. Write to us via the Contact page with your order number and the item concerned; we tell you how to send it back.",
+      "Refund. Once the return is received and checked, you are refunded within about 14 days, to the payment method used for the order. Original delivery fees are not refunded, unless the item is defective or not as described.",
+      "Defective or non-conforming item. Contact us quickly with photos; we find a solution with the partner.",
     ],
   },
   terms: {
     fr: [
-      "1. Objet. Les pr?sentes conditions g?n?rales de vente r?gissent toute commande pass?e sur E p?m ta?, galerie en ligne de cr?ations d'artistes et de cr?ateurs afrodescendants.",
-      "2. Commandes. Toute commande vaut acceptation des pr?sentes conditions. Un e-mail de confirmation est envoy? apr?s validation. Chaque cr?ation ?tant une pi?ce unique, sa disponibilit? est confirm?e par le cr?ateur.",
-      "3. Prix. Les prix sont indiqu?s en euros (?), toutes taxes comprises. E p?m ta? peut modifier ses prix ? tout moment ; le prix applicable est celui affich? au moment de la commande.",
-      "4. Paiement. Le paiement s'effectue par carte bancaire au moment de la commande. Il est s?curis? et la commande n'est trait?e qu'apr?s enregistrement du paiement.",
-      "5. Livraison. Chaque cr?ateur exp?die sa commande ? l'adresse indiqu?e. Le transporteur et le num?ro de suivi sont communiqu?s par e-mail. L'adresse reste modifiable tant que la commande n'est pas exp?di?e.",
-      "6. Retours. Vous pouvez retourner un article sous 30 jours ? compter de sa livraison, dans son ?tat d'origine. Contactez-nous pour organiser le retour ; l'article retourn? est rembours? apr?s r?ception.",
-      "7. Droit de r?tractation. Conform?ment au Code de la consommation, vous disposez de 14 jours ? compter de la r?ception pour vous r?tracter sans avoir ? justifier de motif, sauf pour les cr?ations personnalis?es ? votre demande.",
-      "8. Responsabilit?. E p?m ta? agit comme interm?diaire entre les acheteurs et les cr?ateurs. Notre responsabilit? ne saurait ?tre engag?e en cas de retard ou d'indisponibilit? du transporteur ou de force majeure.",
-      "9. Droit applicable. Les pr?sentes conditions sont soumises au droit fran?ais. En cas de litige, une solution amiable sera recherch?e avant toute action, ? d?faut de quoi les tribunaux comp?tents seront saisis.",
+      "1. Objet. Les présentes conditions générales de vente régissent toute commande passée sur E póm ta’, galerie en ligne de créations d'artistes et de créateurs afrodescendants.",
+      "2. Commandes. Toute commande vaut acceptation des présentes conditions. Un e-mail de confirmation est envoyé après validation. Chaque création étant une pièce unique, sa disponibilité est confirmée par le créateur.",
+      "3. Prix. Les prix sont fixés par chaque partenaire et indiqués en euros (€), toutes taxes comprises. Le prix applicable est celui affiché au moment de la commande.",
+      "4. Paiement. Le paiement s'effectue par carte bancaire au moment de la commande, avec authentification 3D Secure le cas échéant. La commande n'est traitée qu'après enregistrement du paiement.",
+      "5. Livraison. Chaque créateur prépare la commande sous 2 jours ouvrés et l'expédie à l'adresse indiquée. Le transporteur et le numéro de suivi sont communiqués par e-mail. L'adresse reste modifiable tant que la commande n'est pas expédiée.",
+      "6. Annulation. Une commande peut être annulée tant qu'elle n'est pas expédiée ; elle est alors remboursée intégralement sous 14 à 21 jours.",
+      "7. Retours. Vous pouvez retourner un article sous 30 jours à compter de sa livraison, non porté et dans son emballage d'origine. Les pièces sur mesure ne sont pas retournables, sauf défaut. L'article retourné est remboursé sous environ 14 jours, hors frais de livraison initiaux.",
+      "8. Droit de rétractation. Vous disposez de 14 jours à compter de la réception pour vous rétracter sans avoir à justifier de motif, sauf pour les créations personnalisées à votre demande.",
+      "9. Responsabilité. E póm ta’ agit comme intermédiaire entre les acheteurs et les créateurs. Notre responsabilité ne saurait être engagée en cas de retard ou d'indisponibilité du transporteur ou de force majeure.",
+      "10. Droit applicable. Les présentes conditions sont soumises au droit français. En cas de litige, une solution amiable sera recherchée avant toute action, à défaut de quoi les tribunaux compétents seront saisis.",
       "Pour toute question, contactez-nous via la page Contact.",
     ],
     en: [
-      "1. Purpose. These terms and conditions of sale govern every order placed on E p?m ta?, an online gallery of creations by artists and designers of African descent.",
+      "1. Purpose. These terms and conditions of sale govern every order placed on E póm ta’, an online gallery of creations by artists and designers of African descent.",
       "2. Orders. Placing an order means accepting these terms. A confirmation email is sent once the order is validated. As each creation is a one-of-a-kind piece, its availability is confirmed by the creator.",
-      "3. Prices. Prices are shown in euros (?), all taxes included. E p?m ta? may change its prices at any time; the price that applies is the one displayed when you order.",
-      "4. Payment. Payment is made by card when you order. It is secure and the order is processed only once payment has been recorded.",
-      "5. Delivery. Each creator ships their own order to the address provided. The carrier and tracking number are sent by email. The address can be changed as long as the order has not shipped.",
-      "6. Returns. You may return an item within 30 days of delivery, in its original condition. Contact us to arrange the return; the returned item is refunded once received.",
-      "7. Right of withdrawal. In accordance with consumer law, you have 14 days from receipt to withdraw without giving a reason, except for creations made to your personal specifications.",
-      "8. Liability. E p?m ta? acts as an intermediary between buyers and creators. We cannot be held liable for carrier delays or unavailability, or force majeure.",
-      "9. Governing law. These terms are governed by French law. In the event of a dispute, an amicable solution will be sought first, failing which the competent courts will have jurisdiction.",
+      "3. Prices. Prices are set by each partner and shown in euros (€), all taxes included. The price that applies is the one displayed when you order.",
+      "4. Payment. Payment is made by card when you order, with 3D Secure authentication where applicable. The order is processed only once payment has been recorded.",
+      "5. Delivery. Each creator prepares the order within 2 business days and ships it to the address provided. The carrier and tracking number are sent by email. The address can be changed as long as the order has not shipped.",
+      "6. Cancellation. An order can be cancelled as long as it has not shipped; it is then refunded in full within 14 to 21 days.",
+      "7. Returns. You may return an item within 30 days of delivery, unworn and in its original packaging. Made-to-measure pieces cannot be returned, except if defective. The returned item is refunded within about 14 days, excluding original delivery fees.",
+      "8. Right of withdrawal. You have 14 days from receipt to withdraw without giving a reason, except for creations personalised at your request.",
+      "9. Liability. E póm ta’ acts as an intermediary between buyers and creators. We cannot be held liable for carrier delays or unavailability, or force majeure.",
+      "10. Governing law. These terms are governed by French law. In the event of a dispute, an amicable solution will be sought first, failing which the competent courts will have jurisdiction.",
       "For any question, contact us via the Contact page.",
     ],
   },
@@ -86,6 +153,26 @@ const PAGES: Record<string, { fr: string[]; en: string[] }> = {
       "12. Updates to this policy. We may change this policy; the version in force is the one published on this page, with its update date. We will let you know of any significant change. Last updated: November 2026.",
     ],
   },
+  cookies: {
+    fr: [
+      "Qu'est-ce qu'un cookie ? Un cookie est un petit fichier enregistré sur votre appareil par le site. Nous l'utilisons pour faire fonctionner le site et mémoriser vos choix.",
+      "Strictement nécessaires (toujours actifs). Session, panier, langue et région : indispensables au fonctionnement du site, ils ne peuvent pas être désactivés.",
+      "Performance. Mesure d'audience agrégée pour comprendre comment le site est utilisé et l'améliorer.",
+      "Préférences. Mémorisation de vos choix (langue, région, favoris) pour personnaliser votre visite.",
+      "Publicité. Nous n'utilisons aucun cookie publicitaire.",
+      "Gérer les cookies. Vous pouvez supprimer ou bloquer les cookies non nécessaires depuis les réglages de votre navigateur ; les cookies nécessaires ne peuvent pas être désactivés sans altérer le site. La durée de vie des cookies n'excède pas 13 mois.",
+      "Questions. Écrivez-nous via la page Contact.",
+    ],
+    en: [
+      "What is a cookie? A cookie is a small file saved on your device by the site. We use them to make the site work and remember your choices.",
+      "Strictly necessary (always active). Session, cart, language and region: essential for the site to work, they cannot be disabled.",
+      "Performance. Aggregated audience measurement to understand how the site is used and improve it.",
+      "Preferences. Remembering your choices (language, region, favourites) to personalise your visit.",
+      "Advertising. We use no advertising cookies.",
+      "Managing cookies. You can delete or block non-essential cookies in your browser settings; necessary cookies cannot be disabled without affecting the site. Cookie lifetime does not exceed 13 months.",
+      "Questions. Write to us via the Contact page.",
+    ],
+  },
   contact: {
     fr: [
       "Une question sur une cr?ation, une commande ou votre compte ? ?crivez-nous par e-mail ? contact@epomta.example.",
@@ -102,15 +189,24 @@ const PAGES: Record<string, { fr: string[]; en: string[] }> = {
   },
 };
 
-const KEYS = ["faq", "terms", "privacy", "contact", "about", "discounts", "doNotSell", "credits"] as const;
+const KEYS = ["faq", "orders", "payment", "returns", "terms", "privacy", "cookies", "contact", "about", "discounts", "doNotSell", "credits"] as const;
 type Key = (typeof KEYS)[number];
 const keyOf = (slug: string) => {
   const s = slug === "do-not-sell" ? "doNotSell" : slug;
   return (KEYS as readonly string[]).includes(s) ? (s as Key) : null;
 };
 
+const HELP_LABELS: Record<string, { fr: string; en: string }> = {
+  orders: { fr: "Commandes et livraison", en: "Orders and delivery" },
+  payment: { fr: "Paiement et tarification", en: "Payment and pricing" },
+  returns: { fr: "Retours et remboursements", en: "Returns and refunds" },
+  cookies: { fr: "Cookies", en: "Cookies" },
+};
+const HELP_NAV = ["faq", "orders", "payment", "returns", "terms", "privacy", "cookies", "contact"] as const;
+
 function labelOf(locale: Locale, key: Key) {
   const d = getDict(locale);
+  if (key in HELP_LABELS) return HELP_LABELS[key][locale === "en" ? "en" : "fr"];
   return key in d.me ? d.me[key as keyof typeof d.me] as string : key === "credits" ? d.f10.credits : d.f10[key as "about" | "discounts" | "doNotSell"];
 }
 
@@ -126,17 +222,50 @@ export default async function SupportPage({ params }: Props) {
   if (!key) notFound();
   const t = getDict(locale).me;
   const body = key in PAGES ? PAGES[key][locale === "en" ? "en" : "fr"] : [getDict(locale).f10.pages[key as "about" | "discounts" | "doNotSell" | "credits"]];
-  return (
-    <div className="mx-auto max-w-xl space-y-4">
-      <Link href={`/${locale}/account`} className="text-sm text-muted-foreground hover:text-terracotta">
-        ‹ {t.back}
-      </Link>
+  const en = locale === "en";
+  const isHelp = (HELP_NAV as readonly string[]).includes(key);
+  const content = (
+    <div className="space-y-4">
       <h1 className="font-heading text-3xl text-primary">{labelOf(locale, key)}</h1>
       {body.map((p) => (
         <p key={p} className="text-sm leading-relaxed">
           {p}
         </p>
       ))}
+      {isHelp && (
+        <HelpFeedback
+          question={en ? "Did you find this content helpful?" : "Ce contenu vous semble-t-il pertinent ?"}
+          yes={en ? "Yes" : "Oui"}
+          no={en ? "Not really" : "Pas vraiment"}
+          thanks={en ? "Thank you for your feedback." : "Merci pour votre retour."}
+        />
+      )}
+    </div>
+  );
+  return (
+    <div className={`mx-auto space-y-4 ${isHelp ? "max-w-4xl" : "max-w-xl"}`}>
+      <Link href={`/${locale}/account`} className="text-sm text-muted-foreground hover:text-terracotta">
+        ‹ {t.back}
+      </Link>
+      {isHelp ? (
+        <div className="grid gap-8 md:grid-cols-[14rem_1fr]">
+          <nav aria-label={en ? "Help" : "Aide"} className="text-sm">
+            <h2 className="mb-2 font-semibold uppercase tracking-wide">{en ? "Help" : "Aide"}</h2>
+            <ul className="space-y-1">
+              {HELP_NAV.map((k) => (
+                <li key={k}>
+                  <Link href={`/${locale}/support/${k}`} aria-current={k === key ? "page" : undefined} className={`block py-1 hover:underline ${k === key ? "font-semibold underline" : ""}`}>
+                    {labelOf(locale, k)}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+          {content}
+        </div>
+      ) : (
+        content
+      )}
     </div>
   );
 }

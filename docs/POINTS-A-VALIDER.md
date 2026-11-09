@@ -20,7 +20,7 @@ Statut : À faire / En cours / Validé. Responsables suggérés : Juriste, DPO, 
 | Point | Contexte | Risque | Action recommandée | Responsable | Statut |
 |---|---|---|---|---|---|
 | Délais annoncés : préparation 2 j ouvrés, remboursement 14-21 j (annulation) / ~14 j (retour) | Textes d'aide et CGV | Promesses non tenues | Valider avec les partenaires et la finance | Finance / Produit | À faire |
-| Remboursement manuel | Annulation par le client : le colis passe « Annulée » avec le motif « remboursement à traiter » ; aucun appel Stripe dans le code | Remboursement oublié ou en retard | Définir le process admin ou automatiser via l'API Stripe | Finance / Dev | À faire |
+| Remboursement à l'annulation | Remboursement Stripe automatique (API, idempotent par colis) si la commande porte un `stripePaymentIntentId` et que `STRIPE_SECRET_KEY` est définie ; sinon statut « remboursement à traiter » (admin). Aucun code n'enregistre encore le paiement Stripe à la commande (checkout) : le champ reste vide tant que ce n'est pas branché | Remboursement oublié ou en retard ; échec Stripe | Brancher l'enregistrement du PaymentIntent au checkout, définir le process admin pour les statuts MANUAL/FAILED | Finance / Dev | À faire |
 | 3D Secure / Stripe | Mentionné dans la page Paiement | Texte à aligner sur la config Stripe réelle | Vérifier la configuration et le texte | Dev / Finance | À faire |
 
 ## 3. Livraison / transporteurs
@@ -31,7 +31,7 @@ Statut : À faire / En cours / Validé. Responsables suggérés : Juriste, DPO, 
 | Frais et délais par colis non connus | Aucune donnée de frais ni de délai par envoi ; seule la préparation sous 2 j ouvrés est indiquée | Information avant paiement incomplète | Définir la source de données par partenaire | Produit / Dev | À faire |
 | Calcul des frais de port (fixe ou calculé) | Aucun modèle de frais dans le code | Affichage des frais avant paiement | Décider : forfait, barème ou calcul transporteur | Produit | À décider |
 | Option livraison offerte | Retirée de l'application | Cohérence commerciale | Décider d'une éventuelle offre | Produit | À décider |
-| Suivi de livraison | Lot futur (suivi transporteur) | Attentes clients | Planifier le lot | Produit / Dev | À faire |
+| Suivi de livraison | Transporteur (UPS, DHL, Colissimo, autre) et n° saisis par le créateur ; lien vers la page du transporteur (aucun appel API) ; saisie côté admin non ajoutée | URL de suivi à vérifier ; transporteur « autre » sans lien | Valider les URL et le besoin de saisie admin | Produit / Dev | À faire |
 
 ## 4. Cookies / RGPD
 

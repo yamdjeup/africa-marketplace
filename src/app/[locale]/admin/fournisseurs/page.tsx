@@ -38,7 +38,7 @@ export default async function SuppliersPage({ params, searchParams }: { params: 
   return (
     <>
       <h1 className="font-heading text-3xl text-primary">{tr(locale, "Partenaires", "Partners")}</h1>
-      <p className="text-sm text-muted-foreground">{tr(locale, "Les partenaires de démonstration peuvent être ouverts en vue admin (lecture seule).", "Demo partners can be opened in admin view (read-only).")}</p>
+      <p className="text-sm text-muted-foreground">{tr(locale, "Les partenaires peuvent être ouverts en vue admin (lecture seule).", "Partners can be opened in admin view (read-only).")}</p>
       {sp.done && <p role="status" className="rounded-md border border-accent bg-accent/15 p-3 text-sm">{tr(locale, "Statut mis à jour, e-mail envoyé.", "Status updated, email sent.")}</p>}
       {sp.error && <p role="alert" className="rounded-md border border-destructive p-3 text-sm text-destructive">{errors[sp.error] ? tr(locale, ...errors[sp.error]) : tr(locale, "Erreur.", "Error.")}</p>}
       <ul className="divide-y rounded-lg border bg-card">
@@ -48,7 +48,7 @@ export default async function SuppliersPage({ params, searchParams }: { params: 
               <span>
                 <strong>{s.displayName}</strong> · {s.country} · {s.craftType} · {Math.round(s.commissionRate * 1000) / 10} %
                 <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs">{s.status === "ACTIVE" ? tr(locale, "Actif", "Active") : s.status === "SUSPENDED" ? tr(locale, "Suspendu", "Suspended") : tr(locale, "Révoqué", "Revoked")}</span>
-                <span className="ml-2 text-xs text-muted-foreground">{s.isDemo ? tr(locale, "démo", "demo") : `${s.user?.email ?? ""} · ${tr(locale, "Partenaire depuis le", "Partner since")} ${s.createdAt.toLocaleDateString(dateFmt)}`}</span>
+                <span className="ml-2 text-xs text-muted-foreground">{s.isDemo ? tr(locale, "interne", "internal") : `${s.user?.email ?? ""} · ${tr(locale, "Partenaire depuis le", "Partner since")} ${s.createdAt.toLocaleDateString(dateFmt)}`}</span>
               </span>
               {s.isDemo && (
                 <form action={setViewAs}>

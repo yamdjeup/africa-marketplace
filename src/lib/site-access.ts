@@ -70,7 +70,7 @@ export function safeNext(value: string | null | undefined): string {
 const texts = {
   fr: {
     title: "Accès réservé",
-    lead: "Cette démonstration est privée. Saisissez le mot de passe qui vous a été communiqué.",
+    lead: "Accès réservé. Saisissez le mot de passe qui vous a été communiqué.",
     label: "Mot de passe",
     submit: "Entrer",
     error: "Mot de passe incorrect.",
@@ -79,7 +79,7 @@ const texts = {
   },
   en: {
     title: "Private access",
-    lead: "This demonstration is private. Enter the password you were given.",
+    lead: "Restricted access. Enter the password you were given.",
     label: "Password",
     submit: "Enter",
     error: "Incorrect password.",

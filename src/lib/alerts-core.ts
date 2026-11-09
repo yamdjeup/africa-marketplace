@@ -46,7 +46,7 @@ const T = {
     unsub: "Se désinscrire de ces e-mails",
     testSubject: "E-mail de test — alertes E póm ta’",
     testBody: "Ceci est un e-mail de test : vos alertes fonctionnent.",
-    demo: "Démonstration privée — prix fictifs.",
+    demo: "E póm ta’",
   },
   en: {
     price: "price drop",
@@ -59,7 +59,7 @@ const T = {
     unsub: "Unsubscribe from these emails",
     testSubject: "Test email — E póm ta’ alerts",
     testBody: "This is a test email: your alerts work.",
-    demo: "Private demonstration — fictional prices.",
+    demo: "E póm ta’",
   },
 };
 

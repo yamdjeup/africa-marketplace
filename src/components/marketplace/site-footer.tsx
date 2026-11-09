@@ -70,7 +70,6 @@ export function SiteFooter({ locale }: { locale: Locale }) {
             <li key={h} className="border border-foreground/25 bg-background p-5">
               <p className="font-heading text-base">{h}</p>
               <p className="mt-1">{v}</p>
-              <p className="mt-1 text-xs opacity-70">{t.f9.provisional}</p>
             </li>
           ))}
         </ul>
@@ -102,8 +101,8 @@ export function SiteFooter({ locale }: { locale: Locale }) {
         <nav aria-label={ft.perksTitle}>
           <h2 className={dHead}>{ft.perksTitle}</h2>
           <ul className={dCol}>
-            <li><Link href={l("/support/discounts")}>{ft.referral} ({ft.provisional})</Link></li>
-            <li><Link href={l("/support/discounts")}>{ft.student} ({ft.provisional})</Link></li>
+            <li><Link href={l("/support/discounts")}>{ft.referral}</Link></li>
+            <li><Link href={l("/support/discounts")}>{ft.student}</Link></li>
           </ul>
         </nav>
         <div>

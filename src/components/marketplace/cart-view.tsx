@@ -132,7 +132,6 @@ export function CartView({ locale }: { locale: Locale }) {
         </Link>
         <p className="hidden rounded-md bg-muted p-3 text-center text-sm lg:block">
           {f9.freeReturns}
-          <span className="block text-xs text-muted-foreground">{f9.placeholder}</span>
         </p>
         <Link href={`/${locale}/catalogue`} className={buttonVariants({ variant: "outline", size: "lg", className: "h-12 w-full" })}>
           {t.continue}

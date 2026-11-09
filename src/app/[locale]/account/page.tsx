@@ -77,7 +77,7 @@ export default async function AccountPage({ params }: Props) {
         <Section title={t.me.sectionAccount}>
           {spaceRows}
           <Row href={`${base}/account/orders`} label={t.f10.ordersReturns} />
-          <Row href={`${base}/support/credits`} label={`${t.f10.credits} (${t.f10.provisional})`} />
+          <Row href={`${base}/support/credits`} label={`${t.f10.credits}`} />
           <Row href={`${base}/account/security`} label={t.me.security} />
           <Row href={`${base}/account/addresses`} label={t.me.addresses} />
         </Section>
@@ -92,10 +92,10 @@ export default async function AccountPage({ params }: Props) {
         </Section>
         <Section title={t.me.sectionSupport}>
           <Row href={`${base}/support/about`} label={t.f10.about} />
-          <Row href={`${base}/support/discounts`} label={`${t.f10.discounts} (${t.f10.provisional})`} />
+          <Row href={`${base}/support/discounts`} label={`${t.f10.discounts}`} />
           <Row href={`${base}/support/terms`} label={t.me.terms} />
           <Row href={`${base}/support/privacy`} label={t.me.privacy} />
-          <Row href={`${base}/support/do-not-sell`} label={`${t.f10.doNotSell} (${t.f10.provisional})`} />
+          <Row href={`${base}/support/do-not-sell`} label={`${t.f10.doNotSell}`} />
           <Row href={`${base}/support/faq`} label={t.me.faq} />
         </Section>
         <section className="space-y-3 text-center">

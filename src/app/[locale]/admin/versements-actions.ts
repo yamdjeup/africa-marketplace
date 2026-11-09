@@ -16,7 +16,7 @@ async function admin() {
   return session!.user!.email!;
 }
 
-// Marque le versement (test) de tout le solde disponible d'un partenaire.
+// Marque le versement de tout le solde disponible d'un partenaire.
 export async function markPayoutAction(f: FormData) {
   const email = await admin();
   const supplierId = String(f.get("supplierId") ?? "");

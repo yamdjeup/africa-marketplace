@@ -31,7 +31,7 @@ export default async function PayoutsAdmin({ params, searchParams }: { params: P
   return (
     <>
       <h1 className="font-heading text-3xl text-primary">{tr(locale, "Versements", "Payouts")}</h1>
-      <p className="rounded-md border border-accent bg-accent/10 p-3 text-sm">{tr(locale, "Mode test : marquer un versement n'envoie aucun argent réel.", "Test mode: marking a payout sends no real money.")}</p>
+      <p className="rounded-md border border-accent bg-accent/10 p-3 text-sm">{tr(locale, "Marquer un versement l'enregistre dans le registre.", "Marking a payout records it in the ledger.")}</p>
       {sp.ok && msg[sp.ok] && <p role="status" className="rounded-md border border-accent bg-accent/15 p-3 text-sm">{tr(locale, ...msg[sp.ok])}</p>}
       {sp.error && <p role="alert" className="rounded-md border border-destructive p-3 text-sm text-destructive">{err[sp.error] ? tr(locale, ...err[sp.error]) : tr(locale, "Erreur.", "Error.")}</p>}
       {rows.length === 0 ? <p className="text-sm text-muted-foreground">{tr(locale, "Aucune vente livrée pour l'instant.", "No delivered sale yet.")}</p> : (
@@ -65,7 +65,7 @@ export default async function PayoutsAdmin({ params, searchParams }: { params: P
             {pendingEntries.map((e) => (
               <li key={e.id} className="flex flex-wrap items-center justify-between gap-2 p-3">
                 <span>{names.get(e.supplierId)} · {num.get(e.subOrderId)} · {eur(e.netCents)} · {tr(locale, "disponible le", "available on")} {fmt.format(e.availableAt)}</span>
-                <form action={releaseEntryAction}><input type="hidden" name="id" value={e.id} /><button className={buttonVariants({ variant: "outline", className: "min-h-11" })}>{tr(locale, "Rendre disponible (test)", "Make available (test)")}</button></form>
+                <form action={releaseEntryAction}><input type="hidden" name="id" value={e.id} /><button className={buttonVariants({ variant: "outline", className: "min-h-11" })}>{tr(locale, "Rendre disponible", "Make available")}</button></form>
               </li>
             ))}
           </ul>

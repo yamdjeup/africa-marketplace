@@ -15,7 +15,6 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
   const labels = { artist: t.catalog.kindArtist, category: t.catalog.kindCategory, work: t.catalog.kindWork };
   return (
     <header className="z-10 border-b bg-background/95 backdrop-blur md:sticky md:top-0 max-lg:[body:has([data-wishlist])_&]:hidden max-md:[body:has([data-account])_&]:hidden max-md:[body:has([data-shopnav])_&]:hidden">
-      <div className="bg-accent/20 py-1 text-center text-xs tracking-wide text-foreground">{t.demoBanner}</div>
       <div className="kente-band h-1" />
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-2 lg:grid lg:max-w-[1400px] lg:grid-cols-[1fr_auto_1fr] lg:gap-x-8 lg:py-3">
         <Link href={`/${locale}`} className="font-heading text-lg font-semibold text-primary md:text-xl lg:order-2 lg:text-center lg:text-3xl">

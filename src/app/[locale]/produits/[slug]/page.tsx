@@ -93,7 +93,6 @@ export default async function ProductPage({ params }: Props) {
               {formatEur(p.priceCents, locale)}
               <ApproxPrice cents={p.priceCents} locale={locale} />
             </p>
-            {!p.isPartner && <p className="text-xs text-muted-foreground">{t.fictitiousPrice}</p>}
           </div>
           <p>{p.description}</p>
           <p className={`text-sm ${p.stock === 0 ? "text-destructive" : "text-kente"}`}>
@@ -155,7 +154,7 @@ export default async function ProductPage({ params }: Props) {
               <>
                 <dt className="font-medium">{t.dimensions}</dt>
                 <dd>
-                  {cmLabel}{!p.isPartner && <span className="text-xs text-muted-foreground"> ({t.fictitiousDimensions})</span>}
+                  {cmLabel}
                 </dd>
               </>
             )}

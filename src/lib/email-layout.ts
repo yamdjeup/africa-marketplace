@@ -36,8 +36,8 @@ export function renderEmailHtml(o: EmailLayoutInput): string {
   const base = siteUrl();
   const loc = o.locale;
   const t = fr
-    ? { view: "Voir mon compte", help: "Besoin d'aide ?", mail: "E-mail", phone: "Téléphone", faq: "FAQ", prefs: "Préférences e-mail", account: "Mon compte", contact: "Contact", legal: "E póm ta’ — place de marché de créateurs africains. Démonstration privée." }
-    : { view: "View my account", help: "Need help?", mail: "Email", phone: "Phone", faq: "FAQ", prefs: "Email preferences", account: "My account", contact: "Contact", legal: "E póm ta’ — marketplace of African makers. Private demonstration." };
+    ? { view: "Voir mon compte", help: "Besoin d'aide ?", mail: "E-mail", phone: "Téléphone", faq: "FAQ", prefs: "Préférences e-mail", account: "Mon compte", contact: "Contact", legal: "E póm ta’ — place de marché de créateurs africains." }
+    : { view: "View my account", help: "Need help?", mail: "Email", phone: "Phone", faq: "FAQ", prefs: "Email preferences", account: "My account", contact: "Contact", legal: "E póm ta’ — marketplace of African makers." };
   const center = `text-align:center;font-family:${FONT};color:#000`;
   const sep = `border-top:1px solid ${LINE}`;
 

@@ -29,14 +29,12 @@ test.describe.serial("Parcours client", () => {
     await page.goto("/");
     await expect(page).toHaveURL(/\/fr$/);
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Artistes plasticiens afrodescendants");
-    await expect(page.getByText("Démonstration privée").first()).toBeVisible();
     await expect(page.getByRole("link", { name: /E póm ta’/ }).first()).toBeVisible();
     await expect(page).toHaveTitle(/E póm ta’/);
     await page.getByRole("button", { name: /Langue et région/ }).click();
     await page.getByRole("link", { name: "English" }).click();
     await expect(page).toHaveURL(/\/en$/);
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Afro-descendant visual artists");
-    await expect(page.getByText("Private demo").first()).toBeVisible();
     await page.getByRole("link", { name: "Français" }).click();
     await expect(page).toHaveURL(/\/fr$/);
   });
@@ -71,11 +69,10 @@ test.describe.serial("Parcours client", () => {
     await expect(page.getByText("Page introuvable").first()).toBeVisible();
   });
 
-  test("fiche œuvre : crédit artiste, prix fictif, pièce unique", async ({ page }) => {
+  test("fiche œuvre : crédit artiste, pièce unique", async ({ page }) => {
     await page.goto("/fr/produits/portrait-encadre-cheveux-ocre");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Portrait encadré aux cheveux ocre");
     await expect(page.getByRole("link", { name: "Aurélie-Victoire Célanie" }).first()).toBeVisible();
-    await expect(page.getByText("Prix fictif de démonstration")).toBeVisible();
     await expect(page.getByText("Pièce unique").first()).toBeVisible();
   });
 

@@ -5,23 +5,22 @@ import { getDict, type Locale } from "@/lib/i18n";
 
 type Props = { params: Promise<{ locale: Locale; slug: string }> };
 
-// Contenu provisoire de démonstration (à remplacer avant toute mise en ligne publique).
 const PAGES: Record<string, { fr: string[]; en: string[] }> = {
   faq: {
     fr: [
       "Comment acheter ?       Choisissez une création, ajoutez-la au panier, puis passez commande en quelques clics.",
-            "Les créations sont-elles uniques ? Oui, chaque création d'artiste est une pièce unique ; les pièces « Exemple » sont fictives.",
+            "Les créations sont-elles uniques ? Oui, chaque création d'artiste est une pièce unique .",
       "Dans quelle devise paie-t-on ? Toujours en EUR ; les autres devises sont une conversion indicative.",
     ],
     en: [
       "How do I buy?       Pick a creation, add it to the cart, then place your order in a few clicks.",
-            "Are the creations unique? Yes, each artist's creation is a one-of-a-kind piece; “Example” items are fictional.",
+            "Are the creations unique? Yes, each artist's creation is a one-of-a-kind piece.",
       "Which currency do I pay in? Always EUR; other currencies are an indicative conversion.",
     ],
   },
   terms: {
-    fr: ["Conditions générales de vente : texte à rédiger. Cette démonstration privée ne constitue pas une offre de vente."],
-    en: ["Terms and conditions of sale: text to be written. This private demo is not an offer for sale."],
+    fr: ["Conditions générales de vente : toute commande passée sur E póm ta’ est soumise aux présentes conditions. Pour toute question, contactez-nous."],
+    en: ["Terms and conditions of sale: every order placed on E póm ta’ is subject to these conditions. For any question, contact us."],
   },
   privacy: {
     fr: [
@@ -29,19 +28,19 @@ const PAGES: Record<string, { fr: string[]; en: string[] }> = {
       "Finalités : gérer votre compte et vos commandes, vous envoyer les e-mails et notifications que vous avez choisis (baisse de prix, indisponibilité d'un favori, panier laissé), faire fonctionner le site. Aucune publicité, aucune revente de données, aucun suivi publicitaire.",
       "Caméra (Miroir) et photos : l'image est traitée sur votre appareil et n'est pas envoyée à nos serveurs. Langue et région sont mémorisées dans un cookie ou sur votre appareil.",
       "Prestataires techniques : Vercel (hébergement), Neon (base de données, Francfort), Google (connexion), service d'envoi d'e-mails, flagcdn.com (drapeaux) et Photon/Komoot (suggestions d'adresses). Les notifications push passent par les services Apple/Google/navigateur.",
-      "Vos droits (accès, rectification, suppression, retrait du consentement) : écrivez-nous via la page Contact ; la suppression du compte efface vos données personnelles. Responsable de traitement et coordonnées définitives : à compléter avant la mise en ligne publique.",
+      "Vos droits (accès, rectification, suppression, retrait du consentement) : écrivez-nous via la page Contact ; la suppression du compte efface vos données personnelles.",
     ],
     en: [
       "Data we collect: name, email address and password (stored hashed, never in clear text) when you create an account; delivery addresses, orders, favourites and alert preferences; a push-notification subscription if you enable it. Google sign-in (optional): we only receive your name and email.",
       "Purposes: running your account and orders, sending the emails and notifications you chose (price drop, favourite unavailable, abandoned cart), operating the site. No advertising, no resale of data, no ad tracking.",
       "Camera (Mirror) and photos: the image is processed on your device and is not sent to our servers. Language and region are stored in a cookie or on your device.",
       "Technical providers: Vercel (hosting), Neon (database, Frankfurt), Google (sign-in), an email-sending service, flagcdn.com (flags) and Photon/Komoot (address suggestions). Push notifications go through Apple/Google/browser services.",
-      "Your rights (access, correction, deletion, withdrawing consent): write to us via the Contact page; deleting your account erases your personal data. Data controller and final contact details: to be completed before public launch.",
+      "Your rights (access, correction, deletion, withdrawing consent): write to us via the Contact page; deleting your account erases your personal data.",
     ],
   },
   contact: {
-    fr: ["Contact : coordonnées à renseigner. Pour la démonstration, adressez vos questions à la personne qui vous a communiqué l'accès."],
-    en: ["Contact: details to be provided. For the demo, please send your questions to the person who gave you access."],
+    fr: ["Contact : écrivez-nous par e-mail, nous vous répondons dès que possible."],
+    en: ["Contact: write to us by email, we reply as soon as possible."],
   },
 };
 
@@ -75,7 +74,6 @@ export default async function SupportPage({ params }: Props) {
         ‹ {t.back}
       </Link>
       <h1 className="font-heading text-3xl text-primary">{labelOf(locale, key)}</h1>
-      <p className="rounded-md bg-accent/20 px-3 py-2 text-xs">{t.provisional}</p>
       {body.map((p) => (
         <p key={p} className="text-sm leading-relaxed">
           {p}

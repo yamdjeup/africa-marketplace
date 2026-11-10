@@ -351,6 +351,8 @@ model SubOrder {
   /// Remboursement à l'annulation : "" (aucun) | REQUESTED | DONE | FAILED | MANUAL (à traiter par l'admin)
   refundStatus   String    @default("")
   refundId       String?
+  /// Détail exploitable d'un remboursement en échec ou en attente de paiement
+  refundNote String?
   shippedAt      DateTime?
   deliveredAt    DateTime?
   createdAt      DateTime  @default(now())

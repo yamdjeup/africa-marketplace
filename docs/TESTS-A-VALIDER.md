@@ -13,6 +13,7 @@ Mis à jour à chaque lot (même commit). Statut : Testé (validé par l'utilisa
 | T-AIDE | Pages d'aide FR/EN | 10 min | À tester | — |
 | T24 | Parcours de commande complet (achat → livraison) | 20 min | À tester | — |
 | T-STRIPE | Paiement Stripe Checkout + webhook (lot 0) | 15 min | À tester | — |
+| T-REMB | Remboursement au refus/expiration/annulation | 15 min | À tester | — |
 | T-HIST | Lots A à D, traduction, fiche création | 60 min | À tester | voir TEST-PARTENAIRES.md |
 
 ### T-GA4 — GA4 et bandeau de consentement
@@ -68,6 +69,17 @@ Prérequis : migration 0021 appliquée ; clés Stripe de test ; webhook `/api/st
 6. Abandonner sur la page Stripe : aucun e-mail envoyé, commande en attente de paiement.
 7. Annuler ensuite un colis payé : remboursement Stripe automatique (voir T-SUIVI).
 8. Webhook avec signature invalide (curl) : réponse 400.
+
+### T-REMB — remboursement au refus / expiration / annulation
+Prérequis : migration 0022 ; STRIPE_SECRET_KEY de test ; commande payée via Stripe.
+1. Client : commande payée (carte 4242…), webhook reçu (`stripePaymentIntentId` renseigné).
+2. Créateur : refuser le colis avec un motif. Résultat : Stripe > Paiements > Refund créé (montant du colis), `refundStatus` = DONE.
+3. Compte client : « le remboursement a été effectué ».
+4. Refaire avec annulation client, puis annulation admin : même résultat.
+5. Colis sans réponse 48 h (expiré) : remboursement créé au passage du cron.
+6. Refuser un colis avant le webhook (paiement non confirmé) : `refundStatus` = AWAITING ; renvoyer le webhook : remboursement créé.
+7. Clé Stripe invalide : `refundStatus` = FAILED, `refundNote` explicite, ligne `[refund]` dans les logs Vercel.
+8. Commande AM-ECAD4CB3 : à rattraper (voir handoff) ou nouvelle commande.
 
 ### T-AIDE — pages d'aide
 1. Ouvrir `/fr/support/faq`, `orders`, `payment`, `returns`, `terms`, `privacy`, `cookies`, `contact` : contenu complet, menu latéral commun.

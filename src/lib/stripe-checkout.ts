@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { after } from "next/server";
 import { db } from "@/lib/db";
 import { sendOrderEmail } from "@/lib/order-email";
+import { settleSubRefund } from "@/lib/refund";
 import { notifySubOrder, runSubOrderSweep } from "@/lib/order-notify";
 
 export const stripeEnabled = () => Boolean(process.env.STRIPE_SECRET_KEY);
@@ -73,6 +74,9 @@ export async function confirmPaidOrder(number: string, paymentIntentId: string |
     data: { paymentPending: false, stripePaymentIntentId: paymentIntentId },
   });
   if (claimed.count === 0) return false;
+  // Colis refusés/annulés avant la confirmation du paiement : remboursement de rattrapage.
+  const closed = await db.subOrder.findMany({ where: { order: { number }, status: { in: ["CANCELLED", "REFUSED", "EXPIRED"] }, refundStatus: { not: "DONE" } }, select: { id: true } });
+  for (const s of closed) await settleSubRefund(s.id);
   const order = await db.order.findUnique({ where: { number }, include: { items: true, subOrders: { select: { id: true } } } });
   if (!order) return false;
   const products = await db.product.findMany({ where: { slug: { in: order.items.map((i) => i.productSlug) } }, select: { slug: true, images: true } });

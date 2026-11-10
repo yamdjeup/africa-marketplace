@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { notifySubOrder } from "@/lib/order-notify";
+import { settleSubRefund } from "@/lib/refund";
 import { acceptSub, deliverSub, prepareSub, refuseSub, shipSub } from "@/lib/suborders";
 import { getPortalContext } from "@/lib/supplier";
 
@@ -41,6 +42,7 @@ export async function refuseOrderAction(f: FormData) {
   if (reason.length < 3) redirect(back("?error=reason"));
   const sub = await refuseSub(db, id, supplierId, reason, actor);
   if (!sub) redirect(back("?error=state"));
+  await settleSubRefund(id);
   await notifySubOrder("REFUSED", id);
   done(back("?ok=refused"));
 }

@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { safeSend } from "@/lib/supplier-email";
 import { trackingUrl } from "@/lib/tracking";
 import { sweepSubOrders } from "@/lib/suborders";
+import { settleSubRefund } from "@/lib/refund";
 
 export type SubEvent = "NEW" | "REMINDER" | "ESCALATION" | "ACCEPTED" | "REFUSED" | "EXPIRED" | "CANCELLED" | "SHIPPED" | "DELIVERED";
 
@@ -93,6 +94,9 @@ export async function runSubOrderSweep() {
   const r = await sweepSubOrders(db);
   for (const s of r.reminded) await notifySubOrder("REMINDER", s.id);
   for (const s of r.escalated) await notifySubOrder("ESCALATION", s.id);
-  for (const s of r.expired) await notifySubOrder("EXPIRED", s.id);
+  for (const s of r.expired) {
+    await settleSubRefund(s.id);
+    await notifySubOrder("EXPIRED", s.id);
+  }
   return { reminded: r.reminded.length, escalated: r.escalated.length, expired: r.expired.length };
 }

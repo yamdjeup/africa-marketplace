@@ -1,6 +1,7 @@
 import "server-only";
+import { db } from "@/lib/db";
 
-export type RefundResult = { status: "DONE" | "FAILED" | "MANUAL"; refundId?: string };
+export type RefundResult = { status: "DONE" | "FAILED" | "MANUAL"; refundId?: string; note?: string };
 
 /** Remboursement Stripe du montant d'un colis annulé (idempotent par colis). Sans clé ou sans paiement Stripe : MANUAL. */
 export async function refundSubOrder(opts: { paymentIntentId: string | null; amountCents: number; subOrderId: string }): Promise<RefundResult> {
@@ -16,9 +17,27 @@ export async function refundSubOrder(opts: { paymentIntentId: string | null; amo
       },
       body: new URLSearchParams({ payment_intent: opts.paymentIntentId, amount: String(opts.amountCents), "metadata[subOrderId]": opts.subOrderId }),
     });
-    const json = (await res.json()) as { id?: string };
-    return res.ok && json.id ? { status: "DONE", refundId: json.id } : { status: "FAILED" };
-  } catch {
-    return { status: "FAILED" };
+    const json = (await res.json()) as { id?: string; error?: { message?: string } };
+    if (res.ok && json.id) return { status: "DONE", refundId: json.id };
+    console.error(`[refund] Stripe a refusé le remboursement du colis ${opts.subOrderId} (HTTP ${res.status}) : ${json.error?.message ?? "sans détail"}`);
+    return { status: "FAILED", note: json.error?.message ?? `HTTP ${res.status}` };
+  } catch (e) {
+    console.error(`[refund] Échec réseau pour le colis ${opts.subOrderId}`, e);
+    return { status: "FAILED", note: "erreur réseau" };
   }
+}
+
+/**
+ * Rembourse un colis fermé (annulé, refusé, expiré) si le paiement est confirmé et l'enregistre sur le colis.
+ * Si le paiement n'est pas encore confirmé, le colis reste « AWAITING » : le webhook relance ce remboursement.
+ */
+export async function settleSubRefund(subOrderId: string) {
+  const sub = await db.subOrder.findUnique({ where: { id: subOrderId }, include: { order: { select: { stripePaymentIntentId: true, paymentPending: true } } } });
+  if (!sub || !["CANCELLED", "REFUSED", "EXPIRED"].includes(sub.status) || ["DONE"].includes(sub.refundStatus)) return;
+  if (sub.order.paymentPending && !sub.order.stripePaymentIntentId) {
+    await db.subOrder.update({ where: { id: subOrderId }, data: { refundStatus: "AWAITING", refundNote: "Paiement non confirmé : remboursement à faire dès confirmation." } });
+    return;
+  }
+  const r = await refundSubOrder({ paymentIntentId: sub.order.stripePaymentIntentId, amountCents: sub.subtotalCents, subOrderId });
+  await db.subOrder.update({ where: { id: subOrderId }, data: { refundStatus: r.status, refundId: r.refundId ?? null, refundNote: r.note ?? null } });
 }

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { notifySubOrder } from "@/lib/order-notify";
-import { refundSubOrder } from "@/lib/refund";
+import { settleSubRefund } from "@/lib/refund";
 import { cancelSub } from "@/lib/suborders";
 import { safeSend } from "@/lib/supplier-email";
 
@@ -23,8 +23,7 @@ export async function cancelMySubOrder(formData: FormData) {
     revalidatePath("/", "layout");
     return;
   }
-  const refund = await refundSubOrder({ paymentIntentId: sub.order.stripePaymentIntentId, amountCents: sub.subtotalCents, subOrderId: id });
-  await db.subOrder.update({ where: { id }, data: { refundStatus: refund.status, refundId: refund.refundId ?? null } });
+  await settleSubRefund(id);
   await notifySubOrder("CANCELLED", id);
   const supplier = await db.supplier.findUnique({ where: { id: sub.supplierId } });
   const owner = supplier?.userId ? await db.user.findUnique({ where: { id: supplier.userId } }) : null;

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { notifySubOrder } from "@/lib/order-notify";
+import { settleSubRefund } from "@/lib/refund";
 import { cancelSub } from "@/lib/suborders";
 import { isAdminEmail } from "@/lib/supplier";
 
@@ -18,6 +19,7 @@ export async function adminCancelSubOrder(formData: FormData) {
   if (reason.length < 3) redirect(`${path}?error=reason`);
   const sub = await cancelSub(db, id, reason, { id: session?.user?.id ?? null, label: `admin ${session?.user?.email}` });
   if (!sub) redirect(`${path}?error=state`);
+  await settleSubRefund(id);
   await notifySubOrder("CANCELLED", id);
   revalidatePath(path);
   redirect(`${path}?ok=cancelled`);

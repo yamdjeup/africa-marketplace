@@ -22,7 +22,7 @@ test.describe("Viewport mobile", () => {
       await expect(page.getByRole("status")).toContainText("Ajouté au panier", { timeout: 1500 });
     }).toPass({ timeout: 20_000 });
     await page.goto("/fr/checkout");
-    const submit = page.getByRole("button", { name: /Confirmer la commande/ });
+    const submit = page.getByRole("button", { name: /Vérifier mon adresse/ });
     await expect(submit).toBeVisible();
     const box = await submit.boundingBox();
     expect(box!.height).toBeGreaterThanOrEqual(44);
@@ -30,10 +30,10 @@ test.describe("Viewport mobile", () => {
   });
 
   test("bascule de langue en mobile", async ({ page }) => {
-    await page.goto("/fr");
-    await page.getByRole("button", { name: /Langue et région/ }).click();
+    await page.goto("/fr/login");
+    await page.getByRole("button", { name: /Français/ }).first().click();
     await page.getByRole("link", { name: "English" }).click();
-    await expect(page).toHaveURL(/\/en$/);
+    await expect(page).toHaveURL(/\/en\/login$/);
   });
 });
 

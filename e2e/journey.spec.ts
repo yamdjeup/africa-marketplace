@@ -28,13 +28,14 @@ test.describe.serial("Parcours client", () => {
   test("accueil et bascule FR/EN", async ({ page }) => {
     await page.goto("/");
     await expect(page).toHaveURL(/\/fr$/);
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("Artistes plasticiens afrodescendants");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("L'art afrodescendant sous toutes ses formes");
     await expect(page.getByRole("link", { name: /E póm ta’/ }).first()).toBeVisible();
     await expect(page).toHaveTitle(/E póm ta’/);
     await page.getByRole("button", { name: /Langue et région/ }).click();
     await page.getByRole("link", { name: "English" }).click();
     await expect(page).toHaveURL(/\/en$/);
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("Afro-descendant visual artists");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Afro-descendant art in all its forms");
+    await page.getByRole("button", { name: /Language and region/ }).click();
     await page.getByRole("link", { name: "Français" }).click();
     await expect(page).toHaveURL(/\/fr$/);
   });

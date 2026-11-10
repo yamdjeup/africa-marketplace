@@ -11,6 +11,7 @@ Lancer : GitHub › Actions › « Tests automatisés » › Run workflow (aussi
 Parcours historiques (Actions #1, 10/11/2026) : search 4 et mobile 2 corrigés (textes périmés, recherche "sculpture", langue mobile via /login, bouton « Vérifier mon adresse »). journey.spec.ts : test 1 corrigé ; les tests 2 à 11 (galerie, fiche œuvre/artiste, panier, inscription x2, connexion, checkout connecté/invité/vide) sont marqués `test.skip` (« à réécrire : header/checkout 2 étapes ») ; journey : 1 OK / 10 ignorés.
 
 Dernière exécution : 10/11/2026 — Vitest 33 OK / 6 ignorés (base de test non disponible sur le poste de l'agent : sans Docker ni branche Neon) ; Playwright `e2e/lot-t.spec.ts` 23 OK.
+Dernière exécution (11/11/2026, lot admin + e-mails de retour) : Vitest 62 OK / 6 ignorés (base de test indisponible sur le poste de l'agent) ; tsc et eslint sans erreur.
 
 | ID | Lot | Description | Fichier | Dernier résultat | Couvre (manuel) |
 |---|---|---|---|---|---|
@@ -26,6 +27,9 @@ Dernière exécution : 10/11/2026 — Vitest 33 OK / 6 ignorés (base de test no
 | A-M1 | M | Fournisseur e-mail : Resend (from, reply_to, sans mention interdite) ; repli Gmail / aucun sans erreur | `tests/unit/email-provider.test.ts` (Vitest) | OK 2/2 — 10/11/2026 | T-MAIL-FROM (payload) |
 | A-M2 | M | Mur d'accès : images `/api/media/<id>` et `/images/artworks/*` publiques, reste fermé | `tests/unit/proxy-images.test.ts` (Vitest) | OK 2/2 — 10/11/2026 | T-MAIL-FROM 3 |
 | A-E1 | E | Retours : éligibilité (livré, 30 j, doublon), propriétaire, motif, décision unique, remboursement DONE/échec + écriture comptable annulée | `tests/unit/returns.test.ts` (Vitest) | OK 11/11 — 10/11/2026 | T-RETOUR 3-7 (logique) |
+| A-F1 | F | Listes admin et partenaire : paramètres d'URL (statut par défaut « à traiter », dates, page ≥ 1), pagination 25/page, filtres Commandes/Versements/Retours/Candidatures/Partenaires, espace partenaire limité à son compte, pastilles de compteur (admin et partenaire) | `tests/unit/admin-list.test.ts` (Vitest) | OK 21/21 — 11/11/2026 | T-ADMIN-FILTRES 1-9 (logique) |
+| A-F2 | F | E-mails de retour (demande reçue, accepté, refusé, remboursé) FR/EN : gabarit DA, image en URL absolue, aucune mention interdite, motif et montant (€) | `tests/unit/admin-list.test.ts` (Vitest) | OK 10/10 — 11/11/2026 | T-RETOUR 2, 4-6 (contenu) |
+| A-F3 | F | Règle DA : tout e-mail sortant est habillé du gabarit commun (`ensureTemplate`), `lang=` et Content-Language corrects, aucun envoi direct hors `src/lib/email.ts` | `tests/unit/email-template-guard.test.ts` (Vitest) | OK 4/4 — 11/11/2026 | T-RETOUR 2 (langue FR dans Gmail) |
 
 Parcours Playwright historiques (`e2e/journey.spec.ts`, `access.spec.ts`, `alerts.spec.ts`, `search.spec.ts`, `order-email.spec.ts`, `mobile.spec.ts`) : inchangés, non relancés dans ce lot.
 
@@ -62,6 +66,7 @@ Prérequis : migration 0023 appliquée ; un colis livré (compte client) ; compt
 | T-SUIVI | Suivi de livraison + remboursement (lots 1–2) | 15 min | À tester | — |
 | T-MAILS | E-mails Farfetch | 10 min | Partiel : étape 1 testée | 10/11/2026 |
 | T-AIDE | Pages d'aide FR/EN | 10 min | À tester | — |
+| T-ADMIN-FILTRES | Filtres, pagination et pastilles (admin + partenaire) ; e-mails de retour | 20 min | À tester | — |
 | T24 | Parcours de commande complet (achat → livraison) | 20 min | À tester | — |
 | T-STRIPE | Paiement Stripe Checkout + webhook (lot 0) | 15 min | Partiel : étapes 2, 3, 4, 5, 8 testées ; 1, 6, 7 à tester | 10/11/2026 |
 | T-REMB | Remboursement au refus/expiration/annulation | 15 min | Partiel : étapes 1, 2 testées | 10/11/2026 |
@@ -142,6 +147,19 @@ Prérequis : migration 0022 ; STRIPE_SECRET_KEY de test ; commande payée via St
 2. Créateurs : accepter, préparer, expédier (transporteur + suivi), livrer.
 3. Client : suivre chaque colis, e-mails reçus à chaque étape.
 4. Admin : voir les sous-commandes dans `/fr/admin/commandes` et le registre dans `/fr/admin/versements`.
+
+### T-ADMIN-FILTRES — Filtres, pastilles et e-mails de retour — 20 min — À tester — date : —
+Couvert en partie par A-F1, A-F2, A-F3 (logique, gabarit) ; reste le rendu visuel et la prise en main.
+1. Compte admin : ouvrir Admin. Résultat : pastilles numérotées sur Candidatures, Créations à modérer, Commandes (escaladées), Versements (à payer), Retours (demandés) quand il y a du travail ; aucune pastille à 0.
+2. Admin › Retours : onglet « À traiter » par défaut avec son compteur ; cliquer « Remboursés », « Refusés », « Tous ». Résultat : la liste change, l'URL contient `?st=…`.
+3. Retours : saisir un n° de colis dans « Recherche », une période (Du/Au), cliquer « Filtrer ». Résultat : seules les lignes correspondantes ; recharger la page conserve les filtres.
+4. Admin › Commandes : défaut « À traiter » (sans réponse / remboursement à reprendre) ; tester onglets En cours, Expédiées, Livrées, Annulées ; recherche par n° de colis, nom ou e-mail du client, nom du partenaire.
+5. Admin › Versements : défaut « À payer » ; onglets « En attente (délai de retour) » et « Tous les partenaires » ; recherche partenaire ; historique des versements filtré par période.
+6. Admin › Candidatures (défaut « À traiter ») et Partenaires (défaut « Actifs ») : onglets de statut, recherche nom/e-mail/pays/métier, période.
+7. Avec plus de 25 lignes (ou en réduisant le filtre), vérifier « Page 1 / n », « Suivant → », « ← Précédent » : 25 lignes par page, filtres conservés d'une page à l'autre.
+8. Compte partenaire : menu Espace partenaire › pastille sur Commandes (colis à accepter/expédier) et Créations (refusées) ; Commandes (défaut « À traiter »), Paiements (défaut « Disponibles ») avec recherche, période et pagination.
+9. Mobile : onglets de statut et formulaire de filtres lisibles, boutons ≥ 44 px, pas de défilement horizontal de la page.
+10. E-mails de retour (voir T-RETOUR 2, 4, 5, 6) : logo « E PÓM TA' », titre en capitales, bouton noir, récapitulatif avec vignette (image visible), pied d'aide ; Gmail n'affiche plus « Ce message semble être en anglais » sur un e-mail FR.
 
 ## Recette historique (lots A à D, suspension, traduction, fiche création)
 

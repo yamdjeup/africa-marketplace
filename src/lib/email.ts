@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { renderEmailHtml } from "@/lib/email-layout";
 
 export type EmailMessage = {
   to: string;
@@ -68,7 +69,23 @@ export function getEmailProvider(): EmailProvider | null {
 }
 
 // Retourne true si l'e-mail est parti ; ne lève jamais.
-export async function sendEmail(msg: EmailMessage): Promise<boolean> {
+/** Marqueur du gabarit DA commun (logo en en-tête). */
+export const TEMPLATE_MARK = "E PÓM TA";
+
+const looksFrench = (s: string) => /[àâçéèêëîïôûùœ]|\b(votre|vous|nous|bonjour|commande|merci)\b/i.test(s);
+
+/** Tout e-mail sortant passe par le gabarit DA : un message sans le gabarit est habillé à partir de son texte. */
+export function ensureTemplate(msg: EmailMessage): EmailMessage {
+  const locale: "fr" | "en" = looksFrench(`${msg.subject} ${msg.text}`) ? "fr" : "en";
+  const headers = { "Content-Language": locale, ...msg.headers };
+  if (msg.html.includes(TEMPLATE_MARK)) return { ...msg, headers };
+  const title = msg.subject.replace(/^E p[óo]m ta['\u2019] ?[—-] ?/i, "").trim() || msg.subject;
+  const paragraphs = msg.text.split(/\n{1,2}/).map((l) => l.trim()).filter(Boolean);
+  return { ...msg, headers, html: renderEmailHtml({ locale, title, paragraphs }) };
+}
+
+export async function sendEmail(input: EmailMessage): Promise<boolean> {
+  const msg = ensureTemplate(input);
   const provider = getEmailProvider();
   if (!provider) return false;
   try {

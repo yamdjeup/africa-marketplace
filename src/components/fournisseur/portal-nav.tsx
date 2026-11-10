@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import type { Locale } from "@/lib/i18n";
 import { tr } from "@/lib/tr";
 
-export function PortalNav({ locale }: { locale: Locale }) {
+export function PortalNav({ locale, counts = {} }: { locale: Locale; counts?: Record<string, number> }) {
   const path = usePathname();
   const base = `/${locale}/fournisseur`;
   const items = [
@@ -27,7 +27,7 @@ export function PortalNav({ locale }: { locale: Locale }) {
                 aria-current={active ? "page" : undefined}
                 className={`flex min-h-11 items-center whitespace-nowrap px-3 text-sm ${active ? "border-b-2 border-accent font-semibold text-primary md:border-b-0 md:border-l-2" : "text-muted-foreground hover:text-primary"}`}
               >
-                {label}
+                {label}{counts[href] ? <span className="ml-2 rounded-full bg-accent px-2 py-0.5 text-xs font-semibold text-accent-foreground" aria-label={`${counts[href]} ${tr(locale, "à traiter", "to handle")}`}>{counts[href]}</span> : null}
               </Link>
             </li>
           );

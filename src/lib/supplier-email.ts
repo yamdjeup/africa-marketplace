@@ -2,11 +2,10 @@ import "server-only";
 import { sendEmail } from "@/lib/email";
 import { siteUrl } from "@/lib/alerts-core";
 
-const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 export async function safeSend(to: string, subject: string, lines: string[], html?: string) {
   try {
-    await sendEmail({ to, subject, text: lines.join("\n\n"), html: html ?? lines.map((l) => `<p>${esc(l)}</p>`).join("") });
+    await sendEmail({ to, subject, text: lines.join("\n\n"), html: html ?? "" });
   } catch (e) {
     console.warn("[supplier-email] envoi impossible :", (e as Error).message);
   }

@@ -23,7 +23,7 @@ Statuts : Implémenté / À implémenter ; Testé / À tester (« Testé » = va
 | Annulation par colis depuis le compte | Implémenté | À tester | 003a511 | |
 | Retrait « Offerte » + docs/POINTS-A-VALIDER.md | Implémenté | À tester | 6dd4987 | |
 | Suivi de livraison (transporteur + lien de suivi) | Implémenté | À tester | 41abaa4 | Saisie admin non faite |
-| Remboursement Stripe à l'annulation, au refus et à l'expiration | Implémenté | À tester | voir git log | Rattrapage si colis fermé avant confirmation du paiement ; échecs journalisés (refundNote) |
+| Remboursement Stripe à l'annulation, au refus et à l'expiration | Implémenté | À tester | voir git log | Rattrapage si colis fermé avant confirmation du paiement ; échecs journalisés (refundNote) ; mention du montant remboursé dans mails et suivi |
 | Branchement du paiement Stripe au checkout (Checkout hébergé + webhook) | Implémenté | À tester | voir git log | Sans clé = comportement actuel ; stock réservé tant que non payé ; webhook exempté du mur d'accès privé ; photos /api/media exemptées (images des e-mails) |
 | Lot E — retours / remboursements / litiges | À implémenter | À tester | — | |
 | Lot F — livraison / étiquettes / douane | À implémenter | À tester | — | |

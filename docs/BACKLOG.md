@@ -31,7 +31,9 @@ Statuts : Implémenté / À implémenter ; Testé / À tester (« Testé » = va
 | Lot H — finance / KYC / Stripe Connect | À implémenter | À tester | — | |
 | Lot I — stats / avis / sous-comptes | À implémenter | À tester | — | |
 | Lot J — certificat PDF + QR + /verifier | À implémenter | À tester | — | |
-| Lot T — tests automatisés (Vitest + Playwright, base de test jetable, garde-fou) | Implémenté | Testé | voir git log | 22 Vitest OK + 22 Playwright OK ; tests sur base réelle à lancer avec `npm run test:all` ; voir TESTS-A-VALIDER bloc B |`r`n| Lot CI — GitHub Actions des tests (branche Neon « test ») | Implémenté | À tester | voir git log | `.github/workflows/tests.yml` ; secrets `TEST_DATABASE_URL`, `TEST_STRIPE_SECRET_KEY` ; première exécution à lancer manuellement |
+| Lot T — tests automatisés (Vitest + Playwright, base de test jetable, garde-fou) | Implémenté | Testé | voir git log | 22 Vitest OK + 22 Playwright OK ; tests sur base réelle à lancer avec `npm run test:all` ; voir TESTS-A-VALIDER bloc B |`r`n| Lot e-mail — envoi Resend depuis contact@epomta.com (MAIL_FROM, Reply-To, repli Gmail) | Implémenté | À tester | voir git log | Variables RESEND_API_KEY, MAIL_FROM sur Vercel ; test T-MAIL-FROM |
+| Réécriture parcours e2e `journey.spec.ts` (tests 2 à 11, ignorés) | À implémenter | À tester | — | header replié, checkout en 2 étapes |
+| Lot CI — GitHub Actions des tests (branche Neon « test ») | Implémenté | À tester | voir git log | `.github/workflows/tests.yml` ; secrets `TEST_DATABASE_URL`, `TEST_STRIPE_SECRET_KEY` ; première exécution à lancer manuellement |
 | Lot 4 — modération (Vitest fait au lot T) | À implémenter | À tester | — | |
 | Nettoyage prod : domaine, contacts provisoires, Playwright, NEXT_PUBLIC_SITE_URL, GA_ID, DeepL, TVA/DSA/DAC7 | À implémenter | À tester | — | Voir DEPLOIEMENT.md |
 | Décision : option livraison offerte | À décider | — | — | « On verra plus tard » |

@@ -15,6 +15,7 @@ export interface EmailProvider {
 }
 
 const SEND_TIMEOUT_MS = 8000;
+export const REPLY_TO = "contact@epomta.com";
 const FROM_NAME = "E póm ta’";
 
 function withTimeout<T>(p: Promise<T>): Promise<T> {
@@ -47,7 +48,7 @@ function resendProvider(key: string, from: string): EmailProvider {
         fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ from: `${FROM_NAME} <${from}>`, to: [msg.to], subject: msg.subject, text: msg.text, html: msg.html, headers: msg.headers }),
+          body: JSON.stringify({ from: from.includes("<") ? from : `${FROM_NAME} <${from}>`, reply_to: REPLY_TO, to: [msg.to], subject: msg.subject, text: msg.text, html: msg.html, headers: msg.headers }),
         }),
       );
       if (!res.ok) throw new Error(`resend ${res.status}`);
@@ -58,7 +59,7 @@ function resendProvider(key: string, from: string): EmailProvider {
 // Null si aucun fournisseur n'est configuré (aucun envoi, aucune erreur).
 export function getEmailProvider(): EmailProvider | null {
   const resendKey = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM;
+  const from = process.env.MAIL_FROM ?? process.env.EMAIL_FROM;
   if (resendKey && from) return resendProvider(resendKey, from);
   const user = process.env.GMAIL_USER;
   const pass = process.env.GMAIL_APP_PASSWORD;

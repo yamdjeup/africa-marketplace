@@ -114,7 +114,7 @@ Ne collez jamais ce mot de passe dans le code ni dans un message. Pour le révoq
 Variables à ajouter dans Vercel :
 - `CRON_SECRET` : chaîne aléatoire longue. Protège `/api/alerts/run` ; le cron quotidien de `vercel.json` (07:00 UTC, compatible Hobby) l'envoie automatiquement. Appel manuel : `curl -H "Authorization: Bearer <CRON_SECRET>" https://<site>/api/alerts/run`.
 - `AUTH_URL` (ou `NEXT_PUBLIC_SITE_URL`) : sert à construire les liens des e-mails (pièce, désinscription).
-- Fournisseur d'e-mail : Gmail (`GMAIL_USER`, `GMAIL_APP_PASSWORD`, étape précédente) par défaut ; pour passer à Resend, ajouter `RESEND_API_KEY` et `EMAIL_FROM` (expéditeur d'un domaine vérifié) : Resend est alors prioritaire.
+- Fournisseur d'e-mail : Gmail (`GMAIL_USER`, `GMAIL_APP_PASSWORD`, étape précédente) par défaut ; pour passer à Resend, ajouter `RESEND_API_KEY` et `MAIL_FROM` (ex. `Epomta <contact@epomta.com>`, domaine vérifié ; `EMAIL_FROM` reste accepté ; Reply-To fixé à contact@epomta.com) : Resend est alors prioritaire.
 
 Fonctionnement : pour les comptes connectés, les favoris sont synchronisés en base. Un avis part (une seule fois par changement) quand une pièce favorite baisse de prix, devient la dernière disponible ou revient en stock, et un e-mail « Nouvelles pièces » part aux abonnés aux nouveautés. Déclenchement : cron quotidien, appel manuel, et après chaque commande. Volume limité à 100 e-mails par exécution (Gmail : ~500/jour). Chaque e-mail contient un lien de désinscription signé. Les notifications push (Web Push, migration `0008_push`) sont décrites ci-dessous. Les e-mails sont envoyés en français.
 

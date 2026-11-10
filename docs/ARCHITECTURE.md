@@ -96,7 +96,7 @@ Source : `.env.example` (aucune valeur dans le dépôt). Local : `.env.local` (i
 | `SITE_ACCESS_PASSWORD` | Mot de passe d'entrée de la démo (vide = mur désactivé) | Recommandée en démo privée |
 | `SITE_ACCESS_SECRET` | Clé de signature du cookie d'accès | Oui si mur actif |
 | `GMAIL_USER` / `GMAIL_APP_PASSWORD` | E-mails via Gmail SMTP | Optionnelles (sans elles, aucun e-mail) |
-| `RESEND_API_KEY` / `EMAIL_FROM` | E-mails via Resend (prioritaire sur Gmail) | Optionnelles |
+| `RESEND_API_KEY` / `MAIL_FROM` | E-mails via Resend (prioritaire sur Gmail) | Optionnelles |
 | `GOOGLE_PLACES_API_KEY` | Adresses via Google Places (sinon Photon) | Optionnelle |
 | `CRON_SECRET` | Autorise `/api/alerts/run` (envoyé par Vercel Cron) et `/api/push/test` | Oui pour les alertes |
 | `VAPID_PUBLIC_KEY` (alias `NEXT_PUBLIC_VAPID_PUBLIC_KEY`) | Clé publique Web Push | Non (sans elle : push « Bientôt ») ; Vercel |

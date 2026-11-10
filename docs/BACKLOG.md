@@ -31,7 +31,7 @@ Statuts : Implémenté / À implémenter ; Testé / À tester (« Testé » = va
 | Lot H — finance / KYC / Stripe Connect | À implémenter | À tester | — | |
 | Lot I — stats / avis / sous-comptes | À implémenter | À tester | — | |
 | Lot J — certificat PDF + QR + /verifier | À implémenter | À tester | — | |
-| Lot 4 — modération + Vitest | À implémenter | À tester | — | |
+| Lot T — tests automatisés (Vitest + Playwright, base de test jetable, garde-fou) | Implémenté | Testé | voir git log | 22 Vitest OK + 22 Playwright OK ; tests sur base réelle à lancer avec `npm run test:all` ; voir TESTS-A-VALIDER bloc B |`r`n| Lot 4 — modération (Vitest fait au lot T) | À implémenter | À tester | — | |
 | Nettoyage prod : domaine, contacts provisoires, Playwright, NEXT_PUBLIC_SITE_URL, GA_ID, DeepL, TVA/DSA/DAC7 | À implémenter | À tester | — | Voir DEPLOIEMENT.md |
 | Décision : option livraison offerte | À décider | — | — | « On verra plus tard » |
 | Décision : frais de port fixe / calculé | À décider | — | — | « On verra plus tard » |
@@ -191,3 +191,4 @@ Reste à faire :
 - Attribution : tie-dye → Imane Ayissi ; Hao Set → LDM (Look Different Marque) ; Akara Belt et Neitha Harness → Lozama Leombho. Ces créateurs ont une page et figurent dans « Nos artistes » (lot E4). Prix, tailles et stock restent fictifs ; titres « (Exemple) » + badge.
 - La catégorie « Bijoux » a été renommée « Accessoires » / « Accessories » (libellé seulement ; le slug technique `bijoux` est conservé). Le code Miroir bijoux est conservé pour de vraies pièces.
 - House of Marjón (maison d'accessoires nigériane) : `marjon-lunettes-cristaux.webp` et `marjon-lunettes-cauris.webp` sont la **propriété de House of Marjón** ; photos tirées d'Instagram (@onemarjon), recadrées 4:5, **démo privée uniquement**. Bio d'après une source indirecte (aperçu IA), formulée prudemment : à confirmer avec la maison, ainsi que l'attribution des pièces à des collections (non confirmée). Obtenir l'accord avant toute mise en ligne publique (le retrait passe par le seed examples remove).
+

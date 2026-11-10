@@ -8,7 +8,10 @@
     "vercel-build": "node scripts/db.mjs deploy && next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "vitest run",
+    "test:db": "tsx scripts/test-db.ts",
     "test:e2e": "playwright test",
+    "test:all": "npm run test:db && vitest run && playwright test",
     "postinstall": "node scripts/db.mjs generate",
     "db:setup": "node scripts/db.mjs setup",
     "db:push": "node scripts/db.mjs push",
@@ -68,6 +71,7 @@
     "prisma": "^6.19.3",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.7"
   }
 }

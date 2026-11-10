@@ -8,7 +8,7 @@ import { refundSubOrder } from "@/lib/refund";
 import { cancelSub } from "@/lib/suborders";
 import { safeSend } from "@/lib/supplier-email";
 
-export const CUSTOMER_CANCEL_REASON = "Annulée par le client depuis son compte";
+const CUSTOMER_CANCEL_REASON = "Annulée par le client depuis son compte";
 
 // Annulation par le client d'un colis non expédié : propriétaire vérifié, statut contrôlé en base (anti-course).
 export async function cancelMySubOrder(formData: FormData) {

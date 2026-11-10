@@ -74,11 +74,11 @@ Prérequis : migration 0021 appliquée ; clés Stripe de test ; webhook `/api/st
 Prérequis : migration 0022 ; STRIPE_SECRET_KEY de test ; commande payée via Stripe.
 1. Client : commande payée (carte 4242…), webhook reçu (`stripePaymentIntentId` renseigné).
 2. Créateur : refuser le colis avec un motif. Résultat : Stripe > Paiements > Refund créé (montant du colis), `refundStatus` = DONE.
-3. Compte client : « le remboursement a été effectué ».
+3. Compte client et e-mail « Commande annulée » (refus, expiration, annulation client/admin) : « Vous serez remboursé de X,XX € … sous 5 à 10 jours ouvrés » (FR et EN).
 4. Refaire avec annulation client, puis annulation admin : même résultat.
 5. Colis sans réponse 48 h (expiré) : remboursement créé au passage du cron.
 6. Refuser un colis avant le webhook (paiement non confirmé) : `refundStatus` = AWAITING ; renvoyer le webhook : remboursement créé.
-7. Clé Stripe invalide : `refundStatus` = FAILED, `refundNote` explicite, ligne `[refund]` dans les logs Vercel.
+7. Clé Stripe invalide : `refundStatus` = FAILED, `refundNote` explicite, ligne `[refund]` dans les logs Vercel ; e-mail et compte : message neutre « nous revenons vers vous », sans montant. Sans paiement Stripe : aucune mention de remboursement.
 8. Commande AM-ECAD4CB3 : à rattraper (voir handoff) ou nouvelle commande.
 
 ### T-AIDE — pages d'aide

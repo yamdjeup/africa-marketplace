@@ -39,7 +39,16 @@ export async function SubOrderTracking({ orderId, locale, canCancel = false }: {
             {s.trackingNumber && trackingUrl(s.carrier, s.trackingNumber) && <p><a href={trackingUrl(s.carrier, s.trackingNumber)!} target="_blank" rel="noopener noreferrer" className="font-medium underline">{tr(locale, "Suivre mon colis", "Track my parcel")}</a></p>}
             {s.deliveredAt && <p>{tr(locale, "Livrée le", "Delivered on")} {fmt.format(s.deliveredAt)}</p>}
             {s.reason && ["REFUSED", "CANCELLED"].includes(s.status) && <p>{tr(locale, "Motif : ", "Reason: ")}{s.reason}</p>}
-            {["REFUSED", "EXPIRED", "CANCELLED"].includes(s.status) && <p className="text-xs">{s.refundStatus === "DONE" ? tr(locale, "Commande annulée : le remboursement a été effectué.", "Order cancelled: the refund has been issued.") : tr(locale, "Commande annulée : le remboursement intégral est en cours de traitement.", "Order cancelled: the full refund is being processed.")}</p>}
+            {["REFUSED", "EXPIRED", "CANCELLED"].includes(s.status) && (() => {
+              const amt = new Intl.NumberFormat(locale === "en" ? "en-GB" : "fr-FR", { style: "currency", currency: "EUR" }).format(s.subtotalCents / 100);
+              const ok = ["DONE", "AWAITING", "REQUESTED"].includes(s.refundStatus);
+              const msg = ok
+                ? tr(locale, `Commande annulée : vous serez remboursé de ${amt} sur votre moyen de paiement sous 5 à 10 jours ouvrés.`, `Order cancelled: you will be refunded ${amt} to your payment method within 5 to 10 business days.`)
+                : s.refundStatus === "FAILED"
+                  ? tr(locale, "Commande annulée : nous revenons vers vous au sujet de votre remboursement.", "Order cancelled: we will get back to you about your refund.")
+                  : tr(locale, "Commande annulée.", "Order cancelled.");
+              return <p className="text-xs">{msg}</p>;
+            })()}
             {canCancel && ["PENDING", "ACCEPTED", "PREPARING"].includes(s.status) && <CancelSubOrderButton id={s.id} locale={locale} />}
             {canCancel && ["SHIPPED", "DELIVERED"].includes(s.status) && <p className="text-xs text-muted-foreground">{tr(locale, "Ce colis est expédié : il ne peut plus être annulé. Vous pouvez le retourner sous 30 jours après la livraison (voir Retours et remboursements).", "This parcel has shipped and can no longer be cancelled. You can return it within 30 days of delivery (see Returns and refunds).")}</p>}
           </div>

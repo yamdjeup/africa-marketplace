@@ -44,12 +44,14 @@ export async function notifySubOrder(event: SubEvent, subOrderId: string) {
       return;
     }
 
-    const refundFr = sub.refundStatus === "DONE" ? " Le remboursement de ce colis a été effectué sur votre moyen de paiement." : sub.refundStatus ? " Votre remboursement est en cours de traitement." : "";
-    const refundEn = sub.refundStatus === "DONE" ? " The refund for this parcel has been issued to your payment method." : sub.refundStatus ? " Your refund is being processed." : "";
+    const amt = eur(sub.subtotalCents);
+    const rs = sub.refundStatus;
+    const refundFr = rs === "DONE" || rs === "AWAITING" || rs === "REQUESTED" ? ` Vous serez remboursé de ${amt} sur votre moyen de paiement sous 5 à 10 jours ouvrés.` : rs === "FAILED" ? " Nous revenons vers vous très prochainement au sujet de votre remboursement." : "";
+    const refundEn = rs === "DONE" || rs === "AWAITING" || rs === "REQUESTED" ? ` You will be refunded ${amt} to your payment method within 5 to 10 business days.` : rs === "FAILED" ? " We will get back to you shortly about your refund." : "";
     const msgs: Record<string, [string, string]> = {
       ACCEPTED: [fr ? "commande acceptée" : "order accepted", fr ? `${shop} a accepté votre commande et la prépare.` : `${shop} accepted your order and is preparing it.`],
-      REFUSED: [fr ? "commande annulée" : "order cancelled", fr ? `${shop} ne peut pas honorer votre commande. Elle est annulée et le stock libéré. Motif : ${sub.reason || "non précisé"}.` : `${shop} cannot fulfil your order. It is cancelled. Reason: ${sub.reason || "not specified"}.`],
-      EXPIRED: [fr ? "commande annulée" : "order cancelled", fr ? `${shop} n'a pas répondu sous 48 h : votre commande est annulée.` : `${shop} did not reply within 48 h: your order is cancelled.`],
+      REFUSED: [fr ? "commande annulée" : "order cancelled", fr ? `${shop} ne peut pas honorer votre commande. Elle est annulée et le stock libéré.       Motif : ${sub.reason || "non précisé"}.${refundFr}` : `${shop} cannot fulfil your order. It is cancelled. Reason: ${sub.reason || "not specified"}.${refundEn}`],
+            EXPIRED: [fr ? "commande annulée" : "order cancelled", fr ? `${shop} n'a pas répondu sous 48 h : votre commande est annulée.${refundFr}` : `${shop} did not reply within 48 h: your order is cancelled.${refundEn}`],
       CANCELLED: [fr ? "commande annulée" : "order cancelled", fr ? `Votre commande est annulée. Motif : ${sub.reason || "non précisé"}.${refundFr}` : `Your order is cancelled. Reason: ${sub.reason || "not specified"}.${refundEn}`],
       SHIPPED: [fr ? "commande expédiée" : "order shipped", fr ? `${shop} a expédié votre commande${sub.carrier ? ` (${sub.carrier}` : ""}${sub.trackingNumber ? `${sub.carrier ? ", " : " ("}suivi ${sub.trackingNumber}` : ""}${sub.carrier || sub.trackingNumber ? ")" : ""}.` : `${shop} shipped your order${sub.carrier ? ` (${sub.carrier}` : ""}${sub.trackingNumber ? `${sub.carrier ? ", " : " ("}tracking ${sub.trackingNumber}` : ""}${sub.carrier || sub.trackingNumber ? ")" : ""}.`],
       DELIVERED: [fr ? "commande livrée" : "order delivered", fr ? "Votre commande est livrée. Merci !" : "Your order is delivered. Thank you!"],

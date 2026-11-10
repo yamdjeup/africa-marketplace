@@ -6,6 +6,8 @@ Fichier UNIQUE de tests (règle permanente : chaque lot ajoute ses tests ici, av
 
 Relancer : `npm test` (Vitest, sans base) ; `npm run test:all` (base jetable `TEST_DATABASE_URL` + Vitest + Playwright). Détails : `docs/DEPLOIEMENT.md`, section « Tests automatisés ». Ce tableau est mis à jour à chaque exécution.
 
+Lancer : GitHub › Actions › « Tests automatisés » › Run workflow (aussi sur chaque PR/push vers main) ; résultats dans l'artefact `resultats-tests` (rapport Playwright HTML + JUnit Vitest) ; les tests sur base réelle (A-T4) y tournent sur la branche Neon de test. Config : docs/DEPLOIEMENT.md.
+
 Dernière exécution : 10/11/2026 — Vitest 33 OK / 6 ignorés (base de test non disponible sur le poste de l'agent : sans Docker ni branche Neon) ; Playwright `e2e/lot-t.spec.ts` 23 OK.
 
 | ID | Lot | Description | Fichier | Dernier résultat | Couvre (manuel) |

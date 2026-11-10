@@ -8,7 +8,7 @@ Statuts : Implémenté / À implémenter ; Testé / À tester (« Testé » = va
 |---|---|---|---|---|
 | Socle POC (US-01 à US-14, comptes US-27, suivi US-28) | Implémenté | À tester | historique git | Voir HISTORY.md |
 | Pivot galerie E póm ta’ (artistes, créations, filtres) | Implémenté | À tester | historique git | GAL-01 à GAL-06 ci-dessous |
-| Lot A — candidature partenaire + validation admin | Implémenté | À tester | historique git | TEST-PARTENAIRES.md |
+| Lot A — candidature partenaire + validation admin | Implémenté | À tester | historique git | TESTS-A-VALIDER.md (H-xx) |
 | Lot B — créations et stock | Implémenté | À tester | historique git | |
 | Lot C — commandes par partenaire (48 h, relance, escalade) | Implémenté | À tester | historique git | |
 | Lot D — paiements (registre en mode test, versements) | Implémenté | À tester | historique git | Aucun argent réel |

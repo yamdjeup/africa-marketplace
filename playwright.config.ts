@@ -1,5 +1,13 @@
 import { defineConfig, devices } from "@playwright/test";
 
+import { requireSandboxStripe, requireTestDatabaseUrl } from "./scripts/test-env";
+
+// Avec TEST_DATABASE_URL : base Postgres jetable (garde-fou anti-production) ; sinon SQLite locale.
+const testDb = process.env.TEST_DATABASE_URL ? requireTestDatabaseUrl() : undefined;
+requireSandboxStripe();
+const dbEnv: Record<string, string> = testDb ? { DATABASE_URL: testDb, DIRECT_URL: testDb } : {};
+const testEnv = { ...dbEnv, STRIPE_WEBHOOK_SECRET: "whsec_e2e_only", NEXT_PUBLIC_GA_ID: "G-E2ETEST123" };
+
 const port = 3100;
 const wallPort = 3101;
 const wallPassword = "mur-test-jetable";
@@ -16,7 +24,7 @@ export default defineConfig({
     {
       command: `npm run db:seed && npm run build && npx next start -p ${port}`,
       // Mur de mot de passe désactivé par défaut (variable vide) pour les parcours.
-      env: { AUTH_SECRET: "e2e-only-secret-not-for-production", SITE_ACCESS_PASSWORD: "" },
+      env: { ...testEnv, AUTH_SECRET: "e2e-only-secret-not-for-production", SITE_ACCESS_PASSWORD: "" },
       url: `http://localhost:${port}/fr`,
       reuseExistingServer: !process.env.CI,
       timeout: 300_000,
@@ -25,6 +33,7 @@ export default defineConfig({
       // Même build, mur activé avec un mot de passe jetable propre aux tests.
       command: `npx next start -p ${wallPort}`,
       env: {
+        ...testEnv,
         AUTH_SECRET: "e2e-only-secret-not-for-production",
         SITE_ACCESS_PASSWORD: wallPassword,
         SITE_ACCESS_SECRET: "e2e-only-access-secret",

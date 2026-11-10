@@ -2,6 +2,30 @@
 
 Fichier UNIQUE de tests (règle permanente : chaque lot ajoute ses tests ici, avec étapes numérotées détaillées ; aucun autre fichier de tests). Mis à jour à chaque lot (même commit). Statut : Testé (validé par l'utilisateur) / À tester. Les tests historiques (lots A à D, suspension, traduction, fiche création) sont en fin de fichier (H-xx). Comptes : Client (compte client), Créateur (partenaire actif), Admin (e-mail dans `ADMIN_EMAILS`), partenaires de test KeNoF, Nathalie Morère, Cruzz Taylor (`npm run db:seed-suppliers`).
 
+## BLOC B — Tests automatisés (exécutés par l'agent)
+
+Relancer : `npm test` (Vitest, sans base) ; `npm run test:all` (base jetable `TEST_DATABASE_URL` + Vitest + Playwright). Détails : `docs/DEPLOIEMENT.md`, section « Tests automatisés ». Ce tableau est mis à jour à chaque exécution.
+
+Dernière exécution : 10/11/2026 — Vitest 22 OK / 6 ignorés (base de test non disponible sur le poste de l'agent : sans Docker ni branche Neon) ; Playwright `e2e/lot-t.spec.ts` 22 OK.
+
+| ID | Lot | Description | Fichier | Dernier résultat | Couvre (manuel) |
+|---|---|---|---|---|---|
+| A-T1 | T | Webhook Stripe : signature valide/invalide/expirée/absente | `tests/unit/stripe-signature.test.ts` (Vitest) | OK 5/5 — 10/11/2026 | T-STRIPE 8 |
+| A-T2 | T | Webhook HTTP : 400 si signature invalide, 200 si valide | `e2e/lot-t.spec.ts` (Playwright) | OK 2/2 — 10/11/2026 | T-STRIPE 8 |
+| A-T3 | T | Remboursement : DONE / FAILED / MANUAL / AWAITING, idempotence | `tests/unit/refund.test.ts` (Vitest) | OK 8/8 — 10/11/2026 | T-REMB (logique) |
+| A-T4 | T | Double annulation concurrente, annulation après expédition, expiration 48 h, droits d'accès, AWAITING (base réelle) | `tests/unit/suborders.db.test.ts` (Vitest) | Ignoré 6/6 (sans `TEST_DATABASE_URL`) — à lancer avec `npm run test:all` | T-COLIS (logique) |
+| A-T5 | T | Garde-fou base de test (refuse prod/même URL/clé live) | `tests/unit/guard.test.ts` (Vitest) | OK 4/4 — 10/11/2026 | — |
+| A-T6 | T | E-mails : aucune mention interdite, images en URL absolue https | `tests/unit/emails.test.ts` (Vitest) | OK 5/5 — 10/11/2026 | T-MAILS 1 (URL ; rendu visuel reste manuel) |
+| A-T7 | T | Bandeau : aucune requête GA ni cookie `_ga` avant consentement/refus ; choix mémorisé ; accepter charge gtag | `e2e/lot-t.spec.ts` (Playwright) | OK 3/3 — 10/11/2026 | T-GA4 (parties réseau/cookies) |
+| A-T8 | T | Pages d'aide FR/EN : 200, texte présent, sans mention interdite (7 pages × 2 langues) | `e2e/lot-t.spec.ts` (Playwright) | OK 14/14 — 10/11/2026 | T-AIDE (hors relecture) |
+| A-T9 | T | Accès : visiteur redirigé depuis admin, commandes partenaire, commandes client | `e2e/lot-t.spec.ts` (Playwright) | OK 3/3 — 10/11/2026 | H (accès) |
+
+Parcours Playwright historiques (`e2e/journey.spec.ts`, `access.spec.ts`, `alerts.spec.ts`, `search.spec.ts`, `order-email.spec.ts`, `mobile.spec.ts`) : inchangés, non relancés dans ce lot.
+
+## BLOC A — Tests manuels (à faire par l'utilisateur)
+
+Les tests ci-dessous restent manuels (rendu visuel, e-mails dans Gmail, mobile, relecture des textes, tableau de bord Stripe). Quand un point est couvert par le bloc B, c'est indiqué.
+
 ## Lots récents
 
 | ID | Lot | Durée | Statut | Date |

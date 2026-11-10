@@ -184,3 +184,16 @@ Pour **fermer complètement** la démo : mettez un mot de passe que personne ne 
 - `npm run db:check` valide le schéma et les migrations PostgreSQL sans base réelle. `npm run build` fonctionne avec une `DATABASE_URL` Postgres factice (les pages sont rendues à la demande, aucun accès base au build).
 - Mur de mot de passe : `src/proxy.ts` + `src/lib/site-access.ts` (cookie `site_access` httpOnly, `secure` en HTTPS, signé HMAC-SHA256 avec `SITE_ACCESS_SECRET`, validité 30 jours ; comparaison en temps constant). Désactivé si `SITE_ACCESS_PASSWORD` est vide. `/_next`, `favicon.ico` et `robots.txt` restent publics ; `robots.txt` interdit tout et `X-Robots-Tag: noindex` est ajouté partout. Les images sont servies sans l'optimiseur `/_next/image` pour rester derrière le mur.
 - Limites connues : pas de limitation de tentatives (utilisez un mot de passe long) ; le mur est une protection légère de démonstration, pas un système d'authentification.
+
+## Tests automatisés
+
+- Sans base : `npm test` (Vitest : signature du webhook Stripe, remboursements, e-mails, garde-fou). Les tests qui ont besoin d'une base sont ignorés sans `TEST_DATABASE_URL`.
+- Base jetable (schéma identique à la production : `prisma migrate deploy` de toutes les migrations + seed). Le plus simple : Postgres local via Docker.
+  1. `docker compose -f docker-compose.test.yml up -d`
+  2. `$env:TEST_DATABASE_URL="postgresql://test:test@localhost:54329/epomta_test"` (PowerShell) ou `export TEST_DATABASE_URL=...`
+  3. **Commande unique** : `npm run test:all` (prépare la base, lance Vitest puis Playwright).
+- Alternative sans Docker : une branche Neon dédiée dont le nom de base contient « test » (par exemple `epomta_test`).
+- Garde-fou (`scripts/test-env.ts`) : refus si `TEST_DATABASE_URL` est absent, n'est pas Postgres, est identique à `DATABASE_URL`/`DIRECT_URL` (y compris dans `.env*`), contient « prod », ou pointe vers un hôte distant dont la base ne contient pas « test ». Refus aussi si `STRIPE_SECRET_KEY` est une clé live. Stripe : clés `sk_test_` uniquement ; le webhook de test utilise un secret propre (`whsec_e2e_only`).
+- Playwright démarre deux serveurs : l'un sans mur d'accès, l'autre avec un mot de passe de test jetable. Sans `TEST_DATABASE_URL`, repli sur la base SQLite locale (`npm run db:setup` d'abord).
+- Après `npm run test:db`, le client Prisma généré est celui de Postgres ; `npm run db:setup` régénère la version SQLite pour le développement local.
+- Résultats et tests manuels restants : `docs/TESTS-A-VALIDER.md` (bloc B automatisés, bloc A manuels).

@@ -1,0 +1,55 @@
+name: Tests automatisés
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      TEST_DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+      STRIPE_SECRET_KEY: ${{ secrets.TEST_STRIPE_SECRET_KEY }}
+    steps:
+      - name: Vérifier le secret TEST_DATABASE_URL
+        run: |
+          if [ -z "$TEST_DATABASE_URL" ]; then
+            echo "::error::Secret de dépôt TEST_DATABASE_URL absent (GitHub > Settings > Secrets and variables > Actions). Voir docs/DEPLOIEMENT.md."
+            exit 1
+          fi
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Préparation de la base de test (migrate deploy + seed)
+        run: npm run test:db
+      - name: Vitest (rapport JUnit)
+        run: npx vitest run --reporter=default --reporter=junit --outputFile.junit=test-results/vitest-junit.xml
+        continue-on-error: true
+        id: vitest
+      - name: Playwright
+        run: npx playwright test --reporter=list,html
+        id: e2e
+        continue-on-error: true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: resultats-tests
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: ignore
+      - name: Échec si un test a échoué
+        if: steps.vitest.outcome == 'failure' || steps.e2e.outcome == 'failure'
+        run: exit 1

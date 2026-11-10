@@ -66,7 +66,7 @@ test.describe("pages d'aide FR/EN", () => {
 });
 
 test.describe("accès partenaire / admin", () => {
-  for (const path of ["/fr/admin", "/fr/fournisseur/commandes", "/fr/account/orders"]) {
+  for (const path of ["/fr/admin", "/fr/admin/retours", "/fr/fournisseur/commandes", "/fr/account/orders"]) {
     test(`visiteur redirigé : ${path}`, async ({ page }) => {
       await page.goto(path);
       await expect(page).not.toHaveURL(new RegExp(`${path}$`));

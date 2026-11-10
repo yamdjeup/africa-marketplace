@@ -6,7 +6,9 @@ Fichier UNIQUE de tests (règle permanente : chaque lot ajoute ses tests ici, av
 
 Relancer : `npm test` (Vitest, sans base) ; `npm run test:all` (base jetable `TEST_DATABASE_URL` + Vitest + Playwright). Détails : `docs/DEPLOIEMENT.md`, section « Tests automatisés ». Ce tableau est mis à jour à chaque exécution.
 
-Dernière exécution : 10/11/2026 — Vitest 22 OK / 6 ignorés (base de test non disponible sur le poste de l'agent : sans Docker ni branche Neon) ; Playwright `e2e/lot-t.spec.ts` 22 OK.
+Lancer : GitHub › Actions › « Tests automatisés » › Run workflow (aussi sur chaque PR/push vers main) ; résultats dans l'artefact `resultats-tests` (rapport Playwright HTML + JUnit Vitest) ; les tests sur base réelle (A-T4) y tournent sur la branche Neon de test. Config : docs/DEPLOIEMENT.md.
+
+Dernière exécution : 10/11/2026 — Vitest 33 OK / 6 ignorés (base de test non disponible sur le poste de l'agent : sans Docker ni branche Neon) ; Playwright `e2e/lot-t.spec.ts` 23 OK.
 
 | ID | Lot | Description | Fichier | Dernier résultat | Couvre (manuel) |
 |---|---|---|---|---|---|
@@ -18,7 +20,8 @@ Dernière exécution : 10/11/2026 — Vitest 22 OK / 6 ignorés (base de test no
 | A-T6 | T | E-mails : aucune mention interdite, images en URL absolue https | `tests/unit/emails.test.ts` (Vitest) | OK 5/5 — 10/11/2026 | T-MAILS 1 (URL ; rendu visuel reste manuel) |
 | A-T7 | T | Bandeau : aucune requête GA ni cookie `_ga` avant consentement/refus ; choix mémorisé ; accepter charge gtag | `e2e/lot-t.spec.ts` (Playwright) | OK 3/3 — 10/11/2026 | T-GA4 (parties réseau/cookies) |
 | A-T8 | T | Pages d'aide FR/EN : 200, texte présent, sans mention interdite (7 pages × 2 langues) | `e2e/lot-t.spec.ts` (Playwright) | OK 14/14 — 10/11/2026 | T-AIDE (hors relecture) |
-| A-T9 | T | Accès : visiteur redirigé depuis admin, commandes partenaire, commandes client | `e2e/lot-t.spec.ts` (Playwright) | OK 3/3 — 10/11/2026 | H (accès) |
+| A-T9 | T | Accès : visiteur redirigé depuis admin, retours admin, commandes partenaire, commandes client | `e2e/lot-t.spec.ts` (Playwright) | OK 4/4 — 10/11/2026 | H (accès) |
+| A-E1 | E | Retours : éligibilité (livré, 30 j, doublon), propriétaire, motif, décision unique, remboursement DONE/échec + écriture comptable annulée | `tests/unit/returns.test.ts` (Vitest) | OK 11/11 — 10/11/2026 | T-RETOUR 3-7 (logique) |
 
 Parcours Playwright historiques (`e2e/journey.spec.ts`, `access.spec.ts`, `alerts.spec.ts`, `search.spec.ts`, `order-email.spec.ts`, `mobile.spec.ts`) : inchangés, non relancés dans ce lot.
 
@@ -27,6 +30,17 @@ Parcours Playwright historiques (`e2e/journey.spec.ts`, `access.spec.ts`, `alert
 Les tests ci-dessous restent manuels (rendu visuel, e-mails dans Gmail, mobile, relecture des textes, tableau de bord Stripe). Quand un point est couvert par le bloc B, c'est indiqué.
 
 ## Lots récents
+
+### T-RETOUR — Retours (lot E) — 15 min — À tester — date : —
+Prérequis : migration 0023 appliquée ; un colis livré (compte client) ; compte admin (ADMIN_EMAILS).
+1. Compte client : Mon compte › Mes commandes › commande dont le colis est « Livré ». Résultat : champ « Motif du retour » et bouton « Demander un retour ».
+2. Saisir un motif, cliquer sur « Demander un retour ». Résultat : mention « Retour demandé » à la place du formulaire ; e-mail de confirmation reçu dans Gmail (rendu visuel à relire).
+3. Compte admin : menu Admin › Retours. Résultat : la demande apparaît avec colis, montant (€) et motif.
+4. Cliquer « Refuser » avec une note. Résultat : statut « Retour refusé », e-mail client avec le motif. (Refaire avec une autre demande pour la suite.)
+5. Cliquer « Accepter ». Résultat : statut « Retour accepté », e-mail client.
+6. Cliquer « Rembourser (Stripe) ». Résultat : statut « Remboursé » ; dans le dashboard Stripe (sandbox), un remboursement du montant du colis (€) existe ; e-mail client.
+7. Sans paiement Stripe : cliquer « Rembourser » puis « Marquer remboursé (manuel) ». Résultat : message d'erreur puis statut « Remboursé ».
+8. Colis livré depuis plus de 30 jours ou non livré : aucun formulaire de retour. Version anglaise : textes en EN.
 
 | ID | Lot | Durée | Statut | Date |
 |---|---|---|---|---|

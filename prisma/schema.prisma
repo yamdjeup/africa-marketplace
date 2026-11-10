@@ -356,9 +356,29 @@ model SubOrder {
   shippedAt      DateTime?
   deliveredAt    DateTime?
   createdAt      DateTime  @default(now())
+  returns        ReturnRequest[]
 
   @@index([orderId])
   @@index([supplierId, status])
+}
+
+/// Demande de retour d'un colis livré. status : REQUESTED | ACCEPTED | REFUSED | REFUNDED (l'administrateur arbitre).
+model ReturnRequest {
+  id          String    @id @default(cuid())
+  subOrderId  String
+  subOrder    SubOrder  @relation(fields: [subOrderId], references: [id], onDelete: Cascade)
+  userId      String
+  reason      String
+  status      String    @default("REQUESTED")
+  adminNote   String    @default("")
+  refundId    String?
+  refundNote  String?
+  createdAt   DateTime  @default(now())
+  decidedAt   DateTime?
+  refundedAt  DateTime?
+
+  @@index([subOrderId])
+  @@index([status])
 }
 
 /// Registre (mode test, aucun argent réel) : créé à la livraison d'une sous-commande.

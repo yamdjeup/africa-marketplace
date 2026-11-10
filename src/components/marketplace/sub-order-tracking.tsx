@@ -1,6 +1,8 @@
 import { Pill } from "@/components/fournisseur/parts";
 import { CancelSubOrderButton } from "@/components/marketplace/cancel-sub-order-button";
+import { ReturnRequestForm } from "@/components/marketplace/return-request-form";
 import { db } from "@/lib/db";
+import { RETURN_LABELS, returnEligibility, type ReturnStatus } from "@/lib/returns";
 import type { Locale } from "@/lib/i18n";
 import { subLabel } from "@/lib/suborders";
 import { trackingUrl } from "@/lib/tracking";
@@ -13,6 +15,7 @@ export async function SubOrderTracking({ orderId, locale, canCancel = false }: {
   const shops = await db.supplier.findMany({ where: { id: { in: subs.map((s) => s.supplierId) } } });
   const items = await db.orderItem.findMany({ where: { subOrderId: { in: subs.map((s) => s.id) } } });
   const fmt = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "fr-FR", { dateStyle: "long" });
+  const returns = await db.returnRequest.findMany({ where: { subOrderId: { in: subs.map((s) => s.id) } } });
   return (
     <section aria-labelledby="by-shop" className="space-y-3">
       <h2 id="by-shop" className="font-heading text-xl">{tr(locale, "Suivi par boutique", "Tracking by shop")}</h2>
@@ -50,6 +53,12 @@ export async function SubOrderTracking({ orderId, locale, canCancel = false }: {
               return <p className="text-xs">{msg}</p>;
             })()}
             {canCancel && ["PENDING", "ACCEPTED", "PREPARING"].includes(s.status) && <CancelSubOrderButton id={s.id} locale={locale} />}
+            {(() => {
+              const ret = returns.find((r) => r.subOrderId === s.id);
+              if (ret) return <p className="text-xs font-medium">{tr(locale, RETURN_LABELS[ret.status as ReturnStatus]?.fr ?? ret.status, RETURN_LABELS[ret.status as ReturnStatus]?.en ?? ret.status)}</p>;
+              if (!canCancel || returnEligibility(s, false) !== "ok") return null;
+              return <ReturnRequestForm id={s.id} locale={locale} />;
+            })()}
             {canCancel && ["SHIPPED", "DELIVERED"].includes(s.status) && <p className="text-xs text-muted-foreground">{tr(locale, "Ce colis est expédié : il ne peut plus être annulé. Vous pouvez le retourner sous 30 jours après la livraison (voir Retours et remboursements).", "This parcel has shipped and can no longer be cancelled. You can return it within 30 days of delivery (see Returns and refunds).")}</p>}
           </div>
         );

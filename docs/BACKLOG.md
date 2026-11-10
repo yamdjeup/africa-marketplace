@@ -25,7 +25,7 @@ Statuts : Implémenté / À implémenter ; Testé / À tester (« Testé » = va
 | Suivi de livraison (transporteur + lien de suivi) | Implémenté | À tester | 41abaa4 | Saisie admin non faite |
 | Remboursement Stripe à l'annulation, au refus et à l'expiration | Implémenté | À tester | voir git log | Rattrapage si colis fermé avant confirmation du paiement ; échecs journalisés (refundNote) ; mention du montant remboursé dans mails et suivi |
 | Branchement du paiement Stripe au checkout (Checkout hébergé + webhook) | Implémenté | À tester | voir git log | Sans clé = comportement actuel ; stock réservé tant que non payé ; webhook exempté du mur d'accès privé ; photos /api/media exemptées (images des e-mails) |
-| Lot E — retours / remboursements / litiges | À implémenter | À tester | — | |
+| Lot E — retours / remboursements / litiges | Implémenté | À tester | voir git log | Migration 0023 ; demande client sur colis livré (30 j), arbitrage admin `/admin/retours`, remboursement Stripe ou manuel, écriture comptable annulée ; décisions en attente dans POINTS-A-VALIDER |
 | Lot F — livraison / étiquettes / douane | À implémenter | À tester | — | |
 | Lot G — messagerie / notifications | À implémenter | À tester | — | |
 | Lot H — finance / KYC / Stripe Connect | À implémenter | À tester | — | |

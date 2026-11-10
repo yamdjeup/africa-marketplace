@@ -6,6 +6,7 @@ Statut : À faire / En cours / Validé. Responsables suggérés : Juriste, DPO, 
 
 | Point | Contexte | Risque | Action recommandée | Responsable | Statut |
 |---|---|---|---|---|---|
+| Noms de domaine epomta.eu et epomta.fr | Domaine principal : epomta.com ; protection de la marque | Captation des extensions par un tiers | À réserver ; clarifier avec le juriste (dépôt de marque, extensions à protéger, coût sur 3 ans chez OVH) | Juriste / Produit | À faire |
 | Identité du responsable de traitement | Raison sociale, adresse, SIREN absents des pages légales | Non-conformité LCEN/RGPD | Renseigner les mentions légales et la politique de confidentialité | Juriste | À faire |
 | CGV colis / retours multi-partenaires | Une commande peut compter plusieurs colis ; retours et remboursements traités par colis, contrat avec chaque partenaire | Qualification du vendeur, information précontractuelle | Faire relire les CGV, Retours, FAQ (FR+EN) | Juriste | À faire |
 | Rétractation 14 j et exclusion des pièces sur mesure | Pages Retours et CGV | Exclusion mal formulée | Valider le texte et les cas d'exception | Juriste | À faire |

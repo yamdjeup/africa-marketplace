@@ -146,7 +146,7 @@ L'app native (Capacitor) charge ce site Vercel ; rien à déployer de plus côt�
 - Notifications e-mail (candidature, décision) : réutilisent Resend/Gmail déjà configurés ; sans fournisseur d'e-mail, l'envoi est ignoré et journalisé.
 - La migration `0009_suppliers` (additive) s'applique au build.
 - Fournisseurs de démonstration (vraies lignes en base) : `DATABASE_URL=<url Neon> npm run db:seed-suppliers` (idempotent).
-- Recette pas à pas : `docs/TEST-PARTENAIRES.md`.
+- Recette pas à pas : `docs/TESTS-A-VALIDER.md` (fichier unique de tests).
 
 ## Étape 6 — Tester
 

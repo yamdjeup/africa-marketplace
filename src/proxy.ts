@@ -16,8 +16,8 @@ const locales = ["fr", "en"];
 // Manifeste et icônes d'installation : le navigateur les récupère sans cookie, ils doivent rester publics (aucune œuvre).
 const PUBLIC_PWA = /^\/(manifest\.webmanifest|icons\/[\w-]+\.png|sw\.js|debug-viewport)$/;
 
-// Liens des e-mails d'alertes (désinscription) et cron : publics, protégés par jeton signé / CRON_SECRET.
-const PUBLIC_ALERTS = /^\/(api\/(alerts\/(run|unsubscribe)|push\/test)|(fr|en)\/alertes\/desinscription)$/;
+// Liens des e-mails d'alertes (désinscription), cron et webhook Stripe : publics, protégés par jeton signé / CRON_SECRET / signature Stripe.
+const PUBLIC_ALERTS = /^\/(api\/(alerts\/(run|unsubscribe)|push\/test|stripe\/webhook)|(fr|en)\/alertes\/desinscription)$/;
 
 const htmlHeaders = { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex, nofollow" };
 

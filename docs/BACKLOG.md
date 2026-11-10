@@ -24,7 +24,7 @@ Statuts : Implémenté / À implémenter ; Testé / À tester (« Testé » = va
 | Retrait « Offerte » + docs/POINTS-A-VALIDER.md | Implémenté | À tester | 6dd4987 | |
 | Suivi de livraison (transporteur + lien de suivi) | Implémenté | À tester | 41abaa4 | Saisie admin non faite |
 | Remboursement Stripe à l'annulation | Implémenté (code présent) | À tester | c7c4366 | Paiement Stripe non branché : reste MANUAL |
-| Branchement du paiement Stripe au checkout (Checkout hébergé + webhook) | Implémenté | À tester | voir git log | Sans clé = comportement actuel ; stock réservé tant que non payé |
+| Branchement du paiement Stripe au checkout (Checkout hébergé + webhook) | Implémenté | À tester | voir git log | Sans clé = comportement actuel ; stock réservé tant que non payé ; webhook exempté du mur d'accès privé |
 | Lot E — retours / remboursements / litiges | À implémenter | À tester | — | |
 | Lot F — livraison / étiquettes / douane | À implémenter | À tester | — | |
 | Lot G — messagerie / notifications | À implémenter | À tester | — | |

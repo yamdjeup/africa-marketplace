@@ -24,6 +24,7 @@ Dernière exécution : 10/11/2026 — Vitest 33 OK / 6 ignorés (base de test no
 | A-T8 | T | Pages d'aide FR/EN : 200, texte présent, sans mention interdite (7 pages × 2 langues) | `e2e/lot-t.spec.ts` (Playwright) | OK 14/14 — 10/11/2026 | T-AIDE (hors relecture) |
 | A-T9 | T | Accès : visiteur redirigé depuis admin, retours admin, commandes partenaire, commandes client | `e2e/lot-t.spec.ts` (Playwright) | OK 4/4 — 10/11/2026 | H (accès) |
 | A-M1 | M | Fournisseur e-mail : Resend (from, reply_to, sans mention interdite) ; repli Gmail / aucun sans erreur | `tests/unit/email-provider.test.ts` (Vitest) | OK 2/2 — 10/11/2026 | T-MAIL-FROM (payload) |
+| A-M2 | M | Mur d'accès : images `/api/media/<id>` et `/images/artworks/*` publiques, reste fermé | `tests/unit/proxy-images.test.ts` (Vitest) | OK 2/2 — 10/11/2026 | T-MAIL-FROM 3 |
 | A-E1 | E | Retours : éligibilité (livré, 30 j, doublon), propriétaire, motif, décision unique, remboursement DONE/échec + écriture comptable annulée | `tests/unit/returns.test.ts` (Vitest) | OK 11/11 — 10/11/2026 | T-RETOUR 3-7 (logique) |
 
 Parcours Playwright historiques (`e2e/journey.spec.ts`, `access.spec.ts`, `alerts.spec.ts`, `search.spec.ts`, `order-email.spec.ts`, `mobile.spec.ts`) : inchangés, non relancés dans ce lot.
@@ -34,7 +35,7 @@ Les tests ci-dessous restent manuels (rendu visuel, e-mails dans Gmail, mobile, 
 
 ## Lots récents
 
-### T-MAIL-FROM — E-mail réel depuis contact@epomta.com — 10 min — À tester — date : —
+### T-MAIL-FROM — E-mail réel depuis contact@epomta.com — 10 min — Validé le 10/11/2026 sauf l'étape 3 (images : correctif /images/artworks, à revérifier) — date : 10/11/2026
 Prérequis : RESEND_API_KEY et MAIL_FROM définis sur Vercel.
 1. Passer une commande test (ou renvoyer le webhook) avec une adresse Gmail. Résultat : e-mail reçu.
 2. Vérifier l'expéditeur : « Epomta <contact@epomta.com> ».

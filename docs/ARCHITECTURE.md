@@ -81,6 +81,9 @@ flowchart TD
 
 Le build Vercel utilise `vercel-build`. Les pages sont rendues à la demande (aucun accès base pendant le build).
 
+### E-mails sortants : règle DA
+Tout e-mail sortant passe par le gabarit commun (`renderEmailHtml`, `src/lib/email-layout.ts`) : logo, titre en capitales, bouton noir, récapitulatif, pied d'aide. Aucun envoi en texte brut : `sendEmail` (`src/lib/email.ts`) appelle `ensureTemplate`, qui habille tout message sans gabarit à partir de son texte, renseigne `lang=` sur `<html>` et l'en-tête `Content-Language` (fr/en). Aucun code ne doit appeler nodemailer ou l'API Resend en dehors de `src/lib/email.ts`. Test : `tests/unit/email-template-guard.test.ts` (échoue si un e-mail sort hors gabarit ou si un envoi direct apparaît).
+
 ## 5. Variables d'environnement
 
 Source : `.env.example` (aucune valeur dans le dépôt). Local : `.env.local` (ignoré par git). Production : Vercel › Settings › Environment Variables.

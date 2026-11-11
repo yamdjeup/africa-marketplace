@@ -1,4 +1,6 @@
 import { Pill, inputCls } from "@/components/fournisseur/parts";
+import { ListFilters, Pager } from "@/components/admin/list-controls";
+import { APP_STATUSES, applicationsWhere, pageArgs, pageCount, parseList, type ListParams } from "@/lib/admin-list";
 import { db } from "@/lib/db";
 import type { Locale } from "@/lib/i18n";
 import { tr } from "@/lib/tr";
@@ -13,10 +15,16 @@ const STATUS_CLS: Record<string, string> = {
   REFUSED: "bg-rose-100 text-rose-900",
 };
 
-export default async function ApplicationsPage({ params, searchParams }: { params: Promise<{ locale: Locale }>; searchParams: Promise<{ error?: string }> }) {
+export default async function ApplicationsPage({ params, searchParams }: { params: Promise<{ locale: Locale }>; searchParams: Promise<ListParams & { error?: string }> }) {
   const { locale } = await params;
   const sp = await searchParams;
-  const apps = await db.supplierApplication.findMany({ orderBy: { createdAt: "desc" }, take: 100 });
+  const q = parseList(sp, APP_STATUSES, "PENDING", ["createdAt"], "createdAt");
+  const where = applicationsWhere(q);
+  const total = await db.supplierApplication.count({ where });
+  q.page = Math.min(q.page, pageCount(total));
+  const [apps, nPending] = await Promise.all([db.supplierApplication.findMany({ where, orderBy: { createdAt: q.asc ? "asc" : "desc" }, ...pageArgs(q.page) }), db.supplierApplication.count({ where: { status: "PENDING" } })]);
+  const path = `/${locale}/admin/candidatures`;
+  const tabs = [{ value: "PENDING", label: tr(locale, "À traiter", "Pending"), count: nPending }, { value: "NEEDS_INFO", label: tr(locale, "Infos demandées", "Info requested") }, { value: "ACCEPTED", label: tr(locale, "Acceptées", "Accepted") }, { value: "REFUSED", label: tr(locale, "Refusées", "Declined") }, { value: "all", label: tr(locale, "Toutes", "All") }];
   const allFiles = await db.applicationFile.findMany({ where: { applicationId: { in: apps.map((a) => a.id) } }, select: { id: true, applicationId: true, name: true, mime: true }, orderBy: { createdAt: "asc" } });
   const label: Record<string, string> = {
     PENDING: tr(locale, "À traiter", "Pending"),
@@ -28,6 +36,7 @@ export default async function ApplicationsPage({ params, searchParams }: { param
   return (
     <>
       <h1 className="font-heading text-3xl text-primary">{tr(locale, "Candidatures partenaires", "Partner applications")}</h1>
+      <ListFilters locale={locale} path={path} q={q} tabs={tabs} defaultStatus="PENDING" />
       {sp.error === "name" && <p role="alert" className="rounded-md border border-destructive p-3 text-sm text-destructive">{tr(locale, "Ce nom est déjà utilisé par un partenaire.", "This name is already used by a partner.")}</p>}
       {apps.length === 0 && <p className="text-sm text-muted-foreground">{tr(locale, "Aucune candidature pour le moment.", "No applications yet.")}</p>}
       <ul className="space-y-3">
@@ -73,6 +82,7 @@ export default async function ApplicationsPage({ params, searchParams }: { param
           </li>
         ))}
       </ul>
+      <Pager locale={locale} path={path} q={q} total={total} defaultStatus="PENDING" />
     </>
   );
 }

@@ -1,5 +1,7 @@
 import { buttonVariants } from "@/components/ui/button";
 import { inputCls } from "@/components/fournisseur/parts";
+import { ListFilters, Pager } from "@/components/admin/list-controls";
+import { PAYOUT_FILTERS, has, ledgerWhere, pageArgs, pageCount, parseList, payoutHistoryWhere, type ListParams } from "@/lib/admin-list";
 import { db } from "@/lib/db";
 import type { Locale } from "@/lib/i18n";
 import { balances } from "@/lib/ledger";
@@ -8,18 +10,28 @@ import { markPayoutAction, releaseEntryAction, setCommissionAction } from "../ve
 
 export const dynamic = "force-dynamic";
 
-export default async function PayoutsAdmin({ params, searchParams }: { params: Promise<{ locale: Locale }>; searchParams: Promise<{ ok?: string; error?: string }> }) {
+export default async function PayoutsAdmin({ params, searchParams }: { params: Promise<{ locale: Locale }>; searchParams: Promise<ListParams & { ok?: string; error?: string }> }) {
   const { locale } = await params;
   const sp = await searchParams;
   const now = new Date();
-  const withEntries = await db.ledgerEntry.findMany({ distinct: ["supplierId"], select: { supplierId: true } });
-  const list = await db.supplier.findMany({ where: { id: { in: withEntries.map((w) => w.supplierId) } }, orderBy: { displayName: "asc" } });
+  const q = parseList(sp, PAYOUT_FILTERS, "topay", ["displayName"], "displayName");
+  const withEntries = await db.ledgerEntry.groupBy({ by: ["supplierId"], where: ledgerWhere(q.st, now) });
+  const ids = withEntries.map((w) => w.supplierId);
+  const sWhere = { id: { in: ids }, ...(q.q ? { displayName: has(q.q) } : {}) };
+  const total = await db.supplier.count({ where: sWhere });
+  q.page = Math.min(q.page, pageCount(total));
+  const list = await db.supplier.findMany({ where: sWhere, orderBy: { displayName: q.asc ? "desc" : "asc" }, ...pageArgs(q.page) });
   const rows = await Promise.all(list.map(async (s) => ({ s, bal: await balances(db, s.id, now) })));
-  const pendingEntries = await db.ledgerEntry.findMany({ where: { payoutId: null, reversedAt: null, availableAt: { gt: now } }, orderBy: { availableAt: "asc" }, take: 50 });
+  const pendingEntries = q.st === "topay" ? [] : await db.ledgerEntry.findMany({ where: { ...ledgerWhere("pending", now), ...(q.q ? { supplierId: { in: (await db.supplier.findMany({ where: { displayName: has(q.q) }, select: { id: true }, take: 50 })).map((x) => x.id) } } : {}) }, orderBy: { availableAt: "asc" }, take: 25 });
   const subs = await db.subOrder.findMany({ where: { id: { in: pendingEntries.map((e) => e.subOrderId) } }, select: { id: true, number: true } });
   const num = new Map(subs.map((x) => [x.id, x.number]));
-  const names = new Map(list.map((x) => [x.id, x.displayName]));
-  const payouts = await db.payout.findMany({ orderBy: { paidAt: "desc" }, take: 30 });
+  const matchIds = q.q ? (await db.supplier.findMany({ where: { displayName: has(q.q) }, select: { id: true }, take: 50 })).map((x) => x.id) : [];
+  const payouts = await db.payout.findMany({ where: payoutHistoryWhere(q, matchIds), orderBy: { paidAt: "desc" }, take: 25 });
+  const nameRows = await db.supplier.findMany({ where: { id: { in: [...new Set([...pendingEntries.map((e) => e.supplierId), ...payouts.map((p) => p.supplierId), ...list.map((x) => x.id)])] } }, select: { id: true, displayName: true } });
+  const names = new Map(nameRows.map((x) => [x.id, x.displayName]));
+  const path = `/${locale}/admin/versements`;
+  const nToPay = (await db.ledgerEntry.groupBy({ by: ["supplierId"], where: ledgerWhere("topay", now) })).length;
+  const tabs = [{ value: "topay", label: tr(locale, "À payer", "To pay"), count: nToPay }, { value: "pending", label: tr(locale, "En attente (délai de retour)", "Pending (return window)") }, { value: "all", label: tr(locale, "Tous les partenaires", "All partners") }];
   const eur = (c: number) => new Intl.NumberFormat(locale === "en" ? "en-GB" : "fr-FR", { style: "currency", currency: "EUR" }).format(c / 100);
   const fmt = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "fr-FR", { dateStyle: "medium", timeStyle: "short" });
   const msg: Record<string, [string, string]> = {
@@ -34,6 +46,7 @@ export default async function PayoutsAdmin({ params, searchParams }: { params: P
       <p className="rounded-md border border-accent bg-accent/10 p-3 text-sm">{tr(locale, "Marquer un versement l'enregistre dans le registre.", "Marking a payout records it in the ledger.")}</p>
       {sp.ok && msg[sp.ok] && <p role="status" className="rounded-md border border-accent bg-accent/15 p-3 text-sm">{tr(locale, ...msg[sp.ok])}</p>}
       {sp.error && <p role="alert" className="rounded-md border border-destructive p-3 text-sm text-destructive">{err[sp.error] ? tr(locale, ...err[sp.error]) : tr(locale, "Erreur.", "Error.")}</p>}
+      <ListFilters locale={locale} path={path} q={q} tabs={tabs} defaultStatus="topay" />
       {rows.length === 0 ? <p className="text-sm text-muted-foreground">{tr(locale, "Aucune vente livrée pour l'instant.", "No delivered sale yet.")}</p> : (
         <ul className="divide-y rounded-lg border bg-card">
           {rows.map(({ s, bal }) => (
@@ -58,6 +71,7 @@ export default async function PayoutsAdmin({ params, searchParams }: { params: P
           ))}
         </ul>
       )}
+      <Pager locale={locale} path={path} q={q} total={total} defaultStatus="topay" />
       {pendingEntries.length > 0 && (
         <>
           <h2 className="font-heading text-2xl text-primary">{tr(locale, "Gains en attente (délai de retour)", "Pending earnings (return window)")}</h2>

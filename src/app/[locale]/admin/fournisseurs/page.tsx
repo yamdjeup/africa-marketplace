@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
+import { ListFilters, Pager } from "@/components/admin/list-controls";
+import { PARTNER_STATUSES, pageArgs, pageCount, parseList, partnersWhere, type ListParams } from "@/lib/admin-list";
 import { db } from "@/lib/db";
 import type { Locale } from "@/lib/i18n";
 import { tr } from "@/lib/tr";
@@ -9,18 +11,25 @@ import { PartnerActionForm } from "@/components/fournisseur/partner-action-form"
 
 export const dynamic = "force-dynamic";
 
-export default async function SuppliersPage({ params, searchParams }: { params: Promise<{ locale: Locale }>; searchParams: Promise<{ done?: string; error?: string }> }) {
+export default async function SuppliersPage({ params, searchParams }: { params: Promise<{ locale: Locale }>; searchParams: Promise<ListParams & { done?: string; error?: string }> }) {
   const { locale } = await params;
   const sp = await searchParams;
-  const [list, audits] = await Promise.all([
-    db.supplier.findMany({ orderBy: { createdAt: "asc" }, include: { user: { select: { email: true } } } }),
+  const q = parseList(sp, PARTNER_STATUSES, "ACTIVE", ["createdAt"], "createdAt");
+  const where = partnersWhere(q);
+  const total = await db.supplier.count({ where });
+  q.page = Math.min(q.page, pageCount(total));
+  const [list, all, audits] = await Promise.all([
+    db.supplier.findMany({ where, orderBy: { createdAt: q.asc ? "asc" : "desc" }, ...pageArgs(q.page), include: { user: { select: { email: true } } } }),
+    db.supplier.findMany({ select: { id: true, displayName: true, createdAt: true, isDemo: true } }),
     db.partnerAudit.findMany({ orderBy: { createdAt: "desc" }, take: 20 }),
   ]);
-  const names = new Map(list.map((s) => [s.id, s.displayName]));
+  const path = `/${locale}/admin/fournisseurs`;
+  const tabs = [{ value: "ACTIVE", label: tr(locale, "Actifs", "Active") }, { value: "SUSPENDED", label: tr(locale, "Suspendus", "Suspended") }, { value: "REVOKED", label: tr(locale, "Révoqués", "Revoked") }, { value: "all", label: tr(locale, "Tous", "All") }];
+  const names = new Map(all.map((s) => [s.id, s.displayName]));
   // « Devenu partenaire » est déduit de la création du partenaire (créé à l'acceptation de la candidature) : rétro-rempli pour les existants.
   const events = [
     ...audits.map((a) => ({ id: a.id, at: a.createdAt, supplierId: a.supplierId, action: a.action, reason: a.reason, actor: a.actorEmail })),
-    ...list.filter((s) => !s.isDemo).map((s) => ({ id: `joined-${s.id}`, at: s.createdAt, supplierId: s.id, action: "JOINED", reason: "", actor: "" })),
+    ...all.filter((s) => !s.isDemo).map((s) => ({ id: `joined-${s.id}`, at: s.createdAt, supplierId: s.id, action: "JOINED", reason: "", actor: "" })),
   ].sort((a, b) => (names.get(a.supplierId) ?? "").localeCompare(names.get(b.supplierId) ?? "") || a.at.getTime() - b.at.getTime());
   const actionLabels: Record<string, [string, string]> = {
     JOINED: ["Création du compte partenaire (candidature acceptée)", "Partner account created (application accepted)"],
@@ -39,6 +48,7 @@ export default async function SuppliersPage({ params, searchParams }: { params: 
     <>
       <h1 className="font-heading text-3xl text-primary">{tr(locale, "Partenaires", "Partners")}</h1>
       <p className="text-sm text-muted-foreground">{tr(locale, "Les partenaires peuvent être ouverts en vue admin (lecture seule).", "Partners can be opened in admin view (read-only).")}</p>
+      <ListFilters locale={locale} path={path} q={q} tabs={tabs} defaultStatus="ACTIVE" />
       {sp.done && <p role="status" className="rounded-md border border-accent bg-accent/15 p-3 text-sm">{tr(locale, "Statut mis à jour, e-mail envoyé.", "Status updated, email sent.")}</p>}
       {sp.error && <p role="alert" className="rounded-md border border-destructive p-3 text-sm text-destructive">{errors[sp.error] ? tr(locale, ...errors[sp.error]) : tr(locale, "Erreur.", "Error.")}</p>}
       <ul className="divide-y rounded-lg border bg-card">
@@ -67,6 +77,7 @@ export default async function SuppliersPage({ params, searchParams }: { params: 
           </li>
         ))}
       </ul>
+      <Pager locale={locale} path={path} q={q} total={total} defaultStatus="ACTIVE" />
       <h2 className="font-heading text-2xl text-primary">{tr(locale, "Journal d'audit", "Audit log")}</h2>
       {events.length === 0 ? <p className="text-sm text-muted-foreground">{tr(locale, "Aucun événement.", "No events.")}</p> : (
         <div className="overflow-x-auto rounded-lg border">

@@ -1,5 +1,7 @@
 import { buttonVariants } from "@/components/ui/button";
 import { inputCls } from "@/components/fournisseur/parts";
+import { ListFilters, Pager } from "@/components/admin/list-controls";
+import { RETURN_FILTERS, pageArgs, pageCount, parseList, returnsWhere, type ListParams } from "@/lib/admin-list";
 import { db } from "@/lib/db";
 import type { Locale } from "@/lib/i18n";
 import { RETURN_LABELS, type ReturnStatus } from "@/lib/returns";
@@ -8,10 +10,16 @@ import { decideReturnAction, refundReturnAction } from "../retours-actions";
 
 export const dynamic = "force-dynamic";
 
-export default async function ReturnsAdmin({ params, searchParams }: { params: Promise<{ locale: Locale }>; searchParams: Promise<{ ok?: string; error?: string }> }) {
+export default async function ReturnsAdmin({ params, searchParams }: { params: Promise<{ locale: Locale }>; searchParams: Promise<ListParams & { ok?: string; error?: string }> }) {
   const { locale } = await params;
   const sp = await searchParams;
-  const list = await db.returnRequest.findMany({ orderBy: { createdAt: "desc" }, take: 100, include: { subOrder: { select: { number: true, subtotalCents: true } } } });
+  const q = parseList(sp, RETURN_FILTERS, "REQUESTED", ["createdAt"], "createdAt");
+  const where = returnsWhere(q);
+  const total = await db.returnRequest.count({ where });
+  q.page = Math.min(q.page, pageCount(total));
+  const [list, nReq] = await Promise.all([db.returnRequest.findMany({ where, orderBy: { createdAt: q.asc ? "asc" : "desc" }, ...pageArgs(q.page), include: { subOrder: { select: { number: true, subtotalCents: true } } } }), db.returnRequest.count({ where: { status: "REQUESTED" } })]);
+  const path = `/${locale}/admin/retours`;
+  const tabs = [{ value: "REQUESTED", label: tr(locale, "À traiter", "To handle"), count: nReq }, { value: "ACCEPTED", label: tr(locale, "Acceptés (à rembourser)", "Accepted (to refund)") }, { value: "REFUNDED", label: tr(locale, "Remboursés", "Refunded") }, { value: "REFUSED", label: tr(locale, "Refusés", "Refused") }, { value: "all", label: tr(locale, "Tous", "All") }];
   const eur = (c: number) => new Intl.NumberFormat(locale === "en" ? "en-GB" : "fr-FR", { style: "currency", currency: "EUR" }).format(c / 100);
   const fmt = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "fr-FR", { dateStyle: "medium" });
   const ok: Record<string, [string, string]> = { accepted: ["Retour accepté, client prévenu.", "Return accepted, customer notified."], refused: ["Retour refusé, client prévenu.", "Return refused, customer notified."], refunded: ["Remboursement enregistré, client prévenu.", "Refund recorded, customer notified."] };
@@ -22,6 +30,7 @@ export default async function ReturnsAdmin({ params, searchParams }: { params: P
       <p className="rounded-md border border-accent bg-accent/10 p-3 text-sm">{tr(locale, "L'administration arbitre : accepter ou refuser, puis rembourser le colis.", "The admin team arbitrates: accept or refuse, then refund the parcel.")}</p>
       {sp.ok && ok[sp.ok] && <p role="status" className="rounded-md border border-accent bg-accent/15 p-3 text-sm">{tr(locale, ...ok[sp.ok])}</p>}
       {sp.error && <p role="alert" className="rounded-md border border-destructive p-3 text-sm text-destructive">{err[sp.error] ? tr(locale, ...err[sp.error]) : tr(locale, "Erreur.", "Error.")}</p>}
+      <ListFilters locale={locale} path={path} q={q} tabs={tabs} defaultStatus="REQUESTED" />
       {list.length === 0 ? <p className="text-sm text-muted-foreground">{tr(locale, "Aucune demande de retour.", "No return request.")}</p> : (
         <ul className="divide-y rounded-lg border bg-card">
           {list.map((r) => (
@@ -51,6 +60,7 @@ export default async function ReturnsAdmin({ params, searchParams }: { params: P
           ))}
         </ul>
       )}
+      <Pager locale={locale} path={path} q={q} total={total} defaultStatus="REQUESTED" />
     </>
   );
 }

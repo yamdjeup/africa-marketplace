@@ -32,6 +32,7 @@ Dernière exécution (11/11/2026, lot admin + e-mails de retour) : Vitest 62 OK 
 | A-F3 | F | Règle DA : tout e-mail sortant est habillé du gabarit commun (`ensureTemplate`), `lang=` et Content-Language corrects, aucun envoi direct hors `src/lib/email.ts` | `tests/unit/email-template-guard.test.ts` (Vitest) | OK 4/4 — 11/11/2026 | T-RETOUR 2 (langue FR dans Gmail) |
 | A-F4 | F | Contact : e-mail unique contact@epomta.com, téléphones masqués sans variable CONTACT_PHONE_LOCAL/INTL | `tests/unit/contact.test.ts` (Vitest) | OK 2/2 — 11/11/2026 | T-CONTACT (logique) |
 | A-F5 | F | Page commande : texte « retour sous 30 jours » masqué si un retour existe ; achat impossible pour une œuvre sans partenaire | `tests/unit/tracking-notice.test.ts` (Vitest) | OK 2/2 — 11/11/2026 | T-COLIS-REMB |
+| A-F6 | F | Bouton « Réinitialiser » des filtres (garde l'onglet de statut) | `tests/unit/list-reset.test.ts` (Vitest) | OK 2/2 — 11/11/2026 | T-FILTRES-RESET (logique) |
 
 Parcours Playwright historiques (`e2e/journey.spec.ts`, `access.spec.ts`, `alerts.spec.ts`, `search.spec.ts`, `order-email.spec.ts`, `mobile.spec.ts`) : inchangés, non relancés dans ce lot.
 
@@ -346,3 +347,7 @@ Statut : À tester — Date : —
 ### T-COLIS-REMB — Page commande après remboursement — 3 min — À tester — date : —
 1. Compte client › Mes commandes, colis au retour remboursé. Résultat : seul le statut du retour s'affiche, plus de « vous pouvez le retourner sous 30 jours » ni de formulaire.
 2. Tenter d'acheter une œuvre sans partenaire : elle ne peut pas être commandée (erreur au paiement).
+
+### T-FILTRES-RESET — Réinitialiser et Versements — 5 min — À tester — date : —
+1. Sur Admin › Commandes (puis Versements, Retours, Candidatures, Partenaires ; partenaire › Commandes, Paiements), saisir une recherche et des dates, Filtrer, puis « Réinitialiser ». Résultat : champs vides, onglet de statut conservé.
+2. Admin › Versements : le texte d'aide du cycle s'affiche sous le titre ; le bouton « Rendre disponible maintenant (ignorer le délai de retour) » demande confirmation (Annuler = rien ne change).

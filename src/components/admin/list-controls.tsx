@@ -14,6 +14,8 @@ export function listHref(path: string, q: ListQuery, over: Partial<Record<"q" | 
   return s ? `${path}?${s}` : path;
 }
 
+export function resetHref(path: string, st: string, defaultStatus: string) { return st && st !== defaultStatus ? `${path}?st=${encodeURIComponent(st)}` : path; }
+
 type Tab = { value: string; label: string; count?: number };
 
 /** Onglets de statut + recherche + période (GET, état dans l'URL), puis pagination. */
@@ -44,6 +46,7 @@ export function ListFilters({ locale, path, q, tabs, defaultStatus, sorts }: { l
           </select>
         </label>
         <button className="min-h-11 rounded-md border px-3 text-sm">{tr(locale, "Filtrer", "Filter")}</button>
+        <Link href={resetHref(path, q.st, defaultStatus)} className="inline-flex min-h-11 items-center rounded-md border px-3 text-sm">{tr(locale, "Réinitialiser", "Reset")}</Link>
       </form>
     </div>
   );

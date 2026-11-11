@@ -14,14 +14,14 @@ function siteUrl() {
 type CheckoutItem = { name: string; quantity: number; unitPriceCents: number };
 
 /** Crée une session Stripe Checkout hébergée ; renvoie son URL, ou null en cas d'échec. */
-export async function createCheckoutSession(order: { number: string; email: string; locale: string; editToken: string }, items: CheckoutItem[]) {
+export async function createCheckoutSession(order: { number: string; email: string; locale: string; editToken: string }, items: CheckoutItem[], origin: string = siteUrl()) {
   const params = new URLSearchParams();
   params.set("mode", "payment");
   params.set("locale", order.locale === "en" ? "en" : "fr");
   params.set("customer_email", order.email);
   params.set("client_reference_id", order.number);
-  params.set("success_url", `${siteUrl()}/${order.locale}/checkout/confirmation/${order.number}?t=${order.editToken}`);
-  params.set("cancel_url", `${siteUrl()}/${order.locale}/cart`);
+  params.set("success_url", `${origin}/${order.locale}/checkout/confirmation/${order.number}?t=${order.editToken}`);
+  params.set("cancel_url", `${origin}/${order.locale}/cart`);
   params.set("metadata[orderNumber]", order.number);
   params.set("payment_intent_data[metadata][orderNumber]", order.number);
   items.forEach((it, i) => {

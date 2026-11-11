@@ -72,7 +72,7 @@ export default async function OrderDetailPage({ params }: Props) {
           {order.items.map((i) => (
             <li key={i.id} className="flex justify-between gap-3">
               <span>
-                {i.quantity} × {i.name}
+                {i.quantity} × <Link href={`/${locale}/produits/${i.productSlug}`} className="underline underline-offset-4">{i.name}</Link>
                 {i.size ? ` (${i.size})` : ""}
               </span>
               <span>{formatEur(i.unitPriceCents * i.quantity, locale)}</span>

@@ -22,7 +22,7 @@ Dernière exécution (11/11/2026, lot admin + e-mails de retour) : Vitest 62 OK 
 | A-T5 | T | Garde-fou base de test (refuse prod/même URL/clé live) | `tests/unit/guard.test.ts` (Vitest) | OK 4/4 — 10/11/2026 | — |
 | A-T6 | T | E-mails : aucune mention interdite, images en URL absolue https | `tests/unit/emails.test.ts` (Vitest) | OK 5/5 — 10/11/2026 | T-MAILS 1 (URL ; rendu visuel reste manuel) |
 | A-T7 | T | Bandeau : aucune requête GA ni cookie `_ga` avant consentement/refus ; choix mémorisé ; accepter charge gtag | `e2e/lot-t.spec.ts` (Playwright) | OK 3/3 — 10/11/2026 | T-GA4 (parties réseau/cookies) |
-| A-T8 | T | Pages d'aide FR/EN : 200, texte présent, sans mention interdite (7 pages × 2 langues) | `e2e/lot-t.spec.ts` (Playwright) | OK 14/14 — 10/11/2026 | T-AIDE (hors relecture) |
+| A-T8 | T | Pages d'aide FR/EN : 200, texte présent, sans mention interdite (7 pages × 2 langues ; exemple de n° de commande au format réel AM-1A2B3C4D) | `e2e/lot-t.spec.ts` (Playwright) | OK 14/14 — 10/11/2026 | T-AIDE (hors relecture) |
 | A-T9 | T | Accès : visiteur redirigé depuis admin, retours admin, commandes partenaire, commandes client | `e2e/lot-t.spec.ts` (Playwright) | OK 4/4 — 10/11/2026 | H (accès) |
 | A-M1 | M | Fournisseur e-mail : Resend (from, reply_to, sans mention interdite) ; repli Gmail / aucun sans erreur | `tests/unit/email-provider.test.ts` (Vitest) | OK 2/2 — 10/11/2026 | T-MAIL-FROM (payload) |
 | A-M2 | M | Mur d'accès : images `/api/media/<id>` et `/images/artworks/*` publiques, reste fermé | `tests/unit/proxy-images.test.ts` (Vitest) | OK 2/2 — 10/11/2026 | T-MAIL-FROM 3 |
@@ -34,6 +34,9 @@ Dernière exécution (11/11/2026, lot admin + e-mails de retour) : Vitest 62 OK 
 | A-F5 | F | Page commande : texte « retour sous 30 jours » masqué si un retour existe ; règle `live` (œuvre sans partenaire invisible) | `tests/unit/tracking-notice.test.ts`, `tests/unit/catalog-live.test.ts` (Vitest) | OK — 11/11/2026 | T-COLIS-REMB 1 |
 | A-F6 | F | Bouton « Réinitialiser » des filtres (garde l'onglet de statut) | `tests/unit/list-reset.test.ts` (Vitest) | OK 2/2 — 11/11/2026 | T-FILTRES-RESET (logique) |
 | A-F8 | F | Règle « action restante » (onglet + pastille admin) : colis en cours, ou remboursement MANUAL/FAILED avec paiement réel ; expirée sans paiement = annulée | `tests/unit/todo-rule.test.ts` (Vitest) | OK 4/4 — 11/11/2026 | T-ADMIN-FILTRES 4 |
+| A-F11 | F | URL de retour Stripe/liens : domaine de la requête (liste blanche epomta.com, epomta-demo.vercel.app), sinon origine configurée | `tests/unit/origin.test.ts` (Vitest) | OK 3/3 — 11/11/2026 | T-DOMAINE |
+| A-F12 | F | Nom d'article cliquable vers la fiche produit dans le récapitulatif e-mail (annulée, en route…) | `tests/unit/email-item-link.test.ts` (Vitest) | OK 2/2 — 11/11/2026 | T-RACHAT-LIEN |
+| A-F10 | F | Montants des e-mails au format de la langue (EN « €55.00 », FR « 55,00 € ») | `tests/unit/money-locale.test.ts` (Vitest) | OK 2/2 — 11/11/2026 | T-MAILS (format EN) |
 | A-F9 | F | Mur d'accès : API et images hors exemptions bloquées (401), artworks e-mail publics (≠ 401), manifeste/icônes PWA | `e2e/access.spec.ts` (Playwright) | OK 5/5 en local — 11/11/2026 (CI à relancer) | — |
 
 Parcours Playwright historiques (`e2e/journey.spec.ts`, `access.spec.ts`, `alerts.spec.ts`, `search.spec.ts`, `order-email.spec.ts`, `mobile.spec.ts`) : inchangés, non relancés dans ce lot.
@@ -356,3 +359,18 @@ Statut : À tester — Date : —
 ### T-STOCK-UNIQUE — Message de stock unique — 2 min — À tester — date : —
 1. Ouvrir une fiche œuvre avec 2 exemplaires, sans taille (ex. /fr/produits/bague-de-marquis-argent-925-355e). Résultat : une seule ligne « Plus que 2 » (sous la description), pas de doublon rouge près du bouton.
 2. Fiche avec tailles : l'indication « Plus que n » reste sur la taille concernée uniquement.
+
+### T-MONTANT-EN — Montants et exemple de commande — 3 min — À tester — date : —
+1. Annuler un colis avec un compte en anglais (/en). Résultat : l'e-mail « Order cancelled » indique « €55.00 » (pas « 55,00 € »).
+2. Pages d'aide Contact FR et EN : l'exemple de n° de commande est « AM-1A2B3C4D ».
+
+### T-DOMAINE — Retour Stripe sur le même domaine — 5 min — À tester — date : —
+1. Se connecter en client sur https://epomta-demo.vercel.app, commander (carte test Stripe 4242 4242 4242 4242). Résultat : retour sur epomta-demo.vercel.app/fr/checkout/confirmation/…, toujours connecté.
+2. Même parcours sur https://epomta.com : retour sur epomta.com.
+3. Sur epomta-demo.vercel.app, ouvrir le compte client : plus d'erreur /api/auth/error?error=Configuration (sinon voir variables Vercel : AUTH_URL).
+
+### T-RACHAT-LIEN — Racheter un article annulé via son lien — 5 min — À tester — date : —
+1. Annuler une commande en tant que client, ouvrir l'e-mail « Commande annulée » : cliquer le nom d'un article → fiche produit (FR et EN selon la langue).
+2. Sur /fr/account/orders/<numéro> : les noms dans « Suivi par boutique » et « Articles » sont des liens vers la fiche.
+3. Pour une pièce vendue ou en rupture : le lien ouvre quand même la fiche, qui indique l'indisponibilité.
+(Lien e-mail couvert par A-F12.)

@@ -11,7 +11,7 @@ export type EmailLayoutInput = {
   trackLink?: { label: string; url: string };
   deliveryLine?: { label: string; value: string };
   summary?: {
-    items: { name: string; detail?: string; priceLabel: string; image?: string | null }[];
+    items: { name: string; detail?: string; priceLabel: string; image?: string | null; url?: string }[];
     rows: { label: string; value: string; bold?: boolean }[];
   };
   address?: { title: string; lines: string[] };
@@ -65,7 +65,7 @@ export function renderEmailHtml(o: EmailLayoutInput): string {
 ${o.summary.items
   .map(
     (i) =>
-      `<tr><td style="${sep};padding:12px 0"><table role="presentation" cellpadding="0" cellspacing="0"><tr>${i.image ? `<td style="padding-right:12px;width:72px"><img src="${esc(i.image)}" alt="${esc(i.name)}" width="72" height="72" style="display:block;width:72px;height:72px;object-fit:cover;border:0"></td>` : ""}<td style="font-family:${FONT};font-size:14px;color:#000"><strong>${esc(i.name)}</strong>${i.detail ? `<br><span style="color:${GREY};font-size:13px">${esc(i.detail)}</span>` : ""}</td></tr></table></td><td align="right" style="${sep};padding:12px 0;white-space:nowrap">${esc(i.priceLabel)}</td></tr>`,
+      `<tr><td style="${sep};padding:12px 0"><table role="presentation" cellpadding="0" cellspacing="0"><tr>${i.image ? `<td style="padding-right:12px;width:72px"><img src="${esc(i.image)}" alt="${esc(i.name)}" width="72" height="72" style="display:block;width:72px;height:72px;object-fit:cover;border:0"></td>` : ""}<td style="font-family:${FONT};font-size:14px;color:#000"><strong>${i.url ? `<a href="${esc(i.url)}" style="color:#000;text-decoration:underline">${esc(i.name)}</a>` : esc(i.name)}</strong>${i.detail ? `<br><span style="color:${GREY};font-size:13px">${esc(i.detail)}</span>` : ""}</td></tr></table></td><td align="right" style="${sep};padding:12px 0;white-space:nowrap">${esc(i.priceLabel)}</td></tr>`,
   )
   .join("")}
 ${o.summary.rows

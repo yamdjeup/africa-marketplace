@@ -9,7 +9,7 @@ import { settleSubRefund } from "@/lib/refund";
 
 export type SubEvent = "NEW" | "REMINDER" | "ESCALATION" | "ACCEPTED" | "REFUSED" | "EXPIRED" | "CANCELLED" | "SHIPPED" | "DELIVERED";
 
-const eur = (c: number) => `${(c / 100).toFixed(2).replace(".", ",")} €`;
+export const eur = (c: number, fr = true) => new Intl.NumberFormat(fr ? "fr-FR" : "en-GB", { style: "currency", currency: "EUR" }).format(c / 100);
 
 /** E-mails d'une sous-commande : partenaire (nouvelle commande, relance), admin (escalade), client (chaque changement d'état). */
 export async function notifySubOrder(event: SubEvent, subOrderId: string) {
@@ -44,7 +44,7 @@ export async function notifySubOrder(event: SubEvent, subOrderId: string) {
       return;
     }
 
-    const amt = eur(sub.subtotalCents);
+    const amt = eur(sub.subtotalCents, fr);
     const rs = sub.refundStatus;
     const refundFr = rs === "DONE" || rs === "AWAITING" || rs === "REQUESTED" ? ` Vous serez remboursé de ${amt} sur votre moyen de paiement sous 5 à 10 jours ouvrés.` : rs === "FAILED" ? " Nous revenons vers vous très prochainement au sujet de votre remboursement." : "";
     const refundEn = rs === "DONE" || rs === "AWAITING" || rs === "REQUESTED" ? ` You will be refunded ${amt} to your payment method within 5 to 10 business days.` : rs === "FAILED" ? " We will get back to you shortly about your refund." : "";
@@ -81,7 +81,7 @@ export async function notifySubOrder(event: SubEvent, subOrderId: string) {
       paragraphs: [hello, ...(parcelNote ? [`**${parcelNote}**`] : []), m[1]],
       cta: event === "DELIVERED" ? { label: fr ? "Voir ma commande" : "View my order", url: link } : { label: fr ? "Suivre ma commande" : "Track my order", url: link },
       trackLink: trackUrl && (event === "SHIPPED" || event === "DELIVERED") ? { label: fr ? "Suivre mon colis" : "Track my parcel", url: trackUrl } : undefined,
-      summary: { items: items.map((i) => ({ name: i.name, detail: `× ${i.quantity}${i.size ? ` · ${i.size}` : ""}`, priceLabel: eur(i.unitPriceCents * i.quantity), image: imgOf.get(i.productSlug) })), rows: [{ label: fr ? "Sous-total" : "Subtotal", value: eur(sub.subtotalCents), bold: true }] },
+      summary: { items: items.map((i) => ({ name: i.name, detail: `× ${i.quantity}${i.size ? ` · ${i.size}` : ""}`, priceLabel: eur(i.unitPriceCents * i.quantity, fr), image: imgOf.get(i.productSlug), url: `${siteUrl()}/${loc}/produits/${i.productSlug}` })), rows: [{ label: fr ? "Sous-total" : "Subtotal", value: eur(sub.subtotalCents, fr), bold: true }] },
       notice: sold,
       address: event === "SHIPPED" || event === "DELIVERED" ? { title: fr ? "Adresse de livraison" : "Delivery address", lines: [o.fullName, o.address, `${o.postalCode} ${o.city}`.trim(), o.country, ...(o.phone ? [`${fr ? "Téléphone" : "Phone"} : ${o.phone}`] : [])] } : undefined,
     });

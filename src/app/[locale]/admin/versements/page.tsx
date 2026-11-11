@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import type { Locale } from "@/lib/i18n";
 import { balances } from "@/lib/ledger";
 import { tr } from "@/lib/tr";
+import { ConfirmButton } from "@/components/admin/confirm-button";
 import { markPayoutAction, releaseEntryAction, setCommissionAction } from "../versements-actions";
 
 export const dynamic = "force-dynamic";
@@ -43,6 +44,7 @@ export default async function PayoutsAdmin({ params, searchParams }: { params: P
   return (
     <>
       <h1 className="font-heading text-3xl text-primary">{tr(locale, "Versements", "Payouts")}</h1>
+      <p className="max-w-3xl text-sm text-muted-foreground">{tr(locale, "Cycle : colis livré → gains « en attente » pendant le délai de retour → « disponible » → « à payer » → « Marquer le versement effectué » → historique.", "Cycle: parcel delivered → earnings “pending” during the return period → “available” → “to pay” → “Mark payout as done” → history.")}</p>
       <p className="rounded-md border border-accent bg-accent/10 p-3 text-sm">{tr(locale, "Marquer un versement l'enregistre dans le registre.", "Marking a payout records it in the ledger.")}</p>
       {sp.ok && msg[sp.ok] && <p role="status" className="rounded-md border border-accent bg-accent/15 p-3 text-sm">{tr(locale, ...msg[sp.ok])}</p>}
       {sp.error && <p role="alert" className="rounded-md border border-destructive p-3 text-sm text-destructive">{err[sp.error] ? tr(locale, ...err[sp.error]) : tr(locale, "Erreur.", "Error.")}</p>}
@@ -79,7 +81,7 @@ export default async function PayoutsAdmin({ params, searchParams }: { params: P
             {pendingEntries.map((e) => (
               <li key={e.id} className="flex flex-wrap items-center justify-between gap-2 p-3">
                 <span>{names.get(e.supplierId)} · {num.get(e.subOrderId)} · {eur(e.netCents)} · {tr(locale, "disponible le", "available on")} {fmt.format(e.availableAt)}</span>
-                <form action={releaseEntryAction}><input type="hidden" name="id" value={e.id} /><button className={buttonVariants({ variant: "outline", className: "min-h-11" })}>{tr(locale, "Rendre disponible", "Make available")}</button></form>
+                <form action={releaseEntryAction}><input type="hidden" name="id" value={e.id} /><ConfirmButton className={buttonVariants({ variant: "outline", className: "min-h-11" })} title={tr(locale, "Ignore le délai de retour : le gain devient payable tout de suite.", "Skips the return period: the earning becomes payable now.")} message={tr(locale, "Rendre ce gain disponible maintenant, sans attendre la fin du délai de retour ?", "Make this earning available now, without waiting for the return period to end?")}>{tr(locale, "Rendre disponible maintenant (ignorer le délai de retour)", "Make available now (skip the return period)")}</ConfirmButton></form>
               </li>
             ))}
           </ul>

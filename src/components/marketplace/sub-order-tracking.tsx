@@ -2,7 +2,7 @@ import { Pill } from "@/components/fournisseur/parts";
 import { CancelSubOrderButton } from "@/components/marketplace/cancel-sub-order-button";
 import { ReturnRequestForm } from "@/components/marketplace/return-request-form";
 import { db } from "@/lib/db";
-import { RETURN_LABELS, returnEligibility, type ReturnStatus } from "@/lib/returns";
+import { RETURN_LABELS, returnEligibility, showShippedNotice, type ReturnStatus } from "@/lib/returns";
 import type { Locale } from "@/lib/i18n";
 import { subLabel } from "@/lib/suborders";
 import { trackingUrl } from "@/lib/tracking";
@@ -59,7 +59,7 @@ export async function SubOrderTracking({ orderId, locale, canCancel = false }: {
               if (!canCancel || returnEligibility(s, false) !== "ok") return null;
               return <ReturnRequestForm id={s.id} locale={locale} />;
             })()}
-            {canCancel && ["SHIPPED", "DELIVERED"].includes(s.status) && <p className="text-xs text-muted-foreground">{tr(locale, "Ce colis est expédié : il ne peut plus être annulé. Vous pouvez le retourner sous 30 jours après la livraison (voir Retours et remboursements).", "This parcel has shipped and can no longer be cancelled. You can return it within 30 days of delivery (see Returns and refunds).")}</p>}
+            {canCancel && showShippedNotice(s.status, returns.some((r) => r.subOrderId === s.id)) && <p className="text-xs text-muted-foreground">{tr(locale, "Ce colis est expédié : il ne peut plus être annulé. Vous pouvez le retourner sous 30 jours après la livraison (voir Retours et remboursements).", "This parcel has shipped and can no longer be cancelled. You can return it within 30 days of delivery (see Returns and refunds).")}</p>}
           </div>
         );
       })}

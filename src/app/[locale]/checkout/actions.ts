@@ -85,7 +85,7 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
   const cart = parseCart(formData.get("cart"));
   if (cart.length === 0) return fail("empty");
 
-  const products = await db.product.findMany({ where: { slug: { in: cart.map((l) => l.slug) }, status: "PUBLISHED" }, include: { variants: true } });
+  const products = await db.product.findMany({ where: { slug: { in: cart.map((l) => l.slug) }, status: "PUBLISHED", supplierId: { not: null } }, include: { variants: true } });
   const bySlug = new Map(products.map((p) => [p.slug, p]));
 
   let totalCents = 0;

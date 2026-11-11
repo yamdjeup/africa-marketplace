@@ -15,9 +15,10 @@ test.describe("Mur de mot de passe", () => {
     expect(await robots.text()).toMatch(/Disallow: \//);
   });
 
-  test("bloque images et API sans cookie", async ({ request }) => {
-    const image = await request.get("/images/artworks/inexistante.jpg", { maxRedirects: 0 });
+  test("bloque images hors exemptions et API sans cookie", async ({ request }) => {
+    const image = await request.get("/images/private/inexistante.jpg", { maxRedirects: 0 });
     expect(image.status()).toBe(401);
+    expect((await request.get("/images/artworks/inexistante.jpg", { maxRedirects: 0 })).status()).not.toBe(401);
     const api = await request.get("/api/auth/session", { maxRedirects: 0 });
     expect(api.status()).toBe(401);
   });
@@ -36,7 +37,7 @@ test.describe("Mur de mot de passe", () => {
     }
     const apple = await request.get("/icons/apple-touch-icon.png", { maxRedirects: 0 });
     expect(apple.status()).toBe(200);
-    expect((await request.get("/images/artworks/celanie-1.jpg", { maxRedirects: 0 })).status()).toBe(401);
+    expect((await request.get("/images/private/celanie-1.jpg", { maxRedirects: 0 })).status()).toBe(401);
   });
 
   test("mauvais mot de passe refusé, bon mot de passe accepté", async ({ page, context }) => {

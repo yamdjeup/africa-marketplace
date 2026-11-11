@@ -1,8 +1,8 @@
 import type { PrismaClient } from "@prisma/client";
 
 // Filtres, tri et pagination côté serveur des listes d'administration (état dans l'URL).
-// Règle unique « à traiter » (onglet + pastille) : une commande expirée n'est jamais à traiter.
-export const TODO_WHERE = { status: { not: "EXPIRED" }, OR: [{ status: "PENDING", escalatedAt: { not: null } }, { refundStatus: { in: ["MANUAL", "FAILED"] } }] };
+// Règle unique « action restante » (onglet + pastille) : colis en cours, ou remboursement à reprendre avec un paiement réel (même si expiré).
+export const TODO_WHERE = { OR: [{ status: { in: ["PENDING", "ACCEPTED", "PREPARING"] } }, { refundStatus: { in: ["MANUAL", "FAILED"] }, order: { stripePaymentIntentId: { not: null } } }] };
 
 export const LIST_PAGE_SIZE = 25;
 

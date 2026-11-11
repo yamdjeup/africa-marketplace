@@ -42,9 +42,9 @@ describe("listes admin : pagination 25 par page", () => {
 });
 
 describe("listes admin : filtres", () => {
-  it("commandes « à traiter » = escaladées ou remboursement à reprendre", () => {
+  it("commandes « à traiter » = colis en cours ou remboursement à reprendre", () => {
     const w = JSON.stringify(subOrdersWhere(parse({})));
-    expect(w).toContain("escalatedAt");
+    expect(w).toContain("PREPARING");
     expect(w).toContain("MANUAL");
     expect(subOrdersWhere(parse({ st: "all" }))).toEqual({});
   });

@@ -1,6 +1,9 @@
 import type { PrismaClient } from "@prisma/client";
 
 // Filtres, tri et pagination côté serveur des listes d'administration (état dans l'URL).
+// Règle unique « action restante » (onglet + pastille) : colis en cours, ou remboursement à reprendre avec un paiement réel (même si expiré).
+export const TODO_WHERE = { OR: [{ status: { in: ["PENDING", "ACCEPTED", "PREPARING"] } }, { refundStatus: { in: ["MANUAL", "FAILED"] }, order: { stripePaymentIntentId: { not: null } } }] };
+
 export const LIST_PAGE_SIZE = 25;
 
 export type ListParams = { q?: string; st?: string; from?: string; to?: string; sort?: string; dir?: string; p?: string };
@@ -44,7 +47,7 @@ export const SUB_STATUSES = ["todo", "open", "SHIPPED", "DELIVERED", "closed", "
 /** Commandes (colis) : « à traiter » = sans réponse du partenaire (escaladées) ou remboursement à reprendre. */
 export function subOrdersWhere(q: ListQuery, supplierIds: string[] = []) {
   const and: object[] = [];
-  if (q.st === "todo") and.push({ OR: [{ status: "PENDING", escalatedAt: { not: null } }, { refundStatus: { in: ["MANUAL", "FAILED"] } }] });
+  if (q.st === "todo") and.push(TODO_WHERE);
   else if (q.st === "open") and.push({ status: { in: ["PENDING", "ACCEPTED", "PREPARING", "SHIPPED"] } });
   else if (q.st === "SHIPPED" || q.st === "DELIVERED") and.push({ status: q.st });
   else if (q.st === "closed") and.push({ status: { in: ["REFUSED", "EXPIRED", "CANCELLED"] } });
@@ -138,7 +141,7 @@ export async function adminCounts(db: PrismaClient, now = new Date()) {
   const [applications, creations, orders, returns, payoutGroups] = await Promise.all([
     db.supplierApplication.count({ where: { status: "PENDING" } }),
     db.product.count({ where: { status: "SUBMITTED" } }),
-    db.subOrder.count({ where: { OR: [{ status: "PENDING", escalatedAt: { not: null } }, { refundStatus: { in: ["MANUAL", "FAILED"] } }] } }),
+    db.subOrder.count({ where: TODO_WHERE }),
     db.returnRequest.count({ where: { status: "REQUESTED" } }),
     db.ledgerEntry.groupBy({ by: ["supplierId"], where: { payoutId: null, reversedAt: null, availableAt: { lte: now } } }),
   ]);

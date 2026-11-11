@@ -33,6 +33,7 @@ Dernière exécution (11/11/2026, lot admin + e-mails de retour) : Vitest 62 OK 
 | A-F4 | F | Contact : e-mail unique contact@epomta.com, téléphones masqués sans variable CONTACT_PHONE_LOCAL/INTL | `tests/unit/contact.test.ts` (Vitest) | OK 2/2 — 11/11/2026 | T-CONTACT (logique) |
 | A-F5 | F | Page commande : texte « retour sous 30 jours » masqué si un retour existe ; règle `live` (œuvre sans partenaire invisible) | `tests/unit/tracking-notice.test.ts`, `tests/unit/catalog-live.test.ts` (Vitest) | OK — 11/11/2026 | T-COLIS-REMB 1 |
 | A-F6 | F | Bouton « Réinitialiser » des filtres (garde l'onglet de statut) | `tests/unit/list-reset.test.ts` (Vitest) | OK 2/2 — 11/11/2026 | T-FILTRES-RESET (logique) |
+| A-F8 | F | Règle « action restante » (onglet + pastille admin) : colis en cours, ou remboursement MANUAL/FAILED avec paiement réel ; expirée sans paiement = annulée | `tests/unit/todo-rule.test.ts` (Vitest) | OK 4/4 — 11/11/2026 | T-ADMIN-FILTRES 4 |
 
 Parcours Playwright historiques (`e2e/journey.spec.ts`, `access.spec.ts`, `alerts.spec.ts`, `search.spec.ts`, `order-email.spec.ts`, `mobile.spec.ts`) : inchangés, non relancés dans ce lot.
 

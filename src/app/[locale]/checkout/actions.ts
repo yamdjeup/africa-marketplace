@@ -1,12 +1,14 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { runAlerts } from "@/lib/alerts";
 import { auth } from "@/auth";
 import { checkAddress, formatStreet, readAddress } from "@/lib/address";
 import { db } from "@/lib/db";
+import { returnOrigin } from "@/lib/origin";
 import { isLocale } from "@/lib/i18n";
 import { sendOrderEmail } from "@/lib/order-email";
 import { isAddressEditable, isOrderOwner } from "@/lib/order-edit";
@@ -158,6 +160,9 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
   }
   after(() => notifyLowStock(before).catch(() => undefined));
 
+  const hdr = await headers();
+  const configured = (process.env.NEXT_PUBLIC_SITE_URL || process.env.AUTH_URL || "https://epomta-demo.vercel.app").replace(/\/$/, "");
+  const origin = returnOrigin(hdr.get("x-forwarded-host") ?? hdr.get("host"), configured);
   if (stripeEnabled()) {
     await db.order.update({ where: { number }, data: { paymentPending: true } });
     const url = await createCheckoutSession(
@@ -166,6 +171,7 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
         const p = bySlug.get(l.slug)!;
         return { name: l.size ? `${p.name} (${l.size})` : p.name, quantity: l.quantity, unitPriceCents: p.priceCents };
       }),
+      origin,
     );
     if (url) redirect(url);
     // Échec de création de session : on revient au comportement sans paiement en ligne.
@@ -176,7 +182,7 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
     await runSubOrderSweep().catch(() => undefined);
   });
 
-  const base = (process.env.NEXT_PUBLIC_SITE_URL || process.env.AUTH_URL || "https://epomta-demo.vercel.app").replace(/\/$/, "");
+  const base = origin;
   await sendOrderEmail({
     to: email,
     locale,

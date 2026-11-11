@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Pill } from "@/components/fournisseur/parts";
 import { CancelSubOrderButton } from "@/components/marketplace/cancel-sub-order-button";
 import { ReturnRequestForm } from "@/components/marketplace/return-request-form";
@@ -34,7 +35,7 @@ export async function SubOrderTracking({ orderId, locale, canCancel = false }: {
             </div>
             <ul className="text-muted-foreground">
               {items.filter((i) => i.subOrderId === s.id).map((i) => (
-                <li key={i.id}>{i.quantity} × {i.name}{i.size ? ` (${i.size})` : ""}</li>
+                <li key={i.id}>{i.quantity} × <Link href={`/${locale}/produits/${i.productSlug}`} className="underline underline-offset-4">{i.name}</Link>{i.size ? ` (${i.size})` : ""}</li>
               ))}
             </ul>
             {s.status === "PENDING" && <p className="text-xs text-muted-foreground">{tr(locale, "En attente de la réponse de la boutique (48 h maximum).", "Waiting for the shop's reply (48 h maximum).")}</p>}

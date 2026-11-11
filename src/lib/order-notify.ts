@@ -81,7 +81,7 @@ export async function notifySubOrder(event: SubEvent, subOrderId: string) {
       paragraphs: [hello, ...(parcelNote ? [`**${parcelNote}**`] : []), m[1]],
       cta: event === "DELIVERED" ? { label: fr ? "Voir ma commande" : "View my order", url: link } : { label: fr ? "Suivre ma commande" : "Track my order", url: link },
       trackLink: trackUrl && (event === "SHIPPED" || event === "DELIVERED") ? { label: fr ? "Suivre mon colis" : "Track my parcel", url: trackUrl } : undefined,
-      summary: { items: items.map((i) => ({ name: i.name, detail: `× ${i.quantity}${i.size ? ` · ${i.size}` : ""}`, priceLabel: eur(i.unitPriceCents * i.quantity, fr), image: imgOf.get(i.productSlug) })), rows: [{ label: fr ? "Sous-total" : "Subtotal", value: eur(sub.subtotalCents, fr), bold: true }] },
+      summary: { items: items.map((i) => ({ name: i.name, detail: `× ${i.quantity}${i.size ? ` · ${i.size}` : ""}`, priceLabel: eur(i.unitPriceCents * i.quantity, fr), image: imgOf.get(i.productSlug), url: `${siteUrl()}/${loc}/produits/${i.productSlug}` })), rows: [{ label: fr ? "Sous-total" : "Subtotal", value: eur(sub.subtotalCents, fr), bold: true }] },
       notice: sold,
       address: event === "SHIPPED" || event === "DELIVERED" ? { title: fr ? "Adresse de livraison" : "Delivery address", lines: [o.fullName, o.address, `${o.postalCode} ${o.city}`.trim(), o.country, ...(o.phone ? [`${fr ? "Téléphone" : "Phone"} : ${o.phone}`] : [])] } : undefined,
     });

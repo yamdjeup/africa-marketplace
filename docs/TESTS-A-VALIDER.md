@@ -35,6 +35,7 @@ Dernière exécution (11/11/2026, lot admin + e-mails de retour) : Vitest 62 OK 
 | A-F6 | F | Bouton « Réinitialiser » des filtres (garde l'onglet de statut) | `tests/unit/list-reset.test.ts` (Vitest) | OK 2/2 — 11/11/2026 | T-FILTRES-RESET (logique) |
 | A-F8 | F | Règle « action restante » (onglet + pastille admin) : colis en cours, ou remboursement MANUAL/FAILED avec paiement réel ; expirée sans paiement = annulée | `tests/unit/todo-rule.test.ts` (Vitest) | OK 4/4 — 11/11/2026 | T-ADMIN-FILTRES 4 |
 | A-F11 | F | URL de retour Stripe/liens : domaine de la requête (liste blanche epomta.com, epomta-demo.vercel.app), sinon origine configurée | `tests/unit/origin.test.ts` (Vitest) | OK 3/3 — 11/11/2026 | T-DOMAINE |
+| A-F12 | F | Nom d'article cliquable vers la fiche produit dans le récapitulatif e-mail (annulée, en route…) | `tests/unit/email-item-link.test.ts` (Vitest) | OK 2/2 — 11/11/2026 | T-RACHAT-LIEN |
 | A-F10 | F | Montants des e-mails au format de la langue (EN « €55.00 », FR « 55,00 € ») | `tests/unit/money-locale.test.ts` (Vitest) | OK 2/2 — 11/11/2026 | T-MAILS (format EN) |
 | A-F9 | F | Mur d'accès : API et images hors exemptions bloquées (401), artworks e-mail publics (≠ 401), manifeste/icônes PWA | `e2e/access.spec.ts` (Playwright) | OK 5/5 en local — 11/11/2026 (CI à relancer) | — |
 
@@ -367,3 +368,9 @@ Statut : À tester — Date : —
 1. Se connecter en client sur https://epomta-demo.vercel.app, commander (carte test Stripe 4242 4242 4242 4242). Résultat : retour sur epomta-demo.vercel.app/fr/checkout/confirmation/…, toujours connecté.
 2. Même parcours sur https://epomta.com : retour sur epomta.com.
 3. Sur epomta-demo.vercel.app, ouvrir le compte client : plus d'erreur /api/auth/error?error=Configuration (sinon voir variables Vercel : AUTH_URL).
+
+### T-RACHAT-LIEN — Racheter un article annulé via son lien — 5 min — À tester — date : —
+1. Annuler une commande en tant que client, ouvrir l'e-mail « Commande annulée » : cliquer le nom d'un article → fiche produit (FR et EN selon la langue).
+2. Sur /fr/account/orders/<numéro> : les noms dans « Suivi par boutique » et « Articles » sont des liens vers la fiche.
+3. Pour une pièce vendue ou en rupture : le lien ouvre quand même la fiche, qui indique l'indisponibilité.
+(Lien e-mail couvert par A-F12.)

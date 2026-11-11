@@ -1,3 +1,4 @@
+import { CONTACT_EMAIL } from "@/lib/contact";
 import nodemailer from "nodemailer";
 import { renderEmailHtml } from "@/lib/email-layout";
 
@@ -16,7 +17,7 @@ export interface EmailProvider {
 }
 
 const SEND_TIMEOUT_MS = 8000;
-export const REPLY_TO = "contact@epomta.com";
+export const REPLY_TO = CONTACT_EMAIL;
 const FROM_NAME = "E póm ta’";
 
 function withTimeout<T>(p: Promise<T>): Promise<T> {

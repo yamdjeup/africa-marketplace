@@ -1,10 +1,13 @@
 import { CookieSettingsLink } from "@/components/marketplace/cookie-consent";
 import Link from "next/link";
 import { InstallApp } from "@/components/marketplace/install-app";
+import { CONTACT_EMAIL, contactPhones } from "@/lib/contact";
 import { getDict, type Locale } from "@/lib/i18n";
 
 export function SiteFooter({ locale }: { locale: Locale }) {
   const t = getDict(locale);
+  const ph = contactPhones();
+  const cards = ([[t.f9.contactEmail, CONTACT_EMAIL], [t.f9.contactLocal, ph.local], [t.f9.contactIntl, ph.intl]] as [string, string | undefined][]).filter((x): x is [string, string] => !!x[1]);
   const f = t.f4;
   const l = (path: string) => `/${locale}${path}`;
   const col = "space-y-1 opacity-90 [&_a]:inline-flex [&_a]:min-h-8 [&_a]:items-center [&_a:hover]:underline";
@@ -62,13 +65,9 @@ export function SiteFooter({ locale }: { locale: Locale }) {
       <div className="kente-band h-1" />
       <section aria-labelledby="contact-us" className="mx-auto max-w-[1400px] border-b border-foreground/15 px-4 py-8">
         <h2 id="contact-us" className="mb-4 text-center font-heading text-2xl font-normal">{t.f9.contactTitle}</h2>
-        <ul className="grid grid-cols-3 gap-6 text-center text-sm">
-          {[
-            [t.f9.contactEmail, "contact@epomta.example"],
-            [t.f9.contactLocal, "+237 000 00 00 00"],
-            [t.f9.contactIntl, "+33 0 00 00 00 00"],
-          ].map(([h, v]) => (
-            <li key={h} className="border border-foreground/25 bg-background p-5">
+        <ul className="flex justify-center gap-6 text-center text-sm">
+          {cards.map(([h, v]) => (
+            <li key={h} className="min-w-64 border border-foreground/25 bg-background p-5">
               <p className="font-heading text-base">{h}</p>
               <p className="mt-1">{v}</p>
             </li>

@@ -13,6 +13,14 @@ async function main() {
     await prisma.creator.upsert({ where: { slug: c.slug }, update: c, create: c });
   }
 
+  // Chaque œuvre du catalogue appartient à un partenaire (jamais d'œuvre sans partenaire).
+  const supplierBySlug = new Map<string, string>();
+  for (const c of creators) {
+    const found = await prisma.supplier.findFirst({ where: { creatorSlug: c.slug } });
+    const s = found ?? (await prisma.supplier.create({ data: { displayName: c.name, country: "—", craftType: "Art", creatorSlug: c.slug } }));
+    supplierBySlug.set(c.slug, s.id);
+  }
+
   // createdAt décalé par produit pour que le tri « nouveautés » soit stable.
   const base = Date.UTC(2026, 9, 1);
   for (const [i, p] of products.entries()) {
@@ -45,6 +53,7 @@ async function main() {
       hasCertificate: p.hasCertificate,
       stock: p.stock,
       images: p.images,
+      supplierId: supplierBySlug.get(p.creatorSlug) ?? null,
       createdAt: new Date(base - i * 86_400_000),
     };
     await prisma.product.upsert({ where: { slug: p.slug }, update: data, create: { slug: p.slug, ...data } });

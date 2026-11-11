@@ -79,7 +79,6 @@ export function AddToCart({ locale, slug, name, creatorName, image, priceCents, 
           )}
         </fieldset>
       )}
-      {sizes.length === 0 && stock > 0 && stock <= LOW && <p className="text-sm text-destructive">{lowN(stock)}</p>}
       {showQty && (
         <div className="inline-flex items-center rounded-md border" role="group" aria-label={fr ? "Quantité" : "Quantity"}>
           <button type="button" className="size-11 text-lg disabled:opacity-40" aria-label={fr ? "Diminuer" : "Decrease"} disabled={q <= 1} onClick={() => { setAdded(false); setQty(q - 1); }}>−</button>

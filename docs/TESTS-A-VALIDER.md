@@ -352,3 +352,7 @@ Statut : À tester — Date : —
 ### T-FILTRES-RESET — Réinitialiser et Versements — 5 min — À tester — date : —
 1. Sur Admin › Commandes (puis Versements, Retours, Candidatures, Partenaires ; partenaire › Commandes, Paiements), saisir une recherche et des dates, Filtrer, puis « Réinitialiser ». Résultat : champs vides, onglet de statut conservé.
 2. Admin › Versements : le texte d'aide du cycle s'affiche sous le titre ; le bouton « Rendre disponible maintenant (ignorer le délai de retour) » demande confirmation (Annuler = rien ne change).
+
+### T-STOCK-UNIQUE — Message de stock unique — 2 min — À tester — date : —
+1. Ouvrir une fiche œuvre avec 2 exemplaires, sans taille (ex. /fr/produits/bague-de-marquis-argent-925-355e). Résultat : une seule ligne « Plus que 2 » (sous la description), pas de doublon rouge près du bouton.
+2. Fiche avec tailles : l'indication « Plus que n » reste sur la taille concernée uniquement.

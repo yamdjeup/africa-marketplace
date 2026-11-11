@@ -62,7 +62,8 @@ export type CreatorView = {
 type ProductRow = Product & { creator: Pick<Creator, "name">; variants?: { label: string; stock: number; reserved: number }[] };
 
 /** Filtre commun : seules les œuvres publiées sont visibles du public. */
-const live = { status: "PUBLISHED" } as const;
+// Règle unique : une œuvre sans partenaire n'est jamais visible ni achetable.
+export const live = { status: "PUBLISHED", supplierId: { not: null } } as const;
 
 const strings = (v: unknown): string[] => (Array.isArray(v) ? (v as string[]) : []);
 
@@ -262,7 +263,7 @@ async function getFilterOptionsRaw(locale: Locale, category?: string) {
 
 export async function getProduct(slug: string, locale: Locale) {
   const p = await db.product.findUnique({ where: { slug }, include: { creator: true, category: true, variants: true } });
-  if (!p || p.status !== "PUBLISHED") return null;
+  if (!p || p.status !== "PUBLISHED" || !p.supplierId) return null;
   return {
     product: toProductView(p, locale),
     creator: toCreatorView(p.creator, locale),

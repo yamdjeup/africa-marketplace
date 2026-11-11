@@ -183,13 +183,13 @@ const PAGES: Record<string, { fr: string[]; en: string[] }> = {
     fr: [
       "Une question sur une création, une commande ou votre compte ? Écrivez-nous par e-mail à contact@epomta.com.",
       "Délai de réponse : nous répondons sous 48 heures ouvrées.",
-      "Pour traiter votre demande plus vite, indiquez : votre numéro de commande (ex. EP-20481), l'adresse e-mail utilisée pour commander, le nom de la création concernée et, le cas échéant, une photo.",
+      "Pour traiter votre demande plus vite, indiquez : votre numéro de commande (ex. AM-1A2B3C4D), l'adresse e-mail utilisée pour commander, le nom de la création concernée et, le cas échéant, une photo.",
       "Pour un retour ou un changement d'adresse, précisez-le dans l'objet de votre message.",
     ],
     en: [
       "A question about a creation, an order or your account? Email us at contact@epomta.com.",
       "Response time: we reply within 48 business hours.",
-      "To help us handle your request faster, include: your order number (e.g. EP-20481), the email address used to order, the name of the creation concerned and, if relevant, a photo.",
+      "To help us handle your request faster, include: your order number (e.g. AM-1A2B3C4D), the email address used to order, the name of the creation concerned and, if relevant, a photo.",
       "For a return or an address change, mention it in the subject of your message.",
     ],
   },

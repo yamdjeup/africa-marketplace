@@ -67,3 +67,5 @@ export async function markReturnRefundedManually(db: PrismaClient, id: string, n
   if (!ret || ret.status !== "ACCEPTED") return null;
   return refundReturn(db, id, async () => ({ status: "DONE", refundId: "manuel" }), now);
 }
+
+export function showShippedNotice(status: string, hasReturn: boolean) { return !hasReturn && ["SHIPPED", "DELIVERED"].includes(status); }

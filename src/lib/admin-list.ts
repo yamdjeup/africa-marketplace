@@ -81,7 +81,7 @@ export const PARTNER_STATUSES = ["ACTIVE", "SUSPENDED", "REVOKED", "all"] as con
 export function partnersWhere(q: ListQuery) {
   const and: object[] = [];
   if (q.st !== "all") and.push({ status: q.st });
-  if (q.q) and.push({ OR: [{ displayName: has(q.q) }, { country: has(q.q) }, { craftType: has(q.q) }, { user: { email: has(q.q) } }] });
+  if (q.q) and.push({ OR: [{ displayName: has(q.q) }, { country: has(q.q) }, { craftType: has(q.q) }, { user: { email: has(q.q) } }, { contactEmail: has(q.q) }] });
   const r = dateRange(q);
   if (r) and.push({ createdAt: r });
   return and.length ? { AND: and } : {};

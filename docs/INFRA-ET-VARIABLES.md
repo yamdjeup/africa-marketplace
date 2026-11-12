@@ -23,7 +23,10 @@
 | Vercel (compte yamdjeup, plan Hobby) | yamdjeup@gmail.com |
 | Neon (compte yamdjeup, organisation `africa-marketplace`, plan Free, région Frankfurt) | yamdjeup@gmail.com |
 | Partenaire de test LoliPat | lolipat2026@gmail.com |
-| Stripe, Resend, OVH, GA4, Apple Developer : e-mail du compte | À compléter |
+| Stripe « Epomta sandbox » | africamadolo@gmail.com (connexion Google, sans mot de passe ; pas de 2FA ni e-mail/téléphone de secours pour l'instant) |
+| OVH (titulaire, admin, technique, facturation) | yamdjeup@gmail.com — réf. client pn1604783-ovh |
+| Resend (équipe yamdjeup) | yamdjeup@gmail.com |
+| GA4, Apple Developer | À compléter |
 
 ## 3. Variables par service
 
@@ -40,7 +43,7 @@ Légende : P = Production, Pv = Preview, T = Test/CI, L = local (`.env.local`). 
 | `ADMIN_EMAILS` | P, Pv | Liste d'administrateurs (e-mails séparés par des virgules) | Non | Vercel |
 | `CRON_SECRET` | P | Protège `/api/alerts/run` et `/api/orders/sweep` (Vercel l'envoie en Bearer) | Oui | Chaîne aléatoire |
 | `LEDGER_HOLD_DAYS` | P (optionnel) | Délai avant gains disponibles | Non | Vercel |
-| `CONTACT_PHONE_LOCAL`, `CONTACT_PHONE_INTL` | P | Téléphones affichés ; cartes masquées si vides | Non | Numéros réels : À compléter |
+| `CONTACT_PHONE_LOCAL`, `CONTACT_PHONE_INTL` | P | Téléphones affichés ; cartes masquées si vides | Non | **Pas encore définis dans Vercel (à faire)** ; numéros réels : À compléter |
 | `TMP_ATTACH_SECRET` | — | Ancienne route temporaire supprimée : **à supprimer sur Vercel** | Oui | — |
 | `NODE_ENV`, `CI` | automatiques | Fournis par Vercel / CI | — | — |
 
@@ -63,9 +66,11 @@ Compte Neon : yamdjeup@gmail.com (organisation `africa-marketplace`). Nom du pro
 | `STRIPE_WEBHOOK_SECRET` | P | Signature du webhook `https://epomta.com/api/stripe/webhook` | Oui | Stripe > Webhooks > endpoint > Signing secret |
 | `TEST_STRIPE_SECRET_KEY` (secret GitHub) | CI | Clé test pour les tests automatisés | Oui | Stripe |
 
-Pas de clé live. Compte Stripe / e-mail : À compléter.
+Pas de clé live. Compte Stripe « Epomta sandbox » : africamadolo@gmail.com.
 
 ### Resend / e-mails
+Équipe Resend : yamdjeup (yamdjeup@gmail.com) ; clé API `epomta-prod` (permission Sending access) ; plan à vérifier.
+
 | Variable | Env. | Rôle | Sensible | Où régénérer |
 |---|---|---|---|---|
 | `RESEND_API_KEY` | P | Envoi d'e-mails (prioritaire sur Gmail) | Oui | Resend > API Keys |
@@ -79,7 +84,7 @@ Pas de clé live. Compte Stripe / e-mail : À compléter.
 | `GOOGLE_PLACES_API_KEY` | P (optionnel) | Saisie d'adresse (Places API New), restreinte | Oui | Google Cloud |
 | `GOOGLE_TRANSLATE_API_KEY`, `DEEPL_API_KEY`, `DEEPL_API_URL`, `TRANSLATE_PROVIDER` | optionnel | Traduction automatique, si activée | Clés : oui | À compléter |
 
-Compte Google Cloud : africamadolo@gmail.com, projet `epomta-demo`.
+Compte Google Cloud : africamadolo@gmail.com, projet `epomta-demo`. Client « Epomta web » : redirect URIs `epomta.com` et `www.epomta.com` ajoutées ; connexion Google testée OK sur epomta.com.
 
 ### Autres connexions sociales (optionnel, inactives si vides)
 `AUTH_FACEBOOK_ID`, `AUTH_FACEBOOK_SECRET`, `AUTH_APPLE_ID`, `AUTH_APPLE_SECRET` : secrets sensibles ; callback `https://epomta.com/api/auth/callback/<fournisseur>`.
@@ -99,7 +104,7 @@ Secrets du dépôt (Settings > Secrets and variables > Actions) :
 - App iOS (workflow de build) : `APPLE_TEAM_ID`, `IOS_CERTIFICATE_P12_BASE64`, `IOS_CERTIFICATE_PASSWORD`, `IOS_PROVISIONING_PROFILE_BASE64`, `IOS_PROVISIONING_PROFILE_NAME`, `KEYCHAIN_PASSWORD`, `APP_STORE_CONNECT_ISSUER_ID`, `APP_STORE_CONNECT_KEY_ID`, `APP_STORE_CONNECT_KEY_P8_BASE64`. Compte Apple Developer : À compléter.
 
 ### OVH (domaine)
-Pas de variable. Enregistrements DNS : A/CNAME vers Vercel, enregistrements SPF/DKIM de Resend. Compte OVH : À compléter.
+Pas de variable. Offre Standard ; epomta.com expire le 10/11/2027 (renouvellement automatique) ; contact du domaine validé le 12/11/2026 ; **aucun moyen de paiement enregistré** ; service Emails lié. Enregistrements DNS : A/CNAME vers Vercel, enregistrements SPF/DKIM de Resend. Compte OVH : yamdjeup@gmail.com (réf. pn1604783-ovh).
 
 ## 4. Secrets à régénérer
 
@@ -137,3 +142,8 @@ Redirect URI Google (et Facebook/Apple) ; endpoint webhook Stripe `https://epomt
 - [ ] Relecture CNIL (mentions, cookies, données personnelles)
 - [ ] Politique de retour validée (qui paie le retour, remboursements partiels)
 - [ ] Plans Vercel Pro et Neon Launch activés
+- [ ] Stripe : activer la 2FA et un e-mail/téléphone de secours ; inviter yamdjeup comme administrateur
+- [ ] OVH : enregistrer un moyen de paiement (renouvellement auto du 10/11/2027)
+- [ ] Redirection www.epomta.com → epomta.com (308)
+- [ ] Vercel : `NEXT_PUBLIC_SITE_URL=https://epomta.com`, `SITE_ACCESS_PASSWORD` défini, `CONTACT_PHONE_*` définis
+- [ ] Webhook Stripe pointant sur `https://epomta.com/api/stripe/webhook`

@@ -148,6 +148,7 @@ export async function adminUpdatePartnerProfile(formData: FormData) {
     await tx.supplier.update({ where: { id }, data: { ...next, contactEmail: next.contactEmail || null, phone: next.phone || null, address: next.address || null } });
     if (changed.length) await tx.partnerAudit.create({ data: { supplierId: id, action: "PROFILE_EDIT", reason: changeLog<Record<string, unknown>>({ ...s }, next), actorEmail: session?.user?.email ?? "" } });
   });
-  revalidatePath("/[locale]/admin/fournisseurs", "page");
+  if (s.userId && next.displayName !== s.displayName) await db.user.update({ where: { id: s.userId }, data: { name: next.displayName } });
+  revalidatePath("/", "layout");
   back("saved=1");
 }

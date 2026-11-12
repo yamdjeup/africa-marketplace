@@ -429,7 +429,8 @@ Statut : À tester — Date : —
 
 ### T-NOM-ENTETE — Nom du partenaire dans l'en-tête — 2 min — À tester — date : —
 1. Partenaire : renommer le profil (ex. Mia-Mia) et enregistrer.
-2. Recharger : le nom dans l'en-tête du compte est le nouveau nom.
+2. Recharger : le nom dans le menu compte (en-tête) et sur la page « Mon compte » est le nouveau nom, sans reconnexion.
+3. Même contrôle après un renommage par l'admin (Modifier le profil). Note : les comptes renommés avant ce correctif sont resynchronisés au prochain renommage ; l'en-tête lit déjà le nom du profil partenaire.
 
 ### T-TABLEAU-PARTENAIRES — Tableau compact des partenaires — 5 min — À tester — date : —
 1. Admin, Partenaires : tableau Nom, Pays, Savoir-faire, Commission (%), Statut, E-mail, Date, Actions.

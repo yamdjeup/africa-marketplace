@@ -40,6 +40,7 @@ Dernière exécution (11/11/2026, lot admin + e-mails de retour) : Vitest 62 OK 
 | A-F14 | F | Transporteur « Autre » → « Other » en EN (`carrierLabel`) ; image exemple non bloquée par le mur (`/images/examples/*`) | `tests/unit/partner-profile.test.ts`, `tests/unit/proxy-images.test.ts` (Vitest) | À lancer | T-AUTRE-EN, T-IMG-EXEMPLE |
 | A-F15 | F | Profil partenaire : validation e-mail/téléphone/adresse ; journal « champ : ancienne → nouvelle valeur » | `tests/unit/partner-profile.test.ts` (Vitest) | À lancer | T-PROFIL-PARTENAIRE, T-PROFIL-ADMIN || A-F10 | F | Montants des e-mails au format de la langue (EN « €55.00 », FR « 55,00 € ») | `tests/unit/money-locale.test.ts` (Vitest) | OK 2/2 — 11/11/2026 | T-MAILS (format EN) |
 | A-F16 | F | E-mails partenaire envoyés à l'e-mail de contact du profil, repli sur l'e-mail du compte (partnerRecipient) | `tests/unit/partner-recipient.test.ts` (Vitest) | À lancer | T-EMAIL-CONTACT |
+| A-F17 | F | « use server » en première instruction de tous les fichiers *actions.ts (évite l'échec du build Vercel) | `tests/unit/use-server.test.ts` (Vitest) | OK 1/1 — 12/11/2026 | — |
 | A-F9 | F | Mur d'accès : API et images hors exemptions bloquées (401), artworks e-mail publics (≠ 401), manifeste/icônes PWA | `e2e/access.spec.ts` (Playwright) | OK 5/5 en local — 11/11/2026 (CI à relancer) | — |
 
 Parcours Playwright historiques (`e2e/journey.spec.ts`, `access.spec.ts`, `alerts.spec.ts`, `search.spec.ts`, `order-email.spec.ts`, `mobile.spec.ts`) : inchangés, non relancés dans ce lot.

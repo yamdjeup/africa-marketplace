@@ -463,6 +463,13 @@ Statut : À tester
 3. « Stocks » : par création/variante, total, réservé, dispo, badge « Stock bas »/« Épuisée », bouton « Ajuster le stock » ; dessous, journal filtrable (période incluse).
 4. Admin : onglet « Stocks » après « Retours » : stock total/réservé/dispo par création et partenaire, réservations actives (e-mail, quantité, heure d'expiration), journal filtrable.
 5. Journal admin : la colonne Création affiche le titre (+ variante + partenaire), pas le slug. Liens depuis « Gérer les créations » toujours présents.
+### T-ENVOI-IMMEDIAT-DISPO — E-mail « de nouveau disponible » envoyé tout de suite
+Statut : À tester
+1. Compte A : cliquer « Me prévenir » sur une pièce épuisée (ou laisser une réservation expirer sans payer).
+2. Compte B : réserver la dernière pièce (Confirmer) puis fermer l'onglet Stripe ; ou admin : annuler un colis contenant la pièce.
+3. Attendre l'expiration (30 min) puis ouvrir la fiche produit (déclenche le balayage), ou attendre l'événement Stripe d'expiration.
+4. Résultat : le compte A reçoit l'e-mail dans la minute (sans attendre le cron de 07:00), une seule fois.
+5. Vercel > Settings > Cron Jobs : /api/alerts/run (07:00) et /api/orders/sweep (06:00) listés ; variable CRON_SECRET définie.
 ### T-RETOUR-DISPO — Prévenu quand une pièce redevient disponible — 15 min — À tester — date : —
 1. Compte A : mettre une pièce unique au panier, « Confirmer » (réservation 30 min), ne pas payer, revenir en arrière.
 2. Compte B (autre navigateur, pièce NON en favori) : tenter la même pièce : message « plus disponible » (tentative mémorisée).

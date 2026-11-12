@@ -49,6 +49,8 @@ export async function createSubOrders(db: Db, order: { id: string; number: strin
   return created;
 }
 
+import { flushRestockSafe } from "./restock-flush";
+
 async function loadItems(db: Db, subOrderId: string) {
   return db.orderItem.findMany({ where: { subOrderId } });
 }
@@ -57,13 +59,15 @@ const guard = (id: string, supplierId: string | null, from: SubStatus[]) => ({ i
 
 /** Annule une sous-commande et libère le stock réservé (refus, expiration, annulation). */
 async function closeAndRelease(db: PrismaClient, id: string, supplierId: string | null, from: SubStatus[], to: "REFUSED" | "EXPIRED" | "CANCELLED", reason: string, actor: Actor) {
-  return db.$transaction(async (tx) => {
+  const res = await db.$transaction(async (tx) => {
     const n = await tx.subOrder.updateMany({ where: guard(id, supplierId, from), data: { status: to, reason, decidedAt: new Date() } });
     if (n.count !== 1) return null;
     const sub = await tx.subOrder.findUniqueOrThrow({ where: { id } });
     for (const it of await loadItems(tx, id)) await releaseStock(tx, { slug: it.productSlug, label: it.size }, it.quantity, reason || to, actor, sub.number);
     return sub;
   });
+  if (res) await flushRestockSafe();
+  return res;
 }
 
 export async function acceptSub(db: PrismaClient, id: string, supplierId: string | null) {

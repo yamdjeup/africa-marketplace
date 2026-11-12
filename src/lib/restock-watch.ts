@@ -51,7 +51,9 @@ export async function notifyRestockWatches(db: PrismaClient, send: (to: string, 
     const image = Array.isArray(p.images) ? (p.images as string[])[0] : undefined;
     const claimed = await db.restockWatch.updateMany({ where: { id: w.id, notifiedAt: null }, data: { notifiedAt: new Date() } });
     if (claimed.count !== 1) continue;
-    if (await send(w.email, buildRestockEmail({ locale: loc, name: loc === "en" ? p.nameEn : p.name, image, slug: p.slug, priceLabel: price }))) sent++;
+    const ok = await send(w.email, buildRestockEmail({ locale: loc, name: loc === "en" ? p.nameEn : p.name, image, slug: p.slug, priceLabel: price })).catch(() => false);
+    if (ok) sent++;
+    else await db.restockWatch.update({ where: { id: w.id }, data: { notifiedAt: null } });
   }
   return sent;
 }

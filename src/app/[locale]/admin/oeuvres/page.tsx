@@ -201,6 +201,7 @@ export default async function AdminWorks({ params, searchParams }: Props) {
 
       <section className="space-y-3">
         <h2 className="font-heading text-2xl text-primary">{tr(locale, "Journal des mouvements de stock", "Stock movement log")}</h2>
+        <Link href={`/${locale}/admin/stock`} className="text-sm underline">{tr(locale, "Journal complet filtrable (partenaire, création, dates)", "Full filterable log (partner, creation, dates)")}</Link>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] text-left text-sm">
             <thead><tr className="border-b text-xs uppercase text-muted-foreground"><th className="py-2 pr-3">Date</th><th className="pr-3">{tr(locale, "Création", "Creation")}</th><th className="pr-3">Type</th><th className="pr-3">Qté</th><th className="pr-3">{tr(locale, "Motif", "Reason")}</th><th>{tr(locale, "Auteur", "Author")}</th></tr></thead>

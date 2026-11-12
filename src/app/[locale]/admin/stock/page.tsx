@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { MOVEMENT_LABELS } from "@/lib/stock";
 import type { Locale } from "@/lib/i18n";
@@ -27,7 +28,7 @@ export default async function AdminStockJournal({ params, searchParams }: { para
   const vids = [...new Set(rows.map((m) => m.variantId).filter((x): x is string => !!x))];
   const vlabel = new Map((await db.productVariant.findMany({ where: { id: { in: vids } }, select: { id: true, label: true } })).map((v) => [v.id, v.label]));
   const sp2 = Math.max(1, Math.trunc(Number(sp.sp)) || 1);
-  const stockWhere = { supplier: { isDemo: false }, ...(sp.sup ? { supplierId: sp.sup } : {}) };
+  const stockWhere: Prisma.ProductWhereInput = { supplierId: sp.sup ? sp.sup : { in: sups.map((s) => s.id) } };
   const [stockRows, stockTotal] = await Promise.all([
     db.product.findMany({ where: stockWhere, orderBy: { name: "asc" }, skip: (sp2 - 1) * PAGE, take: PAGE, select: { slug: true, name: true, nameEn: true, stock: true, reserved: true, supplierId: true } }),
     db.product.count({ where: stockWhere }),

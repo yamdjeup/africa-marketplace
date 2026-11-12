@@ -1,8 +1,9 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { after } from "next/server";
 import { db } from "@/lib/db";
-import { sendOrderEmail } from "@/lib/order-email";
-import { settleSubRefund } from "@/lib/refund";
+import { sendOrderEmail, sendStockRefundEmail } from "@/lib/order-email";
+import { consumeHold } from "@/lib/checkout-hold";
+import { refundPayment, settleSubRefund } from "@/lib/refund";
 import { notifySubOrder, runSubOrderSweep } from "@/lib/order-notify";
 
 export const stripeEnabled = () => Boolean(process.env.STRIPE_SECRET_KEY);
@@ -14,7 +15,7 @@ function siteUrl() {
 type CheckoutItem = { name: string; quantity: number; unitPriceCents: number };
 
 /** Crée une session Stripe Checkout hébergée ; renvoie son URL, ou null en cas d'échec. */
-export async function createCheckoutSession(order: { number: string; email: string; locale: string; editToken: string }, items: CheckoutItem[], origin: string = siteUrl()) {
+export async function createCheckoutSession(order: { number: string; email: string; locale: string; editToken: string }, items: CheckoutItem[], origin: string = siteUrl(), holdMinutes = 30) {
   const params = new URLSearchParams();
   params.set("mode", "payment");
   params.set("locale", order.locale === "en" ? "en" : "fr");
@@ -22,6 +23,7 @@ export async function createCheckoutSession(order: { number: string; email: stri
   params.set("client_reference_id", order.number);
   params.set("success_url", `${origin}/${order.locale}/checkout/confirmation/${order.number}?t=${order.editToken}`);
   params.set("cancel_url", `${origin}/${order.locale}/cart`);
+  params.set("expires_at", String(Math.floor(Date.now() / 1000) + Math.max(30, holdMinutes) * 60 + 30));
   params.set("metadata[orderNumber]", order.number);
   params.set("payment_intent_data[metadata][orderNumber]", order.number);
   items.forEach((it, i) => {
@@ -43,8 +45,7 @@ export async function createCheckoutSession(order: { number: string; email: stri
     if (!res.ok) return null;
     const json = (await res.json()) as { id?: string; url?: string };
     if (!json.id || !json.url) return null;
-    await db.order.update({ where: { number: order.number }, data: { stripeSessionId: json.id, paymentPending: true } });
-    return json.url;
+    return { id: json.id, url: json.url };
   } catch {
     return null;
   }
@@ -68,7 +69,22 @@ export function verifyStripeSignature(payload: string, header: string | null, se
 }
 
 /** Confirme une commande payée : enregistre le paiement, puis envoie les notifications différées. */
-export async function confirmPaidOrder(number: string, paymentIntentId: string | null) {
+/** Paiement réussi : crée la commande depuis la réservation (idempotent), puis e-mails ; remboursement automatique si le stock a disparu. */
+export async function confirmPaidOrder(number: string, paymentIntentId: string | null, amountCents?: number) {
+  const r = await consumeHold(db, number, paymentIntentId);
+  if (r.status === "unknown") return confirmLegacyOrder(number, paymentIntentId);
+  if (r.status === "already") return false;
+  if (r.status === "nostock") {
+    const total = amountCents ?? r.payload.totalCents;
+    await refundPayment({ paymentIntentId, amountCents: total, number });
+    await sendStockRefundEmail({ to: r.payload.email, locale: r.payload.locale === "en" ? "en" : "fr", fullName: r.payload.fullName, item: r.item, amountCents: total, number });
+    return false;
+  }
+  return announceOrder(number);
+}
+
+/** Anciennes commandes créées avant paiement (paymentPending) : conservé pour les données existantes. */
+async function confirmLegacyOrder(number: string, paymentIntentId: string | null) {
   const claimed = await db.order.updateMany({
     where: { number, paymentPending: true },
     data: { paymentPending: false, stripePaymentIntentId: paymentIntentId },
@@ -77,6 +93,10 @@ export async function confirmPaidOrder(number: string, paymentIntentId: string |
   // Colis refusés/annulés avant la confirmation du paiement : remboursement de rattrapage.
   const closed = await db.subOrder.findMany({ where: { order: { number }, status: { in: ["CANCELLED", "REFUSED", "EXPIRED"] }, refundStatus: { not: "DONE" } }, select: { id: true } });
   for (const s of closed) await settleSubRefund(s.id);
+  return announceOrder(number);
+}
+
+async function announceOrder(number: string) {
   const order = await db.order.findUnique({ where: { number }, include: { items: true, subOrders: { select: { id: true } } } });
   if (!order) return false;
   const products = await db.product.findMany({ where: { slug: { in: order.items.map((i) => i.productSlug) } }, select: { slug: true, images: true } });

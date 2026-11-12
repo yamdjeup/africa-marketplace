@@ -5,7 +5,8 @@ import { db } from "@/lib/db";
 import { safeSend } from "@/lib/supplier-email";
 import { partnerRecipient } from "@/lib/partner-recipient";
 import { carrierLabel, trackingUrl } from "@/lib/tracking";
-import { releaseUnpaidOrders, sweepSubOrders } from "@/lib/suborders";
+import { releaseExpiredHolds } from "@/lib/checkout-hold";
+import { sweepSubOrders } from "@/lib/suborders";
 import { settleSubRefund } from "@/lib/refund";
 
 export type SubEvent = "NEW" | "REMINDER" | "ESCALATION" | "ACCEPTED" | "REFUSED" | "EXPIRED" | "CANCELLED" | "SHIPPED" | "DELIVERED";
@@ -96,7 +97,7 @@ export async function notifySubOrder(event: SubEvent, subOrderId: string) {
 
 /** Relances, escalades et expirations (appelé par le cron, au chargement des pages commandes et après chaque commande). */
 export async function runSubOrderSweep() {
-  await releaseUnpaidOrders(db, { olderThanMin: 30 });
+  await releaseExpiredHolds(db);
   const r = await sweepSubOrders(db);
   for (const s of r.reminded) await notifySubOrder("REMINDER", s.id);
   for (const s of r.escalated) await notifySubOrder("ESCALATION", s.id);

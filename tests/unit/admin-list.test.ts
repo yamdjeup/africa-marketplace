@@ -46,7 +46,7 @@ describe("listes admin : filtres", () => {
     const w = JSON.stringify(subOrdersWhere(parse({})));
     expect(w).toContain("PREPARING");
     expect(w).toContain("MANUAL");
-    expect(subOrdersWhere(parse({ st: "all" }))).toEqual({});
+    expect(subOrdersWhere(parse({ st: "all" }))).toEqual({ AND: [{ order: { archivedAt: null } }] });
   });
   it("recherche : n° de commande, client et partenaire", () => {
     const w = JSON.stringify(subOrdersWhere(parse({ st: "all", q: "AM-1" }), ["s1"]));

@@ -2,6 +2,8 @@ import type { PrismaClient } from "@prisma/client";
 
 // Filtres, tri et pagination côté serveur des listes d'administration (état dans l'URL).
 // Règle unique « action restante » (onglet + pastille) : colis en cours, ou remboursement à reprendre avec un paiement réel (même si expiré).
+/** Anciennes commandes jamais payées, archivées : masquées de toutes les listes. */
+export const NOT_ARCHIVED = { order: { archivedAt: null } };
 export const TODO_WHERE = { OR: [{ status: { in: ["PENDING", "ACCEPTED", "PREPARING"] } }, { refundStatus: { in: ["MANUAL", "FAILED"] }, order: { stripePaymentIntentId: { not: null } } }] };
 
 export const LIST_PAGE_SIZE = 25;
@@ -46,7 +48,7 @@ export const SUB_STATUSES = ["todo", "open", "SHIPPED", "DELIVERED", "closed", "
 
 /** Commandes (colis) : « à traiter » = sans réponse du partenaire (escaladées) ou remboursement à reprendre. */
 export function subOrdersWhere(q: ListQuery, supplierIds: string[] = []) {
-  const and: object[] = [];
+  const and: object[] = [NOT_ARCHIVED];
   if (q.st === "todo") and.push(TODO_WHERE);
   else if (q.st === "open") and.push({ status: { in: ["PENDING", "ACCEPTED", "PREPARING", "SHIPPED"] } });
   else if (q.st === "SHIPPED" || q.st === "DELIVERED") and.push({ status: q.st });
@@ -106,7 +108,7 @@ export function payoutHistoryWhere(q: ListQuery, supplierIds: string[]) {
 export const PARTNER_SUB_FILTERS = ["todo", "PENDING", "ship", "SHIPPED", "done", "all"] as const;
 /** Espace partenaire : « à traiter » = à accepter + à expédier. */
 export function partnerSubOrdersWhere(q: ListQuery, supplierId: string) {
-  const and: object[] = [{ supplierId }];
+  const and: object[] = [{ supplierId }, NOT_ARCHIVED];
   const m: Record<string, string[]> = { todo: ["PENDING", "ACCEPTED", "PREPARING"], PENDING: ["PENDING"], ship: ["ACCEPTED", "PREPARING"], SHIPPED: ["SHIPPED"], done: ["DELIVERED", "REFUSED", "EXPIRED", "CANCELLED"] };
   if (m[q.st]) and.push({ status: { in: m[q.st] } });
   if (q.q) and.push({ OR: [{ number: has(q.q) }, { order: { fullName: has(q.q) } }] });
@@ -130,7 +132,7 @@ export function partnerLedgerWhere(q: ListQuery, supplierId: string, now: Date, 
 /** Pastilles du menu partenaire : colis à accepter ou à expédier, créations refusées. */
 export async function partnerCounts(db: PrismaClient, supplierId: string) {
   const [orders, works] = await Promise.all([
-    db.subOrder.count({ where: { supplierId, status: { in: ["PENDING", "ACCEPTED", "PREPARING"] } } }),
+    db.subOrder.count({ where: { supplierId, status: { in: ["PENDING", "ACCEPTED", "PREPARING"] }, ...NOT_ARCHIVED } }),
     db.product.count({ where: { supplierId, status: "REJECTED" } }),
   ]);
   return { orders, works };
@@ -141,7 +143,7 @@ export async function adminCounts(db: PrismaClient, now = new Date()) {
   const [applications, creations, orders, returns, payoutGroups] = await Promise.all([
     db.supplierApplication.count({ where: { status: "PENDING" } }),
     db.product.count({ where: { status: "SUBMITTED" } }),
-    db.subOrder.count({ where: TODO_WHERE }),
+    db.subOrder.count({ where: { AND: [TODO_WHERE, NOT_ARCHIVED] } }),
     db.returnRequest.count({ where: { status: "REQUESTED" } }),
     db.ledgerEntry.groupBy({ by: ["supplierId"], where: { payoutId: null, reversedAt: null, availableAt: { lte: now } } }),
   ]);

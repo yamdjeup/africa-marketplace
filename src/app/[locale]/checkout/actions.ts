@@ -14,15 +14,8 @@ import { sendOrderEmail } from "@/lib/order-email";
 import { isAddressEditable, isOrderOwner } from "@/lib/order-edit";
 import { notifySubOrder, runSubOrderSweep } from "@/lib/order-notify";
 import { createCheckoutSession, stripeEnabled } from "@/lib/stripe-checkout";
-import { createSubOrders, releaseUnpaidOrders } from "@/lib/suborders";
-import { reserveStock } from "@/lib/stock";
+import { attachSession, buyerKeyOf, consumeHold, createHold, releaseBuyerHolds, releaseHold, StockError, type HoldPayload } from "@/lib/checkout-hold";
 import { notifyLowStock, snapshotAvail } from "@/lib/stock-alerts";
-
-class StockError extends Error {
-  constructor(public item: string) {
-    super(item);
-  }
-}
 
 export type CheckoutState = { error?: "required" | "email" | "postal" | "stock" | "unknown" | "empty"; item?: string; values?: Record<string, string> };
 
@@ -91,8 +84,11 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
   const cart = parseCart(formData.get("cart"));
   if (cart.length === 0) return fail("empty");
 
-  // Une réservation impayée du même acheteur (retour arrière depuis Stripe) ne doit pas le bloquer.
-  await releaseUnpaidOrders(db, { email });
+  const session = await auth();
+  const user = session?.user?.id ? await db.user.findUnique({ where: { id: session.user.id } }) : null;
+  // Retour arrière depuis Stripe puis reconfirmation : la réservation précédente du même acheteur est libérée avant de vérifier le stock.
+  await releaseBuyerHolds(db, buyerKeyOf(null, email));
+  if (user) await releaseBuyerHolds(db, buyerKeyOf(user.id, email));
   const products = await db.product.findMany({ where: { slug: { in: cart.map((l) => l.slug) }, status: "PUBLISHED", supplierId: { not: null } }, include: { variants: true } });
   const bySlug = new Map(products.map((p) => [p.slug, p]));
 
@@ -112,54 +108,32 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
   }
 
   const number = `AM-${randomUUID().slice(0, 8).toUpperCase()}`;
-  const session = await auth();
-  const user = session?.user?.id ? await db.user.findUnique({ where: { id: session.user.id } }) : null;
   const editToken = randomUUID();
   const before = await snapshotAvail(products.map((p) => p.slug));
-  let subs: { id: string }[] = [];
+  const payload: HoldPayload = {
+    locale,
+    email,
+    userId: user?.id ?? null,
+    fullName,
+    address,
+    postalCode: addr.postalCode,
+    city: addr.city,
+    country: addr.country,
+    phone: addr.phone,
+    street: addr.line1,
+    houseNumber: addr.houseNumber,
+    box: addr.box || null,
+    complement: addr.line2 || null,
+    editToken,
+    totalCents,
+    lines: cart.map((l) => {
+      const p = bySlug.get(l.slug)!;
+      return { slug: p.slug, name: p.name, size: l.size, quantity: l.quantity, unitPriceCents: p.priceCents, supplierId: p.supplierId };
+    }),
+  };
+  // Réservation de 30 min : aucune commande ni e-mail avant le paiement.
   try {
-    await db.$transaction(async (tx) => {
-      const created = await tx.order.create({
-        data: {
-          number,
-          locale,
-          userId: user?.id ?? null,
-          email,
-          fullName,
-          address,
-          postalCode: addr.postalCode,
-          city: addr.city,
-          country: addr.country,
-          phone: addr.phone,
-          street: addr.line1,
-          houseNumber: addr.houseNumber,
-          box: addr.box || null,
-          complement: addr.line2 || null,
-          editToken,
-          totalCents,
-          items: {
-            create: cart.map((l) => {
-              const p = bySlug.get(l.slug)!;
-              return { productSlug: p.slug, name: p.name, size: l.size, quantity: l.quantity, unitPriceCents: p.priceCents };
-            }),
-          },
-        },
-      });
-      subs = await createSubOrders(
-        tx,
-        created,
-        cart.map((l) => {
-          const p = bySlug.get(l.slug)!;
-          return { slug: p.slug, supplierId: p.supplierId, quantity: l.quantity, unitPriceCents: p.priceCents };
-        }),
-      );
-      // Réservation atomique : si une pièce vient d'être prise par un autre client, tout est annulé.
-      for (const [key, qty] of stockUsed) {
-        const [slug, label] = key.split("\u0000");
-        const ok = await reserveStock(tx, { slug, label: label || null }, qty, { id: user?.id ?? null, label: email }, number);
-        if (!ok) throw new StockError(bySlug.get(slug)?.name ?? slug);
-      }
-    });
+    await createHold(db, payload, number);
   } catch (e) {
     if (e instanceof StockError) return fail("stock", e.item);
     throw e;
@@ -170,39 +144,45 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
   const configured = (process.env.NEXT_PUBLIC_SITE_URL || process.env.AUTH_URL || "https://epomta.com").replace(/\/$/, "");
   const origin = returnOrigin(hdr.get("x-forwarded-host") ?? hdr.get("host"), configured);
   if (stripeEnabled()) {
-    await db.order.update({ where: { number }, data: { paymentPending: true } });
-    const url = await createCheckoutSession(
+    const stripeSession = await createCheckoutSession(
       { number, email, locale, editToken },
-      cart.map((l) => {
-        const p = bySlug.get(l.slug)!;
-        return { name: l.size ? `${p.name} (${l.size})` : p.name, quantity: l.quantity, unitPriceCents: p.priceCents };
-      }),
+      payload.lines.map((l) => ({ name: l.size ? `${l.name} (${l.size})` : l.name, quantity: l.quantity, unitPriceCents: l.unitPriceCents })),
       origin,
     );
-    if (url) redirect(url);
-    // Échec de création de session : on revient au comportement sans paiement en ligne.
-    await db.order.update({ where: { number }, data: { paymentPending: false } });
+    if (stripeSession) {
+      await attachSession(db, number, stripeSession.id);
+      redirect(stripeSession.url);
+    }
+    // Échec de création de session : la réservation est libérée, puis retour au comportement sans paiement en ligne.
+    await releaseHold(db, number, "Session de paiement non créée");
+    try {
+      await createHold(db, payload, number);
+    } catch (e) {
+      if (e instanceof StockError) return fail("stock", e.item);
+      throw e;
+    }
   }
+  const made = await consumeHold(db, number, null);
+  if (made.status !== "created") return fail("unknown");
   after(async () => {
-    for (const s of subs) await notifySubOrder("NEW", s.id);
+    for (const id of made.subIds) await notifySubOrder("NEW", id);
     await runSubOrderSweep().catch(() => undefined);
   });
 
-  const base = origin;
   await sendOrderEmail({
     to: email,
     locale,
     number,
     fullName,
-    items: cart.map((l) => {
+    items: payload.lines.map((l) => {
       const p = bySlug.get(l.slug)!;
-      return { name: p.name, quantity: l.quantity, size: l.size, unitPriceCents: p.priceCents, image: Array.isArray(p.images) ? (p.images as string[])[0] : undefined };
+      return { name: l.name, quantity: l.quantity, size: l.size, unitPriceCents: l.unitPriceCents, image: Array.isArray(p.images) ? (p.images as string[])[0] : undefined };
     }),
     totalCents,
     shipping: {
       lines: [fullName, address, `${addr.postalCode} ${addr.city}`.trim(), addr.country],
       phone: addr.phone,
-      editUrl: `${base}/${locale}/checkout/confirmation/${number}/address?t=${editToken}`,
+      editUrl: `${origin}/${locale}/checkout/confirmation/${number}/address?t=${editToken}`,
     },
   });
 

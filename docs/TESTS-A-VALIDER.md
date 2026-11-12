@@ -420,3 +420,18 @@ Statut : À tester — Date : —
 2. Changer le nom, les coordonnées, les bios, enregistrer.
 3. Un nom déjà pris est refusé.
 4. Le journal affiche l'auteur (e-mail admin) et l'ancienne/nouvelle valeur ; le partenaire voit les nouvelles valeurs.
+
+### T-AUDIT-PROFIL — Journal d'audit des profils — 5 min — À tester — date : —
+1. Admin : Partenaires, « Modifier le profil » d'un partenaire, changer le téléphone, enregistrer.
+2. Revenir sur Partenaires, section « Journal d'audit » : ligne « Profil modifié » en tête (date, partenaire, détail « phone : ancien → nouveau », auteur = e-mail admin).
+3. Se connecter comme partenaire, changer son nom : nouvelle ligne avec l'e-mail du partenaire.
+4. Filtrer par partenaire puis par action « Profil modifié » ; vérifier la pagination (25 lignes par page).
+
+### T-NOM-ENTETE — Nom du partenaire dans l'en-tête — 2 min — À tester — date : —
+1. Partenaire : renommer le profil (ex. Mia-Mia) et enregistrer.
+2. Recharger : le nom dans l'en-tête du compte est le nouveau nom.
+
+### T-TABLEAU-PARTENAIRES — Tableau compact des partenaires — 5 min — À tester — date : —
+1. Admin, Partenaires : tableau Nom, Pays, Savoir-faire, Commission (%), Statut, E-mail, Date, Actions.
+2. Tester recherche, onglets de statut, tri par date, pagination.
+3. « Suspendre / révoquer… » : déplie le formulaire avec motif et confirmation ; « Modifier le profil » et « Gérer les créations » fonctionnent.

@@ -5,12 +5,15 @@ import { CartLink } from "@/components/marketplace/cart-link";
 import { FavoritesLink } from "@/components/marketplace/favorites-link";
 import { RegionPanel } from "@/components/marketplace/region-panel";
 import { SearchBox } from "@/components/marketplace/search-box";
+import { db } from "@/lib/db";
 import { getCategoryMenu } from "@/lib/catalog";
 import { getDict, type Locale } from "@/lib/i18n";
 
 export async function SiteHeader({ locale }: { locale: Locale }) {
   const t = getDict(locale);
   const session = await auth();
+  const partner = session?.user?.id ? await db.supplier.findFirst({ where: { userId: session.user.id, status: { not: "REVOKED" } }, select: { displayName: true } }) : null;
+  const shownName = partner?.displayName ?? session?.user?.name ?? null;
   const menu = await getCategoryMenu(locale);
   const labels = { artist: t.catalog.kindArtist, category: t.catalog.kindCategory, work: t.catalog.kindWork };
   return (
@@ -61,9 +64,9 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
               <path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" />
             </svg>
           </Link>
-          <div className="hidden lg:order-3 lg:block"><AccountMenu locale={locale} name={session?.user?.name ?? null} /></div>
-          {session?.user?.name && (
-            <span className="hidden max-w-[10ch] truncate text-xs font-light text-muted-foreground lg:order-4 lg:-ml-3 lg:inline">{session.user.name.split(" ")[0]}</span>
+          <div className="hidden lg:order-3 lg:block"><AccountMenu locale={locale} name={shownName} /></div>
+          {shownName && (
+            <span className="hidden max-w-[10ch] truncate text-xs font-light text-muted-foreground lg:order-4 lg:-ml-3 lg:inline">{shownName.split(" ")[0]}</span>
           )}
           <div className="max-md:hidden md:contents lg:order-1 lg:flex"><RegionPanel locale={locale} /></div>
           <span aria-hidden="true" className="hidden h-6 w-px bg-foreground/20 lg:order-2 lg:block" />

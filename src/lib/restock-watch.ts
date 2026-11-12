@@ -1,4 +1,4 @@
-﻿import type { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "@prisma/client";
 import { renderEmailHtml, absoluteImageUrl } from "./email-layout";
 import { siteUrl } from "./alerts-core";
 
@@ -6,7 +6,7 @@ import { siteUrl } from "./alerts-core";
 type Line = { slug: string };
 
 /** Mémorise (une seule fois par acheteur et pièce) l'intérêt d'un acheteur pour des pièces. */
-export async function recordWatch(db: PrismaClient, o: { buyerKey: string; email: string; locale: string; slugs: string[]; source: "HOLD" | "BLOCKED" }) {
+export async function recordWatch(db: PrismaClient, o: { buyerKey: string; email: string; locale: string; slugs: string[]; source: "HOLD" | "BLOCKED" | "NOTIFY" }) {
   for (const productSlug of new Set(o.slugs)) {
     await db.restockWatch.upsert({ where: { buyerKey_productSlug: { buyerKey: o.buyerKey, productSlug } }, update: {}, create: { buyerKey: o.buyerKey, email: o.email, locale: o.locale === "en" ? "en" : "fr", productSlug, source: o.source } });
   }

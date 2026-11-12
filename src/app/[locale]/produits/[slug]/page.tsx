@@ -19,6 +19,9 @@ import { getProduct, getRelatedProducts } from "@/lib/catalog";
 import { auth } from "@/auth";
 import { isAdminEmail } from "@/lib/supplier";
 import { formatEur, getDict, type Locale } from "@/lib/i18n";
+import { NotifyButton } from "@/components/marketplace/notify-button";
+import { db } from "@/lib/db";
+import { buyerKeyOf } from "@/lib/checkout-hold";
 import { ApproxPrice } from "@/components/marketplace/approx-price";
 
 type Props = { params: Promise<{ locale: Locale; slug: string }> };
@@ -44,7 +47,13 @@ export default async function ProductPage({ params }: Props) {
   const mirror = MIRROR_CATEGORIES.includes(p.categorySlug) && p.images.length > 0 ? MIRROR_ITEMS[p.slug] : undefined;
   const roomOk =
     ROOM_CATEGORIES.includes(p.categorySlug) && !!p.widthCm && !!p.heightCm && p.widthCm > 0 && p.heightCm > 0 && p.images.length > 0;
-  const adminUser = isAdminEmail((await auth())?.user?.email);
+  const session = await auth();
+  const adminUser = isAdminEmail(session?.user?.email);
+  const sUser = session?.user;
+  const soldOut = p.stock === 0 || (p.variants.length > 0 && p.variants.every((v) => v.available <= 0));
+  const watching = soldOut && sUser?.id && sUser.email
+    ? (await db.restockWatch.count({ where: { buyerKey: buyerKeyOf(sUser.id, sUser.email), productSlug: p.slug } })) > 0
+    : false;
 
   return (
     <div className="space-y-12">
@@ -113,6 +122,7 @@ export default async function ProductPage({ params }: Props) {
             sizeStock={p.variants.length > 0 ? Object.fromEntries(p.variants.map((v) => [v.label, v.available])) : undefined}
             sizeLabel={p.variants.length > 0 ? (locale === "fr" ? "Taille / couleur" : "Size / colour") : sizeKind === "ring" ? t.sizeRing : t.size}
           />
+          {soldOut && <NotifyButton slug={p.slug} locale={locale} loggedIn={!!sUser?.id} initial={watching} />}
           {roomOk && (
             <RoomPreview
               key={p.slug}

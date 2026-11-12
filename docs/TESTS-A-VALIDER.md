@@ -430,6 +430,12 @@ Prérequis : Stripe en mode test (carte 4242 4242 4242 4242), webhook `checkout.
 2. Attendu : l'acheteur reçoit l'e-mail d'annulation ET le partenaire reçoit « colis … annulé » (motif, n° de colis, bouton vers sa commande) sur son e-mail de contact (sinon e-mail du compte).
 3. Refus par le partenaire : pas d'e-mail à lui-même. Expiration 48 h : e-mail au partenaire.
 
+### T-ME-PREVENIR — Bouton « Me prévenir quand elle est disponible » — 10 min — À tester — date : —
+1. Ouvrir la fiche d'une pièce épuisée (ou réservée par un autre acheteur) NON connecté : bouton « Me prévenir quand elle est disponible » visible ; clic : renvoi vers la connexion, puis retour sur la fiche après connexion.
+2. Connecté : clic sur le bouton. Attendu : message « Vous serez prévenu(e) dès qu'elle est disponible » et bouton « Annuler l'alerte » ; recharger la page : état conservé.
+3. « Annuler l'alerte » : le message disparaît, le bouton revient ; plus d'e-mail.
+4. Réactiver, remettre du stock (ou libérer la réservation), lancer /api/alerts/run : e-mail « Votre pièce est de nouveau disponible » reçu UNE fois ; relancer : pas de doublon. Pièce en favori ou déjà achetée : pas de cet e-mail.
+5. Pièce disponible : le bouton n'apparaît pas. Vérifier en EN.
 ### T-RETOUR-DISPO — Prévenu quand une pièce redevient disponible — 15 min — À tester — date : —
 1. Compte A : mettre une pièce unique au panier, « Confirmer » (réservation 30 min), ne pas payer, revenir en arrière.
 2. Compte B (autre navigateur, pièce NON en favori) : tenter la même pièce : message « plus disponible » (tentative mémorisée).

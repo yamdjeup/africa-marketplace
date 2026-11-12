@@ -1,48 +1,20 @@
 import Link from "next/link";
-import type { Prisma } from "@prisma/client";
-import { db } from "@/lib/db";
+import { loadAdminStock, type AdminStockParams } from "@/lib/admin-stock";
 import { MOVEMENT_LABELS } from "@/lib/stock";
 import type { Locale } from "@/lib/i18n";
 import { StockFilters } from "@/components/marketplace/stock-filters";
-import { JOURNAL_KEYS, journalOrder, journalWhere, type JournalParams } from "@/lib/stock-journal";
+import { JOURNAL_KEYS } from "@/lib/stock-journal";
 import { tr } from "@/lib/tr";
 
 export const dynamic = "force-dynamic";
-const PAGE = 50;
-type SP = JournalParams & { p?: string; sp?: string };
+type SP = AdminStockParams;
 
 export default async function AdminStockJournal({ params, searchParams }: { params: Promise<{ locale: Locale }>; searchParams: Promise<SP> }) {
   const { locale } = await params;
   const sp = await searchParams;
   const fr = locale !== "en";
   const page = Math.max(1, Math.trunc(Number(sp.p)) || 1);
-  const sups = await db.supplier.findMany({ where: { isDemo: false }, orderBy: { displayName: "asc" }, select: { id: true, displayName: true } });
-  const where = await journalWhere(sp);
-  const [rows, total] = await Promise.all([
-    db.stockMovement.findMany({ where, orderBy: journalOrder(sp), skip: (page - 1) * PAGE, take: PAGE }),
-    db.stockMovement.count({ where }),
-  ]);
-  const slugs = [...new Set(rows.map((m) => m.productSlug))];
-  const prods = await db.product.findMany({ where: { slug: { in: slugs } }, select: { slug: true, name: true, nameEn: true, supplierId: true } });
-  const prodOf = new Map(prods.map((x) => [x.slug, x]));
-  const vids = [...new Set(rows.map((m) => m.variantId).filter((x): x is string => !!x))];
-  const vlabel = new Map((await db.productVariant.findMany({ where: { id: { in: vids } }, select: { id: true, label: true } })).map((v) => [v.id, v.label]));
-  const sp2 = Math.max(1, Math.trunc(Number(sp.sp)) || 1);
-  const stockWhere: Prisma.ProductWhereInput = { supplierId: sp.sup ? sp.sup : { in: sups.map((s) => s.id) } };
-  const [stockRows, stockTotal] = await Promise.all([
-    db.product.findMany({ where: stockWhere, orderBy: { name: "asc" }, skip: (sp2 - 1) * PAGE, take: PAGE, select: { slug: true, name: true, nameEn: true, stock: true, reserved: true, supplierId: true } }),
-    db.product.count({ where: stockWhere }),
-  ]);
-  const varRows = await db.productVariant.findMany({ where: { productSlug: { in: stockRows.map((s) => s.slug) } }, select: { productSlug: true, label: true, stock: true, reserved: true } });
-  const supName = new Map(sups.map((s) => [s.id, s.displayName]));
-  const holds = await db.checkoutHold.findMany({ where: { status: "HELD", expiresAt: { gt: new Date() } }, select: { expiresAt: true, payload: true } });
-  const holdsBy = new Map<string, string[]>();
-  for (const h of holds) {
-    const pl = h.payload as { email?: string; lines?: { slug: string; quantity: number }[] } | null;
-    for (const l of pl?.lines ?? []) holdsBy.set(l.slug, [...(holdsBy.get(l.slug) ?? []), `${pl?.email ?? "?"} x${l.quantity} -> ${h.expiresAt.toLocaleTimeString(fr ? "fr-FR" : "en-GB", { timeZone: "Europe/Paris", hour: "2-digit", minute: "2-digit" })}`]);
-  }
-  const spages = Math.max(1, Math.ceil(stockTotal / PAGE));
-  const pages = Math.max(1, Math.ceil(total / PAGE));
+  const { sups, rows, total, prodOf, vlabel, sp2, stockRows, varRows, supName, holdsBy, spages, pages } = await loadAdminStock(sp, fr);
   const href = (p: number) => {
     const u = new URLSearchParams();
     for (const k of JOURNAL_KEYS) if (sp[k]) u.set(k, sp[k]!);

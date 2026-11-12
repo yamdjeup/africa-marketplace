@@ -147,3 +147,45 @@ Redirect URI Google (et Facebook/Apple) ; endpoint webhook Stripe `https://epomt
 - [ ] Redirection www.epomta.com → epomta.com (308)
 - [ ] Vercel : `NEXT_PUBLIC_SITE_URL=https://epomta.com`, `SITE_ACCESS_PASSWORD` défini, `CONTACT_PHONE_*` définis
 - [ ] Webhook Stripe pointant sur `https://epomta.com/api/stripe/webhook`
+
+## 8. Sécurité
+
+Statut : `[x]` fait, `[ ]` à faire. Seuls les points confirmés par le propriétaire sont cochés.
+
+### Comptes
+- [ ] 2FA activée : Vercel, Neon, GitHub, OVH, Stripe, Google (africamadolo et yamdjeup), Resend
+- [ ] E-mail de secours + téléphone de secours sur chaque compte (Stripe : connexion Google uniquement, aucun secours aujourd'hui)
+- [ ] Gestionnaire de mots de passe utilisé pour tous les comptes ; codes de récupération stockés hors ligne
+- [ ] Second administrateur sur Vercel, Neon, Stripe, OVH (éviter un compte unique)
+- [ ] Revue trimestrielle des accès (membres, clés API, applications OAuth autorisées)
+
+### Secrets et variables
+- [ ] Toutes les variables secrètes Vercel marquées « Sensitive »
+- [ ] Rotation des clés exposées : Stripe `sk_test`, mot de passe de la branche Neon de test, clé Resend si partagée
+- [ ] Mot de passe du mur d'accès fort et unique ; `SITE_ACCESS_SECRET` distinct
+- [ ] Secrets distincts par environnement (webhook Stripe live ≠ sandbox ; Production ≠ Preview)
+- [ ] Clés API à droits minimaux (Resend : Sending access ; Places restreinte à Places API New)
+- [ ] `TMP_ATTACH_SECRET` supprimé sur Vercel
+- [ ] Jamais de secret dans le dépôt, les logs ou le chat ; analyse de secrets GitHub (secret scanning) activée
+
+### GitHub
+- [ ] Branche `main` protégée : PR obligatoire + CI verte obligatoire, pas de force-push
+- [ ] Dependabot / alertes de sécurité activées
+
+### Stripe
+- [ ] Webhook live avec son propre secret de signature, distinct du sandbox
+- [ ] Clés live uniquement côté Vercel Production ; restreintes (restricted keys) si possible
+
+### OVH / domaine
+- [x] Verrou de transfert actif
+- [x] DNSSEC actif
+- [ ] Moyen de paiement enregistré (renouvellement auto du 10/11/2027)
+- [ ] SPF, DKIM et DMARC configurés pour `contact@epomta.com`
+
+### Application et données
+- [ ] En-têtes de sécurité (CSP, HSTS, X-Content-Type-Options, Referrer-Policy, frame-ancestors) vérifiés dans `next.config.ts`
+- [ ] Limitation de débit sur connexion, inscription, mur d'accès, formulaires publics
+- [ ] Sauvegardes Neon : restauration à un instant donné (plan Launch) ; test de restauration documenté
+- [ ] Accès aux journaux (Vercel, Neon, Stripe) limité aux administrateurs ; pas de données personnelles dans les logs
+- [ ] RGPD : consentement GA4 (déjà en place), politique de confidentialité, droit d'accès/suppression, registre des traitements
+- [ ] Mise à jour régulière des dépendances (`npm audit`)

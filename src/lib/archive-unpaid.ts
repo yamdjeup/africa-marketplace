@@ -13,14 +13,17 @@ export async function archiveUnpaidOrders(db: PrismaClient, execute: boolean) {
   const ledger = await db.ledgerEntry.findMany({ where: { subOrderId: { in: candidates.flatMap((o) => o.subOrders.map((s) => s.id)) } }, select: { subOrderId: true } });
   const withLedger = new Set(ledger.map((l) => l.subOrderId));
   const safe = [];
+  const proofs: object[] = [];
   const ignored: { number: string; reasons: string[] }[] = [];
   for (const o of candidates) {
     const reasons: string[] = [];
+    if (o.stripePaymentIntentId) reasons.push("paiement Stripe enregistré (PaymentIntent)");
     for (const s of o.subOrders) {
       if (!["PENDING", "CANCELLED"].includes(s.status)) reasons.push(`colis ${s.number} au statut ${s.status}`);
-      if (s.refundStatus === "DONE") reasons.push(`colis ${s.number} remboursé`);
+      if (s.refundStatus === "DONE" || s.refundStatus === "FAILED" || s.refundId) reasons.push(`colis ${s.number} remboursement Stripe (${s.refundStatus || s.refundId})`);
       if (withLedger.has(s.id)) reasons.push(`colis ${s.number} avec écriture comptable`);
     }
+    proofs.push({ number: o.number, neverPaid: reasons.length === 0, hasPaymentIntent: Boolean(o.stripePaymentIntentId), hasStripeSession: Boolean(o.stripeSessionId), paymentPending: o.paymentPending, refunds: o.subOrders.map((s) => s.refundStatus || s.refundId || "").filter(Boolean), ledgerEntries: o.subOrders.filter((s) => withLedger.has(s.id)).length, subStatuses: o.subOrders.map((s) => s.status), reasons });
     if (reasons.length) ignored.push({ number: o.number, reasons });
     else safe.push(o);
   }
@@ -40,6 +43,7 @@ export async function archiveUnpaidOrders(db: PrismaClient, execute: boolean) {
     count: safe.length,
     orders: safe.map((o) => ({ number: o.number, createdAt: o.createdAt.toISOString(), email: o.email, totalEur: o.totalCents / 100, subStatuses: o.subOrders.map((s) => s.status) })),
     ignored,
+    proofs,
     missingExplicit: EXPLICIT_UNPAID.filter((n) => !candidates.some((o) => o.number === n)),
   };
 }

@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { getPortalContext } from "@/lib/supplier";
 import { tr } from "@/lib/tr";
 import { MOVEMENT_LABELS } from "@/lib/stock";
+import { StockFilters } from "@/components/marketplace/stock-filters";
+import { journalOrder, journalWhere } from "@/lib/stock-journal";
 import type { Locale } from "@/lib/i18n";
 import { PhotoLightbox } from "@/components/admin/table-widgets";
 import { PAGE_SIZE, WAIT_ALERT_H, WAIT_WARN_H, waitHours, waitLabel } from "@/lib/admin-works";
@@ -12,7 +14,7 @@ import { PTABS, ptabOf, queryPartnerWorks, availOf, type PTab, type PWorkParams 
 export const metadata = { title: "Créations et stock", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
-type Props = { params: Promise<{ locale: Locale }>; searchParams: Promise<PWorkParams & { saved?: string; error?: string; mp?: string }> };
+type Props = { params: Promise<{ locale: Locale }>; searchParams: Promise<PWorkParams & { saved?: string; error?: string; mp?: string; jq?: string; jt?: string; jfrom?: string; jto?: string; jwho?: string; jr?: string; jdir?: string }> };
 
 const STATUS: Record<string, [string, string, string]> = {
   DRAFT: ["Brouillon", "Draft", "bg-muted text-foreground"],
@@ -42,9 +44,11 @@ export default async function WorksPage({ params, searchParams }: Props) {
   const own = await db.product.findMany({ where: { supplierId }, select: { slug: true, name: true, nameEn: true } });
   const slugs = own.map((o) => o.slug);
   const titleOf = new Map(own.map((o) => [o.slug, fr ? o.name : o.nameEn]));
+  const jsp = { q: sp.jq, t: sp.jt, from: sp.jfrom, to: sp.jto, who: sp.jwho, r: sp.jr, dir: sp.jdir };
+  const jwhere = await journalWhere(jsp, slugs);
   const [moves, movesTotal, cats] = await Promise.all([
-    db.stockMovement.findMany({ where: { productSlug: { in: slugs } }, orderBy: { createdAt: "desc" }, skip: (mpage - 1) * PAGE_SIZE, take: PAGE_SIZE }),
-    db.stockMovement.count({ where: { productSlug: { in: slugs } } }),
+    db.stockMovement.findMany({ where: jwhere, orderBy: journalOrder(jsp), skip: (mpage - 1) * PAGE_SIZE, take: PAGE_SIZE }),
+    db.stockMovement.count({ where: jwhere }),
     db.category.findMany({ orderBy: { sortOrder: "asc" }, select: { slug: true, name: true, nameEn: true } }),
   ]);
   const catName = new Map(cats.map((c) => [c.slug, fr ? c.name : c.nameEn]));
@@ -57,7 +61,7 @@ export default async function WorksPage({ params, searchParams }: Props) {
   const href = (o: Record<string, string | undefined>) => {
     const u = new URLSearchParams();
     const merged: Record<string, string | undefined> = { ...sp, ...o };
-    for (const k of [...KEYS, "p", "mp"]) if (merged[k]) u.set(k, merged[k]!);
+    for (const k of [...KEYS, "p", "mp", "jq", "jt", "jfrom", "jto", "jwho", "jr", "jdir"]) if (merged[k]) u.set(k, merged[k]!);
     return `${base}?${u.toString()}`;
   };
   const csvHref = `/api/partner/works?${new URLSearchParams(Object.entries(sp).filter(([k, v]) => (KEYS as readonly string[]).includes(k) && typeof v === "string" && v) as [string, string][]).toString()}`;
@@ -203,6 +207,7 @@ export default async function WorksPage({ params, searchParams }: Props) {
 
       <section className="space-y-3">
         <h2 className="font-heading text-2xl text-primary">{tr(locale, "Journal des mouvements de stock", "Stock movement log")}</h2>
+        <StockFilters pf="j" locale={locale} sp={jsp} action={base} hidden={Object.fromEntries(KEYS.map((k) => [k, sp[k as keyof typeof sp] as string | undefined]))} />
         {moves.length === 0 ? <p className="text-sm text-muted-foreground">{tr(locale, "Aucun mouvement.", "No movements.")}</p> : (
           <>
           <ul className="space-y-2 md:hidden">

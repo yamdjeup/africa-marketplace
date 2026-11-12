@@ -2,11 +2,13 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { MOVEMENT_LABELS } from "@/lib/stock";
 import type { Locale } from "@/lib/i18n";
+import { StockFilters } from "@/components/marketplace/stock-filters";
+import { JOURNAL_KEYS, journalOrder, journalWhere, type JournalParams } from "@/lib/stock-journal";
 import { tr } from "@/lib/tr";
 
 export const dynamic = "force-dynamic";
 const PAGE = 50;
-type SP = { sup?: string; q?: string; from?: string; to?: string; p?: string };
+type SP = JournalParams & { p?: string };
 
 export default async function AdminStockJournal({ params, searchParams }: { params: Promise<{ locale: Locale }>; searchParams: Promise<SP> }) {
   const { locale } = await params;
@@ -14,26 +16,15 @@ export default async function AdminStockJournal({ params, searchParams }: { para
   const fr = locale !== "en";
   const page = Math.max(1, Math.trunc(Number(sp.p)) || 1);
   const sups = await db.supplier.findMany({ where: { isDemo: false }, orderBy: { displayName: "asc" }, select: { id: true, displayName: true } });
-  const slugFilter: { in?: string[]; contains?: string; mode?: "insensitive" } = {};
-  if (sp.sup) slugFilter.in = (await db.product.findMany({ where: { supplierId: sp.sup }, select: { slug: true } })).map((x) => x.slug);
-  const where: { productSlug?: typeof slugFilter; createdAt?: { gte?: Date; lte?: Date } } = {};
-  if (sp.q?.trim()) {
-    slugFilter.contains = sp.q.trim();
-    slugFilter.mode = "insensitive";
-  }
-  if (slugFilter.in || slugFilter.contains) where.productSlug = slugFilter;
-  const day = (v?: string) => (v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : undefined);
-  const from = day(sp.from);
-  const to = day(sp.to);
-  if (from || to) where.createdAt = { ...(from ? { gte: new Date(`${from}T00:00:00+01:00`) } : {}), ...(to ? { lte: new Date(`${to}T23:59:59+01:00`) } : {}) };
+  const where = await journalWhere(sp);
   const [rows, total] = await Promise.all([
-    db.stockMovement.findMany({ where, orderBy: { createdAt: "desc" }, skip: (page - 1) * PAGE, take: PAGE }),
+    db.stockMovement.findMany({ where, orderBy: journalOrder(sp), skip: (page - 1) * PAGE, take: PAGE }),
     db.stockMovement.count({ where }),
   ]);
   const pages = Math.max(1, Math.ceil(total / PAGE));
   const href = (p: number) => {
     const u = new URLSearchParams();
-    for (const k of ["sup", "q", "from", "to"] as const) if (sp[k]) u.set(k, sp[k]!);
+    for (const k of JOURNAL_KEYS) if (sp[k]) u.set(k, sp[k]!);
     u.set("p", String(p));
     return `/${locale}/admin/stock?${u.toString()}`;
   };
@@ -42,18 +33,7 @@ export default async function AdminStockJournal({ params, searchParams }: { para
     <div className="space-y-4">
       <Link href={`/${locale}/admin/fournisseurs`} className="text-sm underline">← {tr(locale, "Partenaires", "Partners")}</Link>
       <h1 className="font-heading text-3xl text-primary">{tr(locale, "Journal des mouvements de stock", "Stock movement log")}</h1>
-      <form method="get" className="flex flex-wrap items-end gap-3 text-sm">
-        <label className="grid gap-1">{tr(locale, "Partenaire", "Partner")}
-          <select name="sup" defaultValue={sp.sup ?? ""} className="h-10 rounded-md border px-2">
-            <option value="">{tr(locale, "Tous", "All")}</option>
-            {sups.map((s) => <option key={s.id} value={s.id}>{s.displayName}</option>)}
-          </select>
-        </label>
-        <label className="grid gap-1">{tr(locale, "Création (slug)", "Creation (slug)")}<input name="q" defaultValue={sp.q ?? ""} className="h-10 rounded-md border px-2" /></label>
-        <label className="grid gap-1">{tr(locale, "Du", "From")}<input type="date" name="from" defaultValue={from ?? ""} className="h-10 rounded-md border px-2" /></label>
-        <label className="grid gap-1">{tr(locale, "Au", "To")}<input type="date" name="to" defaultValue={to ?? ""} className="h-10 rounded-md border px-2" /></label>
-        <button className="h-10 rounded-md bg-primary px-4 text-primary-foreground">{tr(locale, "Filtrer", "Filter")}</button>
-      </form>
+      <StockFilters locale={locale} sp={sp} action={`/${locale}/admin/stock`} partner={sups} />
       <p className="text-sm text-muted-foreground">{total} {tr(locale, "mouvement(s)", "movement(s)")}</p>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[640px] text-left text-sm">

@@ -51,7 +51,7 @@ export function rangeFields(sp: WorkParams, now = new Date()): { from: string; t
   return from && to && from > to ? { from: to, to: from, swapped: true } : { from, to, swapped: false };
 }
 
-function dateRange(sp: WorkParams): { gte?: Date; lt?: Date } | null {
+export function dateRange(sp: WorkParams): { gte?: Date; lt?: Date } | null {
   if (dateModeOf(sp.d) === "all") return null;
   const { from, to } = rangeFields(sp);
   return { ...(from ? { gte: parisMidnight(from) } : {}), ...(to ? { lt: parisMidnight(addDays(to, 1)) } : {}) };

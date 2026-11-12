@@ -11,7 +11,8 @@ export function PortalNav({ locale, counts = {} }: { locale: Locale; counts?: Re
   const items = [
     ["/tableau-de-bord", tr(locale, "Tableau de bord", "Dashboard")],
     ["/commandes", tr(locale, "Commandes", "Orders")],
-    ["/oeuvres", tr(locale, "Créations et stock", "Creations and stock")],
+    ["/oeuvres", tr(locale, "Créations", "Creations")],
+    ["/stocks", tr(locale, "Stocks", "Stock")],
     ["/paiements", tr(locale, "Paiements", "Payments")],
     ["/profil", tr(locale, "Profil", "Profile")],
   ];

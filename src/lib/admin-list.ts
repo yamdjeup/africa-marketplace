@@ -8,19 +8,27 @@ export const TODO_WHERE = { OR: [{ status: { in: ["PENDING", "ACCEPTED", "PREPAR
 
 export const LIST_PAGE_SIZE = 25;
 
-export type ListParams = { q?: string; st?: string; from?: string; to?: string; sort?: string; dir?: string; p?: string };
-export const LIST_KEYS = ["q", "st", "from", "to", "sort", "dir", "p"] as const;
+export type ListParams = { q?: string; st?: string; d?: string; from?: string; to?: string; sort?: string; dir?: string; p?: string };
+export const LIST_KEYS = ["q", "st", "d", "from", "to", "sort", "dir", "p"] as const;
 
-export type ListQuery = { q: string; st: string; from: Date | null; to: Date | null; asc: boolean; sort: string; page: number };
+export type ListQuery = { q: string; st: string; d: string; from: Date | null; to: Date | null; asc: boolean; sort: string; page: number };
 
 const day = (s?: string) => (s && /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(s)) ? new Date(`${s}T00:00:00.000Z`) : null);
 
+const parisDay = (d: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
+const shift = (ymd: string, n: number) => new Date(Date.UTC(+ymd.slice(0, 4), +ymd.slice(5, 7) - 1, +ymd.slice(8, 10) + n)).toISOString().slice(0, 10);
+export const PERIOD_MODES = ["all", "today", "7", "30", "custom"] as const;
+
 /** Normalise les paramètres d'URL : statut limité aux valeurs connues, dates ISO, page ≥ 1, plage inversée corrigée. */
 export function parseList(sp: ListParams, statuses: readonly string[], defaultStatus: string, sorts: readonly string[], defaultSort: string): ListQuery {
-  let from = day(sp.from);
-  let to = day(sp.to);
+  // Période : « toutes les dates » par défaut ; une borne seule (plage personnalisée) reste ouverte.
+  const d = (PERIOD_MODES as readonly string[]).includes(sp.d ?? "") ? sp.d! : sp.from || sp.to ? "custom" : "all";
+  const today = parisDay(new Date());
+  let from = d === "custom" ? day(sp.from) : d === "today" ? day(today) : d === "7" || d === "30" ? day(shift(today, -(Number(d) - 1))) : null;
+  let to = d === "custom" ? day(sp.to) : d === "all" ? null : day(today);
   if (from && to && from > to) [from, to] = [to, from];
   return {
+    d,
     q: (sp.q ?? "").trim().slice(0, 80),
     st: statuses.includes(sp.st ?? "") ? sp.st! : defaultStatus,
     from,

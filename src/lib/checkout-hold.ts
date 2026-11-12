@@ -2,6 +2,7 @@ import type { PrismaClient } from "@prisma/client";
 import { recordWatch } from "./restock-watch";
 import { createSubOrders } from "./suborders";
 import { releaseStock, reserveStock } from "./stock";
+import { flushRestockSafe } from "./restock-flush";
 
 // Réservation de stock de 30 min liée à une session Stripe Checkout : la commande (Order + colis) n'est créée qu'au paiement réussi.
 // Sans dépendance serveur (ni next ni auth) : testable sur une base jetable.
@@ -71,6 +72,7 @@ export async function releaseHold(db: PrismaClient, number: string, reason = "Pa
   if (watch) {
     const p = released.payload as unknown as HoldPayload;
     await recordWatch(db, { buyerKey: released.buyerKey, email: p.email, locale: p.locale, slugs: p.lines.map((l) => l.slug), source: "HOLD" });
+    await flushRestockSafe();
   }
   return true;
 }

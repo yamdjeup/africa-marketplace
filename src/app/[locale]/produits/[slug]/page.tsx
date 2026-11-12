@@ -21,7 +21,7 @@ import { isAdminEmail } from "@/lib/supplier";
 import { formatEur, getDict, type Locale } from "@/lib/i18n";
 import { NotifyButton } from "@/components/marketplace/notify-button";
 import { db } from "@/lib/db";
-import { buyerKeyOf } from "@/lib/checkout-hold";
+import { buyerKeyOf, releaseExpiredHolds } from "@/lib/checkout-hold";
 import { ApproxPrice } from "@/components/marketplace/approx-price";
 
 type Props = { params: Promise<{ locale: Locale; slug: string }> };
@@ -35,6 +35,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProductPage({ params }: Props) {
   const { locale, slug } = await params;
+  await releaseExpiredHolds(db).catch(() => 0);
   const [data, more] = await Promise.all([getProduct(slug, locale), getRelatedProducts(slug, locale, 4)]);
   if (!data) notFound();
   const { product: p, creator, categoryLabel } = data;

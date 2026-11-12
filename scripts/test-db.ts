@@ -1,12 +1,39 @@
 // Prépare la base de test jetable : mêmes migrations que la production (migrate deploy) + seed.
 import { spawnSync } from "node:child_process";
+import { PrismaClient } from "@prisma/client";
 import { requireSandboxStripe, requireTestDatabaseUrl } from "./test-env";
+import { UNREACHABLE_HELP, isUnreachable, retry, withConnectTimeout } from "./db-wake";
 
-const url = requireTestDatabaseUrl();
-requireSandboxStripe();
-const env = { ...process.env, DATABASE_URL: url, DIRECT_URL: url };
-for (const args of [["scripts/db.mjs", "deploy"], ["scripts/db.mjs", "seed"]]) {
-  const r = spawnSync("node", args, { stdio: "inherit", env, shell: true });
-  if (r.status !== 0) process.exit(r.status ?? 1);
+async function main() {
+  const url = withConnectTimeout(requireTestDatabaseUrl());
+  requireSandboxStripe();
+  const env = { ...process.env, DATABASE_URL: url, DIRECT_URL: url };
+  const onRetry = (n: number) => console.log(`[test-db] base injoignable (compute Neon en veille ?) — nouvel essai ${n}…`);
+
+  console.log("[test-db] réveil de la base…");
+  const client = new PrismaClient({ datasources: { db: { url } } });
+  try {
+    await retry(() => client.$queryRaw`SELECT 1`, { onRetry });
+  } finally {
+    await client.$disconnect().catch(() => undefined);
+  }
+
+  for (const args of [["scripts/db.mjs", "deploy"], ["scripts/db.mjs", "seed"]]) {
+    await retry(
+      async () => {
+        const r = spawnSync("node", args, { env, shell: true, encoding: "utf8" });
+        const out = `${r.stdout ?? ""}${r.stderr ?? ""}`;
+        process.stdout.write(out);
+        if (r.status !== 0) throw new Error(out || `exit ${r.status}`);
+      },
+      { delaysMs: [3000, 6000, 12000], onRetry, retryable: (e) => isUnreachable(String((e as Error).message)) },
+    );
+  }
+  console.log("[test-db] base de test prête.");
 }
-console.log("[test-db] base de test prête.");
+
+main().catch((e) => {
+  const msg = String((e as Error)?.message ?? e);
+  console.error(isUnreachable(msg) ? `[test-db] ${UNREACHABLE_HELP}` : `[test-db] ${msg}`);
+  process.exit(1);
+});

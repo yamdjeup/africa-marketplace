@@ -36,6 +36,7 @@ Dernière exécution (11/11/2026, lot admin + e-mails de retour) : Vitest 62 OK 
 | A-F8 | F | Règle « action restante » (onglet + pastille admin) : colis en cours, ou remboursement MANUAL/FAILED avec paiement réel ; expirée sans paiement = annulée | `tests/unit/todo-rule.test.ts` (Vitest) | OK 4/4 — 11/11/2026 | T-ADMIN-FILTRES 4 |
 | A-F11 | F | URL de retour Stripe/liens : domaine de la requête (liste blanche epomta.com, epomta-demo.vercel.app), sinon origine configurée | `tests/unit/origin.test.ts` (Vitest) | OK 3/3 — 11/11/2026 | T-DOMAINE |
 | A-F12 | F | Nom d'article cliquable vers la fiche produit dans le récapitulatif e-mail (annulée, en route…) | `tests/unit/email-item-link.test.ts` (Vitest) | OK 2/2 — 11/11/2026 | T-RACHAT-LIEN |
+| A-F13 | F | Mur d'accès actif sur epomta.com, www.epomta.com et epomta-demo.vercel.app (page, API ; exemptions webhook/médias conservées) ; robots.txt Disallow + noindex | `tests/unit/wall-hosts.test.ts` (Vitest) + `e2e/access.spec.ts` | OK 3/3 unit — 12/11/2026 | T-MUR-EPOMTA |
 | A-F10 | F | Montants des e-mails au format de la langue (EN « €55.00 », FR « 55,00 € ») | `tests/unit/money-locale.test.ts` (Vitest) | OK 2/2 — 11/11/2026 | T-MAILS (format EN) |
 | A-F9 | F | Mur d'accès : API et images hors exemptions bloquées (401), artworks e-mail publics (≠ 401), manifeste/icônes PWA | `e2e/access.spec.ts` (Playwright) | OK 5/5 en local — 11/11/2026 (CI à relancer) | — |
 
@@ -374,3 +375,16 @@ Statut : À tester — Date : —
 2. Sur /fr/account/orders/<numéro> : les noms dans « Suivi par boutique » et « Articles » sont des liens vers la fiche.
 3. Pour une pièce vendue ou en rupture : le lien ouvre quand même la fiche, qui indique l'indisponibilité.
 (Lien e-mail couvert par A-F12.)
+
+### T-DOMAINE-OFFICIEL — Parcours complet sur epomta.com — 15 min — À tester — date : —
+1. Sur https://epomta.com : inscription/connexion client, ajout panier, paiement Stripe (carte test) → retour sur epomta.com, toujours connecté.
+2. Ouvrir les e-mails reçus : tous les liens (compte, suivi, articles) pointent vers epomta.com.
+3. Connexion Google : OK (après mise à jour de l'URI de redirection).
+4. Webhook Stripe : la commande passe à payée sans action manuelle.
+(epomta-demo.vercel.app reste réservé aux tests ; liste blanche couverte par A-F11.)
+
+### T-MUR-EPOMTA — Mur d'accès sur epomta.com — 3 min — À tester — date : —
+1. Navigation privée, ouvrir https://epomta.com puis https://www.epomta.com : la page de mot de passe s'affiche (aucune œuvre visible).
+2. Ouvrir https://epomta.com/robots.txt : « Disallow: / ».
+3. Saisir le mot de passe : accès au site ; refaire sur epomta-demo.vercel.app : le mot de passe est redemandé (cookie propre à chaque domaine).
+(Couvert aussi par A-F13.)

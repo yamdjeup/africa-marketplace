@@ -23,7 +23,7 @@ export function verifyUnsubToken(userId: string, token: string): boolean {
 }
 
 export function siteUrl(): string {
-  return (process.env.NEXT_PUBLIC_SITE_URL || process.env.AUTH_URL || "http://localhost:3000").replace(/\/$/, "");
+  return (process.env.NEXT_PUBLIC_SITE_URL || process.env.AUTH_URL || (process.env.NODE_ENV === "production" ? "https://epomta.com" : "http://localhost:3000")).replace(/\/$/, "");
 }
 
 export function unsubUrl(userId: string, locale: "fr" | "en"): string {

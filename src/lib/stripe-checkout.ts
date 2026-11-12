@@ -8,7 +8,7 @@ import { notifySubOrder, runSubOrderSweep } from "@/lib/order-notify";
 export const stripeEnabled = () => Boolean(process.env.STRIPE_SECRET_KEY);
 
 function siteUrl() {
-  return (process.env.NEXT_PUBLIC_SITE_URL || process.env.AUTH_URL || "https://epomta-demo.vercel.app").replace(/\/$/, "");
+  return (process.env.NEXT_PUBLIC_SITE_URL || process.env.AUTH_URL || "https://epomta.com").replace(/\/$/, "");
 }
 
 type CheckoutItem = { name: string; quantity: number; unitPriceCents: number };

@@ -434,4 +434,5 @@ Statut : À tester — Date : —
 ### T-TABLEAU-PARTENAIRES — Tableau compact des partenaires — 5 min — À tester — date : —
 1. Admin, Partenaires : tableau Nom, Pays, Savoir-faire, Commission (%), Statut, E-mail, Date, Actions.
 2. Tester recherche, onglets de statut, tri par date, pagination.
-3. « Suspendre / révoquer… » : déplie le formulaire avec motif et confirmation ; « Modifier le profil » et « Gérer les créations » fonctionnent.
+3. Une seule ligne (~40 px) par partenaire ; colonne Actions alignée à droite : « Modifier le profil », « Gérer les créations », « Statut… ».
+4. « Statut… » ouvre une fenêtre : action (Suspendre/Révoquer ou Réactiver), motif obligatoire (sauf réactivation), Valider ; sans motif, la validation est refusée. Annuler ferme la fenêtre sans effet.

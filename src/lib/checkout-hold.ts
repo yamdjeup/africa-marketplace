@@ -45,9 +45,9 @@ function aggregate(lines: HoldLine[]) {
   return [...m.values()];
 }
 
-async function reserveAll(tx: Parameters<typeof reserveStock>[0], payload: HoldPayload, number: string) {
+async function reserveAll(tx: Parameters<typeof reserveStock>[0], payload: HoldPayload, number: string, paid = false) {
   for (const a of aggregate(payload.lines)) {
-    const ok = await reserveStock(tx, { slug: a.slug, label: a.label }, a.qty, { id: payload.userId, label: payload.email }, number);
+    const ok = await reserveStock(tx, { slug: a.slug, label: a.label }, a.qty, { id: payload.userId, label: payload.email }, number, paid ? undefined : `Réservation en attente de paiement (${number})`);
     if (!ok) throw new StockError(a.name);
   }
 }
@@ -118,7 +118,7 @@ export async function consumeHold(db: PrismaClient, number: string, paymentInten
         if (again.count !== 1) return { status: "already" } as const;
         wasReleased = true;
       }
-      if (wasReleased) await reserveAll(tx, payload, number);
+      if (wasReleased) await reserveAll(tx, payload, number, true);
       const order = await tx.order.create({
         data: {
           number,

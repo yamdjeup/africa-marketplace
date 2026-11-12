@@ -408,7 +408,7 @@ Statut : Ã€ tester â€” Date : â€”
 ### T-PAIEMENT-AVANT-COMMANDE — Aucune commande tant que le paiement n'a pas réussi — 15 min — À tester — date : —
 Prérequis : Stripe en mode test (carte 4242 4242 4242 4242), webhook `checkout.session.completed` et `checkout.session.expired` actifs sur l'URL testée.
 1. Client : ajouter une pièce au panier, « Confirmer la commande », arriver sur la page Stripe. NE PAS payer.
-2. Admin > Commandes et Partenaire > Commandes : aucune nouvelle commande ; boîtes mail acheteur et partenaire : aucun e-mail. Fiche de la pièce : stock disponible diminué de 1 (réservation).
+2. Admin > Stock > journal des mouvements : motif « Réservation en attente de paiement (AM-…) » (et non « Commande AM-… »). Admin > Commandes et Partenaire > Commandes : aucune nouvelle commande ; boîtes mail acheteur et partenaire : aucun e-mail. Fiche de la pièce : stock disponible diminué de 1 (réservation).
 3. Revenir sur la boutique et payer le même panier avec la carte de test. Attendu : page « Votre paiement est en cours de confirmation » puis détail de la commande (n° AM-…).
 4. Vérifier : une seule commande, un colis par partenaire, e-mail de confirmation acheteur (DA) et e-mail « nouvelle commande » au partenaire (une seule fois, même si Stripe renvoie l'événement).
 5. Stripe > Développeurs > Webhooks > événement : réponse 200 ; renvoyer l'événement : toujours une seule commande.

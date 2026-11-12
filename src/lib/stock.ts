@@ -38,7 +38,7 @@ async function log(db: Db, slug: string, variantId: string | null, type: Movemen
 }
 
 /** Réserve `qty` pièces ; renvoie false si le stock disponible est insuffisant (atomique). */
-export async function reserveStock(db: Db, t: Target, qty: number, actor: Actor, orderNumber?: string) {
+export async function reserveStock(db: Db, t: Target, qty: number, actor: Actor, orderNumber?: string, reason?: string) {
   const { variant, hasVariants } = await resolveVariant(db, t);
   if (hasVariants) {
     if (!variant) return false;
@@ -49,7 +49,7 @@ export async function reserveStock(db: Db, t: Target, qty: number, actor: Actor,
     const n = await db.$executeRaw`UPDATE "Product" SET "reserved" = "reserved" + ${qty} WHERE "slug" = ${t.slug} AND "status" = 'PUBLISHED' AND "stock" - "reserved" >= ${qty}`;
     if (n !== 1) return false;
   }
-  await log(db, t.slug, variant?.id ?? null, "RESERVE", -qty, orderNumber ? `Commande ${orderNumber}` : "Réservation", actor, orderNumber);
+  await log(db, t.slug, variant?.id ?? null, "RESERVE", -qty, reason ?? (orderNumber ? `Commande ${orderNumber}` : "Réservation"), actor, orderNumber);
   return true;
 }
 

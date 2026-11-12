@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { isUnreachable, retry, withConnectTimeout } from "../../scripts/db-wake";
+import { createServer } from "node:net";
+import { isUnreachable, retry, tcpProbe, withConnectTimeout } from "../../scripts/db-wake";
 
 describe("réveil de la base de test", () => {
   it("ajoute connect_timeout seulement s'il est absent", () => {
@@ -27,5 +28,15 @@ describe("réveil de la base de test", () => {
     let m = 0;
     await expect(retry(async () => { m++; throw new Error("autre"); }, { sleep })).rejects.toThrow("autre");
     expect(m).toBe(1);
+  });
+
+  it("tcpProbe : réussit sur un port ouvert, échoue (retryable) sur un port fermé, sans client Prisma", async () => {
+    const srv = createServer((s) => s.end());
+    await new Promise<void>((r) => srv.listen(0, "127.0.0.1", r));
+    const port = (srv.address() as { port: number }).port;
+    await expect(tcpProbe(`postgresql://u:p@127.0.0.1:${port}/db_test`)).resolves.toBeUndefined();
+    await new Promise((r) => srv.close(r));
+    const err = (await tcpProbe(`postgresql://u:p@127.0.0.1:${port}/db_test`).catch((e) => e as Error)) as Error;
+    expect(isUnreachable(err.message)).toBe(true);
   });
 });

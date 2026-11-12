@@ -1,8 +1,7 @@
 // Prépare la base de test jetable : mêmes migrations que la production (migrate deploy) + seed.
 import { spawnSync } from "node:child_process";
-import { PrismaClient } from "@prisma/client";
 import { requireSandboxStripe, requireTestDatabaseUrl } from "./test-env";
-import { UNREACHABLE_HELP, isUnreachable, retry, withConnectTimeout } from "./db-wake";
+import { UNREACHABLE_HELP, isUnreachable, retry, tcpProbe, withConnectTimeout } from "./db-wake";
 
 async function main() {
   const url = withConnectTimeout(requireTestDatabaseUrl());
@@ -11,12 +10,8 @@ async function main() {
   const onRetry = (n: number) => console.log(`[test-db] base injoignable (compute Neon en veille ?) — nouvel essai ${n}…`);
 
   console.log("[test-db] réveil de la base…");
-  const client = new PrismaClient({ datasources: { db: { url } } });
-  try {
-    await retry(() => client.$queryRaw`SELECT 1`, { onRetry });
-  } finally {
-    await client.$disconnect().catch(() => undefined);
-  }
+  // Sans client Prisma : en CI il est généré en sqlite et refuse une URL postgresql.
+  await retry(() => tcpProbe(url), { onRetry });
 
   for (const args of [["scripts/db.mjs", "deploy"], ["scripts/db.mjs", "seed"]]) {
     await retry(

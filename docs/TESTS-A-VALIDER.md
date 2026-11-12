@@ -436,6 +436,12 @@ Prérequis : Stripe en mode test (carte 4242 4242 4242 4242), webhook `checkout.
 3. « Annuler l'alerte » : le message disparaît, le bouton revient ; plus d'e-mail.
 4. Réactiver, remettre du stock (ou libérer la réservation), lancer /api/alerts/run : e-mail « Votre pièce est de nouveau disponible » reçu UNE fois ; relancer : pas de doublon. Pièce en favori ou déjà achetée : pas de cet e-mail.
 5. Pièce disponible : le bouton n'apparaît pas. Vérifier en EN.
+### T-ADMIN-STOCK — L'admin voit le stock et son journal — 10 min — À tester — date : —
+1. Admin > Partenaires > « Gérer les créations » d'un partenaire : chaque création affiche Stock total, Réservé, Dispo. (stock − réservé) et un lien « Journal du stock ».
+2. Compte acheteur : « Confirmer » une pièce (réservation 30 min, sans payer). Recharger la page admin : sous la création, ligne « Réservation en cours AM-… · e-mail acheteur · quantité · expire à HH:MM » ; Réservé augmente, Dispo. diminue.
+3. Clic « Journal du stock » : page /admin/stock filtrée sur la création (date, création, type, qté, motif, auteur) ; le motif « Réservation en attente de paiement » apparaît.
+4. Lien « Journal des mouvements de stock de ce partenaire » : journal filtré sur ce partenaire.
+5. Journal global : /admin/stock (aussi via le lien sous le titre « Journal des mouvements de stock » de Admin > Créations). Filtrer par partenaire, création, dates ; pagination 50 lignes. Aucune modification de stock possible côté admin.
 ### T-RETOUR-DISPO — Prévenu quand une pièce redevient disponible — 15 min — À tester — date : —
 1. Compte A : mettre une pièce unique au panier, « Confirmer » (réservation 30 min), ne pas payer, revenir en arrière.
 2. Compte B (autre navigateur, pièce NON en favori) : tenter la même pièce : message « plus disponible » (tentative mémorisée).

@@ -21,6 +21,7 @@ export async function adminCancelSubOrder(formData: FormData) {
   if (!sub) redirect(`${path}?error=state`);
   await settleSubRefund(id);
   await notifySubOrder("CANCELLED", id);
+  await notifySubOrder("PARTNER_CANCELLED", id);
   revalidatePath(path);
   redirect(`${path}?ok=cancelled`);
 }

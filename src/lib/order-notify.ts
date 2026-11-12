@@ -3,13 +3,14 @@ import { siteUrl } from "@/lib/alerts-core";
 import { absoluteImageUrl, renderEmailHtml } from "@/lib/email-layout";
 import { db } from "@/lib/db";
 import { safeSend } from "@/lib/supplier-email";
+import { buildPartnerCancelEmail } from "@/lib/partner-cancel-email";
 import { partnerRecipient } from "@/lib/partner-recipient";
 import { carrierLabel, trackingUrl } from "@/lib/tracking";
 import { releaseExpiredHolds } from "@/lib/checkout-hold";
 import { sweepSubOrders } from "@/lib/suborders";
 import { settleSubRefund } from "@/lib/refund";
 
-export type SubEvent = "NEW" | "REMINDER" | "ESCALATION" | "ACCEPTED" | "REFUSED" | "EXPIRED" | "CANCELLED" | "SHIPPED" | "DELIVERED";
+export type SubEvent = "NEW" | "REMINDER" | "ESCALATION" | "ACCEPTED" | "REFUSED" | "EXPIRED" | "CANCELLED" | "PARTNER_CANCELLED" | "PARTNER_EXPIRED" | "SHIPPED" | "DELIVERED";
 
 export const eur = (c: number, fr = true) => new Intl.NumberFormat(fr ? "fr-FR" : "en-GB", { style: "currency", currency: "EUR" }).format(c / 100);
 
@@ -40,6 +41,13 @@ export async function notifySubOrder(event: SubEvent, subOrderId: string) {
         `Merci de l'accepter ou de la refuser avant le ${new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeStyle: "short" }).format(sub.acceptBy)} ; sans réponse, elle est annulée et le client prévenu.`,
         url,
       ]);
+      return;
+    }
+    if (event === "PARTNER_CANCELLED" || event === "PARTNER_EXPIRED") {
+      const partnerTo = partnerRecipient(supplier, owner?.email);
+      if (!partnerTo) return;
+      const e = buildPartnerCancelEmail({ shop, number: sub.number, reason: sub.reason ?? "", kind: event === "PARTNER_EXPIRED" ? "EXPIRED" : "ADMIN", url: `${base}/fr/fournisseur/commandes/${sub.id}`, amount: eur(sub.subtotalCents) });
+      await safeSend(partnerTo, e.subject, e.lines, e.html);
       return;
     }
     if (event === "ESCALATION") {
@@ -104,6 +112,7 @@ export async function runSubOrderSweep() {
   for (const s of r.expired) {
     await settleSubRefund(s.id);
     await notifySubOrder("EXPIRED", s.id);
+    await notifySubOrder("PARTNER_EXPIRED", s.id);
   }
   return { reminded: r.reminded.length, escalated: r.escalated.length, expired: r.expired.length };
 }

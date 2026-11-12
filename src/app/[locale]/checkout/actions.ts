@@ -161,7 +161,7 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
   after(() => notifyLowStock(before).catch(() => undefined));
 
   const hdr = await headers();
-  const configured = (process.env.NEXT_PUBLIC_SITE_URL || process.env.AUTH_URL || "https://epomta-demo.vercel.app").replace(/\/$/, "");
+  const configured = (process.env.NEXT_PUBLIC_SITE_URL || process.env.AUTH_URL || "https://epomta.com").replace(/\/$/, "");
   const origin = returnOrigin(hdr.get("x-forwarded-host") ?? hdr.get("host"), configured);
   if (stripeEnabled()) {
     await db.order.update({ where: { number }, data: { paymentPending: true } });

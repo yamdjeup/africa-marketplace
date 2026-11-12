@@ -374,3 +374,10 @@ Statut : À tester — Date : —
 2. Sur /fr/account/orders/<numéro> : les noms dans « Suivi par boutique » et « Articles » sont des liens vers la fiche.
 3. Pour une pièce vendue ou en rupture : le lien ouvre quand même la fiche, qui indique l'indisponibilité.
 (Lien e-mail couvert par A-F12.)
+
+### T-DOMAINE-OFFICIEL — Parcours complet sur epomta.com — 15 min — À tester — date : —
+1. Sur https://epomta.com : inscription/connexion client, ajout panier, paiement Stripe (carte test) → retour sur epomta.com, toujours connecté.
+2. Ouvrir les e-mails reçus : tous les liens (compte, suivi, articles) pointent vers epomta.com.
+3. Connexion Google : OK (après mise à jour de l'URI de redirection).
+4. Webhook Stripe : la commande passe à payée sans action manuelle.
+(epomta-demo.vercel.app reste réservé aux tests ; liste blanche couverte par A-F11.)

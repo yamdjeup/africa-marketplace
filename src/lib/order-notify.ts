@@ -3,8 +3,8 @@ import { siteUrl } from "@/lib/alerts-core";
 import { absoluteImageUrl, renderEmailHtml } from "@/lib/email-layout";
 import { db } from "@/lib/db";
 import { safeSend } from "@/lib/supplier-email";
-import { trackingUrl } from "@/lib/tracking";
-import { sweepSubOrders } from "@/lib/suborders";
+import { carrierLabel, trackingUrl } from "@/lib/tracking";
+import { releaseUnpaidOrders, sweepSubOrders } from "@/lib/suborders";
 import { settleSubRefund } from "@/lib/refund";
 
 export type SubEvent = "NEW" | "REMINDER" | "ESCALATION" | "ACCEPTED" | "REFUSED" | "EXPIRED" | "CANCELLED" | "SHIPPED" | "DELIVERED";
@@ -24,6 +24,7 @@ export async function notifySubOrder(event: SubEvent, subOrderId: string) {
     const fr = o.locale !== "en";
     const list = items.map((i) => `${i.quantity} × ${i.name}${i.size ? ` (${i.size})` : ""}`).join(", ");
     const shop = supplier.displayName;
+    const carrierName = carrierLabel(sub.carrier, fr);
     const sold = fr ? `Vendu et expédié par ${shop} (${supplier.country}). E póm ta’ est l'intermédiaire.` : `Sold and shipped by ${shop} (${supplier.country}). E póm ta’ is the marketplace intermediary.`;
 
     if (event === "NEW" || event === "REMINDER") {
@@ -53,7 +54,7 @@ export async function notifySubOrder(event: SubEvent, subOrderId: string) {
       REFUSED: [fr ? "commande annulée" : "order cancelled", fr ? `${shop} ne peut pas honorer votre commande. Elle est annulée et le stock libéré.       Motif : ${sub.reason || "non précisé"}.${refundFr}` : `${shop} cannot fulfil your order. It is cancelled. Reason: ${sub.reason || "not specified"}.${refundEn}`],
             EXPIRED: [fr ? "commande annulée" : "order cancelled", fr ? `${shop} n'a pas répondu sous 48 h : votre commande est annulée.${refundFr}` : `${shop} did not reply within 48 h: your order is cancelled.${refundEn}`],
       CANCELLED: [fr ? "commande annulée" : "order cancelled", fr ? `Votre commande est annulée. Motif : ${sub.reason || "non précisé"}.${refundFr}` : `Your order is cancelled. Reason: ${sub.reason || "not specified"}.${refundEn}`],
-      SHIPPED: [fr ? "commande expédiée" : "order shipped", fr ? `${shop} a expédié votre commande${sub.carrier ? ` (${sub.carrier}` : ""}${sub.trackingNumber ? `${sub.carrier ? ", " : " ("}suivi ${sub.trackingNumber}` : ""}${sub.carrier || sub.trackingNumber ? ")" : ""}.` : `${shop} shipped your order${sub.carrier ? ` (${sub.carrier}` : ""}${sub.trackingNumber ? `${sub.carrier ? ", " : " ("}tracking ${sub.trackingNumber}` : ""}${sub.carrier || sub.trackingNumber ? ")" : ""}.`],
+      SHIPPED: [fr ? "commande expédiée" : "order shipped", fr ? `${shop} a expédié votre commande${carrierName ? ` (${carrierName}` : ""}${sub.trackingNumber ? `${carrierName ? ", " : " ("}suivi ${sub.trackingNumber}` : ""}${carrierName || sub.trackingNumber ? ")" : ""}.` : `${shop} shipped your order${carrierName ? ` (${carrierName}` : ""}${sub.trackingNumber ? `${carrierName ? ", " : " ("}tracking ${sub.trackingNumber}` : ""}${carrierName || sub.trackingNumber ? ")" : ""}.`],
       DELIVERED: [fr ? "commande livrée" : "order delivered", fr ? "Votre commande est livrée. Merci !" : "Your order is delivered. Thank you!"],
     };
     const m = msgs[event];
@@ -93,6 +94,7 @@ export async function notifySubOrder(event: SubEvent, subOrderId: string) {
 
 /** Relances, escalades et expirations (appelé par le cron, au chargement des pages commandes et après chaque commande). */
 export async function runSubOrderSweep() {
+  await releaseUnpaidOrders(db, { olderThanMin: 30 });
   const r = await sweepSubOrders(db);
   for (const s of r.reminded) await notifySubOrder("REMINDER", s.id);
   for (const s of r.escalated) await notifySubOrder("ESCALATION", s.id);

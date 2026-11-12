@@ -35,6 +35,7 @@ export default async function SuppliersPage({ params, searchParams }: { params: 
     JOINED: ["Création du compte partenaire (candidature acceptée)", "Partner account created (application accepted)"],
     SUSPEND: ["Suspendu", "Suspended"],
     REACTIVATE: ["Réactivé", "Reactivated"],
+    PROFILE_EDIT: ["Profil modifié", "Profile edited"],
     REVOKE: ["Révoqué définitivement", "Permanently revoked"],
   };
   const dateFmt = locale === "en" ? "en-GB" : "fr-FR";
@@ -66,6 +67,9 @@ export default async function SuppliersPage({ params, searchParams }: { params: 
                   <input type="hidden" name="supplierId" value={s.id} />
                   <button className={buttonVariants({ variant: "outline", className: "min-h-11" })}>{tr(locale, "Voir son espace", "View its area")}</button>
                 </form>
+              )}
+              {!s.isDemo && (
+                <Link href={`/${locale}/admin/fournisseurs/${s.id}/profil`} className={buttonVariants({ variant: "outline", className: "min-h-11" })}>{tr(locale, "Modifier le profil", "Edit profile")}</Link>
               )}
               {!s.isDemo && s.status === "ACTIVE" && (
                 <Link href={`/${locale}/admin/fournisseurs/${s.id}/oeuvres`} className={buttonVariants({ variant: "outline", className: "min-h-11" })}>{tr(locale, "Gérer les créations", "Manage creations")}</Link>

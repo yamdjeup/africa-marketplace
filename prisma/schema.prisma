@@ -190,6 +190,10 @@ model Supplier {
   bio            String   @default("")
   bioEn          String   @default("")
   videoUrl       String?
+  /// Coordonnées de contact (facultatives)
+  contactEmail   String?
+  phone          String?
+  address        String?
   creatorSlug    String?
   status         String   @default("ACTIVE")
   commissionRate Float    @default(0.15)

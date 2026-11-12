@@ -126,4 +126,20 @@ export async function sweepSubOrders(db: PrismaClient, now = new Date()) {
   return out;
 }
 
+/** Libère les réservations de commandes jamais payées (retour arrière Stripe, abandon) : celles du même e-mail, ou de plus de `olderThanMin` minutes. Idempotent. */
+export async function releaseUnpaidOrders(db: PrismaClient, opts: { email?: string; olderThanMin?: number; now?: Date }) {
+  const now = opts.now ?? new Date();
+  const or: Prisma.OrderWhereInput[] = [];
+  if (opts.email) or.push({ email: opts.email }, { email: opts.email.toLowerCase() });
+  if (opts.olderThanMin !== undefined) or.push({ createdAt: { lt: new Date(now.getTime() - opts.olderThanMin * 60000) } });
+  if (or.length === 0) return 0;
+  const orders = await db.order.findMany({ where: { paymentPending: true, stripePaymentIntentId: null, OR: or }, select: { id: true, subOrders: { where: { status: "PENDING" }, select: { id: true } } } });
+  let n = 0;
+  for (const o of orders) {
+    for (const s of o.subOrders) if (await closeAndRelease(db, s.id, null, ["PENDING"], "CANCELLED", "Paiement non finalisé", { label: "système" })) n++;
+    await db.order.update({ where: { id: o.id }, data: { paymentPending: false } });
+  }
+  return n;
+}
+
 export type SubOrderWithItems = Prisma.SubOrderGetPayload<object>;

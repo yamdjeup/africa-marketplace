@@ -7,6 +7,7 @@ describe("mur d'accès : images des e-mails", () => {
   it("exempte /api/media/<id> et /images/artworks/*.jpg", () => {
     expect(re.test("/api/media/abc123")).toBe(true);
     expect(re.test("/images/artworks/taylor-3.jpg")).toBe(true);
+    expect(re.test("/images/examples/marjon-lunettes-cristaux.webp")).toBe(true);
   });
   it("ne rouvre pas le reste du site", () => {
     for (const p of ["/fr", "/fr/catalogue", "/images/other/x.jpg", "/images/artworks/../x.jpg", "/api/orders"]) expect(re.test(p)).toBe(false);

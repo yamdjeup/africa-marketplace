@@ -8,6 +8,7 @@ import { ensureCreator } from "@/lib/partner-creator";
 import { isAdminEmail, VIEW_AS_COOKIE, getPortalContext } from "@/lib/supplier";
 import { emailAdminNewApplication, emailApplicantReceived } from "@/lib/supplier-email";
 import { partnerNameTaken } from "@/lib/partner-name";
+import { changeLog, changedFields, validateContact } from "@/lib/partner-profile";
 
 const s = (f: FormData, k: string, max = 2000) => String(f.get(k) ?? "").trim().slice(0, max);
 const loc = (f: FormData) => (s(f, "locale") === "en" ? "en" : "fr");
@@ -54,9 +55,21 @@ export async function updateSupplierProfile(formData: FormData) {
   if (!ctx || ctx.viewingAs) redirect(`/${locale}/fournisseur/profil?error=readonly`);
   const newName = s(formData, "displayName", 120);
   if (newName && (await partnerNameTaken(newName, ctx.supplier.id))) redirect(`/${locale}/fournisseur/profil?error=name`);
+  const contact = { contactEmail: s(formData, "contactEmail", 200), phone: s(formData, "phone", 30), address: s(formData, "address", 400) };
+  const invalid = validateContact(contact);
+  if (invalid) redirect(`/${locale}/fournisseur/profil?error=${invalid}`);
+  const session = await auth();
+  const sup = ctx.supplier;
+  const bioKey = locale === "fr" ? "bio" : "bioEn";
+  const before: Record<string, unknown> = { displayName: sup.displayName, country: sup.country, [bioKey]: sup[bioKey], videoUrl: sup.videoUrl, contactEmail: sup.contactEmail, phone: sup.phone, address: sup.address };
+  const video = /^https?:\/\//.test(s(formData, "videoUrl", 300)) ? s(formData, "videoUrl", 300) : null;
+  const after: Record<string, unknown> = { displayName: newName || sup.displayName, country: s(formData, "country", 80) || sup.country, [bioKey]: s(formData, "bio", 4000), videoUrl: video, ...contact };
+  const changed = changedFields(before, after);
+  if (changed.length) await db.partnerAudit.create({ data: { supplierId: ctx.supplier.id, action: "PROFILE_EDIT", reason: changeLog(before, after), actorEmail: session?.user?.email ?? "" } });
   await db.supplier.update({
     where: { id: ctx.supplier.id },
     data: {
+      ...contact,
       displayName: s(formData, "displayName", 120) || ctx.supplier.displayName,
       country: s(formData, "country", 80) || ctx.supplier.country,
       bio: locale === "fr" ? s(formData, "bio", 4000) : ctx.supplier.bio,

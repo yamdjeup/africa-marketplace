@@ -424,7 +424,7 @@ Prérequis : Stripe en mode test (carte 4242 4242 4242 4242), webhook `checkout.
 3. Panier de 2 pièces dont une seule épuisée : le message cite la pièce épuisée.
 
 ### T-ARCHIVAGE — Anciennes commandes jamais payées archivées — 10 min — À tester — date : —
-0. Depuis Vercel (route temporaire, connecté en admin) : ouvrir `https://epomta.com/api/admin/archive-unpaid` (simulation JSON) ; l'exécution se fait par POST (console du navigateur : `fetch("/api/admin/archive-unpaid",{method:"POST"}).then(r=>r.json()).then(console.log)`). Non-admin : 403. Puis supprimer la route.
+0. Archivage de prod fait le 12/11/2026 via une route temporaire (5 commandes archivées, route supprimée).
 1. Simulation locale : `npm run db:archive-unpaid` (DATABASE_URL de la base visée, définie dans cmd pour la commande seulement). Attendu : liste dont AM-C83CA71A et AM-C08665C5 ; aucune commande payée/remboursée/expédiée listée ; rien modifié.
 2. Exécution : `npm run db:archive-unpaid -- --execute`.
 3. Attendu : ces commandes disparaissent des listes acheteur, partenaire et admin et des compteurs ; les commandes payées sont inchangées ; relancer la simulation : 0 commande.

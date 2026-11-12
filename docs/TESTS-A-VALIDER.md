@@ -43,6 +43,7 @@ DerniÃ¨re exÃ©cution (11/11/2026, lot admin + e-mails de retour) : Vitest 62
 | A-F17 | F | Â« use server Â» en premiÃ¨re instruction de tous les fichiers *actions.ts (Ã©vite l'Ã©chec du build Vercel) | `tests/unit/use-server.test.ts` (Vitest) | OK 1/1 â€” 12/11/2026 | â€” |
 | A-F18 | F | Paiement avant commande : rÃ©servation 30 min sans commande ni e-mail ; commande + colis crÃ©Ã©s une seule fois au paiement (idempotent) ; reconfirmation du mÃªme acheteur ; libÃ©ration/balayage ; paiement aprÃ¨s expiration (re-rÃ©servation, sinon aucune commande + remboursement) ; erreur de stock nominative | `tests/unit/checkout-hold.db.test.ts` (Vitest, base jetable `TEST_DATABASE_URL`, exÃ©cutÃ© en CI) ; filtre archivage dans `tests/unit/admin-list.test.ts` | Ã€ lancer en CI (non exÃ©cutable sans PostgreSQL local) | T-PAIEMENT-AVANT-COMMANDE, T-RESERVATION-IMPAYEE, T-STOCK-NOM, T-ARCHIVAGE |
 | A-F19 | F | Archivage des commandes impayées (simulation sans écriture ; ignore expédiées/remboursées) | `tests/unit/archive-unpaid.test.ts` (Vitest) | À lancer | T-ARCHIVAGE |
+| A-F20 | F | E-mail au partenaire quand l'admin annule un colis ou à l'expiration 48 h (motif, n° de colis, lien) | `tests/unit/partner-cancel-email.test.ts` (Vitest) | À lancer | T-ANNUL-ADMIN-PARTENAIRE |
 | A-F9 | F | Mur d'accÃ¨s : API et images hors exemptions bloquÃ©es (401), artworks e-mail publics (â‰  401), manifeste/icÃ´nes PWA | `e2e/access.spec.ts` (Playwright) | OK 5/5 en local â€” 11/11/2026 (CI Ã  relancer) | â€” |
 
 Parcours Playwright historiques (`e2e/journey.spec.ts`, `access.spec.ts`, `alerts.spec.ts`, `search.spec.ts`, `order-email.spec.ts`, `mobile.spec.ts`) : inchangÃ©s, non relancÃ©s dans ce lot.
@@ -422,6 +423,11 @@ Prérequis : Stripe en mode test (carte 4242 4242 4242 4242), webhook `checkout.
 1. Mettre une pièce à stock 1 ; avec le compte A, « Confirmer » et rester sur Stripe (réservation en cours).
 2. Avec le compte B (autre e-mail), tenter de commander la même pièce. Attendu : message de stock citant le NOM de la pièce, aucune réservation ni commande créée pour B.
 3. Panier de 2 pièces dont une seule épuisée : le message cite la pièce épuisée.
+
+### T-ANNUL-ADMIN-PARTENAIRE — Le partenaire est prévenu d'une annulation admin — 5 min — À tester — date : —
+1. Admin > Commandes : annuler le colis d'un partenaire avec un motif.
+2. Attendu : l'acheteur reçoit l'e-mail d'annulation ET le partenaire reçoit « colis … annulé » (motif, n° de colis, bouton vers sa commande) sur son e-mail de contact (sinon e-mail du compte).
+3. Refus par le partenaire : pas d'e-mail à lui-même. Expiration 48 h : e-mail au partenaire.
 
 ### T-ARCHIVAGE — Anciennes commandes jamais payées archivées — 10 min — À tester — date : —
 0. Archivage de prod fait le 12/11/2026 via une route temporaire (5 commandes archivées, route supprimée).

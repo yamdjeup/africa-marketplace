@@ -127,9 +127,6 @@ export function CartView({ locale }: { locale: Locale }) {
         <Link href={`/${locale}/checkout`} className={buttonVariants({ size: "lg", className: "h-12 w-full" })}>
           {t.checkout}
         </Link>
-        <p className="hidden rounded-md bg-muted p-3 text-center text-sm lg:block">
-          {f9.freeReturns}
-        </p>
         <Link href={`/${locale}/catalogue`} className={buttonVariants({ variant: "outline", size: "lg", className: "h-12 w-full" })}>
           {t.continue}
         </Link>

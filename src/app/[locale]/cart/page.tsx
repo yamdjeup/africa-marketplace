@@ -17,7 +17,6 @@ export default async function CartPage({ params }: { params: Promise<{ locale: L
   const t = getDict(locale);
   const recos = (await getFeaturedProducts(locale, 12)).slice(0, 10);
   const reass = [
-    [t.f9.reassReturns, t.f9.reassReturnsText],
     [t.f9.reassShipping, t.f9.reassShippingText],
     [t.f9.reassPayment, t.f9.reassPaymentText],
   ];

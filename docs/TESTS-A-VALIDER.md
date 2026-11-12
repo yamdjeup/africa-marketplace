@@ -446,3 +446,8 @@ Statut : À tester — Date : —
 3. Attendu : l'e-mail « nouvelle commande » arrive sur l'adresse de contact, pas sur l'e-mail de connexion.
 4. Vider l'e-mail de contact, refaire une commande : l'e-mail arrive sur l'e-mail de connexion (repli).
 5. Contrôler aussi : annulation client, suspension/réactivation, versement (même adresse). L'e-mail de connexion reste inchangé. (A-F16 couvre la règle.)
+
+### T-RETOURS-GRATUITS — Mention « retours gratuits » retirée — 3 min — À tester — date : —
+1. FR puis EN : ouvrir le panier (bureau et mobile), le checkout, une fiche produit.
+2. Attendu : aucune mention « Retours gratuits sous 30 jours » / « Free returns within 30 days », ni autre mention « gratuit/offert » en remplacement.
+3. Ouvrir les e-mails de commande : même contrôle. Les pages Retours et remboursements restent inchangées.

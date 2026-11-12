@@ -66,7 +66,7 @@ export default async function SuppliersPage({ params, searchParams }: { params: 
       <div className="overflow-x-auto rounded-lg border bg-card">
         <table className="w-full text-left text-sm">
           <thead className="bg-muted/50"><tr>
-            {[["Nom", "Name"], ["Pays", "Country"], ["Savoir-faire", "Craft"], ["Commission (%)", "Commission (%)"], ["Statut", "Status"], ["E-mail", "Email"], ["Date", "Date"], ["Actions", "Actions"]].map((h) => <th key={h[0]} className={`p-2${h[0] === "Actions" ? " text-right" : ""}`}>{tr(locale, h[0], h[1])}</th>)}
+            {[["Nom", "Name"], ["Pays", "Country"], ["Savoir-faire", "Craft"], ["Commission (%)", "Commission (%)"], ["Statut", "Status"], ["E-mail compte", "Account email"], ["E-mail contact", "Contact email"], ["Date", "Date"], ["Actions", "Actions"]].map((h) => <th key={h[0]} className={`p-2${h[0] === "Actions" ? " text-right" : ""}`}>{tr(locale, h[0], h[1])}</th>)}
           </tr></thead>
           <tbody>
             {list.map((s) => (
@@ -77,6 +77,7 @@ export default async function SuppliersPage({ params, searchParams }: { params: 
                 <td className="whitespace-nowrap p-2">{Math.round(s.commissionRate * 1000) / 10} %</td>
                 <td className="p-2"><span className="rounded-full bg-muted px-2 py-0.5 text-xs">{s.status === "ACTIVE" ? tr(locale, "Actif", "Active") : s.status === "SUSPENDED" ? tr(locale, "Suspendu", "Suspended") : tr(locale, "Révoqué", "Revoked")}</span></td>
                 <td className="break-all p-2">{s.isDemo ? tr(locale, "interne", "internal") : s.user?.email ?? "—"}</td>
+                <td className="break-all p-2">{s.isDemo ? "—" : s.contactEmail || "—"}</td>
                 <td className="whitespace-nowrap p-2">{s.createdAt.toLocaleDateString(dateFmt)}</td>
                 <td className="p-2">
                   <div className="flex items-center justify-end gap-2 whitespace-nowrap">

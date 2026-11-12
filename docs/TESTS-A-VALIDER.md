@@ -435,7 +435,7 @@ Statut : À tester — Date : —
 3. Même contrôle après un renommage par l'admin (Modifier le profil). Note : les comptes renommés avant ce correctif sont resynchronisés au prochain renommage ; l'en-tête lit déjà le nom du profil partenaire.
 
 ### T-TABLEAU-PARTENAIRES — Tableau compact des partenaires — 5 min — À tester — date : —
-1. Admin, Partenaires : tableau Nom, Pays, Savoir-faire, Commission (%), Statut, E-mail, Date, Actions.
+1. Admin, Partenaires : tableau Nom, Pays, Savoir-faire, Commission (%), Statut, E-mail compte, E-mail contact (« — » si vide : repli sur le compte), Date, Actions ; la recherche trouve aussi par e-mail de contact.
 2. Tester recherche, onglets de statut, tri par date, pagination.
 3. Une seule ligne (~40 px) par partenaire ; colonne Actions alignée à droite : « Modifier le profil », « Gérer les créations », « Statut… ».
 4. « Statut… » ouvre une fenêtre : action (Suspendre/Révoquer ou Réactiver), motif obligatoire (sauf réactivation), Valider ; sans motif, la validation est refusée. Annuler ferme la fenêtre sans effet.

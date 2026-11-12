@@ -37,7 +37,8 @@ Dernière exécution (11/11/2026, lot admin + e-mails de retour) : Vitest 62 OK 
 | A-F11 | F | URL de retour Stripe/liens : domaine de la requête (liste blanche epomta.com, epomta-demo.vercel.app), sinon origine configurée | `tests/unit/origin.test.ts` (Vitest) | OK 3/3 — 11/11/2026 | T-DOMAINE |
 | A-F12 | F | Nom d'article cliquable vers la fiche produit dans le récapitulatif e-mail (annulée, en route…) | `tests/unit/email-item-link.test.ts` (Vitest) | OK 2/2 — 11/11/2026 | T-RACHAT-LIEN |
 | A-F13 | F | Mur d'accès actif sur epomta.com, www.epomta.com et epomta-demo.vercel.app (page, API ; exemptions webhook/médias conservées) ; robots.txt Disallow + noindex | `tests/unit/wall-hosts.test.ts` (Vitest) + `e2e/access.spec.ts` | OK 3/3 unit — 12/11/2026 | T-MUR-EPOMTA |
-| A-F10 | F | Montants des e-mails au format de la langue (EN « €55.00 », FR « 55,00 € ») | `tests/unit/money-locale.test.ts` (Vitest) | OK 2/2 — 11/11/2026 | T-MAILS (format EN) |
+| A-F14 | F | Transporteur « Autre » → « Other » en EN (`carrierLabel`) ; image exemple non bloquée par le mur (`/images/examples/*`) | `tests/unit/partner-profile.test.ts`, `tests/unit/proxy-images.test.ts` (Vitest) | À lancer | T-AUTRE-EN, T-IMG-EXEMPLE |
+| A-F15 | F | Profil partenaire : validation e-mail/téléphone/adresse ; journal « champ : ancienne → nouvelle valeur » | `tests/unit/partner-profile.test.ts` (Vitest) | À lancer | T-PROFIL-PARTENAIRE, T-PROFIL-ADMIN || A-F10 | F | Montants des e-mails au format de la langue (EN « €55.00 », FR « 55,00 € ») | `tests/unit/money-locale.test.ts` (Vitest) | OK 2/2 — 11/11/2026 | T-MAILS (format EN) |
 | A-F9 | F | Mur d'accès : API et images hors exemptions bloquées (401), artworks e-mail publics (≠ 401), manifeste/icônes PWA | `e2e/access.spec.ts` (Playwright) | OK 5/5 en local — 11/11/2026 (CI à relancer) | — |
 
 Parcours Playwright historiques (`e2e/journey.spec.ts`, `access.spec.ts`, `alerts.spec.ts`, `search.spec.ts`, `order-email.spec.ts`, `mobile.spec.ts`) : inchangés, non relancés dans ce lot.
@@ -71,13 +72,13 @@ Prérequis : migration 0023 appliquée ; un colis livré (compte client) ; compt
 | ID | Lot | Durée | Statut | Date |
 |---|---|---|---|---|
 | T-GA4 | GA4 + consentement | 15 min | À tester | — |
-| T-COLIS | Multi-colis + annulation | 20 min | À tester | — |
-| T-SUIVI | Suivi de livraison + remboursement (lots 1–2) | 15 min | À tester | — |
+| T-COLIS | Multi-colis + annulation | 20 min | Testé | 12/11/2026 |
+| T-SUIVI | Suivi de livraison + remboursement (lots 1–2) | 15 min | Partiel : étape 3 testée le 12/11/2026 | 12/11/2026 |
 | T-MAILS | E-mails Farfetch | 10 min | Partiel : étape 1 testée | 10/11/2026 |
 | T-AIDE | Pages d'aide FR/EN | 10 min | À tester | — |
 | T-ADMIN-FILTRES | Filtres, pagination et pastilles (admin + partenaire) ; e-mails de retour | 20 min | À tester | — |
 | T24 | Parcours de commande complet (achat → livraison) | 20 min | À tester | — |
-| T-STRIPE | Paiement Stripe Checkout + webhook (lot 0) | 15 min | Partiel : étapes 2, 3, 4, 5, 8 testées ; 1, 6, 7 à tester | 10/11/2026 |
+| T-STRIPE | Paiement Stripe Checkout + webhook (lot 0) | 15 min | Partiel : étapes 1, 2, 3, 4, 5, 8 testées ; 6, 7 à tester | 10/11/2026 |
 | T-REMB | Remboursement au refus/expiration/annulation | 15 min | Partiel : étapes 1, 2 testées | 10/11/2026 |
 | H-01 à H-16 | Lots A à D, suspension, traduction, fiche création | 60 min | À tester | — |
 
@@ -361,16 +362,16 @@ Statut : À tester — Date : —
 1. Ouvrir une fiche œuvre avec 2 exemplaires, sans taille (ex. /fr/produits/bague-de-marquis-argent-925-355e). Résultat : une seule ligne « Plus que 2 » (sous la description), pas de doublon rouge près du bouton.
 2. Fiche avec tailles : l'indication « Plus que n » reste sur la taille concernée uniquement.
 
-### T-MONTANT-EN — Montants et exemple de commande — 3 min — À tester — date : —
+### T-MONTANT-EN — Montants et exemple de commande — 3 min — Testé — 12/11/2026
 1. Annuler un colis avec un compte en anglais (/en). Résultat : l'e-mail « Order cancelled » indique « €55.00 » (pas « 55,00 € »).
 2. Pages d'aide Contact FR et EN : l'exemple de n° de commande est « AM-1A2B3C4D ».
 
-### T-DOMAINE — Retour Stripe sur le même domaine — 5 min — À tester — date : —
+### T-DOMAINE — Retour Stripe sur le même domaine — 5 min — Testé — 12/11/2026
 1. Se connecter en client sur https://epomta-demo.vercel.app, commander (carte test Stripe 4242 4242 4242 4242). Résultat : retour sur epomta-demo.vercel.app/fr/checkout/confirmation/…, toujours connecté.
 2. Même parcours sur https://epomta.com : retour sur epomta.com.
 3. Sur epomta-demo.vercel.app, ouvrir le compte client : plus d'erreur /api/auth/error?error=Configuration (sinon voir variables Vercel : AUTH_URL).
 
-### T-RACHAT-LIEN — Racheter un article annulé via son lien — 5 min — À tester — date : —
+### T-RACHAT-LIEN — Racheter un article annulé via son lien — 5 min — Testé — 12/11/2026
 1. Annuler une commande en tant que client, ouvrir l'e-mail « Commande annulée » : cliquer le nom d'un article → fiche produit (FR et EN selon la langue).
 2. Sur /fr/account/orders/<numéro> : les noms dans « Suivi par boutique » et « Articles » sont des liens vers la fiche.
 3. Pour une pièce vendue ou en rupture : le lien ouvre quand même la fiche, qui indique l'indisponibilité.
@@ -383,8 +384,39 @@ Statut : À tester — Date : —
 4. Webhook Stripe : la commande passe à payée sans action manuelle.
 (epomta-demo.vercel.app reste réservé aux tests ; liste blanche couverte par A-F11.)
 
-### T-MUR-EPOMTA — Mur d'accès sur epomta.com — 3 min — À tester — date : —
+### T-MUR-EPOMTA — Mur d'accès sur epomta.com — 3 min — Testé — 12/11/2026
 1. Navigation privée, ouvrir https://epomta.com puis https://www.epomta.com : la page de mot de passe s'affiche (aucune œuvre visible).
 2. Ouvrir https://epomta.com/robots.txt : « Disallow: / ».
 3. Saisir le mot de passe : accès au site ; refaire sur epomta-demo.vercel.app : le mot de passe est redemandé (cookie propre à chaque domaine).
 (Couvert aussi par A-F13.)
+
+### T-AUTRE-EN — Transporteur « Autre » en anglais — 3 min — À tester — date : —
+1. Partenaire : expédier un colis avec transporteur « Autre ».
+2. Client en EN : ouvrir l'e-mail « on its way » et la page commande.
+3. Attendu : « Other », pas « Autre ». (Couvert en partie par A-F14.)
+
+### T-IMG-EXEMPLE — Image d'exemple dans les e-mails — 3 min — À tester — date : —
+1. Passer commande d'une pièce exemple (lunettes), puis l'annuler.
+2. Ouvrir les e-mails de confirmation et d'annulation.
+3. Attendu : l'image s'affiche (mur d'accès actif). (A-F14.)
+
+### T-RESERVATION-IMPAYEE — Réservation impayée libérée — 8 min — À tester — date : —
+1. Client : valider le panier, aller sur Stripe, revenir en arrière, reconfirmer.
+2. Attendu : pas de « plus disponible » ; la commande précédente est annulée (« Paiement non finalisé »).
+3. Laisser une commande impayée 30 min : stock libéré automatiquement (tâche planifiée).
+
+### T-STOCK-NOM — Erreur de stock nommant l'article — 3 min — À tester — date : —
+1. Mettre une pièce à stock 1, la réserver depuis un autre compte, tenter de commander.
+2. Attendu : message de stock avec le nom de l'article entre parenthèses.
+
+### T-PROFIL-PARTENAIRE — Le partenaire modifie son profil — 5 min — À tester — date : —
+1. Partenaire : Profil, renseigner adresse, e-mail de contact, téléphone, enregistrer.
+2. Saisir un e-mail ou téléphone invalide : message d'erreur FR/EN.
+3. Admin : Partenaires, journal : ligne « Profil modifié » avec date, auteur, champ, ancienne et nouvelle valeur.
+4. Note : les renommages faits avant ce lot ne sont pas tracés (pas de rétro-remplissage).
+
+### T-PROFIL-ADMIN — L'admin modifie un profil partenaire — 5 min — À tester — date : —
+1. Admin : Partenaires, « Modifier le profil » d'un partenaire.
+2. Changer le nom, les coordonnées, les bios, enregistrer.
+3. Un nom déjà pris est refusé.
+4. Le journal affiche l'auteur (e-mail admin) et l'ancienne/nouvelle valeur ; le partenaire voit les nouvelles valeurs.

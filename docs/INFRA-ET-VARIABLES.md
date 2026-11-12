@@ -69,7 +69,7 @@ Compte Neon : yamdjeup@gmail.com (organisation `africa-marketplace`). Nom du pro
 Pas de clé live. Compte Stripe « Epomta sandbox » : africamadolo@gmail.com.
 
 ### Resend / e-mails
-Équipe Resend : yamdjeup (yamdjeup@gmail.com) ; clé API `epomta-prod` (permission Sending access) ; plan à vérifier.
+Équipe Resend : yamdjeup (yamdjeup@gmail.com) ; clé API `epomta-prod` (permission Sending access) ; plan Free (3 000 e-mails/mois, 100/jour) ; passer à Pro (20 $/mois) avant l'ouverture.
 
 | Variable | Env. | Rôle | Sensible | Où régénérer |
 |---|---|---|---|---|
@@ -127,7 +127,7 @@ Redirect URI Google (et Facebook/Apple) ; endpoint webhook Stripe `https://epomt
 | Neon | Free (Frankfurt) | Passer à **Launch** : base toujours active, restauration à un instant donné, branches protégées |
 | Stripe | Sandbox (clés test) | Compte **live** : vérification de l'entreprise, compte bancaire, clés live, **nouveau webhook** live, commission par transaction à intégrer dans les prix |
 | Google Cloud | Application OAuth en mode test | **Publier** l'app OAuth (hors mode test), écran de consentement complet ; surveiller les quotas Places |
-| Resend | Offre actuelle À compléter | Vérifier le quota d'envoi mensuel et passer au plan adapté |
+| Resend | Free (3 000 e-mails/mois, 100/jour) | Passer à Pro (20 $/mois) avant l'ouverture |
 | OVH | Domaine epomta.com | Renouvellement automatique, DNS à jour, contact titulaire exact ; réserver **epomta.eu / epomta.fr** |
 | GitHub | Dépôt privé | Vérifier le plan (Actions, minutes CI) |
 | GA4 | Gratuit | Vérifier la conformité du consentement |
@@ -153,6 +153,7 @@ Redirect URI Google (et Facebook/Apple) ; endpoint webhook Stripe `https://epomt
 Statut : `[x]` fait, `[ ]` à faire. Seuls les points confirmés par le propriétaire sont cochés.
 
 ### Comptes
+- [ ] Resend : passer de Free à Pro (20 $/mois) avant l'ouverture
 - [ ] 2FA activée : Vercel, Neon, GitHub, OVH, Stripe, Google (africamadolo et yamdjeup), Resend
 - [ ] E-mail de secours + téléphone de secours sur chaque compte (Stripe : connexion Google uniquement, aucun secours aujourd'hui)
 - [ ] Gestionnaire de mots de passe utilisé pour tous les comptes ; codes de récupération stockés hors ligne

@@ -199,3 +199,5 @@ Reste à faire :
 - La catégorie « Bijoux » a été renommée « Accessoires » / « Accessories » (libellé seulement ; le slug technique `bijoux` est conservé). Le code Miroir bijoux est conservé pour de vraies pièces.
 - House of Marjón (maison d'accessoires nigériane) : `marjon-lunettes-cristaux.webp` et `marjon-lunettes-cauris.webp` sont la **propriété de House of Marjón** ; photos tirées d'Instagram (@onemarjon), recadrées 4:5, **démo privée uniquement**. Bio d'après une source indirecte (aperçu IA), formulée prudemment : à confirmer avec la maison, ainsi que l'attribution des pièces à des collections (non confirmée). Obtenir l'accord avant toute mise en ligne publique (le retrait passe par le seed examples remove).
 
+## Lot colis / profil partenaire (12/11/2026)
+- Fait : coordonnées partenaire (adresse, e-mail, téléphone), édition admin et partenaire, journal des modifications (ancienne/nouvelle valeur ; renommages antérieurs non tracés), libération auto des réservations impayées (30 min), erreur de stock nommant l'article.

@@ -6,6 +6,11 @@ const BUILDERS: [RegExp, (n: string) => string][] = [
   [/colissimo|la\s*poste/i, (n) => `https://www.laposte.fr/outils/suivre-vos-envois?code=${n}`],
 ];
 
+/** Nom du transporteur affiché au client : « Autre » saisi par le partenaire devient « Other » en anglais. */
+export function carrierLabel(carrier: string, fr: boolean): string {
+  return /^\s*(autre|other)\s*$/i.test(carrier) ? (fr ? "Autre" : "Other") : carrier;
+}
+
 /** URL de suivi du transporteur (lien uniquement, aucun appel externe) ; null si transporteur inconnu. */
 export function trackingUrl(carrier: string, trackingNumber: string): string | null {
   const n = encodeURIComponent(trackingNumber.trim());

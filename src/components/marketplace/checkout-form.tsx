@@ -88,6 +88,7 @@ export function CheckoutForm({
         {state.error && (
           <p role="alert" className="text-sm text-destructive">
             {state.error === "empty" ? t.empty : t.errors[state.error]}
+            {state.error === "stock" && state.item ? ` (${state.item})` : ""}
           </p>
         )}
 

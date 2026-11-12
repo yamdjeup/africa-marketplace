@@ -14,13 +14,17 @@ import { sendOrderEmail } from "@/lib/order-email";
 import { isAddressEditable, isOrderOwner } from "@/lib/order-edit";
 import { notifySubOrder, runSubOrderSweep } from "@/lib/order-notify";
 import { createCheckoutSession, stripeEnabled } from "@/lib/stripe-checkout";
-import { createSubOrders } from "@/lib/suborders";
+import { createSubOrders, releaseUnpaidOrders } from "@/lib/suborders";
 import { reserveStock } from "@/lib/stock";
 import { notifyLowStock, snapshotAvail } from "@/lib/stock-alerts";
 
-class StockError extends Error {}
+class StockError extends Error {
+  constructor(public item: string) {
+    super(item);
+  }
+}
 
-export type CheckoutState = { error?: "required" | "email" | "postal" | "stock" | "unknown" | "empty"; values?: Record<string, string> };
+export type CheckoutState = { error?: "required" | "email" | "postal" | "stock" | "unknown" | "empty"; item?: string; values?: Record<string, string> };
 
 type CartInput = { slug: string; size: string | null; quantity: number }[];
 
@@ -76,7 +80,7 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
   const email = field("email");
   const addr = readAddress(field);
   const values = { email, ...addr };
-  const fail = (error: NonNullable<CheckoutState["error"]>): CheckoutState => ({ error, values });
+  const fail = (error: NonNullable<CheckoutState["error"]>, item?: string): CheckoutState => ({ error, item, values });
   if (!email) return fail("required");
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail("email");
   const problem = checkAddress(addr);
@@ -87,6 +91,8 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
   const cart = parseCart(formData.get("cart"));
   if (cart.length === 0) return fail("empty");
 
+  // Une réservation impayée du même acheteur (retour arrière depuis Stripe) ne doit pas le bloquer.
+  await releaseUnpaidOrders(db, { email });
   const products = await db.product.findMany({ where: { slug: { in: cart.map((l) => l.slug) }, status: "PUBLISHED", supplierId: { not: null } }, include: { variants: true } });
   const bySlug = new Map(products.map((p) => [p.slug, p]));
 
@@ -100,7 +106,7 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
     if (p.variants.length > 0 ? !variant : sizes.length > 0 ? !line.size || !sizes.includes(line.size) : line.size !== null) return fail("unknown");
     const key = `${p.slug}\u0000${line.size ?? ""}`;
     const used = (stockUsed.get(key) ?? 0) + line.quantity;
-    if (used > (variant ? variant.stock - variant.reserved : p.stock - p.reserved)) return fail("stock");
+    if (used > (variant ? variant.stock - variant.reserved : p.stock - p.reserved)) return fail("stock", p.name);
     stockUsed.set(key, used);
     totalCents += p.priceCents * line.quantity;
   }
@@ -151,11 +157,11 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
       for (const [key, qty] of stockUsed) {
         const [slug, label] = key.split("\u0000");
         const ok = await reserveStock(tx, { slug, label: label || null }, qty, { id: user?.id ?? null, label: email }, number);
-        if (!ok) throw new StockError();
+        if (!ok) throw new StockError(bySlug.get(slug)?.name ?? slug);
       }
     });
   } catch (e) {
-    if (e instanceof StockError) return fail("stock");
+    if (e instanceof StockError) return fail("stock", e.item);
     throw e;
   }
   after(() => notifyLowStock(before).catch(() => undefined));

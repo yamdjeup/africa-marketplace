@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { isAdminEmail } from "@/lib/supplier";
 import { emailApplicantDecision, emailPartnerProductDecision, emailPartnerStatus } from "@/lib/supplier-email";
 import { partnerNameTaken } from "@/lib/partner-name";
+import { changeLog, changedFields, validateContact } from "@/lib/partner-profile";
 
 // Suspendre / réactiver / révoquer un partenaire. Œuvres publiées : PUBLISHED <-> HELD (masquées du catalogue).
 export async function changePartnerStatus(formData: FormData) {
@@ -116,4 +117,37 @@ export async function bulkModerateProducts(formData: FormData) {
   }
   revalidatePath("/[locale]/admin/oeuvres", "page");
   redirect(`${dest}${dest.includes("?") ? "&" : "?"}done=${done}&dec=${ok ? "P" : "R"}`);
+}
+
+// L'admin modifie tout le profil d'un partenaire ; chaque modification est journalisée (noms des champs).
+export async function adminUpdatePartnerProfile(formData: FormData) {
+  const session = await auth();
+  if (!isAdminEmail(session?.user?.email)) redirect("/");
+  const f = (k: string, max: number) => String(formData.get(k) ?? "").trim().slice(0, max);
+  const id = f("id", 60);
+  const locale = formData.get("locale") === "en" ? "en" : "fr";
+  const back = (q: string) => redirect(`/${locale}/admin/fournisseurs/${id}/profil?${q}`);
+  const s = await db.supplier.findUnique({ where: { id } });
+  if (!s) redirect(`/${locale}/admin/fournisseurs`);
+  const next = {
+    displayName: f("displayName", 120) || s.displayName,
+    country: f("country", 80) || s.country,
+    craftType: f("craftType", 80) || s.craftType,
+    bio: f("bio", 4000),
+    bioEn: f("bioEn", 4000),
+    videoUrl: /^https?:\/\//.test(f("videoUrl", 300)) ? f("videoUrl", 300) : null,
+    contactEmail: f("contactEmail", 200),
+    phone: f("phone", 30),
+    address: f("address", 400),
+  };
+  const invalid = validateContact(next);
+  if (invalid) return back(`error=${invalid}`);
+  if (await partnerNameTaken(next.displayName, id)) return back("error=name");
+  const changed = changedFields<Record<string, unknown>>({ ...s }, next);
+  await db.$transaction(async (tx) => {
+    await tx.supplier.update({ where: { id }, data: { ...next, contactEmail: next.contactEmail || null, phone: next.phone || null, address: next.address || null } });
+    if (changed.length) await tx.partnerAudit.create({ data: { supplierId: id, action: "PROFILE_EDIT", reason: changeLog<Record<string, unknown>>({ ...s }, next), actorEmail: session?.user?.email ?? "" } });
+  });
+  revalidatePath("/[locale]/admin/fournisseurs", "page");
+  back("saved=1");
 }

@@ -42,6 +42,7 @@ DerniÃ¨re exÃ©cution (11/11/2026, lot admin + e-mails de retour) : Vitest 62
 | A-F16 | F | E-mails partenaire envoyÃ©s Ã  l'e-mail de contact du profil, repli sur l'e-mail du compte (partnerRecipient) | `tests/unit/partner-recipient.test.ts` (Vitest) | Ã€ lancer | T-EMAIL-CONTACT |
 | A-F17 | F | Â« use server Â» en premiÃ¨re instruction de tous les fichiers *actions.ts (Ã©vite l'Ã©chec du build Vercel) | `tests/unit/use-server.test.ts` (Vitest) | OK 1/1 â€” 12/11/2026 | â€” |
 | A-F18 | F | Paiement avant commande : rÃ©servation 30 min sans commande ni e-mail ; commande + colis crÃ©Ã©s une seule fois au paiement (idempotent) ; reconfirmation du mÃªme acheteur ; libÃ©ration/balayage ; paiement aprÃ¨s expiration (re-rÃ©servation, sinon aucune commande + remboursement) ; erreur de stock nominative | `tests/unit/checkout-hold.db.test.ts` (Vitest, base jetable `TEST_DATABASE_URL`, exÃ©cutÃ© en CI) ; filtre archivage dans `tests/unit/admin-list.test.ts` | Ã€ lancer en CI (non exÃ©cutable sans PostgreSQL local) | T-PAIEMENT-AVANT-COMMANDE, T-RESERVATION-IMPAYEE, T-STOCK-NOM, T-ARCHIVAGE |
+| A-F19 | F | Archivage des commandes impayées (simulation sans écriture ; ignore expédiées/remboursées) | `tests/unit/archive-unpaid.test.ts` (Vitest) | À lancer | T-ARCHIVAGE |
 | A-F9 | F | Mur d'accÃ¨s : API et images hors exemptions bloquÃ©es (401), artworks e-mail publics (â‰  401), manifeste/icÃ´nes PWA | `e2e/access.spec.ts` (Playwright) | OK 5/5 en local â€” 11/11/2026 (CI Ã  relancer) | â€” |
 
 Parcours Playwright historiques (`e2e/journey.spec.ts`, `access.spec.ts`, `alerts.spec.ts`, `search.spec.ts`, `order-email.spec.ts`, `mobile.spec.ts`) : inchangÃ©s, non relancÃ©s dans ce lot.
@@ -423,7 +424,8 @@ Prérequis : Stripe en mode test (carte 4242 4242 4242 4242), webhook `checkout.
 3. Panier de 2 pièces dont une seule épuisée : le message cite la pièce épuisée.
 
 ### T-ARCHIVAGE — Anciennes commandes jamais payées archivées — 10 min — À tester — date : —
-1. Simulation : `npm run db:archive-unpaid` (DATABASE_URL de la base visée, définie dans cmd pour la commande seulement). Attendu : liste dont AM-C83CA71A et AM-C08665C5 ; aucune commande payée/remboursée/expédiée listée ; rien modifié.
+0. Depuis Vercel (route temporaire, connecté en admin) : ouvrir `https://epomta.com/api/admin/archive-unpaid` (simulation JSON) ; l'exécution se fait par POST (console du navigateur : `fetch("/api/admin/archive-unpaid",{method:"POST"}).then(r=>r.json()).then(console.log)`). Non-admin : 403. Puis supprimer la route.
+1. Simulation locale : `npm run db:archive-unpaid` (DATABASE_URL de la base visée, définie dans cmd pour la commande seulement). Attendu : liste dont AM-C83CA71A et AM-C08665C5 ; aucune commande payée/remboursée/expédiée listée ; rien modifié.
 2. Exécution : `npm run db:archive-unpaid -- --execute`.
 3. Attendu : ces commandes disparaissent des listes acheteur, partenaire et admin et des compteurs ; les commandes payées sont inchangées ; relancer la simulation : 0 commande.
 ### T-PROFIL-PARTENAIRE â€” Le partenaire modifie son profil â€” 5 min â€” Ã€ tester â€” date : â€”

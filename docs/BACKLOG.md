@@ -201,3 +201,4 @@ Reste à faire :
 
 ## Lot colis / profil partenaire (12/11/2026)
 - Fait : coordonnées partenaire (adresse, e-mail, téléphone), édition admin et partenaire, journal des modifications (ancienne/nouvelle valeur ; renommages antérieurs non tracés), libération auto des réservations impayées (30 min), erreur de stock nommant l'article.
+- À faire : réintroduire un texte « retours » (panier, réassurance) une fois la politique de retour tranchée ; mention « Retours gratuits sous 30 jours » retirée le 12/11/2026.

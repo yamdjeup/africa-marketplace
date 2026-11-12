@@ -44,6 +44,7 @@ DerniÃ¨re exÃ©cution (11/11/2026, lot admin + e-mails de retour) : Vitest 62
 | A-F18 | F | Paiement avant commande : rÃ©servation 30 min sans commande ni e-mail ; commande + colis crÃ©Ã©s une seule fois au paiement (idempotent) ; reconfirmation du mÃªme acheteur ; libÃ©ration/balayage ; paiement aprÃ¨s expiration (re-rÃ©servation, sinon aucune commande + remboursement) ; erreur de stock nominative | `tests/unit/checkout-hold.db.test.ts` (Vitest, base jetable `TEST_DATABASE_URL`, exÃ©cutÃ© en CI) ; filtre archivage dans `tests/unit/admin-list.test.ts` | Ã€ lancer en CI (non exÃ©cutable sans PostgreSQL local) | T-PAIEMENT-AVANT-COMMANDE, T-RESERVATION-IMPAYEE, T-STOCK-NOM, T-ARCHIVAGE |
 | A-F19 | F | Archivage des commandes impayées (simulation sans écriture ; ignore expédiées/remboursées) | `tests/unit/archive-unpaid.test.ts` (Vitest) | À lancer | T-ARCHIVAGE |
 | A-F20 | F | E-mail au partenaire quand l'admin annule un colis ou à l'expiration 48 h (motif, n° de colis, lien) | `tests/unit/partner-cancel-email.test.ts` (Vitest) | À lancer | T-ANNUL-ADMIN-PARTENAIRE |
+| A-F21 | F | E-mail « Votre pièce est de nouveau disponible » (FR/EN, lien fiche, disponibilité non garantie) | `tests/unit/restock-watch.test.ts` (Vitest) | À lancer | T-RETOUR-DISPO |
 | A-F9 | F | Mur d'accÃ¨s : API et images hors exemptions bloquÃ©es (401), artworks e-mail publics (â‰  401), manifeste/icÃ´nes PWA | `e2e/access.spec.ts` (Playwright) | OK 5/5 en local â€” 11/11/2026 (CI Ã  relancer) | â€” |
 
 Parcours Playwright historiques (`e2e/journey.spec.ts`, `access.spec.ts`, `alerts.spec.ts`, `search.spec.ts`, `order-email.spec.ts`, `mobile.spec.ts`) : inchangÃ©s, non relancÃ©s dans ce lot.
@@ -429,7 +430,12 @@ Prérequis : Stripe en mode test (carte 4242 4242 4242 4242), webhook `checkout.
 2. Attendu : l'acheteur reçoit l'e-mail d'annulation ET le partenaire reçoit « colis … annulé » (motif, n° de colis, bouton vers sa commande) sur son e-mail de contact (sinon e-mail du compte).
 3. Refus par le partenaire : pas d'e-mail à lui-même. Expiration 48 h : e-mail au partenaire.
 
-### T-ARCHIVAGE — Anciennes commandes jamais payées archivées — 10 min — À tester — date : —
+### T-RETOUR-DISPO — Prévenu quand une pièce redevient disponible — 15 min — À tester — date : —
+1. Compte A : mettre une pièce unique au panier, « Confirmer » (réservation 30 min), ne pas payer, revenir en arrière.
+2. Compte B (autre navigateur, pièce NON en favori) : tenter la même pièce : message « plus disponible » (tentative mémorisée).
+3. Laisser expirer la réservation de A (ou annuler le paiement), puis lancer /api/alerts/run (ou attendre le cron).
+4. Attendu : A et B reçoivent UNE fois « Votre pièce est de nouveau disponible » (nom, image, lien fiche, « premier arrivé, premier servi, disponibilité non garantie »).
+5. Relancer /api/alerts/run : aucun doublon. Si la pièce est en favori de A : A reçoit seulement l Anciennes commandes jamais payées archivées — 10 min — À tester — date : —
 0. Archivage de prod fait le 12/11/2026 via une route temporaire (5 commandes archivées, route supprimée).
 1. Simulation locale : `npm run db:archive-unpaid` (DATABASE_URL de la base visée, définie dans cmd pour la commande seulement). Attendu : liste dont AM-C83CA71A et AM-C08665C5 ; aucune commande payée/remboursée/expédiée listée ; rien modifié.
 2. Exécution : `npm run db:archive-unpaid -- --execute`.

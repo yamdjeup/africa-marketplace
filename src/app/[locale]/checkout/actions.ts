@@ -14,6 +14,7 @@ import { sendOrderEmail } from "@/lib/order-email";
 import { isAddressEditable, isOrderOwner } from "@/lib/order-edit";
 import { notifySubOrder, runSubOrderSweep } from "@/lib/order-notify";
 import { createCheckoutSession, stripeEnabled } from "@/lib/stripe-checkout";
+import { recordWatch } from "@/lib/restock-watch";
 import { attachSession, buyerKeyOf, consumeHold, createHold, releaseBuyerHolds, releaseHold, StockError, type HoldPayload } from "@/lib/checkout-hold";
 import { notifyLowStock, snapshotAvail } from "@/lib/stock-alerts";
 
@@ -102,7 +103,10 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
     if (p.variants.length > 0 ? !variant : sizes.length > 0 ? !line.size || !sizes.includes(line.size) : line.size !== null) return fail("unknown");
     const key = `${p.slug}\u0000${line.size ?? ""}`;
     const used = (stockUsed.get(key) ?? 0) + line.quantity;
-    if (used > (variant ? variant.stock - variant.reserved : p.stock - p.reserved)) return fail("stock", p.name);
+    if (used > (variant ? variant.stock - variant.reserved : p.stock - p.reserved)) {
+      await recordWatch(db, { buyerKey: buyerKeyOf(user?.id ?? null, email), email, locale, slugs: [p.slug], source: "BLOCKED" }).catch(() => undefined);
+      return fail("stock", p.name);
+    }
     stockUsed.set(key, used);
     totalCents += p.priceCents * line.quantity;
   }
@@ -135,7 +139,10 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
   try {
     await createHold(db, payload, number);
   } catch (e) {
-    if (e instanceof StockError) return fail("stock", e.item);
+    if (e instanceof StockError) {
+      await recordWatch(db, { buyerKey: buyerKeyOf(user?.id ?? null, email), email, locale, slugs: payload.lines.map((l) => l.slug), source: "BLOCKED" }).catch(() => undefined);
+      return fail("stock", e.item);
+    }
     throw e;
   }
   after(() => notifyLowStock(before).catch(() => undefined));

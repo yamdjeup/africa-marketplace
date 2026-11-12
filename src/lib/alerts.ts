@@ -2,6 +2,7 @@ import "server-only";
 import { db } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
 import { buildAlertEmail, buildAlertPush, detectAlert, type AlertItem } from "@/lib/alerts-core";
+import { notifyRestockWatches } from "@/lib/restock-watch";
 import { sendPushToUser } from "@/lib/push";
 
 const MAX_EMAILS_PER_RUN = 100;
@@ -67,5 +68,7 @@ export async function runAlerts(limit = MAX_EMAILS_PER_RUN) {
     if (await send(u.email, buildAlertEmail({ kind: "new", locale: "fr", userId: u.id, items }))) ok = true;
     if (ok) await db.user.update({ where: { id: u.id }, data: { promoSince: new Date() } });
   }
+  // 3) Pièces de nouveau disponibles pour les acheteurs dont la réservation a échoué (hors favoris, hors déjà achetées).
+  if (sent + failed < limit) sent += await notifyRestockWatches(db, async (to, m) => sendEmail({ to, ...m }), limit - sent - failed);
   return { sent, failed, pushed };
 }

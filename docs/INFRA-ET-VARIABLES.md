@@ -19,8 +19,11 @@
 | Admin du site (`ADMIN_EMAILS`) | africamadolo@gmail.com |
 | Client de test | uccle20@gmail.com |
 | Expéditeur des e-mails (`MAIL_FROM`) | contact@epomta.com |
-| Client OAuth Google « Epomta web » (créé le 3 nov. 2026) | Compte Google propriétaire : **À confirmer** (lolipat ou africamadolo) |
-| Vercel, Neon, Stripe, Resend, OVH, GA4 : e-mail du compte | À compléter |
+| Client OAuth Google « Epomta web » (projet `epomta-demo`, créé le 3 nov. 2026) | africamadolo@gmail.com |
+| Vercel (compte yamdjeup, plan Hobby) | yamdjeup@gmail.com |
+| Neon (compte yamdjeup, organisation `africa-marketplace`, plan Free, région Frankfurt) | yamdjeup@gmail.com |
+| Partenaire de test LoliPat | lolipat2026@gmail.com |
+| Stripe, Resend, OVH, GA4, Apple Developer : e-mail du compte | À compléter |
 
 ## 3. Variables par service
 
@@ -51,7 +54,7 @@ Crons (`vercel.json`) : `/api/alerts/run` à 07:00 UTC, `/api/orders/sweep` à 0
 | `TEST_DATABASE_URL` | T, L | Branche Neon **jetable** pour tests ; jamais la prod | Oui | Neon > branche de test > Reset password |
 | `NEON_DATABASE_URL` (secret GitHub) | CI | Utilisé par un workflow (déploiement/migrations) | Oui | Neon |
 
-Compte Neon / projet / branche de test : À compléter.
+Compte Neon : yamdjeup@gmail.com (organisation `africa-marketplace`). Nom du projet / branche de test : À compléter.
 
 ### Stripe (mode test uniquement)
 | Variable | Env. | Rôle | Sensible | Où régénérer |
@@ -76,7 +79,7 @@ Pas de clé live. Compte Stripe / e-mail : À compléter.
 | `GOOGLE_PLACES_API_KEY` | P (optionnel) | Saisie d'adresse (Places API New), restreinte | Oui | Google Cloud |
 | `GOOGLE_TRANSLATE_API_KEY`, `DEEPL_API_KEY`, `DEEPL_API_URL`, `TRANSLATE_PROVIDER` | optionnel | Traduction automatique, si activée | Clés : oui | À compléter |
 
-Compte Google Cloud / projet : À compléter (voir §2).
+Compte Google Cloud : africamadolo@gmail.com, projet `epomta-demo`.
 
 ### Autres connexions sociales (optionnel, inactives si vides)
 `AUTH_FACEBOOK_ID`, `AUTH_FACEBOOK_SECRET`, `AUTH_APPLE_ID`, `AUTH_APPLE_SECRET` : secrets sensibles ; callback `https://epomta.com/api/auth/callback/<fournisseur>`.
@@ -108,3 +111,29 @@ Pas de variable. Enregistrements DNS : A/CNAME vers Vercel, enregistrements SPF/
 ## 5. Réglages externes liés au domaine officiel `epomta.com`
 
 Redirect URI Google (et Facebook/Apple) ; endpoint webhook Stripe `https://epomta.com/api/stripe/webhook` ; domaine d'envoi Resend vérifié ; `NEXT_PUBLIC_SITE_URL=https://epomta.com` ; `capacitor.config.ts` (app mobile) pointe encore sur `epomta-demo.vercel.app`.
+
+## 6. Plans tarifaires à adopter pour la mise en production commerciale
+
+> Tarifs et conditions **à vérifier sur les pages officielles** de chaque service avant décision.
+
+| Service | Situation actuelle | Action pour l'ouverture commerciale |
+|---|---|---|
+| Vercel | Hobby (usage non commercial ; stockage Functions à 7,76 / 10 Go) | Passer à **Pro** (usage commercial obligatoire, quotas supérieurs) |
+| Neon | Free (Frankfurt) | Passer à **Launch** : base toujours active, restauration à un instant donné, branches protégées |
+| Stripe | Sandbox (clés test) | Compte **live** : vérification de l'entreprise, compte bancaire, clés live, **nouveau webhook** live, commission par transaction à intégrer dans les prix |
+| Google Cloud | Application OAuth en mode test | **Publier** l'app OAuth (hors mode test), écran de consentement complet ; surveiller les quotas Places |
+| Resend | Offre actuelle À compléter | Vérifier le quota d'envoi mensuel et passer au plan adapté |
+| OVH | Domaine epomta.com | Renouvellement automatique, DNS à jour, contact titulaire exact ; réserver **epomta.eu / epomta.fr** |
+| GitHub | Dépôt privé | Vérifier le plan (Actions, minutes CI) |
+| GA4 | Gratuit | Vérifier la conformité du consentement |
+| Traduction (DEEPL_*, GOOGLE_TRANSLATE_*) | Optionnel | Vérifier les quotas et la facturation si activée |
+
+## 7. Checklist pré-ouverture
+
+- [ ] Retirer le mur d'accès (SITE_ACCESS_PASSWORD) **seulement après** régularisation des droits d'image
+- [ ] Passer aux clés Stripe live et au webhook live
+- [ ] Régénérer les secrets exposés (voir §4)
+- [ ] Renseigner les vrais numéros de téléphone (CONTACT_PHONE_LOCAL, CONTACT_PHONE_INTL)
+- [ ] Relecture CNIL (mentions, cookies, données personnelles)
+- [ ] Politique de retour validée (qui paie le retour, remboursements partiels)
+- [ ] Plans Vercel Pro et Neon Launch activés

@@ -39,6 +39,7 @@ Dernière exécution (11/11/2026, lot admin + e-mails de retour) : Vitest 62 OK 
 | A-F13 | F | Mur d'accès actif sur epomta.com, www.epomta.com et epomta-demo.vercel.app (page, API ; exemptions webhook/médias conservées) ; robots.txt Disallow + noindex | `tests/unit/wall-hosts.test.ts` (Vitest) + `e2e/access.spec.ts` | OK 3/3 unit — 12/11/2026 | T-MUR-EPOMTA |
 | A-F14 | F | Transporteur « Autre » → « Other » en EN (`carrierLabel`) ; image exemple non bloquée par le mur (`/images/examples/*`) | `tests/unit/partner-profile.test.ts`, `tests/unit/proxy-images.test.ts` (Vitest) | À lancer | T-AUTRE-EN, T-IMG-EXEMPLE |
 | A-F15 | F | Profil partenaire : validation e-mail/téléphone/adresse ; journal « champ : ancienne → nouvelle valeur » | `tests/unit/partner-profile.test.ts` (Vitest) | À lancer | T-PROFIL-PARTENAIRE, T-PROFIL-ADMIN || A-F10 | F | Montants des e-mails au format de la langue (EN « €55.00 », FR « 55,00 € ») | `tests/unit/money-locale.test.ts` (Vitest) | OK 2/2 — 11/11/2026 | T-MAILS (format EN) |
+| A-F16 | F | E-mails partenaire envoyés à l'e-mail de contact du profil, repli sur l'e-mail du compte (partnerRecipient) | `tests/unit/partner-recipient.test.ts` (Vitest) | À lancer | T-EMAIL-CONTACT |
 | A-F9 | F | Mur d'accès : API et images hors exemptions bloquées (401), artworks e-mail publics (≠ 401), manifeste/icônes PWA | `e2e/access.spec.ts` (Playwright) | OK 5/5 en local — 11/11/2026 (CI à relancer) | — |
 
 Parcours Playwright historiques (`e2e/journey.spec.ts`, `access.spec.ts`, `alerts.spec.ts`, `search.spec.ts`, `order-email.spec.ts`, `mobile.spec.ts`) : inchangés, non relancés dans ce lot.
@@ -429,9 +430,18 @@ Statut : À tester — Date : —
 
 ### T-NOM-ENTETE — Nom du partenaire dans l'en-tête — 2 min — À tester — date : —
 1. Partenaire : renommer le profil (ex. Mia-Mia) et enregistrer.
-2. Recharger : le nom dans l'en-tête du compte est le nouveau nom.
+2. Recharger : le nom dans le menu compte (en-tête) et sur la page « Mon compte » est le nouveau nom, sans reconnexion.
+3. Même contrôle après un renommage par l'admin (Modifier le profil). Note : les comptes renommés avant ce correctif sont resynchronisés au prochain renommage ; l'en-tête lit déjà le nom du profil partenaire.
 
 ### T-TABLEAU-PARTENAIRES — Tableau compact des partenaires — 5 min — À tester — date : —
 1. Admin, Partenaires : tableau Nom, Pays, Savoir-faire, Commission (%), Statut, E-mail, Date, Actions.
 2. Tester recherche, onglets de statut, tri par date, pagination.
-3. « Suspendre / révoquer… » : déplie le formulaire avec motif et confirmation ; « Modifier le profil » et « Gérer les créations » fonctionnent.
+3. Une seule ligne (~40 px) par partenaire ; colonne Actions alignée à droite : « Modifier le profil », « Gérer les créations », « Statut… ».
+4. « Statut… » ouvre une fenêtre : action (Suspendre/Révoquer ou Réactiver), motif obligatoire (sauf réactivation), Valider ; sans motif, la validation est refusée. Annuler ferme la fenêtre sans effet.
+
+### T-EMAIL-CONTACT — E-mails partenaire vers l'e-mail de contact — 8 min — À tester — date : —
+1. Admin : « Modifier le profil » de Mia-Mia, mettre une autre adresse dans « E-mail de contact », enregistrer.
+2. Client : passer une commande contenant une pièce de Mia-Mia.
+3. Attendu : l'e-mail « nouvelle commande » arrive sur l'adresse de contact, pas sur l'e-mail de connexion.
+4. Vider l'e-mail de contact, refaire une commande : l'e-mail arrive sur l'e-mail de connexion (repli).
+5. Contrôler aussi : annulation client, suspension/réactivation, versement (même adresse). L'e-mail de connexion reste inchangé. (A-F16 couvre la règle.)

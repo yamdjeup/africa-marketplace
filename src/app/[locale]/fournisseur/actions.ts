@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 "use server";
 
 import { cookies } from "next/headers";
@@ -78,7 +79,9 @@ export async function updateSupplierProfile(formData: FormData) {
       ...(formData.has("signatureUrl") ? { signatureFileId: await ownedMediaId(s(formData, "signatureUrl", 400), ctx.supplier.userId) } : {}),
     },
   });
+  if (after.displayName !== before.displayName && ctx.supplier.userId) await db.user.update({ where: { id: ctx.supplier.userId }, data: { name: String(after.displayName) } });
   if (formData.has("avatarUrl")) await saveAvatar(ctx.supplier, s(formData, "avatarUrl", 400));
+  revalidatePath("/", "layout");
   redirect(`/${locale}/fournisseur/profil?saved=1`);
 }
 

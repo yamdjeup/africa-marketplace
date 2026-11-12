@@ -66,11 +66,11 @@ export default async function SuppliersPage({ params, searchParams }: { params: 
       <div className="overflow-x-auto rounded-lg border bg-card">
         <table className="w-full text-left text-sm">
           <thead className="bg-muted/50"><tr>
-            {[["Nom", "Name"], ["Pays", "Country"], ["Savoir-faire", "Craft"], ["Commission (%)", "Commission (%)"], ["Statut", "Status"], ["E-mail", "Email"], ["Date", "Date"], ["Actions", "Actions"]].map((h) => <th key={h[0]} className="p-2">{tr(locale, h[0], h[1])}</th>)}
+            {[["Nom", "Name"], ["Pays", "Country"], ["Savoir-faire", "Craft"], ["Commission (%)", "Commission (%)"], ["Statut", "Status"], ["E-mail", "Email"], ["Date", "Date"], ["Actions", "Actions"]].map((h) => <th key={h[0]} className={`p-2${h[0] === "Actions" ? " text-right" : ""}`}>{tr(locale, h[0], h[1])}</th>)}
           </tr></thead>
           <tbody>
             {list.map((s) => (
-              <tr key={s.id} className="border-t align-top">
+              <tr key={s.id} className="border-t align-middle">
                 <td className="p-2 font-medium">{s.displayName}</td>
                 <td className="p-2">{s.country}</td>
                 <td className="p-2">{s.craftType}</td>
@@ -78,8 +78,8 @@ export default async function SuppliersPage({ params, searchParams }: { params: 
                 <td className="p-2"><span className="rounded-full bg-muted px-2 py-0.5 text-xs">{s.status === "ACTIVE" ? tr(locale, "Actif", "Active") : s.status === "SUSPENDED" ? tr(locale, "Suspendu", "Suspended") : tr(locale, "Révoqué", "Revoked")}</span></td>
                 <td className="break-all p-2">{s.isDemo ? tr(locale, "interne", "internal") : s.user?.email ?? "—"}</td>
                 <td className="whitespace-nowrap p-2">{s.createdAt.toLocaleDateString(dateFmt)}</td>
-                <td className="space-y-2 p-2">
-                  <div className="flex flex-wrap gap-2">
+                <td className="p-2">
+                  <div className="flex items-center justify-end gap-2 whitespace-nowrap">
                     {s.isDemo && (
                       <form action={setViewAs}>
                         <input type="hidden" name="locale" value={locale} />
@@ -89,15 +89,9 @@ export default async function SuppliersPage({ params, searchParams }: { params: 
                     )}
                     {!s.isDemo && <Link href={`/${locale}/admin/fournisseurs/${s.id}/profil`} className={buttonVariants({ variant: "outline", size: "sm", className: "min-h-11" })}>{tr(locale, "Modifier le profil", "Edit profile")}</Link>}
                     {!s.isDemo && s.status === "ACTIVE" && <Link href={`/${locale}/admin/fournisseurs/${s.id}/oeuvres`} className={buttonVariants({ variant: "outline", size: "sm", className: "min-h-11" })}>{tr(locale, "Gérer les créations", "Manage creations")}</Link>}
+                    {!s.isDemo && s.status !== "REVOKED" && <PartnerActionForm id={s.id} status={s.status as "ACTIVE" | "SUSPENDED"} locale={locale} action={changePartnerStatus} />}
                   </div>
-                  {!s.isDemo && s.status !== "REVOKED" && (
-                    <details>
-                      <summary className="min-h-11 cursor-pointer py-2 underline">{tr(locale, "Suspendre / révoquer…", "Suspend / revoke…")}</summary>
-                      <PartnerActionForm id={s.id} status={s.status as "ACTIVE" | "SUSPENDED"} locale={locale} action={changePartnerStatus} />
-                    </details>
-                  )}
-                </td>
-              </tr>
+                </td>              </tr>
             ))}
           </tbody>
         </table>
@@ -122,7 +116,7 @@ export default async function SuppliersPage({ params, searchParams }: { params: 
             </tr></thead>
             <tbody>
               {events.map((e) => (
-                <tr key={e.id} className="border-t align-top">
+                <tr key={e.id} className="border-t align-middle">
                   <td className="whitespace-nowrap p-2">{e.at.toLocaleString(dateFmt)}</td>
                   <td className="p-2">{names.get(e.supplierId) ?? e.supplierId}</td>
                   <td className="p-2"><strong>{actionLabels[e.action] ? tr(locale, ...actionLabels[e.action]) : e.action}</strong></td>

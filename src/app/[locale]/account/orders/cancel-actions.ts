@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { notifySubOrder } from "@/lib/order-notify";
 import { settleSubRefund } from "@/lib/refund";
 import { cancelSub } from "@/lib/suborders";
+import { partnerRecipient } from "@/lib/partner-recipient";
 import { safeSend } from "@/lib/supplier-email";
 
 const CUSTOMER_CANCEL_REASON = "Annulée par le client depuis son compte";
@@ -27,6 +28,7 @@ export async function cancelMySubOrder(formData: FormData) {
   await notifySubOrder("CANCELLED", id);
   const supplier = await db.supplier.findUnique({ where: { id: sub.supplierId } });
   const owner = supplier?.userId ? await db.user.findUnique({ where: { id: supplier.userId } }) : null;
-  if (owner?.email) await safeSend(owner.email, `E póm ta’ — commande ${sub.number} annulée par le client`, [`Bonjour ${supplier?.displayName ?? ""},`, `Le client a annulé la commande ${sub.number} avant expédition. Merci de ne pas la préparer ; le stock réservé est libéré.`]);
+  const to = supplier ? partnerRecipient(supplier, owner?.email) : null;
+  if (to) await safeSend(to, `E póm ta’ — commande ${sub.number} annulée par le client`, [`Bonjour ${supplier?.displayName ?? ""},`, `Le client a annulé la commande ${sub.number} avant expédition. Merci de ne pas la préparer ; le stock réservé est libéré.`]);
   revalidatePath("/", "layout");
 }

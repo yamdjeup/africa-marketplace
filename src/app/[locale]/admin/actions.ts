@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { isAdminEmail } from "@/lib/supplier";
 import { emailApplicantDecision, emailPartnerProductDecision, emailPartnerStatus } from "@/lib/supplier-email";
 import { partnerNameTaken } from "@/lib/partner-name";
+import { partnerRecipient } from "@/lib/partner-recipient";
 import { changeLog, changedFields, validateContact } from "@/lib/partner-profile";
 
 // Suspendre / réactiver / révoquer un partenaire. Œuvres publiées : PUBLISHED <-> HELD (masquées du catalogue).
@@ -41,7 +42,8 @@ export async function changePartnerStatus(formData: FormData) {
       await tx.supplier.update({ where: { id }, data: { displayName: "Partenaire retiré", bio: "", bioEn: "", videoUrl: null, signatureFileId: null } });
     }
   });
-  if (s.user?.email) await emailPartnerStatus({ email: s.user.email, name: s.displayName, locale: "fr" }, action as "SUSPEND" | "REACTIVATE" | "REVOKE", reason);
+  const to = partnerRecipient(s, s.user?.email);
+  if (to) await emailPartnerStatus({ email: to, name: s.displayName, locale: "fr" }, action as "SUSPEND" | "REACTIVATE" | "REVOKE", reason);
   revalidatePath("/[locale]/admin/fournisseurs", "page");
   back(`done=${action}`);
 }
@@ -86,7 +88,7 @@ export async function moderateProduct(formData: FormData) {
   const ok = decision === "PUBLISHED";
   if (!ok && decision !== "REJECTED") return;
   await db.product.update({ where: { slug }, data: { status: decision, rejectReason: ok ? null : reason, decidedAt: new Date() } });
-  if (sup.user?.email) await emailPartnerProductDecision({ email: sup.user.email, name: sup.displayName, locale: "fr" }, p.name, ok, reason, p.status === "PUBLISHED");
+  if (partnerRecipient(sup, sup.user?.email)) await emailPartnerProductDecision({ email: partnerRecipient(sup, sup.user?.email)!, name: sup.displayName, locale: "fr" }, p.name, ok, reason, p.status === "PUBLISHED");
   revalidatePath("/[locale]/admin/oeuvres", "page");
 }
 
@@ -112,7 +114,7 @@ export async function bulkModerateProducts(formData: FormData) {
     const sup = p?.supplierId ? await db.supplier.findUnique({ where: { id: p.supplierId }, include: { user: { select: { email: true } } } }) : null;
     if (!p || !sup || !(p.status === "SUBMITTED" || (p.status === "PUBLISHED" && !ok) || (p.status === "REJECTED" && ok))) continue;
     await db.product.update({ where: { slug }, data: { status: decision, rejectReason: ok ? null : reason, decidedAt: new Date() } });
-    if (sup.user?.email) await emailPartnerProductDecision({ email: sup.user.email, name: sup.displayName, locale: "fr" }, p.name, ok, reason, p.status === "PUBLISHED");
+    if (partnerRecipient(sup, sup.user?.email)) await emailPartnerProductDecision({ email: partnerRecipient(sup, sup.user?.email)!, name: sup.displayName, locale: "fr" }, p.name, ok, reason, p.status === "PUBLISHED");
     done++;
   }
   revalidatePath("/[locale]/admin/oeuvres", "page");

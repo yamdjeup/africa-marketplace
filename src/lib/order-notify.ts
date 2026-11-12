@@ -3,6 +3,7 @@ import { siteUrl } from "@/lib/alerts-core";
 import { absoluteImageUrl, renderEmailHtml } from "@/lib/email-layout";
 import { db } from "@/lib/db";
 import { safeSend } from "@/lib/supplier-email";
+import { partnerRecipient } from "@/lib/partner-recipient";
 import { carrierLabel, trackingUrl } from "@/lib/tracking";
 import { releaseUnpaidOrders, sweepSubOrders } from "@/lib/suborders";
 import { settleSubRefund } from "@/lib/refund";
@@ -28,10 +29,11 @@ export async function notifySubOrder(event: SubEvent, subOrderId: string) {
     const sold = fr ? `Vendu et expédié par ${shop} (${supplier.country}). E póm ta’ est l'intermédiaire.` : `Sold and shipped by ${shop} (${supplier.country}). E póm ta’ is the marketplace intermediary.`;
 
     if (event === "NEW" || event === "REMINDER") {
-      if (!owner?.email) return;
+      const partnerTo = partnerRecipient(supplier, owner?.email);
+      if (!partnerTo) return;
       const url = `${base}/fr/fournisseur/commandes/${sub.id}`;
       const subject = event === "NEW" ? `E póm ta’ — nouvelle commande ${sub.number}` : `E póm ta’ — rappel : commande ${sub.number} à accepter`;
-      await safeSend(owner.email, subject, [
+      await safeSend(partnerTo, subject, [
         `Bonjour ${shop},`,
         `${event === "NEW" ? "Nouvelle commande" : "Rappel : commande en attente de votre réponse"} ${sub.number} — ${list} — ${eur(sub.subtotalCents)}.`,
         `Merci de l'accepter ou de la refuser avant le ${new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeStyle: "short" }).format(sub.acceptBy)} ; sans réponse, elle est annulée et le client prévenu.`,

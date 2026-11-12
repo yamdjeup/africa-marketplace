@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { createPayout } from "@/lib/ledger";
 import { isAdminEmail } from "@/lib/supplier";
 import { emailPartnerPayout } from "@/lib/supplier-email";
+import { partnerRecipient } from "@/lib/partner-recipient";
 
 const path = "/fr/admin/versements";
 
@@ -23,7 +24,8 @@ export async function markPayoutAction(f: FormData) {
   const payout = await createPayout(db, supplierId, email);
   if (!payout) redirect(`${path}?error=nothing`);
   const s = await db.supplier.findUnique({ where: { id: supplierId }, include: { user: { select: { email: true } } } });
-  if (s?.user?.email) await emailPartnerPayout({ email: s.user.email, name: s.displayName, locale: "fr" }, payout.amountCents, payout.reference);
+  const to = s ? partnerRecipient(s, s.user?.email) : null;
+  if (s && to) await emailPartnerPayout({ email: to, name: s.displayName, locale: "fr" }, payout.amountCents, payout.reference);
   revalidatePath(path);
   redirect(`${path}?ok=paid`);
 }

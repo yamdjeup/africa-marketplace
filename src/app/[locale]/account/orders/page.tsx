@@ -21,7 +21,7 @@ export default async function OrdersPage({ params }: Props) {
   const session = await auth();
   if (!session?.user?.id) redirect(`/${locale}/login?next=${encodeURIComponent(`/${locale}/account/orders`)}`);
   const orders = await db.order.findMany({
-    where: { userId: session.user.id },
+    where: { userId: session.user.id, archivedAt: null },
     include: { items: true, subOrders: true },
     orderBy: { createdAt: "desc" },
   });

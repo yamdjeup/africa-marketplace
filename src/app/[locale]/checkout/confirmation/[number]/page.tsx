@@ -22,7 +22,25 @@ export default async function ConfirmationPage({ params, searchParams }: Props) 
   const { locale, number } = await params;
   const { t: token, updated } = await searchParams;
   const order = await db.order.findUnique({ where: { number }, include: { items: true } });
-  if (!order) notFound();
+  if (!order) {
+    // Paiement réussi mais commande pas encore créée (délai du webhook) : état d'attente, la page se rafraîchit seule.
+    const hold = await db.checkoutHold.findUnique({ where: { number }, select: { status: true, payload: true } });
+    const fr = locale !== "en";
+    if (!hold || (hold.payload as { editToken?: string }).editToken !== token) notFound();
+    const msg =
+      hold.status === "REFUNDED"
+        ? fr ? "Un article n'est plus disponible : votre paiement est remboursé et aucune commande n'a été créée." : "An item is no longer available: your payment is refunded and no order was created."
+        : hold.status === "RELEASED"
+          ? fr ? "Le paiement n'a pas été finalisé : aucune commande n'a été créée." : "The payment was not completed: no order was created."
+          : fr ? "Votre paiement est en cours de confirmation. Cette page se met à jour automatiquement." : "Your payment is being confirmed. This page updates automatically.";
+    return (
+      <div className="mx-auto max-w-2xl space-y-3 text-center">
+        {hold.status === "HELD" || hold.status === "CONSUMED" ? <meta httpEquiv="refresh" content="4" /> : null}
+        <h1 className="font-heading text-3xl text-primary">{fr ? "Commande" : "Order"} {number}</h1>
+        <p role="status" className="text-muted-foreground">{msg}</p>
+      </div>
+    );
+  }
   const session = await auth();
   const t = getDict(locale).confirmation;
   const owner = isOrderOwner(order, token, session?.user?.id);

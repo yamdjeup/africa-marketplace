@@ -70,3 +70,22 @@ export function buildOrderEmail(o: OrderEmailInput) {
 export async function sendOrderEmail(o: OrderEmailInput): Promise<void> {
   await sendEmail({ to: o.to, ...buildOrderEmail(o) });
 }
+
+/** Paiement reçu mais article épuisé entre-temps : aucune commande créée, remboursement intégral. */
+export function buildStockRefundEmail(o: { to: string; locale: "fr" | "en"; fullName: string; item: string; amountCents: number; number: string }) {
+  const fr = o.locale === "fr";
+  const amount = new Intl.NumberFormat(fr ? "fr-FR" : "en-GB", { style: "currency", currency: "EUR" }).format(o.amountCents / 100);
+  const hello = fr ? `Bonjour ${o.fullName},` : `Hello ${o.fullName},`;
+  const body = fr
+    ? `Nous sommes désolés : **${o.item}** n'est plus disponible. Votre commande n'a pas pu être créée et votre paiement de **${amount}** est intégralement remboursé (délai bancaire habituel : quelques jours).`
+    : `We are sorry: **${o.item}** is no longer available. Your order could not be created and your payment of **${amount}** is fully refunded (usual bank delay: a few days).`;
+  const title = fr ? "Votre paiement est remboursé" : "Your payment is refunded";
+  const subject = fr ? `E póm ta’ — remboursement (${o.number})` : `E póm ta’ — refund (${o.number})`;
+  const text = [hello, "", body.replace(/\*\*/g, ""), "", fr ? "Merci de votre compréhension." : "Thank you for your understanding."].join("\n");
+  const html = renderEmailHtml({ locale: o.locale, title, orderNumber: o.number, paragraphs: [hello, body], notice: fr ? "Merci de votre compréhension." : "Thank you for your understanding." });
+  return { subject, text, html };
+}
+
+export async function sendStockRefundEmail(o: Parameters<typeof buildStockRefundEmail>[0]): Promise<void> {
+  await sendEmail({ to: o.to, ...buildStockRefundEmail(o) });
+}

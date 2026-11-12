@@ -325,6 +325,8 @@ model Order {
   stripeSessionId String?
   /// Vrai entre la création de la commande et la confirmation du paiement par Stripe
   paymentPending Boolean @default(false)
+  /// Ancienne commande jamais payée, masquée des listes (trace conservée)
+  archivedAt DateTime?
   totalCents Int
   /// Statut simulé ; étendu en partie 2 (suivi de commande)
   status     String      @default("PLACED")
@@ -430,4 +432,19 @@ model OrderItem {
 
   @@index([orderId])
   @@index([subOrderId])
+}
+
+/// Réservation de stock de 30 min liée à une session Stripe Checkout. La commande n'existe qu'après paiement. status : HELD | CONSUMED | RELEASED.
+model CheckoutHold {
+  id              String   @id @default(cuid())
+  number          String   @unique
+  stripeSessionId String?  @unique
+  buyerKey        String
+  payload         Json
+  status          String   @default("HELD")
+  expiresAt       DateTime
+  createdAt       DateTime @default(now())
+
+  @@index([buyerKey, status])
+  @@index([status, expiresAt])
 }

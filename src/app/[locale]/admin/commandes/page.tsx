@@ -25,7 +25,7 @@ export default async function AdminOrders({ params, searchParams }: { params: Pr
     db.subOrder.findMany({ where, include: { order: true }, orderBy: [{ createdAt: q.asc ? "asc" : "desc" }], ...pageArgs(q.page) }),
     db.subOrder.count({ where: subOrdersWhere({ ...q, q: "", from: null, to: null, st: "todo" }) }),
   ]);
-  const orphans = q.st === "all" && !q.q && q.page === 1 ? await db.order.findMany({ where: { subOrders: { none: {} } }, include: { items: true }, orderBy: { createdAt: "desc" }, take: 25 }) : [];
+  const orphans = q.st === "all" && !q.q && q.page === 1 ? await db.order.findMany({ where: { subOrders: { none: {} }, archivedAt: null }, include: { items: true }, orderBy: { createdAt: "desc" }, take: 25 }) : [];
   const shops = await db.supplier.findMany({ where: { id: { in: [...new Set(subs.map((s) => s.supplierId))] } } });
   const path = `/${locale}/admin/commandes`;
   const tabs = [{ value: "todo", label: tr(locale, "À traiter", "To handle"), count: nTodo }, { value: "open", label: tr(locale, "En cours", "In progress") }, { value: "SHIPPED", label: tr(locale, "Expédiées", "Shipped") }, { value: "DELIVERED", label: tr(locale, "Livrées", "Delivered") }, { value: "closed", label: tr(locale, "Annulées / refusées", "Cancelled / refused") }, { value: "all", label: tr(locale, "Toutes", "All") }];

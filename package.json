@@ -24,6 +24,7 @@
     "db:examples-remove": "node scripts/db.mjs examples-remove",
     "db:seed-examples-sql": "tsx scripts/seed-examples-sql.ts",
     "db:seed-suppliers": "tsx scripts/seed-suppliers.ts",
+    "db:archive-unpaid": "tsx scripts/archive-unpaid-orders.ts",
     "db:check-stock": "tsx scripts/check-stock.ts",
     "db:check-orders": "tsx scripts/check-orders.ts",
     "db:check-translate": "tsx scripts/check-translate.ts"

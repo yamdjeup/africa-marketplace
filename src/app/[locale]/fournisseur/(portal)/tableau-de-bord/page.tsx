@@ -16,7 +16,7 @@ export default async function Dashboard({ params }: { params: Promise<{ locale: 
   const { supplier } = ctx;
   const base = `/${locale}/fournisseur`;
   await runSubOrderSweep().catch(() => undefined);
-  const counts = await db.subOrder.groupBy({ by: ["status"], where: { supplierId: supplier.id }, _count: true });
+  const counts = await db.subOrder.groupBy({ by: ["status"], where: { supplierId: supplier.id, order: { archivedAt: null } }, _count: true });
   const n = (s: string) => counts.find((c) => c.status === s)?._count ?? 0;
   return (
     <>

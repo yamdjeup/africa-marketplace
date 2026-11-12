@@ -201,4 +201,5 @@ Reste à faire :
 
 ## Lot colis / profil partenaire (12/11/2026)
 - Fait : coordonnées partenaire (adresse, e-mail, téléphone), édition admin et partenaire, journal des modifications (ancienne/nouvelle valeur ; renommages antérieurs non tracés), libération auto des réservations impayées (30 min), erreur de stock nommant l'article.
+- Fait (12/11/2026) : paiement avant commande — réservation de stock 30 min (CheckoutHold, migration 0025), commande créée au webhook `checkout.session.completed`, libération sur `checkout.session.expired` + balayage, remboursement automatique si stock épuisé ; script d'archivage `npm run db:archive-unpaid` des anciennes commandes impayées.
 - À faire : réintroduire un texte « retours » (panier, réassurance) une fois la politique de retour tranchée ; mention « Retours gratuits sous 30 jours » retirée le 12/11/2026.

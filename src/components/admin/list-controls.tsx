@@ -2,12 +2,15 @@ import Link from "next/link";
 import { inputCls } from "@/components/fournisseur/parts";
 import { pageCount, type ListQuery } from "@/lib/admin-list";
 import { tr } from "@/lib/tr";
+import { DateRangeFields } from "@/components/admin/date-range-fields";
+import { periodLabels, todayParis } from "@/components/admin/period-labels";
 import type { Locale } from "@/lib/i18n";
 
 const iso = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : "");
 
-export function listHref(path: string, q: ListQuery, over: Partial<Record<"q" | "st" | "from" | "to" | "sort" | "dir" | "p", string>>, defaultStatus: string) {
-  const v = { q: q.q, st: q.st, from: iso(q.from), to: iso(q.to), sort: q.sort, dir: q.asc ? "asc" : "desc", p: String(q.page), ...over };
+export function listHref(path: string, q: ListQuery, over: Partial<Record<"q" | "st" | "d" | "from" | "to" | "sort" | "dir" | "p", string>>, defaultStatus: string) {
+  const custom = (over.d ?? q.d) === "custom";
+  const v = { q: q.q, st: q.st, d: q.d === "all" ? "" : q.d, from: custom ? iso(q.from) : "", to: custom ? iso(q.to) : "", sort: q.sort, dir: q.asc ? "asc" : "desc", p: String(q.page), ...over };
   const u = new URLSearchParams();
   for (const [k, val] of Object.entries(v)) if (val && !(k === "st" && val === defaultStatus) && !(k === "p" && val === "1")) u.set(k, val);
   const s = u.toString();
@@ -32,8 +35,7 @@ export function ListFilters({ locale, path, q, tabs, defaultStatus, sorts }: { l
       <form method="get" action={path} className="flex flex-wrap items-end gap-2">
         <input type="hidden" name="st" value={q.st} />
         <label className="text-xs">{tr(locale, "Recherche", "Search")}<input name="q" defaultValue={q.q} className={`${inputCls} w-56`} /></label>
-        <label className="text-xs">{tr(locale, "Du", "From")}<input type="date" name="from" defaultValue={iso(q.from)} className={inputCls} /></label>
-        <label className="text-xs">{tr(locale, "Au", "To")}<input type="date" name="to" defaultValue={iso(q.to)} className={inputCls} /></label>
+        <DateRangeFields mode={q.d} from={iso(q.from)} to={iso(q.to)} today={todayParis()} disabled={false} inputCls={inputCls} labels={periodLabels(locale)} />
         {sorts && (
           <label className="text-xs">{tr(locale, "Tri", "Sort")}
             <select name="sort" defaultValue={q.sort} className={inputCls}>{sorts.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>

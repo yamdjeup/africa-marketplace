@@ -3,18 +3,15 @@ import { Pill, inputCls } from "@/components/fournisseur/parts";
 import { db } from "@/lib/db";
 import { getPortalContext } from "@/lib/supplier";
 import { tr } from "@/lib/tr";
-import { MOVEMENT_LABELS } from "@/lib/stock";
-import { StockFilters } from "@/components/marketplace/stock-filters";
-import { journalOrder, journalWhere } from "@/lib/stock-journal";
 import type { Locale } from "@/lib/i18n";
 import { PhotoLightbox } from "@/components/admin/table-widgets";
 import { PAGE_SIZE, WAIT_ALERT_H, WAIT_WARN_H, waitHours, waitLabel } from "@/lib/admin-works";
 import { PTABS, ptabOf, queryPartnerWorks, availOf, type PTab, type PWorkParams } from "@/lib/partner-works";
 
-export const metadata = { title: "Créations et stock", robots: { index: false } };
+export const metadata = { title: "Créations", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
-type Props = { params: Promise<{ locale: Locale }>; searchParams: Promise<PWorkParams & { saved?: string; error?: string; mp?: string; jq?: string; jt?: string; jfrom?: string; jto?: string; jwho?: string; jr?: string; jdir?: string }> };
+type Props = { params: Promise<{ locale: Locale }>; searchParams: Promise<PWorkParams & { saved?: string; error?: string}> };
 
 const STATUS: Record<string, [string, string, string]> = {
   DRAFT: ["Brouillon", "Draft", "bg-muted text-foreground"],
@@ -35,33 +32,20 @@ export default async function WorksPage({ params, searchParams }: Props) {
   const fr = locale !== "en";
   const tab = ptabOf(sp.f);
   const page = Math.max(1, Math.trunc(Number(sp.p)) || 1);
-  const mpage = Math.max(1, Math.trunc(Number(sp.mp)) || 1);
   const supplierId = ctx.supplier.id;
   const dtf = (d: Date | null) => (d ? d.toLocaleString(fr ? "fr-FR" : "en-GB", { timeZone: "Europe/Paris", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—");
   const nowMs = new Date().getTime();
 
   const { list, total, counts, isLow } = await queryPartnerWorks(supplierId, sp, { page });
-  const own = await db.product.findMany({ where: { supplierId }, select: { slug: true, name: true, nameEn: true } });
-  const slugs = own.map((o) => o.slug);
-  const titleOf = new Map(own.map((o) => [o.slug, fr ? o.name : o.nameEn]));
-  const jsp = { q: sp.jq, t: sp.jt, from: sp.jfrom, to: sp.jto, who: sp.jwho, r: sp.jr, dir: sp.jdir };
-  const jwhere = await journalWhere(jsp, slugs);
-  const [moves, movesTotal, cats] = await Promise.all([
-    db.stockMovement.findMany({ where: jwhere, orderBy: journalOrder(jsp), skip: (mpage - 1) * PAGE_SIZE, take: PAGE_SIZE }),
-    db.stockMovement.count({ where: jwhere }),
-    db.category.findMany({ orderBy: { sortOrder: "asc" }, select: { slug: true, name: true, nameEn: true } }),
-  ]);
+  const cats = await db.category.findMany({ orderBy: { sortOrder: "asc" }, select: { slug: true, name: true, nameEn: true } });
   const catName = new Map(cats.map((c) => [c.slug, fr ? c.name : c.nameEn]));
-  const variantIds = [...new Set(moves.map((m) => m.variantId).filter((x): x is string => !!x))];
-  const variantLabel = new Map((await db.productVariant.findMany({ where: { id: { in: variantIds } }, select: { id: true, label: true } })).map((v) => [v.id, v.label]));
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const mpages = Math.max(1, Math.ceil(movesTotal / PAGE_SIZE));
 
   const base = `/${locale}/fournisseur/oeuvres`;
   const href = (o: Record<string, string | undefined>) => {
     const u = new URLSearchParams();
     const merged: Record<string, string | undefined> = { ...sp, ...o };
-    for (const k of [...KEYS, "p", "mp", "jq", "jt", "jfrom", "jto", "jwho", "jr", "jdir"]) if (merged[k]) u.set(k, merged[k]!);
+    for (const k of [...KEYS, "p"]) if (merged[k]) u.set(k, merged[k]!);
     return `${base}?${u.toString()}`;
   };
   const csvHref = `/api/partner/works?${new URLSearchParams(Object.entries(sp).filter(([k, v]) => (KEYS as readonly string[]).includes(k) && typeof v === "string" && v) as [string, string][]).toString()}`;
@@ -71,7 +55,7 @@ export default async function WorksPage({ params, searchParams }: Props) {
   const th = "whitespace-nowrap px-2 py-2";
   const showWait = tab === "all" || tab === "SUBMITTED";
   const showReason = tab === "all" || tab === "REJECTED";
-  const pager = (cur: number, n: number, key: "p" | "mp") => (
+  const pager = (cur: number, n: number, key: "p") => (
     <nav aria-label="Pagination" className="flex flex-wrap items-center gap-3 text-sm">
       {cur > 1 ? <Link className="underline" href={href({ [key]: String(cur - 1) })}>← {tr(locale, "Précédent", "Previous")}</Link> : <span className="text-muted-foreground">←</span>}
       <span>{tr(locale, "Page", "Page")} {cur} / {n}</span>
@@ -82,7 +66,7 @@ export default async function WorksPage({ params, searchParams }: Props) {
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-heading text-3xl text-primary">{tr(locale, "Créations et stock", "Creations and stock")}</h1>
+        <h1 className="font-heading text-3xl text-primary">{tr(locale, "Créations", "Creations")}</h1>
         {!ctx.viewingAs && <Link href={`${base}/nouvelle`} className="inline-flex min-h-11 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">{tr(locale, "Ajouter une création", "Add a creation")}</Link>}
       </div>
       {sp.saved && <p role="status" className="rounded-md border border-accent bg-accent/15 p-3 text-sm">{tr(locale, "Enregistré.", "Saved.")}</p>}
@@ -204,39 +188,6 @@ export default async function WorksPage({ params, searchParams }: Props) {
           {pager(Math.min(page, pages), pages, "p")}
         </div>
       )}
-
-      <section className="space-y-3">
-        <h2 className="font-heading text-2xl text-primary">{tr(locale, "Journal des mouvements de stock", "Stock movement log")}</h2>
-        <StockFilters pf="j" locale={locale} sp={jsp} action={base} hidden={Object.fromEntries(KEYS.map((k) => [k, sp[k as keyof typeof sp] as string | undefined]))} />
-        {moves.length === 0 ? <p className="text-sm text-muted-foreground">{tr(locale, "Aucun mouvement.", "No movements.")}</p> : (
-          <>
-          <ul className="space-y-2 md:hidden">
-            {moves.map((m) => (
-              <li key={m.id} className="rounded-lg border p-3 text-sm">
-                <p className="font-medium">{titleOf.get(m.productSlug) ?? m.productSlug}{m.variantId && variantLabel.get(m.variantId) ? ` — ${variantLabel.get(m.variantId)}` : ""}</p>
-                <p>{MOVEMENT_LABELS[m.type as keyof typeof MOVEMENT_LABELS]?.[fr ? "fr" : "en"] ?? m.type} · {m.quantity > 0 ? `+${m.quantity}` : m.quantity}</p>
-                <p className="text-xs text-muted-foreground">{dtf(m.createdAt)} · {m.authorLabel}{m.reason ? ` · ${m.reason}` : ""}</p>
-              </li>
-            ))}
-          </ul>
-          <div className="hidden overflow-x-auto md:block">
-            <table className="w-full min-w-[640px] text-left text-sm">
-              <thead><tr className="border-b text-xs uppercase text-muted-foreground"><th className="py-2 pr-3">Date</th><th className="pr-3">{tr(locale, "Création", "Creation")}</th><th className="pr-3">{tr(locale, "Variante", "Variant")}</th><th className="pr-3">Type</th><th className="pr-3">Qté</th><th className="pr-3">{tr(locale, "Motif", "Reason")}</th><th>{tr(locale, "Auteur", "Author")}</th></tr></thead>
-              <tbody>{moves.map((m) => (
-                <tr key={m.id} className="border-b">
-                  <td className="whitespace-nowrap py-2 pr-3">{dtf(m.createdAt)}</td>
-                  <td className="pr-3">{titleOf.get(m.productSlug) ?? m.productSlug}</td>
-                  <td className="pr-3">{(m.variantId && variantLabel.get(m.variantId)) || "—"}</td>
-                  <td className="pr-3">{MOVEMENT_LABELS[m.type as keyof typeof MOVEMENT_LABELS]?.[fr ? "fr" : "en"] ?? m.type}</td>
-                  <td className="pr-3">{m.quantity > 0 ? `+${m.quantity}` : m.quantity}</td>
-                  <td className="pr-3">{m.reason}</td><td>{m.authorLabel}</td>
-                </tr>))}</tbody>
-            </table>
-          </div>
-          </>
-        )}
-        {pager(Math.min(mpage, mpages), mpages, "mp")}
-      </section>
     </>
   );
 }

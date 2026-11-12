@@ -448,6 +448,21 @@ Prérequis : Stripe en mode test (carte 4242 4242 4242 4242), webhook `checkout.
 3. Filtrer par Motif « en attente de paiement », puis par e-mail d'un acheteur : résultats cohérents. Période Du/Au : seules les lignes de la période.
 4. Tri « Ancien d'abord » : l'ordre s'inverse (récent d'abord par défaut). Page 2 (si > 50 lignes) : les filtres sont conservés. Réinitialiser : tous les mouvements.
 5. Partenaire : Mes créations, section « Journal des mouvements de stock » : mêmes filtres ; seules SES créations apparaissent ; les filtres de la liste des créations restent actifs. Pas d'export CSV du journal (non existant).
+### T-PERIODE-FILTRES — Sélecteur de période sur tous les filtres à dates
+Statut : À tester
+1. Admin : ouvrir Candidatures, Partenaires, Commandes, Versements, Retours, Créations à modérer, Stocks.
+2. Vérifier le sélecteur « Période » : Toutes les dates (défaut), Aujourd'hui, 7 jours, 30 jours, Plage personnalisée.
+3. Choisir « Aujourd'hui » : la liste se filtre seule ; « Plage personnalisée » : saisir Du/Au puis Filtrer.
+4. Pagination : la période reste appliquée. Réinitialiser : retour à « Toutes les dates ».
+5. Partenaire : mêmes vérifications sur Commandes, Paiements et le journal de Stocks.
+
+### T-ONGLETS-STOCKS — Onglets Créations / Stocks
+Statut : À tester
+1. Partenaire : la barre affiche « Créations » et « Stocks » (plus « Créations et stock »).
+2. « Créations » : liste et gestion, sans journal.
+3. « Stocks » : par création/variante, total, réservé, dispo, badge « Stock bas »/« Épuisée », bouton « Ajuster le stock » ; dessous, journal filtrable (période incluse).
+4. Admin : onglet « Stocks » après « Retours » : stock total/réservé/dispo par création et partenaire, réservations actives (e-mail, quantité, heure d'expiration), journal filtrable.
+5. Journal admin : la colonne Création affiche le titre (+ variante + partenaire), pas le slug. Liens depuis « Gérer les créations » toujours présents.
 ### T-RETOUR-DISPO — Prévenu quand une pièce redevient disponible — 15 min — À tester — date : —
 1. Compte A : mettre une pièce unique au panier, « Confirmer » (réservation 30 min), ne pas payer, revenir en arrière.
 2. Compte B (autre navigateur, pièce NON en favori) : tenter la même pièce : message « plus disponible » (tentative mémorisée).

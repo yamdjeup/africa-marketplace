@@ -2,6 +2,9 @@ import Link from "next/link";
 import { JOURNAL_TYPES, type JournalParams } from "@/lib/stock-journal";
 import { MOVEMENT_LABELS } from "@/lib/stock";
 import { tr } from "@/lib/tr";
+import { DateRangeFields } from "@/components/admin/date-range-fields";
+import { periodLabels, todayParis } from "@/components/admin/period-labels";
+import { dateModeOf, rangeFields } from "@/lib/admin-works";
 import type { Locale } from "@/lib/i18n";
 
 const input = "h-10 rounded-md border bg-background px-2";
@@ -9,6 +12,8 @@ const input = "h-10 rounded-md border bg-background px-2";
 /** Formulaire GET de filtres du journal (conserve les autres paramètres via `hidden`). */
 export function StockFilters({ locale, sp, action, hidden, partner, pf = "" }: { pf?: string; locale: Locale; sp: JournalParams; action: string; hidden?: Record<string, string | undefined>; partner?: { id: string; displayName: string }[] }) {
   const fr = locale !== "en";
+  const mode = sp.d ? dateModeOf(sp.d) : sp.from || sp.to ? "custom" : "all";
+  const range = mode === "custom" ? { from: sp.from ?? "", to: sp.to ?? "" } : rangeFields({ d: mode });
   return (
     <form method="get" action={action} className="flex flex-wrap items-end gap-3 text-sm">
       {Object.entries(hidden ?? {}).map(([k, v]) => (v ? <input key={k} type="hidden" name={k} value={v} /> : null))}
@@ -27,8 +32,7 @@ export function StockFilters({ locale, sp, action, hidden, partner, pf = "" }: {
           {JOURNAL_TYPES.map((t) => <option key={t} value={t}>{MOVEMENT_LABELS[t][fr ? "fr" : "en"]}</option>)}
         </select>
       </label>
-      <label className="grid gap-1">{tr(locale, "Du", "From")}<input type="date" name={pf + "from"} defaultValue={sp.from ?? ""} className={input} /></label>
-      <label className="grid gap-1">{tr(locale, "Au", "To")}<input type="date" name={pf + "to"} defaultValue={sp.to ?? ""} className={input} /></label>
+      <DateRangeFields prefix={pf} mode={mode} from={range.from} to={range.to} today={todayParis()} disabled={false} inputCls={input} labels={periodLabels(locale)} />
       <label className="grid gap-1">{tr(locale, "Auteur / acheteur (e-mail)", "Author / buyer (e-mail)")}<input name={pf + "who"} defaultValue={sp.who ?? ""} className={input} /></label>
       <label className="grid gap-1">{tr(locale, "Motif", "Reason")}<input name={pf + "r"} defaultValue={sp.r ?? ""} className={input} /></label>
       <label className="grid gap-1">{tr(locale, "Tri", "Sort")}

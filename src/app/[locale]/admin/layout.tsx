@@ -14,7 +14,7 @@ export default async function AdminLayout({ children, params }: { children: Reac
   const base = `/${locale}/admin`;
   const n = await adminCounts(db).catch(() => ({ applications: 0, creations: 0, orders: 0, returns: 0, payouts: 0 }));
   const badge: Record<string, number> = { candidatures: n.applications, oeuvres: n.creations, commandes: n.orders, versements: n.payouts, retours: n.returns };
-  const items = [[`${base}/candidatures`, tr(locale, "Candidatures", "Applications")], [`${base}/fournisseurs`, tr(locale, "Partenaires", "Partners")], [`${base}/oeuvres`, tr(locale, "Créations à modérer", "Creations to review")], [`${base}/commandes`, tr(locale, "Commandes", "Orders")], [`${base}/versements`, tr(locale, "Versements", "Payouts")], [`${base}/retours`, tr(locale, "Retours", "Returns")]];
+  const items = [[`${base}/candidatures`, tr(locale, "Candidatures", "Applications")], [`${base}/fournisseurs`, tr(locale, "Partenaires", "Partners")], [`${base}/oeuvres`, tr(locale, "Créations à modérer", "Creations to review")], [`${base}/commandes`, tr(locale, "Commandes", "Orders")], [`${base}/versements`, tr(locale, "Versements", "Payouts")], [`${base}/retours`, tr(locale, "Retours", "Returns")], [`${base}/stock`, tr(locale, "Stocks", "Stock")]];
   return (
     <div className="space-y-4">
       <p className="text-xs uppercase tracking-widest text-muted-foreground">{tr(locale, "Administration", "Administration")}</p>

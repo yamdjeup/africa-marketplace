@@ -448,3 +448,18 @@ model CheckoutHold {
   @@index([buyerKey, status])
   @@index([status, expiresAt])
 }
+
+/// Acheteur à prévenir quand une pièce redevient disponible (réservation non aboutie ou tentative bloquée). source : HOLD | BLOCKED.
+model RestockWatch {
+  id          String    @id @default(cuid())
+  buyerKey    String
+  email       String
+  locale      String    @default("fr")
+  productSlug String
+  source      String
+  createdAt   DateTime  @default(now())
+  notifiedAt  DateTime?
+
+  @@unique([buyerKey, productSlug])
+  @@index([productSlug, notifiedAt])
+}

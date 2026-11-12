@@ -1,4 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
+import { recordWatch } from "./restock-watch";
 import { createSubOrders } from "./suborders";
 import { releaseStock, reserveStock } from "./stock";
 
@@ -45,9 +46,9 @@ function aggregate(lines: HoldLine[]) {
   return [...m.values()];
 }
 
-async function reserveAll(tx: Parameters<typeof reserveStock>[0], payload: HoldPayload, number: string) {
+async function reserveAll(tx: Parameters<typeof reserveStock>[0], payload: HoldPayload, number: string, paid = false) {
   for (const a of aggregate(payload.lines)) {
-    const ok = await reserveStock(tx, { slug: a.slug, label: a.label }, a.qty, { id: payload.userId, label: payload.email }, number);
+    const ok = await reserveStock(tx, { slug: a.slug, label: a.label }, a.qty, { id: payload.userId, label: payload.email }, number, paid ? undefined : `Réservation en attente de paiement (${number})`);
     if (!ok) throw new StockError(a.name);
   }
 }
@@ -57,22 +58,28 @@ async function releaseLines(tx: Parameters<typeof releaseStock>[0], payload: Hol
 }
 
 /** Libère une réservation (idempotent : seule la transition HELD → RELEASED libère le stock). */
-export async function releaseHold(db: PrismaClient, number: string, reason = "Paiement non finalisé") {
-  return db.$transaction(async (tx) => {
+export async function releaseHold(db: PrismaClient, number: string, reason = "Paiement non finalisé", watch = true) {
+  const released = await db.$transaction(async (tx) => {
     const hold = await tx.checkoutHold.findUnique({ where: { number } });
     if (!hold) return false;
     const n = await tx.checkoutHold.updateMany({ where: { id: hold.id, status: "HELD" }, data: { status: "RELEASED" } });
     if (n.count !== 1) return false;
     await releaseLines(tx, hold.payload as unknown as HoldPayload, hold.number, reason);
-    return true;
+    return hold;
   });
+  if (!released) return false;
+  if (watch) {
+    const p = released.payload as unknown as HoldPayload;
+    await recordWatch(db, { buyerKey: released.buyerKey, email: p.email, locale: p.locale, slugs: p.lines.map((l) => l.slug), source: "HOLD" });
+  }
+  return true;
 }
 
 /** Retour arrière puis reconfirmation : libère les réservations en cours du même acheteur. */
 export async function releaseBuyerHolds(db: PrismaClient, buyerKey: string) {
   const holds = await db.checkoutHold.findMany({ where: { buyerKey, status: "HELD" }, select: { number: true } });
   let n = 0;
-  for (const h of holds) if (await releaseHold(db, h.number, "Nouvelle confirmation du même acheteur")) n++;
+  for (const h of holds) if (await releaseHold(db, h.number, "Nouvelle confirmation du même acheteur", false)) n++;
   return n;
 }
 
@@ -118,7 +125,7 @@ export async function consumeHold(db: PrismaClient, number: string, paymentInten
         if (again.count !== 1) return { status: "already" } as const;
         wasReleased = true;
       }
-      if (wasReleased) await reserveAll(tx, payload, number);
+      if (wasReleased) await reserveAll(tx, payload, number, true);
       const order = await tx.order.create({
         data: {
           number,

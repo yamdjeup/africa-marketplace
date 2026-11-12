@@ -44,6 +44,7 @@ DerniÃ¨re exÃ©cution (11/11/2026, lot admin + e-mails de retour) : Vitest 62
 | A-F18 | F | Paiement avant commande : rÃ©servation 30 min sans commande ni e-mail ; commande + colis crÃ©Ã©s une seule fois au paiement (idempotent) ; reconfirmation du mÃªme acheteur ; libÃ©ration/balayage ; paiement aprÃ¨s expiration (re-rÃ©servation, sinon aucune commande + remboursement) ; erreur de stock nominative | `tests/unit/checkout-hold.db.test.ts` (Vitest, base jetable `TEST_DATABASE_URL`, exÃ©cutÃ© en CI) ; filtre archivage dans `tests/unit/admin-list.test.ts` | Ã€ lancer en CI (non exÃ©cutable sans PostgreSQL local) | T-PAIEMENT-AVANT-COMMANDE, T-RESERVATION-IMPAYEE, T-STOCK-NOM, T-ARCHIVAGE |
 | A-F19 | F | Archivage des commandes impayées (simulation sans écriture ; ignore expédiées/remboursées) | `tests/unit/archive-unpaid.test.ts` (Vitest) | À lancer | T-ARCHIVAGE |
 | A-F20 | F | E-mail au partenaire quand l'admin annule un colis ou à l'expiration 48 h (motif, n° de colis, lien) | `tests/unit/partner-cancel-email.test.ts` (Vitest) | À lancer | T-ANNUL-ADMIN-PARTENAIRE |
+| A-F21 | F | E-mail « Votre pièce est de nouveau disponible » (FR/EN, lien fiche, disponibilité non garantie) | `tests/unit/restock-watch.test.ts` (Vitest) | À lancer | T-RETOUR-DISPO |
 | A-F9 | F | Mur d'accÃ¨s : API et images hors exemptions bloquÃ©es (401), artworks e-mail publics (â‰  401), manifeste/icÃ´nes PWA | `e2e/access.spec.ts` (Playwright) | OK 5/5 en local â€” 11/11/2026 (CI Ã  relancer) | â€” |
 
 Parcours Playwright historiques (`e2e/journey.spec.ts`, `access.spec.ts`, `alerts.spec.ts`, `search.spec.ts`, `order-email.spec.ts`, `mobile.spec.ts`) : inchangÃ©s, non relancÃ©s dans ce lot.
@@ -408,7 +409,7 @@ Statut : Ã€ tester â€” Date : â€”
 ### T-PAIEMENT-AVANT-COMMANDE — Aucune commande tant que le paiement n'a pas réussi — 15 min — À tester — date : —
 Prérequis : Stripe en mode test (carte 4242 4242 4242 4242), webhook `checkout.session.completed` et `checkout.session.expired` actifs sur l'URL testée.
 1. Client : ajouter une pièce au panier, « Confirmer la commande », arriver sur la page Stripe. NE PAS payer.
-2. Admin > Commandes et Partenaire > Commandes : aucune nouvelle commande ; boîtes mail acheteur et partenaire : aucun e-mail. Fiche de la pièce : stock disponible diminué de 1 (réservation).
+2. Admin > Stock > journal des mouvements : motif « Réservation en attente de paiement (AM-…) » (et non « Commande AM-… »). Admin > Commandes et Partenaire > Commandes : aucune nouvelle commande ; boîtes mail acheteur et partenaire : aucun e-mail. Fiche de la pièce : stock disponible diminué de 1 (réservation).
 3. Revenir sur la boutique et payer le même panier avec la carte de test. Attendu : page « Votre paiement est en cours de confirmation » puis détail de la commande (n° AM-…).
 4. Vérifier : une seule commande, un colis par partenaire, e-mail de confirmation acheteur (DA) et e-mail « nouvelle commande » au partenaire (une seule fois, même si Stripe renvoie l'événement).
 5. Stripe > Développeurs > Webhooks > événement : réponse 200 ; renvoyer l'événement : toujours une seule commande.
@@ -429,7 +430,18 @@ Prérequis : Stripe en mode test (carte 4242 4242 4242 4242), webhook `checkout.
 2. Attendu : l'acheteur reçoit l'e-mail d'annulation ET le partenaire reçoit « colis … annulé » (motif, n° de colis, bouton vers sa commande) sur son e-mail de contact (sinon e-mail du compte).
 3. Refus par le partenaire : pas d'e-mail à lui-même. Expiration 48 h : e-mail au partenaire.
 
-### T-ARCHIVAGE — Anciennes commandes jamais payées archivées — 10 min — À tester — date : —
+### T-ME-PREVENIR — Bouton « Me prévenir quand elle est disponible » — 10 min — À tester — date : —
+1. Ouvrir la fiche d'une pièce épuisée (ou réservée par un autre acheteur) NON connecté : bouton « Me prévenir quand elle est disponible » visible ; clic : renvoi vers la connexion, puis retour sur la fiche après connexion.
+2. Connecté : clic sur le bouton. Attendu : message « Vous serez prévenu(e) dès qu'elle est disponible » et bouton « Annuler l'alerte » ; recharger la page : état conservé.
+3. « Annuler l'alerte » : le message disparaît, le bouton revient ; plus d'e-mail.
+4. Réactiver, remettre du stock (ou libérer la réservation), lancer /api/alerts/run : e-mail « Votre pièce est de nouveau disponible » reçu UNE fois ; relancer : pas de doublon. Pièce en favori ou déjà achetée : pas de cet e-mail.
+5. Pièce disponible : le bouton n'apparaît pas. Vérifier en EN.
+### T-RETOUR-DISPO — Prévenu quand une pièce redevient disponible — 15 min — À tester — date : —
+1. Compte A : mettre une pièce unique au panier, « Confirmer » (réservation 30 min), ne pas payer, revenir en arrière.
+2. Compte B (autre navigateur, pièce NON en favori) : tenter la même pièce : message « plus disponible » (tentative mémorisée).
+3. Laisser expirer la réservation de A (ou annuler le paiement), puis lancer /api/alerts/run (ou attendre le cron).
+4. Attendu : A et B reçoivent UNE fois « Votre pièce est de nouveau disponible » (nom, image, lien fiche, « premier arrivé, premier servi, disponibilité non garantie »).
+5. Relancer /api/alerts/run : aucun doublon. Si la pièce est en favori de A : A reçoit seulement l Anciennes commandes jamais payées archivées — 10 min — À tester — date : —
 0. Archivage de prod fait le 12/11/2026 via une route temporaire (5 commandes archivées, route supprimée).
 1. Simulation locale : `npm run db:archive-unpaid` (DATABASE_URL de la base visée, définie dans cmd pour la commande seulement). Attendu : liste dont AM-C83CA71A et AM-C08665C5 ; aucune commande payée/remboursée/expédiée listée ; rien modifié.
 2. Exécution : `npm run db:archive-unpaid -- --execute`.

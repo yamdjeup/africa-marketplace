@@ -25,5 +25,18 @@ export async function retry<T>(fn: () => Promise<T>, o: RetryOpts = {}): Promise
   }
 }
 
+import { connect } from "node:net";
+
+/** Ouverture TCP vers l'hôte de l'URL (réveille le compute Neon) ; rejette « ETIMEDOUT/ECONNREFUSED » pour le retry. */
+export function tcpProbe(url: string, timeoutMs = 10000): Promise<void> {
+  const u = new URL(url);
+  return new Promise((resolve, reject) => {
+    const s = connect({ host: u.hostname.replace(/^\[|\]$/g, ""), port: Number(u.port || 5432) });
+    s.setTimeout(timeoutMs, () => { s.destroy(); reject(new Error("ETIMEDOUT P1001 (TCP)")); });
+    s.once("connect", () => { s.end(); resolve(); });
+    s.once("error", (e) => { s.destroy(); reject(new Error(`P1001 ${e.message}`)); });
+  });
+}
+
 export const UNREACHABLE_HELP =
   "Base de test injoignable (P1001) après plusieurs essais. Vérifier : compute Neon actif (ouvrir la branche dans la console Neon), URL directe (sans -pooler) avec sslmode=require, identifiants corrects, réseau sortant vers le port 5432.";

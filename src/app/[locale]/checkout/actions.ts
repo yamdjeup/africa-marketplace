@@ -1,7 +1,7 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { runAlerts } from "@/lib/alerts";
@@ -158,6 +158,7 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
     );
     if (stripeSession) {
       await attachSession(db, number, stripeSession.id);
+      (await cookies()).set("ep_hold", `${number}.${editToken}`, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 30 * 60 });
       redirect(stripeSession.url);
     }
     // Échec de création de session : la réservation est libérée, puis retour au comportement sans paiement en ligne.

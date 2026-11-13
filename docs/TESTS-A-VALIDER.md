@@ -31,10 +31,10 @@ DerniÃ¨re exÃ©cution (11/11/2026, lot admin + e-mails de retour) : Vitest 62
 | A-T25 | T | Réordonnancement des photos : moveItem (monter/descendre, glisser-déposer, bornes, 1re = couverture) | `tests/unit/move-item.test.ts` | OK en CI (#39, #42, #47) — 13/11/2026 | `npm run test:all` |
 | A-T26 | T | Onglets Stocks / Journal : parse du paramètre tab (défaut stock) | `tests/unit/move-item.test.ts` | OK en CI (#39, #42, #47) — 13/11/2026 | `npm run test:all` |
 | A-T27 | Course de stock (2 réservations simultanées, stock 1 : un seul gagnant, erreur nommant la pièce) ; panier de 2 pièces dont une épuisée (message cite la pièce, aucune réservation pour l'autre) — `checkout-hold.db.test.ts` | OK en CI #47 (vert global, log détaillé non lu) | 13/11/2026 |
-| A-T29 | Raison du refus de stock : « réservée par un autre client » (stock présent mais réservé) vs « épuisée » (`stockReason`, `tests/unit/stock-reason.test.ts`) | OK en local (Vitest, 3 tests) ; affichage fiche/checkout non automatisé | 14/11/2026 |
-| A-T30 | Retour arrière Stripe (cancel_url → /api/checkout/cancel) libère la réservation avec le bon jeton, pas avec un mauvais (checkout-hold.db.test.ts) | Écrit, à lancer en CI | 13/11/2026 |
+| A-T29 | Raison du refus de stock : « réservée par un autre client » (stock présent mais réservé) vs « épuisée » (`stockReason`, `tests/unit/stock-reason.test.ts`) | OK en CI #51 (vert global ; log détaillé non lu)| 14/11/2026 |
+| A-T30 | Retour arrière Stripe (cancel_url → /api/checkout/cancel) libère la réservation avec le bon jeton, pas avec un mauvais (checkout-hold.db.test.ts) | OK en CI #51 (vert global ; log détaillé non lu) | 13/11/2026 |
+| A-T31 | Retour NAVIGATEUR depuis Stripe : cookie httpOnly `ep_hold` (numéro.jeton) posé à la confirmation ; `HoldReturnGuard` (pages /checkout et /cart, au montage et au `pageshow` bfcache) appelle `POST /api/checkout/cancel` ; libération idempotente (`checkout-hold.db.test.ts`) | Écrit, à lancer en CI (le cookie/composant ne sont pas testés automatiquement) | 13/11/2026 |
 | A-T28 | Purge des résidus de test avant seed (`prisma/test-residue.ts`, `test-residue.test.ts`) : dépendances supprimées avant les produits test-hold | OK en CI #47 (vert global, log détaillé non lu) | 13/11/2026 |
-| A-T29 | Raison du refus de stock : « réservée par un autre client » (stock présent mais réservé) vs « épuisée » (`stockReason`, `tests/unit/stock-reason.test.ts`) | OK en local (Vitest, 3 tests) ; affichage fiche/checkout non automatisé | 14/11/2026 |
 | A-T23 | T | Réveil de la base de test (Neon en veille) : connect_timeout ajouté si absent, retry/backoff sur P1001, abandon sur autre erreur ; sonde TCP sans client Prisma (régression CI sqlite) | `tests/unit/db-wake.test.ts` (Vitest) | OK en CI (#39, #42, #47) — 13/11/2026 | `npm run test:db` (logique) |
 | A-M1 | M | Fournisseur e-mail : Resend (from, reply_to, sans mention interdite) ; repli Gmail / aucun sans erreur | `tests/unit/email-provider.test.ts` (Vitest) | OK 2/2 â€” 10/11/2026 | T-MAIL-FROM (payload) |
 | A-M2 | M | Mur d'accÃ¨s : images `/api/media/<id>` et `/images/artworks/*` publiques, reste fermÃ© | `tests/unit/proxy-images.test.ts` (Vitest) | OK 2/2 â€” 10/11/2026 | T-MAIL-FROM 3 |
@@ -626,7 +626,7 @@ Statut : Validé — Date : 13/11/2026
 ### T-ARCHIVAGE — Archivage des commandes impayées — Validé le 12–13/11/2026
 Validé manuellement par l'utilisateur ; couvert aussi par A-F19 (logique, simulation sans écriture). Détail des étapes non repris ici.
 
-### T-RETOUR-DISPO — Prévenu quand une pièce redevient disponible — 15 min — Validé le 13/11/2026
+### T-RETOUR-STRIPE — Flèche « ← » de la page Stripe libère la réservation — 5 min — Validé le 13/11/2026 (utilisateur)`n`n### T-RETOUR-DISPO — Prévenu quand une pièce redevient disponible — 15 min — Validé le 13/11/2026
 1. Compte A : mettre une pièce unique au panier, « Confirmer » (réservation 30 min), ne pas payer, revenir en arrière.
 2. Compte B (autre navigateur, pièce NON en favori) : tenter la même pièce : message « plus disponible » (tentative mémorisée).
 3. Laisser expirer la réservation de A (ou annuler le paiement), puis lancer /api/alerts/run (ou attendre le cron).
@@ -687,3 +687,13 @@ Note A-T27 : T-STOCK-NOM étapes 2–3 et Test 4 (course de stock) sont écrits 
 5. B : recharger la fiche P1. Attendu : bouton « Épuisé » et message « Dépêchez-vous : un autre client est en train de réserver cette pièce… » (aucune identité affichée). Note : sans rechargement, la fiche ouverte avant reste inchangée.
 6. A : rouvrir la fiche P1. Attendu : pas de message d'urgence (A détient la réservation).
 7. Pièce à stock 0 : Confirmer depuis un panier. Attendu : « Cette pièce n'est plus disponible : <NOM> » (libellé distinct).
+
+### T-RETOUR-NAVIGATEUR — Retour du navigateur depuis Stripe — 5 min — À tester
+1. Admin : mettre une pièce P à stock 1 (admin > Stocks).
+2. Compte A (client) : ajouter P au panier, cliquer « Confirmer » ; la page Stripe s'ouvre (mode test).
+3. Utiliser le bouton Retour du NAVIGATEUR (flèche du navigateur, pas la flèche « ← » de Stripe). Attendu : retour sur le formulaire /checkout ou le panier.
+4. Admin > Stocks, recharger : réservé = 0 pour P (stock 1 disponible), sans attendre 30 min.
+5. Compte B (autre navigateur) : ouvrir la fiche de P. Attendu : « Ajouter au panier » (plus « Épuisé »).
+6. Variante bfcache : répéter 2–3 puis avancer (→) puis reculer (←) ; Attendu : réservation libérée à nouveau sans erreur.
+7. Flux normal : A confirme et paie (carte test 4242…) ; Attendu : commande créée, confirmation affichée, stock −1.
+Non vérifié : comportement réel selon navigateur (Safari/Firefox/Chrome mobile).

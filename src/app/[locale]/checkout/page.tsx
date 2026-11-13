@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { auth } from "@/auth";
+import { HoldReturnGuard } from "@/components/marketplace/hold-return-guard";
 import { CheckoutForm } from "@/components/marketplace/checkout-form";
 import { db } from "@/lib/db";
 import { getDict, type Locale } from "@/lib/i18n";
@@ -18,6 +19,7 @@ export default async function CheckoutPage({ params }: { params: Promise<{ local
     : [];
   return (
     <div className="space-y-6">
+      <HoldReturnGuard />
       <h1 className="font-heading text-3xl text-primary">{getDict(locale).checkout.title}</h1>
       <CheckoutForm
         locale={locale}

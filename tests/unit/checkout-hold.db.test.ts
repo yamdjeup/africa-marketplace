@@ -64,6 +64,16 @@ describe.skipIf(!enabled)("réservation de paiement (base de test)", () => {
     expect((await product()).reserved).toBe(0);
   });
 
+  it("retour navigateur (A-T31) : libération répétée idempotente, stock rendu une seule fois", async () => {
+    const { createHold, cancelHoldWithToken } = await import("@/lib/checkout-hold");
+    const number = num();
+    const p = payload("d@test.example");
+    await createHold(db, p, number);
+    expect(await cancelHoldWithToken(db, number, p.editToken)).toBe(true);
+    expect(await cancelHoldWithToken(db, number, p.editToken)).toBe(false);
+    expect((await product()).reserved).toBe(0);
+  });
+
   it("retour arrière puis reconfirmation du même acheteur : jamais « plus disponible »", async () => {
     const { createHold } = await import("@/lib/checkout-hold");
     await createHold(db, payload("same@test.example"), num());

@@ -81,7 +81,7 @@ Lu dans le code : tests existants. Rien ci-dessous n'est passé « Validé » : 
 |---|---|---|
 | T-STOCK-NOM (2) | Automatisable sûr — écrit (A-T27, à lancer en CI) | `checkout-hold.db.test.ts` « autre acheteur : erreur de stock nominative » (StockError, item = nom). Reste manuel : le libellé affiché à l'écran (étapes 2–3, panier de 2 pièces non couvert). |
 | T-RESERVATION-IMPAYEE 1–3 | Sûr — déjà fait (logique) | `checkout-hold.db.test.ts` : retour arrière, balayage > 30 min, aucune commande. Manuel : vraie page Stripe (retour navigateur, attente 30 min). |
-| T-RESERVATION-IMPAYEE 4 / T-PAIEMENT 4–5 | Probable | Paiement après expiration couvert en logique (test « paiement après libération ») ; le remboursement Stripe réel exige le bac à sable Stripe + webhook : non écrit. |
+| T-RESERVATION-IMPAYEE 4 | Automatisé (non reproductible à la main) | Fenêtre ≤ 30 s ; couvert en CI par `checkout-hold.db.test.ts` (A-F18, « paiement après libération »). Remboursement Stripe réel non exercé (mock A-T36). T-PAIEMENT 4–5 : déjà validés à la main le 13/11. |
 | Test 4 course de stock | Probable | Concurrence DB possible (Promise.all sur createHold) ; non écrit, non exécutable ici sans base. |
 | T-AUTRE-EN | Partiel | `carrierLabel("Autre", false) === "Other"` testé (`partner-profile.test.ts`, A-F14). Reste manuel : rendu réel e-mail EN + page commande. |
 | T-NOM-ENTETE | Je ne sais pas | Dépend de la session/JWT après renommage : non testé, ne rien inventer. |
@@ -555,11 +555,11 @@ Prérequis : Stripe en mode test (carte 4242 4242 4242 4242), webhook `checkout.
 4. Vérifier : une seule commande, un colis par partenaire, e-mail de confirmation acheteur (DA) et e-mail « nouvelle commande » au partenaire (une seule fois, même si Stripe renvoie l'événement).
 5. Stripe > Développeurs > Webhooks > événement : réponse 200 ; renvoyer l'événement : toujours une seule commande.
 
-### T-RESERVATION-IMPAYEE — Réservation impayée libérée, sans commande « Annulée » — 15 min — Partiel : étapes 1 à 3 validées le 13/11/2026 ; reste l'étape 4 (À tester)
+### T-RESERVATION-IMPAYEE — Réservation impayée libérée, sans commande « Annulée » — 15 min — Validé 13/11/2026 (étapes 1–3 testées à la main ; étape 4 couverte en CI)
 1. Client : « Confirmer », arriver sur Stripe, retour arrière du navigateur, « Confirmer » à nouveau (même e-mail).
 2. Attendu : jamais « plus disponible » ; l'ancienne réservation est libérée, une seule nouvelle réservation ; stock disponible de la pièce = stock − 1.
 3. Fermer l'onglet Stripe sans payer et attendre 30 à 35 min (ou laisser expirer la session). Attendu : stock disponible rétabli, AUCUNE commande (ni « Annulée ») dans les listes acheteur, partenaire et admin, aucun e-mail.
-4. Cas limite : payer après l'expiration (session encore ouverte) : la commande est créée si le stock est toujours là ; sinon aucune commande, remboursement Stripe automatique et e-mail « Votre paiement est remboursé » au client (montant en €).
+4. Cas limite : payer après l'expiration (session encore ouverte) : la commande est créée si le stock est toujours là ; sinon aucune commande, remboursement Stripe automatique et e-mail « Votre paiement est remboursé » au client (montant en €). — Non reproductible à la main (fenêtre ≤ 30 s : réservation 30 min, session Stripe 30 min + 30 s) ; couvert en CI par `checkout-hold.db.test.ts` (A-F18, test « paiement après libération »). Aucun test manuel prétendu ; remboursement Stripe réel non exercé (mock : A-T36).
 
 ### T-STOCK-NOM — Erreur de stock nommant l'article — 5 min — Validé le 13/11/2026
 1. Mettre une pièce à stock 1 ; comptes A et B (autre e-mail) ajoutent la pièce au panier SANS confirmer.

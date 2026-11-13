@@ -15,7 +15,12 @@ type Props = {
 
 const addDays = (ymd: string, n: number) => new Date(Date.UTC(+ymd.slice(0, 4), +ymd.slice(5, 7) - 1, +ymd.slice(8, 10) + n)).toISOString().slice(0, 10);
 
-export function DateRangeFields({ mode: m0, from: f0, to: t0, today, disabled, labels, inputCls, prefix = "" }: Props) {
+// Remonte quand les valeurs venant de l'URL changent (ex. « Réinitialiser ») : l'état local ne doit pas survivre.
+export function DateRangeFields(p: Props) {
+  return <DateRangeInner key={`${p.mode}|${p.from}|${p.to}`} {...p} />;
+}
+
+function DateRangeInner({ mode: m0, from: f0, to: t0, today, disabled, labels, inputCls, prefix = "" }: Props) {
   const [mode, setMode] = useState(m0);
   const [from, setFrom] = useState(f0);
   const [to, setTo] = useState(t0);

@@ -15,7 +15,7 @@ export function StockFilters({ locale, sp, action, hidden, partner, pf = "" }: {
   const mode = sp.d ? dateModeOf(sp.d) : sp.from || sp.to ? "custom" : "all";
   const range = mode === "custom" ? { from: sp.from ?? "", to: sp.to ?? "" } : rangeFields({ d: mode });
   return (
-    <form method="get" action={action} className="flex flex-wrap items-end gap-3 text-sm">
+    <form method="get" action={action} key={JSON.stringify(sp)} className="flex flex-wrap items-end gap-3 text-sm">
       {Object.entries(hidden ?? {}).map(([k, v]) => (v ? <input key={k} type="hidden" name={k} value={v} /> : null))}
       {partner && (
         <label className="grid gap-1">{tr(locale, "Partenaire", "Partner")}

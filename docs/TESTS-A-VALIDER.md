@@ -34,9 +34,9 @@ DerniÃ¨re exÃ©cution (11/11/2026, lot admin + e-mails de retour) : Vitest 62
 | A-T29 | Raison du refus de stock : « réservée par un autre client » (stock présent mais réservé) vs « épuisée » (`stockReason`, `tests/unit/stock-reason.test.ts`) | OK en CI #51 (vert global ; log détaillé non lu)| 14/11/2026 |
 | A-T30 | Retour arrière Stripe (cancel_url → /api/checkout/cancel) libère la réservation avec le bon jeton, pas avec un mauvais (checkout-hold.db.test.ts) | OK en CI #51 (vert global ; log détaillé non lu) | 13/11/2026 |
 | A-T31 | Retour NAVIGATEUR depuis Stripe : cookie httpOnly `ep_hold` (numéro.jeton) posé à la confirmation ; `HoldReturnGuard` (pages /checkout et /cart, au montage et au `pageshow` bfcache) appelle `POST /api/checkout/cancel` ; libération idempotente (`checkout-hold.db.test.ts`) | OK en CI #52 (statut vert vu par l'utilisateur, log détaillé non lu) ; cookie/composant non testés automatiquement | 13/11/2026 |
-| A-T32 | Intérêt panier anonyme (`CartInterest`, jeton navigateur) : vu par un autre navigateur, jamais par soi-même, expiré après 30 min, retiré avec le panier (`checkout-hold.db.test.ts`) | Écrit, à lancer en CI (composant/API non testés automatiquement) | 13/11/2026 |
-| A-T33 | Bouton « Ajouter au panier » désactivé (« Ajouté au panier ») au chargement si la pièce est déjà dans le panier local, à la quantité max (`cartQuantity`, `tests/unit/cart-quantity.test.ts`) | OK en local (Vitest, 3 tests) ; rendu navigateur non testé | 13/11/2026 |
-| A-T34 | Sondage de l'intérêt panier toutes les 5 s (onglet visible, nettoyage au démontage ; bandeau fixe non bloquant) : constante testée (`tests/unit/interest-poll.test.ts`) | OK en local (Vitest, 1 test) ; comportement navigateur non automatisé | 13/11/2026 |
+| A-T32 | Intérêt panier anonyme (`CartInterest`, jeton navigateur) : vu par un autre navigateur, jamais par soi-même, expiré après 30 min, retiré avec le panier (`checkout-hold.db.test.ts`) | OK en CI (statut vert confirmé par l'utilisateur le 13/11, run exact et log non lus) ; composant/API non testés automatiquement | 13/11/2026 |
+| A-T33 | Bouton « Ajouter au panier » désactivé (« Ajouté au panier ») au chargement si la pièce est déjà dans le panier local, à la quantité max (`cartQuantity`, `tests/unit/cart-quantity.test.ts`) | OK en CI (statut vert confirmé par l'utilisateur le 13/11, run exact et log non lus) ; rendu navigateur non automatisé | 13/11/2026 |
+| A-T34 | Sondage de l'intérêt panier toutes les 5 s (onglet visible, nettoyage au démontage ; bandeau fixe non bloquant) : constante testée (`tests/unit/interest-poll.test.ts`) | OK en CI (statut vert confirmé par l'utilisateur le 13/11, run exact et log non lus) ; rendu navigateur non automatisé | 13/11/2026 |
 | A-T28 | Purge des résidus de test avant seed (`prisma/test-residue.ts`, `test-residue.test.ts`) : dépendances supprimées avant les produits test-hold | OK en CI #47 (vert global, log détaillé non lu) | 13/11/2026 |
 | A-T23 | T | Réveil de la base de test (Neon en veille) : connect_timeout ajouté si absent, retry/backoff sur P1001, abandon sur autre erreur ; sonde TCP sans client Prisma (régression CI sqlite) | `tests/unit/db-wake.test.ts` (Vitest) | OK en CI (#39, #42, #47) — 13/11/2026 | `npm run test:db` (logique) |
 | A-M1 | M | Fournisseur e-mail : Resend (from, reply_to, sans mention interdite) ; repli Gmail / aucun sans erreur | `tests/unit/email-provider.test.ts` (Vitest) | OK 2/2 â€” 10/11/2026 | T-MAIL-FROM (payload) |
@@ -682,7 +682,7 @@ Validé manuellement par l'utilisateur ; couvert aussi par A-F19 (logique, simul
 
 Note A-T27 : T-STOCK-NOM étapes 2–3 et Test 4 (course de stock) sont écrits ; manuel restant = seulement l'affichage du message à l'écran. T-RESERVATION 4 / T-PAIEMENT 4–5 : paiement après expiration déjà couvert en logique (test existant) ; remboursement Stripe réel non automatisé.
 
-### T-MESSAGES-RESERVATION - Urgence panier et pièce réservée - 10 min - À tester
+### T-MESSAGES-RESERVATION - Urgence panier et pièce réservée - 10 min - Validé le 13/11/2026 (étapes 1–8 ; étape 9 stock 0 NON testée, reste à tester)
 1. Admin : mettre une pièce P1 à stock 1 (attendre 30 min ou annuler la réservation si elle est déjà réservée). Utiliser deux navigateurs différents : B (anonyme ou compte B) et A (compte client A).
 2. B : ajouter P1 au panier, SANS confirmer.
 3. A : ouvrir la fiche P1 (B reste sur la sienne, ouverte et visible, SANS recharger). Attendu pour A : bandeau pleine largeur, fond bleu nuit et texte clair (bien contrasté), en haut de la fiche sous le menu sans le masquer : « Dépêchez-vous : un autre client a cette pièce dans son panier. » (aucune identité). Attendu pour B : le même bandeau apparaît tout seul en 5 secondes maximum, sans recharger. Si A retire P1 de son panier, il disparaît chez B en 5 secondes maximum (onglet visible ; onglet en arrière-plan : mis à jour au retour dessus).
@@ -704,7 +704,7 @@ Non vérifié : l'intérêt panier expire 30 min après la dernière synchronisa
 7. Flux normal : A confirme et paie (carte test 4242…) ; Attendu : commande créée, confirmation affichée, stock −1.
 Non vérifié : comportement réel selon navigateur (Safari/Firefox/Chrome mobile).
 
-### T-LIENS-PIECES — Noms de pièces cliquables au paiement — 5 min — À tester
+### T-LIENS-PIECES — Noms de pièces cliquables au paiement — 5 min — Partiel : étapes 2, 3, 4, 6 validées le 13/11/2026 ; étape 5 : lien vu en capture, clic non confirmé
 1. Compte client : ajouter une pièce P1 au panier, ouvrir /checkout (Passer commande).
 2. Dans le Récapitulatif (colonne de droite), cliquer le nom « 1 × <NOM de P1> ». Attendu : la fiche de P1 s'ouvre dans le même onglet.
 3. Retour du navigateur vers /checkout. Attendu : formulaire intact, panier inchangé.

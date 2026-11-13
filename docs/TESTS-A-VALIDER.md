@@ -1,5 +1,7 @@
 # Tests Ã  valider â€” E pÃ³m taâ€™
 
+> **Règle : avant de proposer un test, relire son statut dans ce fichier ; ne jamais redonner un test Validé.**
+
 Fichier UNIQUE de tests (rÃ¨gle permanente : chaque lot ajoute ses tests ici, avec Ã©tapes numÃ©rotÃ©es dÃ©taillÃ©es ; aucun autre fichier de tests). Mis Ã  jour Ã  chaque lot (mÃªme commit). Statut : TestÃ© (validÃ© par l'utilisateur) / Ã€ tester. Les tests historiques (lots A Ã  D, suspension, traduction, fiche crÃ©ation) sont en fin de fichier (H-xx). Comptes : Client (compte client), CrÃ©ateur (partenaire actif), Admin (e-mail dans `ADMIN_EMAILS`), partenaires de test KeNoF, Nathalie MorÃ¨re, Cruzz Taylor (`npm run db:seed-suppliers`).
 
 ## BLOC B â€” Tests automatisÃ©s (exÃ©cutÃ©s par l'agent)
@@ -123,8 +125,8 @@ PrÃ©requis : migration 0023 appliquÃ©e ; un colis livrÃ© (compte client) ;
 | T-AIDE | Pages d'aide FR/EN | 10 min | Validé | 12–13/11/2026 |
 | T-ADMIN-FILTRES | Filtres, pagination et pastilles (admin + partenaire) ; e-mails de retour | 20 min | Ã€ tester | â€” |
 | T24 | Parcours de commande complet (achat â†’ livraison) | 20 min | Ã€ tester | â€” |
-| T-STRIPE | Paiement Stripe Checkout + webhook (lot 0) | 15 min | Partiel : étapes 1, 2, 3, 4, 5, 8 validées ; restent 6, 7 | 12–13/11/2026 |
-| T-REMB | Remboursement au refus/expiration/annulation | 15 min | Partiel : étapes 1, 2, 3, 4 (4A, 4B, 4C) validées + expiration (5) testée ; restent 6, 7, 8 | 12–13/11/2026 |
+| T-STRIPE | Paiement Stripe Checkout + webhook (lot 0) | 15 min | Partiel : étapes 1, 2, 3, 4, 5, 7, 8 validées ; reste 6 ; étape 7 validée 13/11/2026 | 12–13/11/2026 |
+| T-REMB | Remboursement au refus/expiration/annulation | 15 min | Partiel : étapes 1, 2, 3, 4 (admin validée 13/11 ; client à tester) validées + expiration (5) testée ; restent 6, 7, 8 | 12–13/11/2026 |
 | H-01 Ã  H-16 | Lots A Ã  D, suspension, traduction, fiche crÃ©ation | 60 min | Ã€ tester | â€” |
 
 ### T-GA4 â€” GA4 et bandeau de consentement
@@ -178,15 +180,15 @@ PrÃ©requis : migration 0021 appliquÃ©e ; clÃ©s Stripe de test ; webhook `/
 4. VÃ©rifier : e-mail Â« reÃ§ue Â» et notification au crÃ©ateur arrivent aprÃ¨s le paiement (webhook), une seule fois. â€” TESTÃ‰ 10/11/2026
 5. En base : `stripePaymentIntentId` renseignÃ©, `paymentPending` = false. â€” TESTÃ‰ 10/11/2026
 6. Abandonner sur la page Stripe : aucun e-mail envoyÃ©, commande en attente de paiement.
-7. Annuler ensuite un colis payÃ© : remboursement Stripe automatique (voir T-SUIVI).
+7. Annuler ensuite un colis payÃ© : remboursement Stripe automatique (voir T-SUIVI). — Validé 13/11/2026 (AM-A3343DEF, Choupi Tree 2 000 €, annulée par l'admin : remboursement Stripe sandbox 2 000,00 € Refunded, e-mail FR « sous 5 à 10 jours ouvrés » reçu 21:06, même mention sur la page commande, stock revenu à 2)
 8. Webhook avec signature invalide (curl) : rÃ©ponse 400. â€” TESTÃ‰ 10/11/2026
 
 ### T-REMB â€” remboursement au refus / expiration / annulation
 PrÃ©requis : migration 0022 ; STRIPE_SECRET_KEY de test ; commande payÃ©e via Stripe.
 1. Client : commande payÃ©e (carte 4242â€¦), webhook reÃ§u (`stripePaymentIntentId` renseignÃ©). â€” TESTÃ‰ 10/11/2026
 2. CrÃ©ateur : refuser le colis avec un motif. RÃ©sultat : Stripe > Paiements > Refund crÃ©Ã© (montant du colis), `refundStatus` = DONE. â€” TESTÃ‰ 10/11/2026
-3. Compte client et e-mail Â« Commande annulÃ©e Â» (refus, expiration, annulation client/admin) : Â« Vous serez remboursÃ© de X,XX â‚¬ â€¦ sous 5 Ã  10 jours ouvrÃ©s Â» (FR et EN).
-4. Refaire avec annulation client, puis annulation admin : mÃªme rÃ©sultat.
+3. Compte client et e-mail Â« Commande annulÃ©e Â» (refus, expiration, annulation client/admin) : Â« Vous serez remboursÃ© de X,XX â‚¬ â€¦ sous 5 Ã  10 jours ouvrÃ©s Â» (FR et EN). — Validé 13/11/2026 (AM-A3343DEF, Choupi Tree 2 000 €, annulée par l'admin : remboursement Stripe sandbox 2 000,00 € Refunded, e-mail FR « sous 5 à 10 jours ouvrés » reçu 21:06, même mention sur la page commande, stock revenu à 2) ; FR seulement pour l'annulation admin, EN non confirmé
+4. Refaire avec annulation client, puis annulation admin : mÃªme rÃ©sultat. — Variante annulation ADMIN : Validé 13/11/2026 (AM-A3343DEF, voir étape 3). Variante annulation CLIENT : À tester (non prouvée).
 5. Colis sans rÃ©ponse 48 h (expirÃ©) : remboursement crÃ©Ã© au passage du cron.
 6. Refuser un colis avant le webhook (paiement non confirmÃ©) : `refundStatus` = AWAITING ; renvoyer le webhook : remboursement crÃ©Ã©.
 7. ClÃ© Stripe invalide : `refundStatus` = FAILED, `refundNote` explicite, ligne `[refund]` dans les logs Vercel ; e-mail et compte : message neutre Â« nous revenons vers vous Â», sans montant. Sans paiement Stripe : aucune mention de remboursement.

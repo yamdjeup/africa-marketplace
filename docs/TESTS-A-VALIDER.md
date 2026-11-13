@@ -215,10 +215,11 @@ Rédigé sans modifier le code. Seuls les écrans/e-mails/Stripe réels restent 
 
 **T-STOCK-NOM (affichage, 5 min)** — le fait est testé en CI (A-T27) ; reste le libellé à l'écran.
 1. Partenaire : mettre une pièce à stock 1.
-2. Client A : panier, « Confirmer », rester sur la page Stripe (ne pas payer).
-3. Client B (navigation privée, autre e-mail) : ajouter la même pièce, « Confirmer ». Attendu : message de stock citant le NOM de la pièce ; aucune page Stripe ouverte.
-4. Client B : panier de 2 pièces (la pièce prise + une pièce en stock). Attendu : le message cite la pièce prise, pas l'autre.
-5. Fermer l'onglet de A, puis admin > Stocks : la pièce redevient disponible après 30 min (ou voir T-RESERVATION).
+2. Client A ET client B (navigation privée, autre e-mail) : ajouter la même pièce à leur panier, SANS cliquer sur « Confirmer » (si A confirme avant, la pièce est réservée et B ne peut plus l'ajouter : bouton désactivé).
+3. Client A : « Confirmer », rester sur la page Stripe (ne pas payer).
+4. Client B, sur son panier déjà ouvert (ne pas recharger la fiche) : « Confirmer ». Attendu : message de stock citant le NOM de la pièce ; aucune page Stripe ouverte.
+5. Variante 2 pièces : refaire avec B ayant préparé un panier de 2 pièces (la pièce de A + une pièce en stock) AVANT que A confirme. Attendu : le message cite la pièce prise, pas l'autre.
+6. Fermer l'onglet de A, puis admin > Stocks : la pièce redevient disponible après 30 min (ou voir T-RESERVATION).
 
 **T-NOM-ENTETE (2 min)** — non automatisé (session/JWT : je ne sais pas le tester sans navigateur connecté, rien d'écrit).
 1. Partenaire : Mon profil, renommer en « Test Nom 1 €-», enregistrer.
@@ -541,9 +542,9 @@ Prérequis : Stripe en mode test (carte 4242 4242 4242 4242), webhook `checkout.
 4. Cas limite : payer après l'expiration (session encore ouverte) : la commande est créée si le stock est toujours là ; sinon aucune commande, remboursement Stripe automatique et e-mail « Votre paiement est remboursé » au client (montant en €).
 
 ### T-STOCK-NOM — Erreur de stock nommant l'article — 5 min — À tester — date : —
-1. Mettre une pièce à stock 1 ; avec le compte A, « Confirmer » et rester sur Stripe (réservation en cours).
-2. Avec le compte B (autre e-mail), tenter de commander la même pièce. Attendu : message de stock citant le NOM de la pièce, aucune réservation ni commande créée pour B.
-3. Panier de 2 pièces dont une seule épuisée : le message cite la pièce épuisée.
+1. Mettre une pièce à stock 1 ; comptes A et B (autre e-mail) ajoutent la pièce au panier SANS confirmer.
+2. A clique « Confirmer » et reste sur Stripe (réservation en cours) ; puis B, sur son panier déjà ouvert, clique « Confirmer ». Attendu : message de stock citant le NOM de la pièce, aucune réservation ni commande créée pour B.
+3. Panier de 2 pièces (préparé par B avant la confirmation de A) dont une seule épuisée : le message cite la pièce épuisée.
 
 ### T-ANNUL-ADMIN-PARTENAIRE — Le partenaire est prévenu d'une annulation admin — 5 min — Validé le 12–13/11/2026
 1. Admin > Commandes : annuler le colis d'un partenaire avec un motif.

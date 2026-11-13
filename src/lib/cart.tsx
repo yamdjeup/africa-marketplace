@@ -62,8 +62,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Hydratation depuis localStorage après le premier rendu (évite un écart SSR/client).
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     const initial = read();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLines(initial);
     if (initial.length > 0) pushInterest(initial);
     const onStorage = (e: StorageEvent) => {

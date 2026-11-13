@@ -126,7 +126,7 @@ PrÃ©requis : migration 0023 appliquÃ©e ; un colis livrÃ© (compte client) ;
 | T-MAILS | E-mails Farfetch | 10 min | Validé (étapes 1–4) | 12–13/11/2026 |
 | T-AIDE | Pages d'aide FR/EN | 10 min | Validé | 12–13/11/2026 |
 | T-ADMIN-FILTRES | Filtres, pagination et pastilles (admin + partenaire) ; e-mails de retour | 20 min | Validé (déclaré par l'utilisateur, sans capture) | avant le 13/11/2026 |
-| T24 | Parcours de commande complet (achat â†’ livraison) | 20 min | Ã€ tester | â€” |
+| T24 | Parcours de commande complet (achat → livraison) | 20 min | Validé 13/11/2026 (AM-E6987B4E) | Captures Gmail + admin + page client |
 | T-STRIPE | Paiement Stripe Checkout + webhook (lot 0) | 15 min | Validé (étapes 1–8 ; 6 et 7 le 13/11/2026) | 12–13/11/2026 |
 | T-REMB | Remboursement au refus/expiration/annulation | 15 min | Partiel : étapes 1, 2, 3, 4 (admin validée 13/11 ; client validée 12/11, déclarée) validées + expiration (5) testée ; restent 6, 7, 8 | 12–13/11/2026 |
 | H-01 Ã  H-16 | Lots A Ã  D, suspension, traduction, fiche crÃ©ation | 60 min | Ã€ tester | â€” |
@@ -202,10 +202,10 @@ PrÃ©requis : migration 0022 ; STRIPE_SECRET_KEY de test ; commande payÃ©e vi
 2. Widget Â« Ce contenu vous semble-t-il pertinent ? Â» : cliquer Oui puis Pas vraiment.
 3. MÃªmes pages en `/en`. VÃ©rifier : retours par colis, signature transporteur, annulation depuis le compte, e-mail de contact inchangÃ©.
 
-### T24 â€” parcours complet
-1. Client : acheter 2 crÃ©ations (2 crÃ©ateurs), panier puis paiement.
-2. CrÃ©ateurs : accepter, prÃ©parer, expÃ©dier (transporteur + suivi), livrer.
-3. Client : suivre chaque colis, e-mails reÃ§us Ã  chaque Ã©tape. Détail e-mail « en préparation » : 3bis. Client (compte avec e-mail réel) : passer une commande, la faire accepter par le créateur. Créateur : ouvrir la commande, cliquer « Marquer en préparation » ; message portail attendu « Marquée en préparation ; client prévenu par e-mail ». Client : dans la minute, recevoir « Votre commande est en préparation » (boutique, article, bouton « Suivre ma commande » ouvrant la commande) ; aucun autre e-mail ; EN si la commande est en anglais. À tester (prod 22:24–22:29 : AM-E6987B4E-1/-2 marqués avant ce correctif, aucun e-mail).
+### T24 — parcours complet — Validé 13/11/2026 (commande AM-E6987B4E, 2 180 €)
+1. Client : acheter 2 crÃ©ations (2 crÃ©ateurs), panier puis paiement. — Validé 13/11/2026 : achat 22:23, AM-E6987B4E 2 180 € (colis -1 Mia Mia Gifts 2 000 €, UPS 1Z999AA10123456784 ; colis -2 Lunettes à cauris 180 €, House of Marjón, UPS 1Z999AA10123456785).
+2. CrÃ©ateurs : accepter, prÃ©parer, expÃ©dier (transporteur + suivi), livrer. — Validé 13/11/2026 : les 2 créateurs ont fait Accepter > Marquer en préparation > Marquer expédiée > Marquer livrée (badges et messages vus).
+3. Client : suivre chaque colis, e-mails reÃ§us Ã  chaque Ã©tape. Détail e-mail « en préparation » : 3bis. Client (compte avec e-mail réel) : passer une commande, la faire accepter par le créateur. Créateur : ouvrir la commande, cliquer « Marquer en préparation » ; message portail attendu « Marquée en préparation ; client prévenu par e-mail ». Client : dans la minute, recevoir « Votre commande est en préparation » (boutique, article, bouton « Suivre ma commande » ouvrant la commande) ; aucun autre e-mail ; EN si la commande est en anglais. À tester (prod 22:24–22:29 : AM-E6987B4E-1/-2 marqués avant ce correctif, aucun e-mail). — Validé 13/11/2026 (captures) : Gmail confirmation 22:23, acceptée ×2 22:24, expédiée ×2 22:32, livrée ×2 22:33 (contenu « livrée » vu : colis 1/2 et 2/2, Voir ma commande, Suivre mon colis) ; page client « Commande livrée », 2 colis Livrée, suivi UPS, Demander un retour. Contenu des e-mails « expédiée » non capturé ici (validé via T-SUIVI). Aucun e-mail « en préparation » à l'époque (ajouté en local c0eff80) : 3bis reste À tester.
 4. Admin : voir les sous-commandes dans `/fr/admin/commandes` et le registre dans `/fr/admin/versements`. — Validé 13/11/2026 (captures admin : Versements AM-B197F3C1-1 · 1 700,00 € en attente, dispo le 20/11 20:21 = 2 000 € − 15 % de commission ; Commandes > Toutes : AM-B197F3C1-1 Livrée). Étapes 1–3 : exercées par morceaux, parcours complet non coché.
 
 ### T-ADMIN-FILTRES â€” Filtres, pastilles et e-mails de retour â€” 20 min — Validé — fait avant le 13/11/2026, déclaré par l'utilisateur, sans capture

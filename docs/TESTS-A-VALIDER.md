@@ -285,6 +285,13 @@ Rédigé sans modifier le code. Seuls les écrans/e-mails/Stripe réels restent 
 | H-15 Partenaire paiements (2 ét.) | Manuel | cartes et tableau à l'écran |
 | H-16 Admin versements (5 ét.) | Partiel | calculs/idempotence couverts par `db:check-orders` (non lancé) ; boutons, e-mail « versement effectué (test) » = manuel |
 Aucun nouveau test écrit à cette étape : un test exécutable en CI nécessite la lecture des scripts `db:check-*` et une base que je n'ai pas ; rien n'est donc marqué « Écrit ». Ordre conseillé pour H : H-13, H-11, H-15, H-16, H-08, H-09, H-06, H-05, H-03, H-04, H-01, H-10, H-12 en dernier.
+### T-KYC — vérification d'identité / Stripe Connect (état réel au 13/11/2026)
+Constat lu : aucune fonctionnalité KYC n'existe dans le code (recherche « kyc », « Stripe Connect », comptes connectés, vérification d'identité, IBAN/SIRET : aucun résultat dans le code, le schéma Prisma ni les docs, sauf une ligne de `docs/BACKLOG.md` : « Lot H — finance / KYC / Stripe Connect — À implémenter »). Aucun test KYC n'existe sous un autre nom dans ce fichier ; ce qui s'en rapproche est la candidature partenaire (H-01) et les versements simulés (H-16, « Marquer le versement effectué », référence TEST-…). Je ne sais pas si l'utilisateur attend une autre définition du KYC (contrôle documentaire de la candidature ? onboarding Stripe Connect ?).
+Étapes de recette (uniquement le comportement actuel, non automatisé) :
+1. Admin, `/fr/admin/candidatures` : ouvrir une candidature avec fichiers. Attendu : miniatures/PDF visibles uniquement par l'admin ; c'est le seul contrôle documentaire existant (pas de pièce d'identité structurée, pas de statut « vérifié »).
+2. Partenaire accepté, `/fr/fournisseur/paiements` : vérifier qu'aucune demande de pièce d'identité, d'IBAN ou de compte Stripe n'est exigée avant d'être payé ; la mention « Paiement test : aucun argent réel » est affichée.
+3. Admin, `/fr/admin/versements` : « Marquer le versement effectué » fonctionne sans aucune vérification préalable du partenaire (attendu actuel : oui, référence TEST-…). Si l'utilisateur veut un blocage avant versement réel, c'est une fonctionnalité à créer (lot H), pas un test à passer.
+4. Décision à prendre par l'utilisateur : KYC = (a) contrôle manuel du dossier de candidature (existe), (b) onboarding Stripe Connect avec vérification d'identité (n'existe pas). Aucune étape de test (b) n'est écrite : la rédiger sans code serait inventer.
 ### Phase 4 — bloqués / non automatisables
 - T-GA4 (1–11) : navigateur privé + outils réseau ; `NEXT_PUBLIC_GA_ID` requis.
 - T-DOMAINE-OFFICIEL (1–4) : domaine de prod, Google OAuth, webhook réel.

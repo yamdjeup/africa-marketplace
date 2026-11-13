@@ -126,7 +126,7 @@ PrÃ©requis : migration 0023 appliquÃ©e ; un colis livrÃ© (compte client) ;
 | T-AIDE | Pages d'aide FR/EN | 10 min | Validé | 12–13/11/2026 |
 | T-ADMIN-FILTRES | Filtres, pagination et pastilles (admin + partenaire) ; e-mails de retour | 20 min | Validé (déclaré par l'utilisateur, sans capture) | avant le 13/11/2026 |
 | T24 | Parcours de commande complet (achat â†’ livraison) | 20 min | Ã€ tester | â€” |
-| T-STRIPE | Paiement Stripe Checkout + webhook (lot 0) | 15 min | Partiel : étapes 1, 2, 3, 4, 5, 7, 8 validées ; reste 6 ; étape 7 validée 13/11/2026 | 12–13/11/2026 |
+| T-STRIPE | Paiement Stripe Checkout + webhook (lot 0) | 15 min | Validé (étapes 1–8 ; 6 et 7 le 13/11/2026) | 12–13/11/2026 |
 | T-REMB | Remboursement au refus/expiration/annulation | 15 min | Partiel : étapes 1, 2, 3, 4 (admin validée 13/11 ; client validée 12/11, déclarée) validées + expiration (5) testée ; restent 6, 7, 8 | 12–13/11/2026 |
 | H-01 Ã  H-16 | Lots A Ã  D, suspension, traduction, fiche crÃ©ation | 60 min | Ã€ tester | â€” |
 
@@ -181,7 +181,7 @@ PrÃ©requis : migration 0021 appliquÃ©e ; clÃ©s Stripe de test ; webhook `/
 3. Payer avec la carte de test 4242 4242 4242 4242 : retour sur la confirmation de commande. â€” TESTÃ‰ 10/11/2026
 4. VÃ©rifier : e-mail Â« reÃ§ue Â» et notification au crÃ©ateur arrivent aprÃ¨s le paiement (webhook), une seule fois. â€” TESTÃ‰ 10/11/2026
 5. En base : `stripePaymentIntentId` renseignÃ©, `paymentPending` = false. â€” TESTÃ‰ 10/11/2026
-6. Abandonner sur la page Stripe : aucun e-mail envoyÃ©, commande en attente de paiement. — Étapes 2–4 vues 13/11/2026 (fermeture de l'onglet Stripe sans payer : Stocks bague Réservé 1 / Dispo 0, réservation epomtaclient0 jusqu'à 22:06 ; page bague côté B « Épuisé », « Réservée par un autre client »). Libération à 22:06 : en attente de capture, À tester.
+6. Abandonner sur la page Stripe : aucun e-mail envoyÃ©, commande en attente de paiement. — Étapes 2–4 vues 13/11/2026 (fermeture de l'onglet Stripe sans payer : Stocks bague Réservé 1 / Dispo 0, réservation epomtaclient0 jusqu'à 22:06 ; page bague côté B « Épuisé », « Réservée par un autre client »). Libération automatique : Validé 13/11/2026 (Stocks 22:09 : Bague Total 1, Réservé 0, Dispo 1, dernier mouvement 22:07, aucune réservation active ; page côté B : « Ajouter au panier » revenu). Validé 13/11/2026. La flèche « ← » Stripe n'a pas été testée ici (couverte par T-RESERVATION-IMPAYEE).
 7. Annuler ensuite un colis payÃ© : remboursement Stripe automatique (voir T-SUIVI). — Validé 13/11/2026 (AM-A3343DEF, Choupi Tree 2 000 €, annulée par l'admin : remboursement Stripe sandbox 2 000,00 € Refunded, e-mail FR « sous 5 à 10 jours ouvrés » reçu 21:06, même mention sur la page commande, stock revenu à 2)
 8. Webhook avec signature invalide (curl) : rÃ©ponse 400. â€” TESTÃ‰ 10/11/2026
 

@@ -703,3 +703,13 @@ Non vérifié : l'intérêt panier expire 30 min après la dernière synchronisa
 6. Variante bfcache : répéter 2–3 puis avancer (→) puis reculer (←) ; Attendu : réservation libérée à nouveau sans erreur.
 7. Flux normal : A confirme et paie (carte test 4242…) ; Attendu : commande créée, confirmation affichée, stock −1.
 Non vérifié : comportement réel selon navigateur (Safari/Firefox/Chrome mobile).
+
+### T-LIENS-PIECES — Noms de pièces cliquables au paiement — 5 min — À tester
+1. Compte client : ajouter une pièce P1 au panier, ouvrir /checkout (Passer commande).
+2. Dans le Récapitulatif (colonne de droite), cliquer le nom « 1 × <NOM de P1> ». Attendu : la fiche de P1 s'ouvre dans le même onglet.
+3. Retour du navigateur vers /checkout. Attendu : formulaire intact, panier inchangé.
+4. Dans le bloc « Colis » (étape livraison), cliquer le nom de P1. Attendu : fiche de P1.
+5. Erreur : B a P1 au panier, A confirme (reste sur Stripe), B clique « Confirmer ». Attendu : « Cette pièce vient d'être réservée par un autre client : <NOM> », le nom est un lien vers la fiche.
+6. Panier (/cart) : le nom et la vignette de P1 sont cliquables (déjà le cas).
+Note : aller sur une fiche ne libère aucune réservation (seul l'affichage de /checkout ou /cart après un départ vers Stripe la libère).
+Non automatisé : liens vérifiés par lecture du code uniquement (pas de test de rendu).

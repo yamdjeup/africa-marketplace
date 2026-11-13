@@ -530,7 +530,8 @@ Statut : Ã€ tester â€” Date : â€”
 3. Saisir le mot de passe : accÃ¨s au site ; refaire sur epomta-demo.vercel.app : le mot de passe est redemandÃ© (cookie propre Ã  chaque domaine).
 (Couvert aussi par A-F13.)
 
-### T-AUTRE-EN — Transporteur « Autre » en anglais — 3 min — Partiel : page commande EN validée le 13/11/2026 ; e-mail « Other » à revérifier (nouvel envoi)
+### T-AUTRE-EN — Transporteur « Autre » en anglais — 3 min — Validé le 13/11/2026 (page commande EN + e-mail « on its way » EN reçu à 17:43 pour AM-F0465F17-1 : « Mimi shipped your order (Other, tracking 123456789) »)
+Note : l'admin ne peut pas annuler une commande déjà expédiée (SHIPPED) — `src/app/[locale]/admin/commandes/[id]/page.tsx:80` ; comportement voulu.
 1. Partenaire : expÃ©dier un colis avec transporteur Â« Autre Â».
 2. Client en EN : ouvrir l'e-mail Â« on its way Â» et la page commande.
 3. Attendu : Â« Other Â», pas Â« Autre Â». (Couvert en partie par A-F14.)

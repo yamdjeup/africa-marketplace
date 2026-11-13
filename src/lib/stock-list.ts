@@ -7,6 +7,10 @@ export const STOCK_STATUSES = ["all", "avail", "low", "out", "held"] as const;
 export type StockStatus = (typeof STOCK_STATUSES)[number];
 export type StockListParams = Partial<Record<(typeof STOCK_LIST_KEYS)[number] | "sp", string>>;
 
+export const STOCK_TABS = ["stock", "journal"] as const;
+export type StockTab = (typeof STOCK_TABS)[number];
+export const stockTabOf = (t?: string): StockTab => (t === "journal" ? "journal" : "stock");
+
 const day = (v?: string) => (v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : undefined);
 const fold = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
 

@@ -6,10 +6,11 @@ import { StockFilters } from "@/components/marketplace/stock-filters";
 import { JOURNAL_KEYS } from "@/lib/stock-journal";
 import { tr } from "@/lib/tr";
 import { StockListView } from "@/components/marketplace/stock-list-view";
-import { loadStockList, STOCK_LIST_KEYS } from "@/lib/stock-list";
+import { StockTabs } from "@/components/marketplace/stock-tabs";
+import { loadStockList, stockTabOf, STOCK_LIST_KEYS } from "@/lib/stock-list";
 
 export const dynamic = "force-dynamic";
-type SP = AdminStockParams & Partial<Record<(typeof STOCK_LIST_KEYS)[number], string>>;
+type SP = AdminStockParams & { tab?: string } & Partial<Record<(typeof STOCK_LIST_KEYS)[number], string>>;
 
 export default async function AdminStockJournal({ params, searchParams }: { params: Promise<{ locale: Locale }>; searchParams: Promise<SP> }) {
   const { locale } = await params;
@@ -17,12 +18,14 @@ export default async function AdminStockJournal({ params, searchParams }: { para
   const fr = locale !== "en";
   const page = Math.max(1, Math.trunc(Number(sp.p)) || 1);
   const { sups, rows, total, prodOf, vlabel, supName, pages } = await loadAdminStock(sp, fr);
+  const tab = stockTabOf(sp.tab);
   const list = await loadStockList(sp, sups.map((s) => s.id), fr);
-  const jhidden = Object.fromEntries(JOURNAL_KEYS.map((k) => [k, sp[k]]));
-  const lhidden = Object.fromEntries(STOCK_LIST_KEYS.map((k) => [k, sp[k]]));
+  const jhidden = Object.fromEntries(JOURNAL_KEYS.map((k) => [k, sp[k]]).concat([["tab", "stock"]]));
+  const lhidden = Object.fromEntries(STOCK_LIST_KEYS.map((k) => [k, sp[k]]).concat([["tab", "journal"]]));
   const href = (p: number) => {
     const u = new URLSearchParams();
     for (const k of [...JOURNAL_KEYS, ...STOCK_LIST_KEYS]) if (sp[k]) u.set(k, sp[k]!);
+    u.set("tab", "journal");
     u.set("p", String(p));
     return `/${locale}/admin/stock?${u.toString()}`;
   };
@@ -31,10 +34,14 @@ export default async function AdminStockJournal({ params, searchParams }: { para
     <div className="space-y-4">
       <Link href={`/${locale}/admin/fournisseurs`} className="text-sm underline">← {tr(locale, "Partenaires", "Partners")}</Link>
       <h1 className="font-heading text-3xl text-primary">{tr(locale, "Stocks", "Stock")}</h1>
+      <StockTabs locale={locale} base={`/${locale}/admin/stock`} tab={tab} />
+      {tab === "stock" ? (
       <section className="space-y-2">
         <h2 className="font-heading text-2xl text-primary">{tr(locale, "Stock par création", "Stock by creation")}</h2>
         <StockListView locale={locale} sp={sp} action={`/${locale}/admin/stock`} data={list} hidden={jhidden} partner={sups} supName={supName} />
       </section>
+      ) : (
+      <>
       <h2 className="font-heading text-2xl text-primary">{tr(locale, "Journal des mouvements de stock", "Stock movement log")}</h2>      <StockFilters locale={locale} sp={sp} action={`/${locale}/admin/stock`} partner={sups} hidden={lhidden} />
       <p className="text-sm text-muted-foreground">{total} {tr(locale, "mouvement(s)", "movement(s)")}</p>
       <div className="overflow-x-auto">
@@ -55,6 +62,8 @@ export default async function AdminStockJournal({ params, searchParams }: { para
         <span>Page {Math.min(page, pages)} / {pages}</span>
         {page < pages ? <Link className="underline" href={href(page + 1)}>{tr(locale, "Suivant", "Next")} →</Link> : <span className="text-muted-foreground">→</span>}
       </nav>
+      </>
+      )}
     </div>
   );
 }

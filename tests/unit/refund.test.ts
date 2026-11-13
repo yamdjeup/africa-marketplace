@@ -72,6 +72,37 @@ describe("settleSubRefund", () => {
     await settleSubRefund("s1");
     expect(update.mock.calls[0][0].data).toMatchObject({ refundStatus: "FAILED", refundNote: "boom" });
   });
+  it("A-T36 MANUAL : sans clé Stripe, le colis est enregistré « MANUAL » et aucun appel n'est fait (T-SUIVI 5)", async () => {
+    const f = vi.fn();
+    vi.stubGlobal("fetch", f);
+    vi.stubEnv("STRIPE_SECRET_KEY", "");
+    await settleSubRefund("s1");
+    expect(f).not.toHaveBeenCalled();
+    expect(update.mock.calls[0][0].data).toMatchObject({ refundStatus: "MANUAL", refundId: null });
+  });
+  it("A-T36 AWAITING puis paiement confirmé : le rattrapage crée le remboursement (T-REMB 6)", async () => {
+    const f = vi.fn(async () => ok({ id: "re_late" }));
+    vi.stubGlobal("fetch", f);
+    sub.order = { stripePaymentIntentId: null as unknown as string, paymentPending: true };
+    await settleSubRefund("s1");
+    expect(f).not.toHaveBeenCalled();
+    sub.refundStatus = "AWAITING";
+    sub.order = { stripePaymentIntentId: "pi_test_1", paymentPending: false };
+    await settleSubRefund("s1");
+    expect(f).toHaveBeenCalledTimes(1);
+    expect(update.mock.calls[1][0].data).toMatchObject({ refundStatus: "DONE", refundId: "re_late" });
+  });
+  it("A-T36 deux annulations simultanées : même clé d'idempotence Stripe, et plus aucun appel une fois DONE (T-SUIVI 7)", async () => {
+    const f = vi.fn(async () => ok({ id: "re_1" }));
+    vi.stubGlobal("fetch", f);
+    await Promise.all([settleSubRefund("s1"), settleSubRefund("s1")]);
+    const keys = f.mock.calls.map((c) => ((c as unknown as [string, RequestInit])[1].headers as Record<string, string>)["Idempotency-Key"]);
+    expect(new Set(keys)).toEqual(new Set(["refund-s1"]));
+    f.mockClear();
+    sub.refundStatus = "DONE";
+    await settleSubRefund("s1");
+    expect(f).not.toHaveBeenCalled();
+  });
   it("ignore un colis non fermé ou déjà remboursé", async () => {
     sub.status = "PENDING";
     await settleSubRefund("s1");

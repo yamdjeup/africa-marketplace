@@ -62,7 +62,7 @@ Les tests ci-dessous restent manuels (rendu visuel, e-mails dans Gmail, mobile, 
 
 ## Lots rÃ©cents
 
-### T-MAIL-FROM â€” E-mail rÃ©el depuis contact@epomta.com â€” 10 min â€” ValidÃ© le 10/11/2026 sauf l'Ã©tape 3 (images : correctif /images/artworks, Ã  revÃ©rifier) â€” date : 10/11/2026
+### T-MAIL-FROM — E-mail réel depuis contact@epomta.com — 10 min — Validé le 12–13/11/2026 (étape 3 images incluse, confirmée par l'utilisateur)
 PrÃ©requis : RESEND_API_KEY et MAIL_FROM dÃ©finis sur Vercel.
 1. Passer une commande test (ou renvoyer le webhook) avec une adresse Gmail. RÃ©sultat : e-mail reÃ§u.
 2. VÃ©rifier l'expÃ©diteur : Â« Epomta <contact@epomta.com> Â».

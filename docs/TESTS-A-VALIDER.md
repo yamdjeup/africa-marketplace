@@ -30,6 +30,7 @@ DerniÃ¨re exÃ©cution (11/11/2026, lot admin + e-mails de retour) : Vitest 62
 | A-T24 | T | Liste « Stock par création » (admin + partenaire) : filtres titre/catégorie/statut/variante/tri/période (dernier mouvement) exécutés pour de vrai ; Réinitialiser remet la période sur « Toutes les dates » (formulaires remontés via key, défaut « all ») | `tests/unit/stock-pages.db.test.ts` (base jetable, CI) + `tests/unit/list-reset.test.ts` | OK en CI (#39, #42) — 13/11/2026 | `npm run test:all` |
 | A-T25 | T | Réordonnancement des photos : moveItem (monter/descendre, glisser-déposer, bornes, 1re = couverture) | `tests/unit/move-item.test.ts` | OK en CI (#39, #42) — 13/11/2026 | `npm run test:all` |
 | A-T26 | T | Onglets Stocks / Journal : parse du paramètre tab (défaut stock) | `tests/unit/move-item.test.ts` | OK en CI (#39, #42) — 13/11/2026 | `npm run test:all` |
+| A-T27 | Course de stock (2 réservations simultanées, stock 1 : un seul gagnant, erreur nommant la pièce) ; panier de 2 pièces dont une épuisée (message cite la pièce, aucune réservation pour l'autre) — `checkout-hold.db.test.ts` | Écrit, à lancer en CI (local : tsc/eslint OK, tests ignorés sans TEST_DATABASE_URL) | — |
 | A-T23 | T | Réveil de la base de test (Neon en veille) : connect_timeout ajouté si absent, retry/backoff sur P1001, abandon sur autre erreur ; sonde TCP sans client Prisma (régression CI sqlite) | `tests/unit/db-wake.test.ts` (Vitest) | OK en CI (#39, #42) — 13/11/2026 | `npm run test:db` (logique) |
 | A-M1 | M | Fournisseur e-mail : Resend (from, reply_to, sans mention interdite) ; repli Gmail / aucun sans erreur | `tests/unit/email-provider.test.ts` (Vitest) | OK 2/2 â€” 10/11/2026 | T-MAIL-FROM (payload) |
 | A-M2 | M | Mur d'accÃ¨s : images `/api/media/<id>` et `/images/artworks/*` publiques, reste fermÃ© | `tests/unit/proxy-images.test.ts` (Vitest) | OK 2/2 â€” 10/11/2026 | T-MAIL-FROM 3 |
@@ -65,7 +66,7 @@ Lu dans le code : tests existants. Rien ci-dessous n'est passé « Validé » : 
 
 | Test manuel | Classe | Raison / couverture existante |
 |---|---|---|
-| T-STOCK-NOM (2) | Automatisable sûr — déjà fait | `checkout-hold.db.test.ts` « autre acheteur : erreur de stock nominative » (StockError, item = nom). Reste manuel : le libellé affiché à l'écran (étapes 2–3, panier de 2 pièces non couvert). |
+| T-STOCK-NOM (2) | Automatisable sûr — écrit (A-T27, à lancer en CI) | `checkout-hold.db.test.ts` « autre acheteur : erreur de stock nominative » (StockError, item = nom). Reste manuel : le libellé affiché à l'écran (étapes 2–3, panier de 2 pièces non couvert). |
 | T-RESERVATION-IMPAYEE 1–3 | Sûr — déjà fait (logique) | `checkout-hold.db.test.ts` : retour arrière, balayage > 30 min, aucune commande. Manuel : vraie page Stripe (retour navigateur, attente 30 min). |
 | T-RESERVATION-IMPAYEE 4 / T-PAIEMENT 4–5 | Probable | Paiement après expiration couvert en logique (test « paiement après libération ») ; le remboursement Stripe réel exige le bac à sable Stripe + webhook : non écrit. |
 | Test 4 course de stock | Probable | Concurrence DB possible (Promise.all sur createHold) ; non écrit, non exécutable ici sans base. |
@@ -574,3 +575,5 @@ Validé manuellement par l'utilisateur ; couvert aussi par A-F19 (logique, simul
 1. FR puis EN : ouvrir le panier (bureau et mobile), le checkout, une fiche produit.
 2. Attendu : aucune mention Â« Retours gratuits sous 30 jours Â» / Â« Free returns within 30 days Â», ni autre mention Â« gratuit/offert Â» en remplacement.
 3. Ouvrir les e-mails de commande : mÃªme contrÃ´le. Les pages Retours et remboursements restent inchangÃ©es.
+
+Note A-T27 : T-STOCK-NOM étapes 2–3 et Test 4 (course de stock) sont écrits ; manuel restant = seulement l'affichage du message à l'écran. T-RESERVATION 4 / T-PAIEMENT 4–5 : paiement après expiration déjà couvert en logique (test existant) ; remboursement Stripe réel non automatisé.

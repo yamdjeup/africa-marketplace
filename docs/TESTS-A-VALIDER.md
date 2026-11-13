@@ -62,7 +62,7 @@ Les tests ci-dessous restent manuels (rendu visuel, e-mails dans Gmail, mobile, 
 
 ## Lots rÃ©cents
 
-### T-MAIL-FROM â€” E-mail rÃ©el depuis contact@epomta.com â€” 10 min â€” ValidÃ© le 10/11/2026 sauf l'Ã©tape 3 (images : correctif /images/artworks, Ã  revÃ©rifier) â€” date : 10/11/2026
+### T-MAIL-FROM — E-mail réel depuis contact@epomta.com — 10 min — Validé le 12–13/11/2026 (étape 3 images incluse, confirmée par l'utilisateur)
 PrÃ©requis : RESEND_API_KEY et MAIL_FROM dÃ©finis sur Vercel.
 1. Passer une commande test (ou renvoyer le webhook) avec une adresse Gmail. RÃ©sultat : e-mail reÃ§u.
 2. VÃ©rifier l'expÃ©diteur : Â« Epomta <contact@epomta.com> Â».
@@ -71,7 +71,7 @@ PrÃ©requis : RESEND_API_KEY et MAIL_FROM dÃ©finis sur Vercel.
 5. Gmail â€º â‹® â€º Afficher l'original : DKIM, SPF, DMARC = PASS.
 6. RÃ©pondre : la rÃ©ponse arrive dans contact@epomta.com (Zimbra).
 
-### T-RETOUR â€” Retours (lot E) â€” 15 min â€” Ã€ tester â€” date : â€”
+### T-RETOUR â€” Retours (lot E) â€” 15 min — Validé le 12–13/11/2026
 PrÃ©requis : migration 0023 appliquÃ©e ; un colis livrÃ© (compte client) ; compte admin (ADMIN_EMAILS).
 1. Compte client : Mon compte â€º Mes commandes â€º commande dont le colis est Â« LivrÃ© Â». RÃ©sultat : champ Â« Motif du retour Â» et bouton Â« Demander un retour Â».
 2. Saisir un motif, cliquer sur Â« Demander un retour Â». RÃ©sultat : mention Â« Retour demandÃ© Â» Ã  la place du formulaire ; e-mail de confirmation reÃ§u dans Gmail (rendu visuel Ã  relire).
@@ -86,13 +86,13 @@ PrÃ©requis : migration 0023 appliquÃ©e ; un colis livrÃ© (compte client) ;
 |---|---|---|---|---|
 | T-GA4 | GA4 + consentement | 15 min | Ã€ tester | â€” |
 | T-COLIS | Multi-colis + annulation | 20 min | TestÃ© | 12/11/2026 |
-| T-SUIVI | Suivi de livraison + remboursement (lots 1â€“2) | 15 min | Partiel : Ã©tape 3 testÃ©e le 12/11/2026 | 12/11/2026 |
-| T-MAILS | E-mails Farfetch | 10 min | Partiel : Ã©tape 1 testÃ©e | 10/11/2026 |
-| T-AIDE | Pages d'aide FR/EN | 10 min | Ã€ tester | â€” |
+| T-SUIVI | Suivi de livraison + remboursement (lots 1â€“2) | 15 min | Partiel : étapes 3–4 validées ; restent 1, 2, 5, 6, 7 | 12–13/11/2026 |
+| T-MAILS | E-mails Farfetch | 10 min | Validé (étapes 1–4) | 12–13/11/2026 |
+| T-AIDE | Pages d'aide FR/EN | 10 min | Validé | 12–13/11/2026 |
 | T-ADMIN-FILTRES | Filtres, pagination et pastilles (admin + partenaire) ; e-mails de retour | 20 min | Ã€ tester | â€” |
 | T24 | Parcours de commande complet (achat â†’ livraison) | 20 min | Ã€ tester | â€” |
-| T-STRIPE | Paiement Stripe Checkout + webhook (lot 0) | 15 min | Partiel : Ã©tapes 1, 2, 3, 4, 5, 8 testÃ©es ; 6, 7 Ã  tester | 10/11/2026 |
-| T-REMB | Remboursement au refus/expiration/annulation | 15 min | Partiel : Ã©tapes 1, 2 testÃ©es | 10/11/2026 |
+| T-STRIPE | Paiement Stripe Checkout + webhook (lot 0) | 15 min | Partiel : étapes 1, 2, 3, 4, 5, 8 validées ; restent 6, 7 | 12–13/11/2026 |
+| T-REMB | Remboursement au refus/expiration/annulation | 15 min | Partiel : étapes 1, 2, 3, 4 (4A, 4B, 4C) validées + expiration (5) testée ; restent 6, 7, 8 | 12–13/11/2026 |
 | H-01 Ã  H-16 | Lots A Ã  D, suspension, traduction, fiche crÃ©ation | 60 min | Ã€ tester | â€” |
 
 ### T-GA4 â€” GA4 et bandeau de consentement
@@ -171,7 +171,7 @@ PrÃ©requis : migration 0022 ; STRIPE_SECRET_KEY de test ; commande payÃ©e vi
 3. Client : suivre chaque colis, e-mails reÃ§us Ã  chaque Ã©tape.
 4. Admin : voir les sous-commandes dans `/fr/admin/commandes` et le registre dans `/fr/admin/versements`.
 
-### T-ADMIN-FILTRES â€” Filtres, pastilles et e-mails de retour â€” 20 min â€” Ã€ tester â€” date : â€”
+### T-ADMIN-FILTRES â€” Filtres, pastilles et e-mails de retour â€” 20 min — Validé le 12–13/11/2026
 Couvert en partie par A-F1, A-F2, A-F3 (logique, gabarit) ; reste le rendu visuel et la prise en main.
 1. Compte admin : ouvrir Admin. RÃ©sultat : pastilles numÃ©rotÃ©es sur Candidatures, CrÃ©ations Ã  modÃ©rer, Commandes (escaladÃ©es), Versements (Ã  payer), Retours (demandÃ©s) quand il y a du travail ; aucune pastille Ã  0.
 2. Admin â€º Retours : onglet Â« Ã€ traiter Â» par dÃ©faut avec son compteur ; cliquer Â« RemboursÃ©s Â», Â« RefusÃ©s Â», Â« Tous Â». RÃ©sultat : la liste change, l'URL contient `?st=â€¦`.
@@ -360,18 +360,18 @@ Statut : Ã€ tester â€” Date : â€”
 - VÃ©rif : `npm run db:check-orders` (inclut commission 15 %, attenteâ†’disponibleâ†’versÃ©, idempotence, versements concurrents).
 - Limites : pas de remboursement/retour (Ã©criture annulÃ©e au lot E : champ `reversedAt` prÃ©vu) ; taux unique par partenaire ; pas d'export/facture (lot H).
 
-### T-CONTACT â€” Pied de page Â« Contactez-nous Â» â€” 3 min â€” Ã€ tester â€” date : â€”
+### T-CONTACT â€” Pied de page Â« Contactez-nous Â» â€” 3 min — Validé le 12–13/11/2026
 1. Ouvrir epomta.com (Ã©cran large), descendre au pied de page. RÃ©sultat : une seule carte E-mail Â« contact@epomta.com Â», aucune carte tÃ©lÃ©phone tant que CONTACT_PHONE_LOCAL / CONTACT_PHONE_INTL ne sont pas dÃ©finies sur Vercel.
 2. Pages Aide, CGV, ConfidentialitÃ© : l'adresse affichÃ©e est contact@epomta.com.
 
-### T-COLIS-REMB â€” Page commande aprÃ¨s remboursement â€” 3 min â€” Ã€ tester â€” date : â€”
+### T-COLIS-REMB â€” Page commande aprÃ¨s remboursement â€” 3 min — Validé le 12–13/11/2026
 1. Compte client â€º Mes commandes, colis au retour remboursÃ©. RÃ©sultat : seul le statut du retour s'affiche, plus de Â« vous pouvez le retourner sous 30 jours Â» ni de formulaire.
 
-### T-FILTRES-RESET â€” RÃ©initialiser et Versements â€” 5 min â€” Ã€ tester â€” date : â€”
+### T-FILTRES-RESET â€” RÃ©initialiser et Versements â€” 5 min — Validé le 12–13/11/2026
 1. Sur Admin â€º Commandes (puis Versements, Retours, Candidatures, Partenaires ; partenaire â€º Commandes, Paiements), saisir une recherche et des dates, Filtrer, puis Â« RÃ©initialiser Â». RÃ©sultat : champs vides, onglet de statut conservÃ©.
 2. Admin â€º Versements : le texte d'aide du cycle s'affiche sous le titre ; le bouton Â« Rendre disponible maintenant (ignorer le dÃ©lai de retour) Â» demande confirmation (Annuler = rien ne change).
 
-### T-STOCK-UNIQUE â€” Message de stock unique â€” 2 min â€” Ã€ tester â€” date : â€”
+### T-STOCK-UNIQUE â€” Message de stock unique â€” 2 min — Validé le 12–13/11/2026
 1. Ouvrir une fiche Å“uvre avec 2 exemplaires, sans taille (ex. /fr/produits/bague-de-marquis-argent-925-355e). RÃ©sultat : une seule ligne Â« Plus que 2 Â» (sous la description), pas de doublon rouge prÃ¨s du bouton.
 2. Fiche avec tailles : l'indication Â« Plus que n Â» reste sur la taille concernÃ©e uniquement.
 
@@ -408,12 +408,12 @@ Statut : Ã€ tester â€” Date : â€”
 2. Client en EN : ouvrir l'e-mail Â« on its way Â» et la page commande.
 3. Attendu : Â« Other Â», pas Â« Autre Â». (Couvert en partie par A-F14.)
 
-### T-IMG-EXEMPLE â€” Image d'exemple dans les e-mails â€” 3 min â€” Ã€ tester â€” date : â€”
+### T-IMG-EXEMPLE â€” Image d'exemple dans les e-mails â€” 3 min — Validé le 12–13/11/2026
 1. Passer commande d'une piÃ¨ce exemple (lunettes), puis l'annuler.
 2. Ouvrir les e-mails de confirmation et d'annulation.
 3. Attendu : l'image s'affiche (mur d'accÃ¨s actif). (A-F14.)
 
-### T-PAIEMENT-AVANT-COMMANDE — Aucune commande tant que le paiement n'a pas réussi — 15 min — À tester — date : —
+### T-PAIEMENT-AVANT-COMMANDE — Aucune commande tant que le paiement n'a pas réussi — 15 min — Partiel : tests 1 à 3 validés (12–13/11/2026) ; restent 4 et 5
 Prérequis : Stripe en mode test (carte 4242 4242 4242 4242), webhook `checkout.session.completed` et `checkout.session.expired` actifs sur l'URL testée.
 1. Client : ajouter une pièce au panier, « Confirmer la commande », arriver sur la page Stripe. NE PAS payer.
 2. Admin > Stock > journal des mouvements : motif « Réservation en attente de paiement (AM-…) » (et non « Commande AM-… »). Admin > Commandes et Partenaire > Commandes : aucune nouvelle commande ; boîtes mail acheteur et partenaire : aucun e-mail. Fiche de la pièce : stock disponible diminué de 1 (réservation).
@@ -432,7 +432,7 @@ Prérequis : Stripe en mode test (carte 4242 4242 4242 4242), webhook `checkout.
 2. Avec le compte B (autre e-mail), tenter de commander la même pièce. Attendu : message de stock citant le NOM de la pièce, aucune réservation ni commande créée pour B.
 3. Panier de 2 pièces dont une seule épuisée : le message cite la pièce épuisée.
 
-### T-ANNUL-ADMIN-PARTENAIRE — Le partenaire est prévenu d'une annulation admin — 5 min — À tester — date : —
+### T-ANNUL-ADMIN-PARTENAIRE — Le partenaire est prévenu d'une annulation admin — 5 min — Validé le 12–13/11/2026
 1. Admin > Commandes : annuler le colis d'un partenaire avec un motif.
 2. Attendu : l'acheteur reçoit l'e-mail d'annulation ET le partenaire reçoit « colis … annulé » (motif, n° de colis, bouton vers sa commande) sur son e-mail de contact (sinon e-mail du compte).
 3. Refus par le partenaire : pas d'e-mail à lui-même. Expiration 48 h : e-mail au partenaire.
@@ -500,6 +500,9 @@ Statut : Validé — Date : 13/11/2026
 3. Onglet Journal : filtrer (type, période Aujourd'hui, plage…), paginer : l'onglet reste Journal. Réinitialiser : période « Toutes les dates ».
 4. Recharger la page sur tab=journal : on reste sur le Journal. Répéter côté admin (Admin > Stocks).
 
+### T-ARCHIVAGE — Archivage des commandes impayées — Validé le 12–13/11/2026
+Validé manuellement par l'utilisateur ; couvert aussi par A-F19 (logique, simulation sans écriture). Détail des étapes non repris ici.
+
 ### T-RETOUR-DISPO — Prévenu quand une pièce redevient disponible — 15 min — Validé le 13/11/2026
 1. Compte A : mettre une pièce unique au panier, « Confirmer » (réservation 30 min), ne pas payer, revenir en arrière.
 2. Compte B (autre navigateur, pièce NON en favori) : tenter la même pièce : message « plus disponible » (tentative mémorisée).
@@ -510,19 +513,19 @@ Statut : Validé — Date : 13/11/2026
 1. Simulation locale : `npm run db:archive-unpaid` (DATABASE_URL de la base visée, définie dans cmd pour la commande seulement). Attendu : liste dont AM-C83CA71A et AM-C08665C5 ; aucune commande payée/remboursée/expédiée listée ; rien modifié.
 2. Exécution : `npm run db:archive-unpaid -- --execute`.
 3. Attendu : ces commandes disparaissent des listes acheteur, partenaire et admin et des compteurs ; les commandes payées sont inchangées ; relancer la simulation : 0 commande.
-### T-PROFIL-PARTENAIRE â€” Le partenaire modifie son profil â€” 5 min â€” Ã€ tester â€” date : â€”
+### T-PROFIL-PARTENAIRE â€” Le partenaire modifie son profil â€” 5 min — Validé le 12–13/11/2026
 1. Partenaire : Profil, renseigner adresse, e-mail de contact, tÃ©lÃ©phone, enregistrer.
 2. Saisir un e-mail ou tÃ©lÃ©phone invalide : message d'erreur FR/EN.
 3. Admin : Partenaires, journal : ligne Â« Profil modifiÃ© Â» avec date, auteur, champ, ancienne et nouvelle valeur.
 4. Note : les renommages faits avant ce lot ne sont pas tracÃ©s (pas de rÃ©tro-remplissage).
 
-### T-PROFIL-ADMIN â€” L'admin modifie un profil partenaire â€” 5 min â€” Ã€ tester â€” date : â€”
+### T-PROFIL-ADMIN â€” L'admin modifie un profil partenaire â€” 5 min — Validé le 12–13/11/2026
 1. Admin : Partenaires, Â« Modifier le profil Â» d'un partenaire.
 2. Changer le nom, les coordonnÃ©es, les bios, enregistrer.
 3. Un nom dÃ©jÃ  pris est refusÃ©.
 4. Le journal affiche l'auteur (e-mail admin) et l'ancienne/nouvelle valeur ; le partenaire voit les nouvelles valeurs.
 
-### T-AUDIT-PROFIL â€” Journal d'audit des profils â€” 5 min â€” Ã€ tester â€” date : â€”
+### T-AUDIT-PROFIL â€” Journal d'audit des profils â€” 5 min — Validé le 12–13/11/2026
 1. Admin : Partenaires, Â« Modifier le profil Â» d'un partenaire, changer le tÃ©lÃ©phone, enregistrer.
 2. Revenir sur Partenaires, section Â« Journal d'audit Â» : ligne Â« Profil modifiÃ© Â» en tÃªte (date, partenaire, dÃ©tail Â« phone : ancien â†’ nouveau Â», auteur = e-mail admin).
 3. Se connecter comme partenaire, changer son nom : nouvelle ligne avec l'e-mail du partenaire.
@@ -539,14 +542,14 @@ Statut : Validé — Date : 13/11/2026
 3. Une seule ligne (~40 px) par partenaire ; colonne Actions alignÃ©e Ã  droite : Â« Modifier le profil Â», Â« GÃ©rer les crÃ©ations Â», Â« Statutâ€¦ Â».
 4. Â« Statutâ€¦ Â» ouvre une fenÃªtre : action (Suspendre/RÃ©voquer ou RÃ©activer), motif obligatoire (sauf rÃ©activation), Valider ; sans motif, la validation est refusÃ©e. Annuler ferme la fenÃªtre sans effet.
 
-### T-EMAIL-CONTACT â€” E-mails partenaire vers l'e-mail de contact â€” 8 min â€” Ã€ tester â€” date : â€”
+### T-EMAIL-CONTACT â€” E-mails partenaire vers l'e-mail de contact â€” 8 min — Validé le 12–13/11/2026
 1. Admin : Â« Modifier le profil Â» de Mia-Mia, mettre une autre adresse dans Â« E-mail de contact Â», enregistrer.
 2. Client : passer une commande contenant une piÃ¨ce de Mia-Mia.
 3. Attendu : l'e-mail Â« nouvelle commande Â» arrive sur l'adresse de contact, pas sur l'e-mail de connexion.
 4. Vider l'e-mail de contact, refaire une commande : l'e-mail arrive sur l'e-mail de connexion (repli).
 5. ContrÃ´ler aussi : annulation client, suspension/rÃ©activation, versement (mÃªme adresse). L'e-mail de connexion reste inchangÃ©. (A-F16 couvre la rÃ¨gle.)
 
-### T-RETOURS-GRATUITS â€” Mention Â« retours gratuits Â» retirÃ©e â€” 3 min â€” Ã€ tester â€” date : â€”
+### T-RETOURS-GRATUITS â€” Mention Â« retours gratuits Â» retirÃ©e â€” 3 min — Validé le 12–13/11/2026
 1. FR puis EN : ouvrir le panier (bureau et mobile), le checkout, une fiche produit.
 2. Attendu : aucune mention Â« Retours gratuits sous 30 jours Â» / Â« Free returns within 30 days Â», ni autre mention Â« gratuit/offert Â» en remplacement.
 3. Ouvrir les e-mails de commande : mÃªme contrÃ´le. Les pages Retours et remboursements restent inchangÃ©es.

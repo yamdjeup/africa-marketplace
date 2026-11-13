@@ -124,7 +124,7 @@ PrÃ©requis : migration 0023 appliquÃ©e ; un colis livrÃ© (compte client) ;
 | T-SUIVI | Suivi de livraison + remboursement (lots 1â€“2) | 15 min | Partiel : étapes 1, 2, 3, 4 validées ; restent 5, 6, 7 | 12–13/11/2026 |
 | T-MAILS | E-mails Farfetch | 10 min | Validé (étapes 1–4) | 12–13/11/2026 |
 | T-AIDE | Pages d'aide FR/EN | 10 min | Validé | 12–13/11/2026 |
-| T-ADMIN-FILTRES | Filtres, pagination et pastilles (admin + partenaire) ; e-mails de retour | 20 min | Ã€ tester | â€” |
+| T-ADMIN-FILTRES | Filtres, pagination et pastilles (admin + partenaire) ; e-mails de retour | 20 min | Validé (déclaré par l'utilisateur, sans capture) | avant le 13/11/2026 |
 | T24 | Parcours de commande complet (achat â†’ livraison) | 20 min | Ã€ tester | â€” |
 | T-STRIPE | Paiement Stripe Checkout + webhook (lot 0) | 15 min | Partiel : étapes 1, 2, 3, 4, 5, 7, 8 validées ; reste 6 ; étape 7 validée 13/11/2026 | 12–13/11/2026 |
 | T-REMB | Remboursement au refus/expiration/annulation | 15 min | Partiel : étapes 1, 2, 3, 4 (admin validée 13/11 ; client validée 12/11, déclarée) validées + expiration (5) testée ; restent 6, 7, 8 | 12–13/11/2026 |
@@ -206,7 +206,7 @@ PrÃ©requis : migration 0022 ; STRIPE_SECRET_KEY de test ; commande payÃ©e vi
 3. Client : suivre chaque colis, e-mails reÃ§us Ã  chaque Ã©tape.
 4. Admin : voir les sous-commandes dans `/fr/admin/commandes` et le registre dans `/fr/admin/versements`.
 
-### T-ADMIN-FILTRES â€” Filtres, pastilles et e-mails de retour â€” 20 min — Validé le 12–13/11/2026
+### T-ADMIN-FILTRES â€” Filtres, pastilles et e-mails de retour â€” 20 min — Validé — fait avant le 13/11/2026, déclaré par l'utilisateur, sans capture
 Couvert en partie par A-F1, A-F2, A-F3 (logique, gabarit) ; reste le rendu visuel et la prise en main.
 1. Compte admin : ouvrir Admin. RÃ©sultat : pastilles numÃ©rotÃ©es sur Candidatures, CrÃ©ations Ã  modÃ©rer, Commandes (escaladÃ©es), Versements (Ã  payer), Retours (demandÃ©s) quand il y a du travail ; aucune pastille Ã  0.
 2. Admin â€º Retours : onglet Â« Ã€ traiter Â» par dÃ©faut avec son compteur ; cliquer Â« RemboursÃ©s Â», Â« RefusÃ©s Â», Â« Tous Â». RÃ©sultat : la liste change, l'URL contient `?st=â€¦`.
@@ -522,7 +522,7 @@ Statut : Ã€ tester â€” Date : â€”
 3. Pour une piÃ¨ce vendue ou en rupture : le lien ouvre quand mÃªme la fiche, qui indique l'indisponibilitÃ©.
 (Lien e-mail couvert par A-F12.)
 
-### T-DOMAINE-OFFICIEL â€” Parcours complet sur epomta.com â€” 15 min â€” Ã€ tester â€” date : â€”
+### T-DOMAINE-OFFICIEL â€” Parcours complet sur epomta.com â€” 15 min â€” Validé — fait avant le 13/11/2026, déclaré par l'utilisateur, sans capture
 1. Sur https://epomta.com : inscription/connexion client, ajout panier, paiement Stripe (carte test) â†’ retour sur epomta.com, toujours connectÃ©.
 2. Ouvrir les e-mails reÃ§us : tous les liens (compte, suivi, articles) pointent vers epomta.com.
 3. Connexion Google : OK (aprÃ¨s mise Ã  jour de l'URI de redirection).

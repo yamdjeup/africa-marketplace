@@ -118,4 +118,46 @@ describe.skipIf(!enabled)("réservation de paiement (base de test)", () => {
     expect((await product()).reserved).toBe(0);
     expect(await db.order.count({ where: { number } })).toBe(0);
   });
+
+  const extraProduct = (suffix: string, stock: number) => {
+    const s = `hold-${tag.toLowerCase()}-${suffix}`;
+    return db.product.create({ data: { slug: s, name: `Pièce ${suffix} ${tag}`, nameEn: `Piece ${suffix} ${tag}`, description: "d", descriptionEn: "d", story: "s", storyEn: "s", categorySlug: "test-hold", creatorSlug: "test-hold", priceCents: 5000, materials: [], sizes: [], images: [], stock, supplierId } });
+  };
+  const dropExtra = async (slugs: string[]) => {
+    await db.checkoutHold.deleteMany({ where: { number: { startsWith: `AM-H${tag}` } } });
+    await db.stockMovement.deleteMany({ where: { productSlug: { in: slugs } } });
+    await db.product.deleteMany({ where: { slug: { in: slugs } } });
+  };
+  const line = (p: { slug: string; name: string }) => ({ slug: p.slug, name: p.name, size: null, quantity: 1, unitPriceCents: 5000, supplierId });
+
+  it("course de stock : deux réservations simultanées sur stock 1, un seul gagnant, l'autre reçoit l'erreur nommant la pièce", async () => {
+    const { createHold, StockError } = await import("@/lib/checkout-hold");
+    const p = await extraProduct("race", 1);
+    try {
+      const res = await Promise.allSettled([
+        createHold(db, { ...payload("r1@test.example"), lines: [line(p)] }, num()),
+        createHold(db, { ...payload("r2@test.example"), lines: [line(p)] }, num()),
+      ]);
+      expect(res.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+      const lost = res.find((r) => r.status === "rejected") as PromiseRejectedResult;
+      expect(lost.reason).toBeInstanceOf(StockError);
+      expect(lost.reason).toMatchObject({ item: p.name });
+      expect((await db.product.findUniqueOrThrow({ where: { slug: p.slug } })).reserved).toBe(1);
+    } finally {
+      await dropExtra([p.slug]);
+    }
+  });
+
+  it("panier de 2 pièces dont une épuisée : l'erreur cite la pièce épuisée, aucune réservation pour l'autre", async () => {
+    const { createHold } = await import("@/lib/checkout-hold");
+    const ok = await extraProduct("ok", 5);
+    const out = await extraProduct("out", 0);
+    try {
+      const err = await createHold(db, { ...payload("cart@test.example"), lines: [line(ok), line(out)] }, num()).catch((e) => e);
+      expect(err).toMatchObject({ item: out.name });
+      expect((await db.product.findUniqueOrThrow({ where: { slug: ok.slug } })).reserved).toBe(0);
+    } finally {
+      await dropExtra([ok.slug, out.slug]);
+    }
+  });
 });

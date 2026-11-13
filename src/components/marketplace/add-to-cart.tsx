@@ -22,16 +22,22 @@ type Props = {
   unique?: boolean;
 };
 
+export function cartQuantity(lines: { slug: string; size: string | null; quantity: number }[], slug: string, size: string | null, hasSizes: boolean) {
+  return lines.filter((l) => l.slug === slug && (!hasSizes || l.size === size)).reduce((n, l) => n + l.quantity, 0);
+}
+
 export function AddToCart({ locale, slug, name, creatorName, image, priceCents, stock, sizes = [], sizeStock, sizeLabel, unique }: Props) {
   const t = getDict(locale).product;
-  const { add } = useCart();
+  const { add, lines } = useCart();
   const [added, setAdded] = useState(false);
   const [size, setSize] = useState<string | null>(null);
   const [missing, setMissing] = useState(false);
-  const disabled = stock === 0 || added;
   const [qty, setQty] = useState(1);
   const fr = locale === "fr";
   const cap = sizeStock && size ? sizeStock[size] ?? stock : stock;
+  const inCart = cartQuantity(lines, slug, size, sizes.length > 0);
+  const atMax = stock > 0 && cap > 0 && inCart >= cap;
+  const disabled = stock === 0 || added || atMax;
   const maxQty = Math.max(1, cap);
   const q = Math.min(qty, maxQty);
   const LOW = 3;
@@ -99,7 +105,7 @@ export function AddToCart({ locale, slug, name, creatorName, image, priceCents, 
           setAdded(true);
         }}
       >
-        {stock === 0 ? t.outOfStock : t.addToCart}
+        {stock === 0 ? t.outOfStock : added || atMax ? t.added : t.addToCart}
       </Button>
       <div role="status" aria-live="polite" className="min-h-6 text-sm">
         {added && (

@@ -207,6 +207,78 @@ Couvert en partie par A-F1, A-F2, A-F3 (logique, gabarit) ; reste le rendu visue
 9. Mobile : onglets de statut et formulaire de filtres lisibles, boutons â‰¥ 44 px, pas de dÃ©filement horizontal de la page.
 10. E-mails de retour (voir T-RETOUR 2, 4, 5, 6) : logo Â« E PÃ“M TA' Â», titre en capitales, bouton noir, rÃ©capitulatif avec vignette (image visible), pied d'aide ; Gmail n'affiche plus Â« Ce message semble Ãªtre en anglais Â» sur un e-mail FR.
 
+## Plan de recette des tests restants (rédigé le 13/11/2026) — ordre conseillé
+
+Rédigé sans modifier le code. Seuls les écrans/e-mails/Stripe réels restent à vérifier par toi ; les statuts ci-dessus ne changent pas. Prérequis communs : un compte client A, un client B (autre e-mail), un partenaire actif, l'admin, une pièce de test à stock 1 (€ = euros TTC affichés).
+
+### Phase 1 — rapide, écran seulement (≈ 20 min)
+
+**T-STOCK-NOM (affichage, 5 min)** — le fait est testé en CI (A-T27) ; reste le libellé à l'écran.
+1. Partenaire : mettre une pièce à stock 1.
+2. Client A : panier, « Confirmer », rester sur la page Stripe (ne pas payer).
+3. Client B (navigation privée, autre e-mail) : ajouter la même pièce, « Confirmer ». Attendu : message de stock citant le NOM de la pièce ; aucune page Stripe ouverte.
+4. Client B : panier de 2 pièces (la pièce prise + une pièce en stock). Attendu : le message cite la pièce prise, pas l'autre.
+5. Fermer l'onglet de A, puis admin > Stocks : la pièce redevient disponible après 30 min (ou voir T-RESERVATION).
+
+**T-NOM-ENTETE (2 min)** — non automatisé (session/JWT : je ne sais pas le tester sans navigateur connecté, rien d'écrit).
+1. Partenaire : Mon profil, renommer en « Test Nom 1 €-», enregistrer.
+2. Recharger (F5) : le menu d'en-tête et « Mon compte » affichent « Test Nom 1 » sans reconnexion.
+3. Admin > Partenaires > « Modifier le profil » de ce partenaire : renommer en « Test Nom 2 », enregistrer.
+4. Se reconnecter côté partenaire ou recharger : nom « Test Nom 2 » partout. Remettre le vrai nom.
+
+**T-TABLEAU-PARTENAIRES (5 min)** — logique de liste couverte par `admin-list.test.ts` ; l'écran reste manuel.
+1. Admin > Partenaires : colonnes Nom, Pays, Savoir-faire, Commission (%), Statut, E-mail compte, E-mail contact, Date, Actions.
+2. Rechercher un nom ; cliquer chaque onglet de statut ; trier par date ; page suivante. Attendu : liste cohérente, filtres conservés dans l'URL.
+3. Une ligne ≈ 40 px par partenaire ; Actions à droite.
+4. « Statut… » : fenêtre ; Valider sans motif refusé (sauf réactivation) ; avec motif accepté.
+5. Mobile (largeur 375 px) : tableau défilable, pas de chevauchement.
+
+**T-AUTRE-EN (3 min)** — `carrierLabel("Autre", false) = "Other"` testé (A-F14) ; reste le rendu réel.
+1. Partenaire : expédier un colis, transporteur « Autre », numéro 12345.
+2. Client en EN (`/en`) : ouvrir l'e-mail « on its way » (Gmail) et la page commande. Attendu : « Other », jamais « Autre ».
+
+### Phase 2 — paiements sandbox Stripe (≈ 45 min, cartes test uniquement)
+
+**T-RESERVATION-IMPAYEE (15 min)** — étapes 1–3 couvertes en logique (checkout-hold.db) ; reste : vraie page Stripe.
+1. Client A : « Confirmer » → page Stripe → bouton retour du navigateur → « Confirmer » à nouveau. Attendu : jamais « plus disponible » ; admin > Stocks : réservé = 1 (pas 2).
+2. Fermer Stripe sans payer ; attendre 30–35 min. Attendu : stock rétabli, aucune commande (ni « Annulée »), aucun e-mail.
+3. Cas limite : ouvrir Stripe, attendre l'expiration, puis payer avec 4242 4242 4242 4242 : commande créée si stock dispo ; sinon aucune commande, remboursement (€) + e-mail « Votre paiement est remboursé ».
+
+**T-PAIEMENT-AVANT-COMMANDE 4–5 (10 min)**
+1. Payer avec 4242 4242 4242 4242. Attendu : une commande, un colis par partenaire, e-mail acheteur + e-mail partenaire « nouvelle commande » (1 seule fois).
+2. Stripe (sandbox) > Développeurs > Webhooks > événement : réponse 200 ; « Renvoyer » : toujours une seule commande (idempotence testée en CI, A-T4).
+
+**T-STRIPE 6–7 (10 min)**
+1. (6) Client : « Confirmer », arriver sur Stripe, abandonner. Attendu : aucun e-mail, aucune commande payée.
+2. (7) Payer un colis puis admin/partenaire : annuler. Attendu : remboursement Stripe du montant du colis (€) + e-mail.
+
+**T-REMB 5–8** — étape 5 (expiration 48 h) : à ce jour le test d'expiration est déclaré OK par l'utilisateur ; non revérifié par moi. Restent 6, 7, 8 :
+1. (6) Voir lignes 6 du fichier : « Rembourser (Stripe) » → statut « Remboursé », remboursement du montant (€) dans le dashboard sandbox, e-mail client.
+2. (7) Clé Stripe invalide (sandbox cassée) : `refundStatus` = FAILED, message neutre « nous revenons vers vous » sans montant ; log `[refund]`.
+3. (8) Sans paiement Stripe : aucune mention de remboursement ; « Marquer remboursé (manuel) » → statut « Remboursé ».
+(Le texte exact des étapes 6–8 est dans la section T-REMB ; je n'ai pas réécrit ce que je n'ai pas relu entièrement.)
+
+### Phase 3 — UPS et recette historique (≈ 1 h+)
+
+**T-SUIVI 1–2, 5–7** : (1) partenaire : commande acceptée, expédier avec UPS + numéro ; (2) e-mail « en route » : lien « Suivre mon colis » vers la page UPS avec ce numéro ; 5–7 : voir la section T-SUIVI (non reprises ici, non relues en détail).
+
+**H-01..H-16 — classification (lue d'après les titres, non exhaustive)** :
+| Test | Classe | Raison |
+|---|---|---|
+| H-02 Créations et stock | Partiel | `stock-pages.db.test.ts`, `checkout-hold.db.test.ts` couvrent le stock ; création/modération = manuel |
+| H-06 Suspension | Partiel | listes couvertes (`admin-list.test.ts`) ; actions + motif = manuel |
+| H-07 Commandes par partenaire | Partiel | `suborders.db.test.ts` couvre colis/stock ; e-mails et écrans = manuel |
+| H-12 Traduction automatique | Je ne sais pas | dépend d'un service externe ; non testé |
+| H-13 Fiche création | Manuel (visuel) | mentions et dimensions à l'écran |
+| H-14 Paiements | Partiel | `refund.test.ts` ; registre/versements à l'écran = manuel |
+| H-01, H-03, H-04, H-05, H-08..H-11, H-15, H-16 | Je ne sais pas | non relus un par un ; à classer avant d'inventer |
+Pas de test Playwright écrit pour H : exécution impossible ici (pas de Neon), donc rien marqué « Écrit ».
+
+### Phase 4 — bloqués / non automatisables
+- T-GA4 (1–11) : navigateur privé + outils réseau ; `NEXT_PUBLIC_GA_ID` requis.
+- T-DOMAINE-OFFICIEL (1–4) : domaine de prod, Google OAuth, webhook réel.
+- T24 : parcours multi-comptes avec Gmail, après les phases 1–3.
+
 ## Recette historique (lots A Ã  D, suspension, traduction, fiche crÃ©ation)
 
 Chaque bloc ci-dessous est un test (ID H-xx) ; ses Ã©tapes sont numÃ©rotÃ©es. Statut de chaque test : Ã€ tester, sauf mention contraire.

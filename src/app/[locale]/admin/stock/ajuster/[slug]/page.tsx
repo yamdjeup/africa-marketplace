@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import type { Locale } from "@/lib/i18n";
+import { requireAdmin } from "@/lib/supplier";
 import { tr } from "@/lib/tr";
 import { adminAdjustStockAction } from "../../../stock-actions";
 
@@ -11,6 +12,7 @@ const inputCls = "mt-1 block min-h-11 w-full rounded-md border bg-background px-
 export default async function AdminAdjustStock({ params, searchParams }: { params: Promise<{ locale: Locale; slug: string }>; searchParams: Promise<{ error?: string; saved?: string }> }) {
   const { locale, slug } = await params;
   const sp = await searchParams;
+  await requireAdmin(locale);
   const p = await db.product.findUnique({ where: { slug }, include: { variants: true } });
   if (!p) notFound();
   const fr = locale !== "en";

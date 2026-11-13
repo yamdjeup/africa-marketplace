@@ -42,7 +42,7 @@ DerniÃ¨re exÃ©cution (11/11/2026, lot admin + e-mails de retour) : Vitest 62
 | A-T35 | L'admin ajuste le stock d'une pièce de partenaire : motif obligatoire, journal avec l'e-mail de l'admin, refus sous le réservé (`tests/unit/checkout-hold.db.test.ts`, base jetable) | OK en CI — 13/11/2026 (vert global ; log détaillé non lu) | 13/11/2026 |
 | A-T36 | Remboursement Stripe (mock `fetch`, sans base ni appel réel) : sans clé → MANUAL (T-SUIVI 5) ; AWAITING puis paiement confirmé → remboursement créé (T-REMB 6) ; deux annulations simultanées → même clé d'idempotence, rien une fois DONE (T-SUIVI 7) (`tests/unit/refund.test.ts`, avec les cas DONE/FAILED/AWAITING existants = T-SUIVI 6, T-REMB 7) | OK en CI #60 — 13/11/2026 (vert global ; log détaillé non lu) | 13/11/2026 |
 | A-T37 | Prérequis de publication stores (sans réseau) : manifest PWA, icônes 192/512/maskable aux tailles réelles, apple-touch 180×180, sw.js, accès sans mur, appId identique Capacitor/Android/iOS, URL HTTPS, page hors ligne, liens CGV/confidentialité/cookies en pied de page (`tests/unit/store-readiness.test.ts`, 7 tests, passés en local) | OK en CI #60 — 13/11/2026 (vert global ; log détaillé non lu) | 13/11/2026 |
-| A-T38 | Numéro de suivi assaini : virgule/point-virgule/espaces retirés, URL UPS sans %2C, pas de lien si vide (`tests/unit/tracking-clean.test.ts`, 3 tests passés en local) ; nettoyage appliqué à la saisie partenaire, à la page commande, au lien et aux e-mails FR/EN | Écrit, à lancer en CI | 13/11/2026 |
+| A-T38 | Numéro de suivi assaini : virgule/point-virgule/espaces retirés, URL UPS sans %2C, pas de lien si vide (`tests/unit/tracking-clean.test.ts`, 3 tests passés en local) ; nettoyage appliqué à la saisie partenaire, à la page commande, au lien et aux e-mails FR/EN | OK en CI #61 — 13/11/2026 (vert global ; log détaillé non lu) | 13/11/2026 |
 | A-T28 | Purge des résidus de test avant seed (`prisma/test-residue.ts`, `test-residue.test.ts`) : dépendances supprimées avant les produits test-hold | OK en CI #47 (vert global, log détaillé non lu) | 13/11/2026 |
 | A-T23 | T | Réveil de la base de test (Neon en veille) : connect_timeout ajouté si absent, retry/backoff sur P1001, abandon sur autre erreur ; sonde TCP sans client Prisma (régression CI sqlite) | `tests/unit/db-wake.test.ts` (Vitest) | OK en CI (#39, #42, #47) — 13/11/2026 | `npm run test:db` (logique) |
 | A-M1 | M | Fournisseur e-mail : Resend (from, reply_to, sans mention interdite) ; repli Gmail / aucun sans erreur | `tests/unit/email-provider.test.ts` (Vitest) | OK 2/2 â€” 10/11/2026 | T-MAIL-FROM (payload) |
@@ -121,13 +121,13 @@ PrÃ©requis : migration 0023 appliquÃ©e ; un colis livrÃ© (compte client) ;
 |---|---|---|---|---|
 | T-GA4 | GA4 + consentement | 15 min | Ã€ tester | â€” |
 | T-COLIS | Multi-colis + annulation | 20 min | TestÃ© | 12/11/2026 |
-| T-SUIVI | Suivi de livraison + remboursement (lots 1â€“2) | 15 min | Partiel : étapes 3–4 validées ; restent 1, 2, 5, 6, 7 | 12–13/11/2026 |
+| T-SUIVI | Suivi de livraison + remboursement (lots 1â€“2) | 15 min | Partiel : étapes 1, 2, 3, 4 validées ; restent 5, 6, 7 | 12–13/11/2026 |
 | T-MAILS | E-mails Farfetch | 10 min | Validé (étapes 1–4) | 12–13/11/2026 |
 | T-AIDE | Pages d'aide FR/EN | 10 min | Validé | 12–13/11/2026 |
-| T-ADMIN-FILTRES | Filtres, pagination et pastilles (admin + partenaire) ; e-mails de retour | 20 min | Ã€ tester | â€” |
+| T-ADMIN-FILTRES | Filtres, pagination et pastilles (admin + partenaire) ; e-mails de retour | 20 min | Validé (déclaré par l'utilisateur, sans capture) | avant le 13/11/2026 |
 | T24 | Parcours de commande complet (achat â†’ livraison) | 20 min | Ã€ tester | â€” |
 | T-STRIPE | Paiement Stripe Checkout + webhook (lot 0) | 15 min | Partiel : étapes 1, 2, 3, 4, 5, 7, 8 validées ; reste 6 ; étape 7 validée 13/11/2026 | 12–13/11/2026 |
-| T-REMB | Remboursement au refus/expiration/annulation | 15 min | Partiel : étapes 1, 2, 3, 4 (admin validée 13/11 ; client à tester) validées + expiration (5) testée ; restent 6, 7, 8 | 12–13/11/2026 |
+| T-REMB | Remboursement au refus/expiration/annulation | 15 min | Partiel : étapes 1, 2, 3, 4 (admin validée 13/11 ; client validée 12/11, déclarée) validées + expiration (5) testée ; restent 6, 7, 8 | 12–13/11/2026 |
 | H-01 Ã  H-16 | Lots A Ã  D, suspension, traduction, fiche crÃ©ation | 60 min | Ã€ tester | â€” |
 
 ### T-GA4 â€” GA4 et bandeau de consentement
@@ -159,10 +159,10 @@ PrÃ©requis : Client connectÃ© ; articles de 2 crÃ©ateurs ; 2 comptes crÃ�
 
 ### T-SUIVI â€” suivi de livraison et remboursement (lots 1â€“2)
 PrÃ©requis : migration 0020 appliquÃ©e.
-1. CrÃ©ateur : commande acceptÃ©e, formulaire d'expÃ©dition : choisir UPS, saisir un numÃ©ro, valider.
-2. Mail Â« en route Â» : lien Â« Suivre mon colis Â» vers la page UPS avec le numÃ©ro.
-3. Compte client, dÃ©tail de commande : lien Â« Suivre mon colis Â» prÃ©sent ; absent pour un transporteur Â« Autre Â».
-4. Marquer livrÃ© : mail Â« livrÃ©e Â» avec le mÃªme lien.
+1. CrÃ©ateur : commande acceptÃ©e, formulaire d'expÃ©dition : choisir UPS, saisir un numÃ©ro, valider. — Validé 13/11/2026 (AM-B197F3C1, UPS, suivi 1Z999AA10123456784 : page commande sans virgule).
+2. Mail Â« en route Â» : lien Â« Suivre mon colis Â» vers la page UPS avec le numÃ©ro. — Validé 13/11/2026 (e-mail FR « en route » reçu 21:19 ; lien → ups.com/track?tracknum=1Z999AA10123456784 sans %2C ; UPS répond Delivered/No Information Available = numéro d'exemple). Nettoyage de la virgule saisie : couvert par A-T38 (auto), non testé à la main (saisie avec virgule inconnue).
+3. Compte client, dÃ©tail de commande : lien Â« Suivre mon colis Â» prÃ©sent ; absent pour un transporteur Â« Autre Â». — Lien présent côté compte client : validé 13/11/2026 pour UPS ; « absent pour Autre » : Validé 13/11/2026 (AM-BD9FB414 : page « Autre · suivi 123456789 » sans « Suivre mon colis » ; e-mail 21:25 FR « (Autre, suivi 123456789) », bouton « Suivre ma commande » vers le compte).
+4. Marquer livrÃ© : mail Â« livrÃ©e Â» avec le mÃªme lien. — Validé 13/11/2026 (AM-B197F3C1 : page « Commande livrée », colis « Livrée » 13/11, lien « Suivre mon colis » ; e-mail 21:21 « Votre commande est livrée » avec « Suivre mon colis »).
 5. Annuler un colis sans STRIPE_SECRET_KEY : Â« remboursement en cours de traitement Â», `refundStatus` = MANUAL en base.
 6. Avec une clÃ© Stripe de test et `stripePaymentIntentId` posÃ© sur la commande : annulation = DONE, mail Â« remboursement effectuÃ© Â», visible dans Stripe.
 7. ClÃ© invalide : FAILED, texte Â« en cours de traitement Â». Deux onglets : un seul remboursement.
@@ -189,7 +189,7 @@ PrÃ©requis : migration 0022 ; STRIPE_SECRET_KEY de test ; commande payÃ©e vi
 1. Client : commande payÃ©e (carte 4242â€¦), webhook reÃ§u (`stripePaymentIntentId` renseignÃ©). â€” TESTÃ‰ 10/11/2026
 2. CrÃ©ateur : refuser le colis avec un motif. RÃ©sultat : Stripe > Paiements > Refund crÃ©Ã© (montant du colis), `refundStatus` = DONE. â€” TESTÃ‰ 10/11/2026
 3. Compte client et e-mail Â« Commande annulÃ©e Â» (refus, expiration, annulation client/admin) : Â« Vous serez remboursÃ© de X,XX â‚¬ â€¦ sous 5 Ã  10 jours ouvrÃ©s Â» (FR et EN). — Validé 13/11/2026 (AM-A3343DEF, Choupi Tree 2 000 €, annulée par l'admin : remboursement Stripe sandbox 2 000,00 € Refunded, e-mail FR « sous 5 à 10 jours ouvrés » reçu 21:06, même mention sur la page commande, stock revenu à 2) ; FR seulement pour l'annulation admin, EN non confirmé
-4. Refaire avec annulation client, puis annulation admin : mÃªme rÃ©sultat. — Variante annulation ADMIN : Validé 13/11/2026 (AM-A3343DEF, voir étape 3). Variante annulation CLIENT : À tester (non prouvée).
+4. Refaire avec annulation client, puis annulation admin : mÃªme rÃ©sultat. — Variante annulation ADMIN : Validé 13/11/2026 (AM-A3343DEF, voir étape 3). Variante annulation CLIENT : Validé 12/11/2026 — déclaré par l'utilisateur, sans capture dans le fichier.
 5. Colis sans rÃ©ponse 48 h (expirÃ©) : remboursement crÃ©Ã© au passage du cron.
 6. Refuser un colis avant le webhook (paiement non confirmÃ©) : `refundStatus` = AWAITING ; renvoyer le webhook : remboursement crÃ©Ã©.
 7. ClÃ© Stripe invalide : `refundStatus` = FAILED, `refundNote` explicite, ligne `[refund]` dans les logs Vercel ; e-mail et compte : message neutre Â« nous revenons vers vous Â», sans montant. Sans paiement Stripe : aucune mention de remboursement.
@@ -206,7 +206,7 @@ PrÃ©requis : migration 0022 ; STRIPE_SECRET_KEY de test ; commande payÃ©e vi
 3. Client : suivre chaque colis, e-mails reÃ§us Ã  chaque Ã©tape.
 4. Admin : voir les sous-commandes dans `/fr/admin/commandes` et le registre dans `/fr/admin/versements`.
 
-### T-ADMIN-FILTRES â€” Filtres, pastilles et e-mails de retour â€” 20 min — Validé le 12–13/11/2026
+### T-ADMIN-FILTRES â€” Filtres, pastilles et e-mails de retour â€” 20 min — Validé — fait avant le 13/11/2026, déclaré par l'utilisateur, sans capture
 Couvert en partie par A-F1, A-F2, A-F3 (logique, gabarit) ; reste le rendu visuel et la prise en main.
 1. Compte admin : ouvrir Admin. RÃ©sultat : pastilles numÃ©rotÃ©es sur Candidatures, CrÃ©ations Ã  modÃ©rer, Commandes (escaladÃ©es), Versements (Ã  payer), Retours (demandÃ©s) quand il y a du travail ; aucune pastille Ã  0.
 2. Admin â€º Retours : onglet Â« Ã€ traiter Â» par dÃ©faut avec son compteur ; cliquer Â« RemboursÃ©s Â», Â« RefusÃ©s Â», Â« Tous Â». RÃ©sultat : la liste change, l'URL contient `?st=â€¦`.
@@ -522,7 +522,7 @@ Statut : Ã€ tester â€” Date : â€”
 3. Pour une piÃ¨ce vendue ou en rupture : le lien ouvre quand mÃªme la fiche, qui indique l'indisponibilitÃ©.
 (Lien e-mail couvert par A-F12.)
 
-### T-DOMAINE-OFFICIEL â€” Parcours complet sur epomta.com â€” 15 min â€” Ã€ tester â€” date : â€”
+### T-DOMAINE-OFFICIEL â€” Parcours complet sur epomta.com â€” 15 min â€” Validé — fait avant le 13/11/2026, déclaré par l'utilisateur, sans capture
 1. Sur https://epomta.com : inscription/connexion client, ajout panier, paiement Stripe (carte test) â†’ retour sur epomta.com, toujours connectÃ©.
 2. Ouvrir les e-mails reÃ§us : tous les liens (compte, suivi, articles) pointent vers epomta.com.
 3. Connexion Google : OK (aprÃ¨s mise Ã  jour de l'URI de redirection).

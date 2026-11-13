@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useCart } from "@/lib/cart";
+import { INTEREST_POLL_MS } from "@/lib/cart-interest";
 import { interestToken } from "@/lib/interest-token";
 
 /** Signale un autre client qui a déjà cette pièce dans son panier (anonyme, sans identité). */
@@ -19,14 +20,23 @@ export function InCartNotice({ slug, locale }: { slug: string; locale: string })
       if (alive) setOthers(Boolean(j?.others));
     };
     void run();
+    const id = setInterval(() => {
+      if (document.visibilityState === "visible") void run();
+    }, INTEREST_POLL_MS);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void run();
+    };
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       alive = false;
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, [ready, slug, lines]);
 
   if (!others) return null;
   return (
-    <p role="status" className="rounded-md border border-accent bg-accent/15 p-3 text-sm font-medium">
+    <p role="status" aria-live="polite" className="pointer-events-none fixed inset-x-4 top-20 z-40 mx-auto w-fit max-w-md rounded-md border border-accent bg-background p-3 text-center text-sm font-medium shadow-lg">
       {locale === "en" ? "Hurry: another customer has this piece in their cart." : "Dépêchez-vous : un autre client a cette pièce dans son panier."}
     </p>
   );

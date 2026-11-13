@@ -1,6 +1,7 @@
 import type { PrismaClient } from "@prisma/client";
 
 export const INTEREST_MINUTES = 30;
+export const INTEREST_POLL_MS = 5000;
 const TOKEN_RE = /^[A-Za-z0-9-]{16,64}$/;
 
 export const validToken = (t: unknown): t is string => typeof t === "string" && TOKEN_RE.test(t);

@@ -38,7 +38,7 @@ export default async function AdminStockJournal({ params, searchParams }: { para
       {tab === "stock" ? (
       <section className="space-y-2">
         <h2 className="font-heading text-2xl text-primary">{tr(locale, "Stock par création", "Stock by creation")}</h2>
-        <StockListView locale={locale} sp={sp} action={`/${locale}/admin/stock`} data={list} hidden={jhidden} partner={sups} supName={supName} />
+        <StockListView locale={locale} sp={sp} action={`/${locale}/admin/stock`} data={list} hidden={jhidden} partner={sups} supName={supName} adjust={(slug) => `/${locale}/admin/stock/ajuster/${slug}`} />
       </section>
       ) : (
       <>

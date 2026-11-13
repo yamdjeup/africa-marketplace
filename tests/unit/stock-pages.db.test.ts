@@ -72,6 +72,19 @@ describe.skipIf(!enabled)("pages Stocks et filtres de période (base de test)", 
     expect(all).toBe(1);
   });
 
+  it("liste Stock par création : tous les filtres s'exécutent et filtrent", async () => {
+    const { loadStockList } = await import("@/lib/stock-list");
+    const base = await loadStockList({}, [supplierId], true);
+    expect(base.rows.some((r) => r.slug === slug)).toBe(true);
+    for (const sp of [{ sst: "low" }, { sst: "out" }, { sst: "held" }, { sst: "avail" }, { sq: "bague" }, { svar: "T52" }, { scat: "test-hold" }, { ssort: "last", sdir: "desc" }, { sd: "today" }, { sd: "7" }, { sd: "30" }, { sfrom: "2020-01-01", sto: "2099-01-01" }, { sd: "custom", sfrom: "bad" }]) {
+      const r = await loadStockList(sp, [supplierId], false);
+      expect(r.total).toBeGreaterThanOrEqual(0);
+    }
+    expect((await loadStockList({ sq: "zzzz-introuvable" }, [supplierId], true)).total).toBe(0);
+    expect((await loadStockList({ ssup: "autre" }, [supplierId], true)).total).toBe(base.total);
+    expect((await loadStockList({ sd: "custom", sfrom: "2099-01-01" }, [supplierId], true)).total).toBe(0);
+  });
+
   it("listes admin : parseList + période produisent des filtres valides", async () => {
     const { parseList } = await import("@/lib/admin-list");
     for (const sp of variants()) {

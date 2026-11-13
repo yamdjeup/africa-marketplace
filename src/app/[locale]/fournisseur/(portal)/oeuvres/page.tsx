@@ -80,7 +80,7 @@ export default async function WorksPage({ params, searchParams }: Props) {
         ))}
       </nav>
 
-      <form method="get" className="grid gap-3 rounded-lg border p-3 sm:grid-cols-2 lg:grid-cols-4">
+      <form method="get" key={JSON.stringify(sp)} className="grid gap-3 rounded-lg border p-3 sm:grid-cols-2 lg:grid-cols-4">
         <input type="hidden" name="f" value={tab} />
         <label className="text-sm font-medium">{tr(locale, "Recherche (titre)", "Search (title)")}<input name="q" defaultValue={sp.q ?? ""} className={inputCls} /></label>
         <label className="text-sm font-medium">{tr(locale, "Catégorie", "Category")}

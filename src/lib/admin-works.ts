@@ -21,7 +21,7 @@ const STATUS: Record<Tab, Prisma.ProductWhereInput> = {
 };
 
 export const tabOf = (f?: string): Tab => ((TABS as readonly string[]).includes(f ?? "") ? (f as Tab) : "pending");
-export const dateModeOf = (d?: string) => (["today", "7", "30", "custom", "all"].includes(d ?? "") ? (d as string) : "today");
+export const dateModeOf = (d?: string) => (["today", "7", "30", "custom", "all"].includes(d ?? "") ? (d as string) : "all");
 const TZ = "Europe/Paris";
 // Jour calendaire (aaaa-mm-jj) d'un instant, en heure de Paris.
 export const isoDay = (d: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(d);

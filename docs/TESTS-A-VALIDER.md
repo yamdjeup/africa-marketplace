@@ -27,6 +27,7 @@ DerniÃ¨re exÃ©cution (11/11/2026, lot admin + e-mails de retour) : Vitest 62
 | A-T20 | T | Pages Stocks admin + partenaire et filtres de période : requêtes réellement exécutées (avec/sans filtres, périodes tous/aujourd'hui/7/30/personnalisée, journal, réservations actives) | `tests/unit/stock-pages.db.test.ts` (Vitest, base jetable) | Écrit ; ignoré sans `TEST_DATABASE_URL` (non exécuté localement) — à lancer avec `npm run test:all` ; tsc, eslint, build OK | T-ONGLETS-STOCKS, T-PERIODE-FILTRES |
 | A-T21 | T | Sélecteur de période des listes : toutes dates par défaut, aujourd'hui/7 j/30 j, plage personnalisée, valeur inconnue | `tests/unit/restock-period.test.ts` (Vitest) | OK 4/4 — 12/11/2026 | T-PERIODE-FILTRES (logique) |
 | A-T22 | T | Alertes « de nouveau disponible » : envoi unique, échec Resend (ou exception) = non marquée envoyée, stock 0/réservé = rien, favori/achetée = close | `tests/unit/restock-period.test.ts` (Vitest, base simulée) | OK 4/4 — 12/11/2026 | T-RETOUR-DISPO, T-ENVOI-IMMEDIAT-DISPO (logique) |
+| A-T24 | T | Liste « Stock par création » (admin + partenaire) : filtres titre/catégorie/statut/variante/tri/période (dernier mouvement) exécutés pour de vrai ; Réinitialiser remet la période sur « Toutes les dates » (formulaires remontés via key, défaut « all ») | `tests/unit/stock-pages.db.test.ts` (base jetable, CI) + `tests/unit/list-reset.test.ts` | À lancer sur base jetable (CI) ; unit local OK | `npm run test:all` |
 | A-T23 | T | Réveil de la base de test (Neon en veille) : connect_timeout ajouté si absent, retry/backoff sur P1001, abandon sur autre erreur ; sonde TCP sans client Prisma (régression CI sqlite) | `tests/unit/db-wake.test.ts` (Vitest) | OK 5/5 — 12/11/2026 | `npm run test:db` (logique) |
 | A-M1 | M | Fournisseur e-mail : Resend (from, reply_to, sans mention interdite) ; repli Gmail / aucun sans erreur | `tests/unit/email-provider.test.ts` (Vitest) | OK 2/2 â€” 10/11/2026 | T-MAIL-FROM (payload) |
 | A-M2 | M | Mur d'accÃ¨s : images `/api/media/<id>` et `/images/artworks/*` publiques, reste fermÃ© | `tests/unit/proxy-images.test.ts` (Vitest) | OK 2/2 â€” 10/11/2026 | T-MAIL-FROM 3 |
@@ -474,6 +475,13 @@ Statut : À tester
 3. Attendre l'expiration (30 min) puis ouvrir la fiche produit (déclenche le balayage), ou attendre l'événement Stripe d'expiration.
 4. Résultat : le compte A reçoit l'e-mail dans la minute (sans attendre le cron de 07:00), une seule fois.
 5. Vercel > Settings > Cron Jobs : /api/alerts/run (07:00) et /api/orders/sweep (06:00) listés ; variable CRON_SECRET définie.
+### T-FILTRES-STOCK-RESET — Filtres des listes de stock et Réinitialiser — 15 min — À tester — date : —
+1. Admin > Stocks : section « Stock par création ». Filtrer Statut = « Stock bas », puis « Épuisée », « Avec réservation » : seules les lignes correspondantes restent ; les compteurs entre parenthèses sont cohérents.
+2. Saisir un titre partiel, une variante, une catégorie, un partenaire : le tableau se réduit ; passer à la page 2 (si > 50 lignes) conserve les filtres.
+3. Période « Dernier mouvement » = Aujourd'hui / 7 j / 30 j / Plage : ne garde que les créations dont le dernier mouvement de stock tombe dans la période. Cliquer Réinitialiser : tout est vide et la période revient sur « Toutes les dates ».
+4. Même chose côté partenaire (Stocks) : les anciens onglets Toutes/Stock bas/Épuisées sont le filtre Statut ; bouton « Ajuster le stock » toujours présent.
+5. /admin/commandes : choisir « Aujourd'hui » puis « Plage personnalisée », Réinitialiser : période = « Toutes les dates », URL sans d/from/to. Répéter sur candidatures, partenaires, versements, retours, paiements, créations à modérer (défaut désormais « Toutes les dates »), journaux de stock admin et partenaire, commandes partenaire.
+
 ### T-RETOUR-DISPO — Prévenu quand une pièce redevient disponible — 15 min — À tester — date : —
 1. Compte A : mettre une pièce unique au panier, « Confirmer » (réservation 30 min), ne pas payer, revenir en arrière.
 2. Compte B (autre navigateur, pièce NON en favori) : tenter la même pièce : message « plus disponible » (tentative mémorisée).

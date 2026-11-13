@@ -32,7 +32,7 @@ export function ListFilters({ locale, path, q, tabs, defaultStatus, sorts }: { l
           </Link>
         ))}
       </nav>
-      <form method="get" action={path} className="flex flex-wrap items-end gap-2">
+      <form method="get" action={path} key={`${q.q}|${q.d}|${iso(q.from)}|${iso(q.to)}|${q.sort}|${q.asc}`} className="flex flex-wrap items-end gap-2">
         <input type="hidden" name="st" value={q.st} />
         <label className="text-xs">{tr(locale, "Recherche", "Search")}<input name="q" defaultValue={q.q} className={`${inputCls} w-56`} /></label>
         <DateRangeFields mode={q.d} from={iso(q.from)} to={iso(q.to)} today={todayParis()} disabled={false} inputCls={inputCls} labels={periodLabels(locale)} />

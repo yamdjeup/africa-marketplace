@@ -530,7 +530,7 @@ Statut : Ã€ tester â€” Date : â€”
 3. Saisir le mot de passe : accÃ¨s au site ; refaire sur epomta-demo.vercel.app : le mot de passe est redemandÃ© (cookie propre Ã  chaque domaine).
 (Couvert aussi par A-F13.)
 
-### T-AUTRE-EN â€” Transporteur Â« Autre Â» en anglais â€” 3 min â€” Ã€ tester â€” date : â€”
+### T-AUTRE-EN — Transporteur « Autre » en anglais — 3 min — Partiel : page commande EN validée le 13/11/2026 ; e-mail « Other » à revérifier (nouvel envoi)
 1. Partenaire : expÃ©dier un colis avec transporteur Â« Autre Â».
 2. Client en EN : ouvrir l'e-mail Â« on its way Â» et la page commande.
 3. Attendu : Â« Other Â», pas Â« Autre Â». (Couvert en partie par A-F14.)
@@ -540,7 +540,7 @@ Statut : Ã€ tester â€” Date : â€”
 2. Ouvrir les e-mails de confirmation et d'annulation.
 3. Attendu : l'image s'affiche (mur d'accÃ¨s actif). (A-F14.)
 
-### T-PAIEMENT-AVANT-COMMANDE — Aucune commande tant que le paiement n'a pas réussi — 15 min — Partiel : tests 1 à 3 validés (12–13/11/2026) ; restent 4 et 5
+### T-PAIEMENT-AVANT-COMMANDE — Aucune commande tant que le paiement n'a pas réussi — 15 min — Validé le 13/11/2026 (étapes 1 à 3 validées le 12–13/11, 4 et 5 le 13/11)
 Prérequis : Stripe en mode test (carte 4242 4242 4242 4242), webhook `checkout.session.completed` et `checkout.session.expired` actifs sur l'URL testée.
 1. Client : ajouter une pièce au panier, « Confirmer la commande », arriver sur la page Stripe. NE PAS payer.
 2. Admin > Stock > journal des mouvements : motif « Réservation en attente de paiement (AM-…) » (et non « Commande AM-… »). Admin > Commandes et Partenaire > Commandes : aucune nouvelle commande ; boîtes mail acheteur et partenaire : aucun e-mail. Fiche de la pièce : stock disponible diminué de 1 (réservation).
@@ -548,13 +548,13 @@ Prérequis : Stripe en mode test (carte 4242 4242 4242 4242), webhook `checkout.
 4. Vérifier : une seule commande, un colis par partenaire, e-mail de confirmation acheteur (DA) et e-mail « nouvelle commande » au partenaire (une seule fois, même si Stripe renvoie l'événement).
 5. Stripe > Développeurs > Webhooks > événement : réponse 200 ; renvoyer l'événement : toujours une seule commande.
 
-### T-RESERVATION-IMPAYEE — Réservation impayée libérée, sans commande « Annulée » — 15 min — À tester — date : —
+### T-RESERVATION-IMPAYEE — Réservation impayée libérée, sans commande « Annulée » — 15 min — Partiel : étapes 1 à 3 validées le 13/11/2026 ; reste l'étape 4 (À tester)
 1. Client : « Confirmer », arriver sur Stripe, retour arrière du navigateur, « Confirmer » à nouveau (même e-mail).
 2. Attendu : jamais « plus disponible » ; l'ancienne réservation est libérée, une seule nouvelle réservation ; stock disponible de la pièce = stock − 1.
 3. Fermer l'onglet Stripe sans payer et attendre 30 à 35 min (ou laisser expirer la session). Attendu : stock disponible rétabli, AUCUNE commande (ni « Annulée ») dans les listes acheteur, partenaire et admin, aucun e-mail.
 4. Cas limite : payer après l'expiration (session encore ouverte) : la commande est créée si le stock est toujours là ; sinon aucune commande, remboursement Stripe automatique et e-mail « Votre paiement est remboursé » au client (montant en €).
 
-### T-STOCK-NOM — Erreur de stock nommant l'article — 5 min — À tester — date : —
+### T-STOCK-NOM — Erreur de stock nommant l'article — 5 min — Validé le 13/11/2026
 1. Mettre une pièce à stock 1 ; comptes A et B (autre e-mail) ajoutent la pièce au panier SANS confirmer.
 2. A clique « Confirmer » et reste sur Stripe (réservation en cours) ; puis B, sur son panier déjà ouvert, clique « Confirmer ». Attendu : message de stock citant le NOM de la pièce, aucune réservation ni commande créée pour B.
 3. Variante panier de 2 pièces, autonome : remettre P1 à stock 1 (attendre 30 min ou annuler la réservation) ; P2 avec du stock ; A ajoute P1 sans confirmer ; B ajoute P1 ET P2 sans confirmer, onglet panier ouvert ; A clique « Confirmer » et reste sur Stripe ; B clique « Confirmer » depuis son panier déjà ouvert. Attendu : le message cite la pièce épuisée.
@@ -683,7 +683,7 @@ Validé manuellement par l'utilisateur ; couvert aussi par A-F19 (logique, simul
 
 Note A-T27 : T-STOCK-NOM étapes 2–3 et Test 4 (course de stock) sont écrits ; manuel restant = seulement l'affichage du message à l'écran. T-RESERVATION 4 / T-PAIEMENT 4–5 : paiement après expiration déjà couvert en logique (test existant) ; remboursement Stripe réel non automatisé.
 
-### T-MESSAGES-RESERVATION - Urgence panier et pièce réservée - 10 min - Validé le 13/11/2026 (étapes 1–8 ; étape 9 stock 0 NON testée, reste à tester)
+### T-MESSAGES-RESERVATION - Urgence panier et pièce réservée - 10 min - Validé le 13/11/2026 (étapes 1 à 9)
 1. Admin : mettre une pièce P1 à stock 1 (attendre 30 min ou annuler la réservation si elle est déjà réservée). Utiliser deux navigateurs différents : B (anonyme ou compte B) et A (compte client A).
 2. B : ajouter P1 au panier, SANS confirmer.
 3. A : ouvrir la fiche P1 (B reste sur la sienne, ouverte et visible, SANS recharger). Attendu pour A : bandeau pleine largeur, fond bleu nuit et texte clair (bien contrasté), en haut de la fiche sous le menu sans le masquer : « Dépêchez-vous : un autre client a cette pièce dans son panier. » (aucune identité). Attendu pour B : le même bandeau apparaît tout seul en 5 secondes maximum, sans recharger. Si A retire P1 de son panier, il disparaît chez B en 5 secondes maximum (onglet visible ; onglet en arrière-plan : mis à jour au retour dessus).

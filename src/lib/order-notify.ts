@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { safeSend } from "@/lib/supplier-email";
 import { buildPartnerCancelEmail } from "@/lib/partner-cancel-email";
 import { partnerRecipient } from "@/lib/partner-recipient";
-import { carrierLabel, trackingUrl } from "@/lib/tracking";
+import { carrierLabel, cleanTrackingNumber, trackingUrl } from "@/lib/tracking";
 import { releaseExpiredHolds } from "@/lib/checkout-hold";
 import { sweepSubOrders } from "@/lib/suborders";
 import { settleSubRefund } from "@/lib/refund";
@@ -65,7 +65,7 @@ export async function notifySubOrder(event: SubEvent, subOrderId: string) {
       REFUSED: [fr ? "commande annulée" : "order cancelled", fr ? `${shop} ne peut pas honorer votre commande. Elle est annulée et le stock libéré.       Motif : ${sub.reason || "non précisé"}.${refundFr}` : `${shop} cannot fulfil your order. It is cancelled. Reason: ${sub.reason || "not specified"}.${refundEn}`],
             EXPIRED: [fr ? "commande annulée" : "order cancelled", fr ? `${shop} n'a pas répondu sous 48 h : votre commande est annulée.${refundFr}` : `${shop} did not reply within 48 h: your order is cancelled.${refundEn}`],
       CANCELLED: [fr ? "commande annulée" : "order cancelled", fr ? `Votre commande est annulée. Motif : ${sub.reason || "non précisé"}.${refundFr}` : `Your order is cancelled. Reason: ${sub.reason || "not specified"}.${refundEn}`],
-      SHIPPED: [fr ? "commande expédiée" : "order shipped", fr ? `${shop} a expédié votre commande${carrierName ? ` (${carrierName}` : ""}${sub.trackingNumber ? `${carrierName ? ", " : " ("}suivi ${sub.trackingNumber}` : ""}${carrierName || sub.trackingNumber ? ")" : ""}.` : `${shop} shipped your order${carrierName ? ` (${carrierName}` : ""}${sub.trackingNumber ? `${carrierName ? ", " : " ("}tracking ${sub.trackingNumber}` : ""}${carrierName || sub.trackingNumber ? ")" : ""}.`],
+      SHIPPED: [fr ? "commande expédiée" : "order shipped", fr ? `${shop} a expédié votre commande${carrierName ? ` (${carrierName}` : ""}${sub.trackingNumber ? `${carrierName ? ", " : " ("}suivi ${cleanTrackingNumber(sub.trackingNumber)}` : ""}${carrierName || sub.trackingNumber ? ")" : ""}.` : `${shop} shipped your order${carrierName ? ` (${carrierName}` : ""}${sub.trackingNumber ? `${carrierName ? ", " : " ("}tracking ${cleanTrackingNumber(sub.trackingNumber)}` : ""}${carrierName || sub.trackingNumber ? ")" : ""}.`],
       DELIVERED: [fr ? "commande livrée" : "order delivered", fr ? "Votre commande est livrée. Merci !" : "Your order is delivered. Thank you!"],
     };
     const m = msgs[event];

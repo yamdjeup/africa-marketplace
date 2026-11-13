@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { moveItem } from "@/lib/move-item";
 
 const MAX_BYTES = 280 * 1024; // le serveur refuse au-delà de 300 Ko
 
@@ -93,6 +94,12 @@ export function PhotoUploader({ name, initial, max, kind = "photo", fr, label, h
                 </button>
               )}
               {kind === "photo" && i === 0 && <span className="flex-1 rounded bg-accent/20 px-1 py-1 text-center font-medium">{fr ? "Couverture" : "Cover"}</span>}
+              {kind === "photo" && urls.length > 1 && (
+                <>
+                  <button type="button" disabled={i === 0} className="min-h-8 rounded border px-2 disabled:opacity-40" onClick={() => setUrls(moveItem(urls, i, i - 1))} aria-label={fr ? `Monter la photo ${i + 1}` : `Move photo ${i + 1} up`}>←</button>
+                  <button type="button" disabled={i === urls.length - 1} className="min-h-8 rounded border px-2 disabled:opacity-40" onClick={() => setUrls(moveItem(urls, i, i + 1))} aria-label={fr ? `Descendre la photo ${i + 1}` : `Move photo ${i + 1} down`}>→</button>
+                </>
+              )}
               <button type="button" className="min-h-8 rounded border px-2 text-destructive" onClick={() => remove(u)} aria-label={fr ? "Supprimer" : "Remove"}>
                 ✕
               </button>

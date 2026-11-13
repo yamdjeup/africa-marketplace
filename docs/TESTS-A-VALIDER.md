@@ -657,12 +657,12 @@ Validé manuellement par l'utilisateur ; couvert aussi par A-F19 (logique, simul
 3. Se connecter comme partenaire, changer son nom : nouvelle ligne avec l'e-mail du partenaire.
 4. Filtrer par partenaire puis par action Â« Profil modifiÃ© Â» ; vÃ©rifier la pagination (25 lignes par page).
 
-### T-NOM-ENTETE â€” Nom du partenaire dans l'en-tÃªte â€” 2 min â€” Ã€ tester â€” date : â€”
+### T-NOM-ENTETE â€” Nom du partenaire dans l'en-tÃªte â€” 2 min â€” Validé le 13/11/2026
 1. Partenaire : renommer le profil (ex. Mia-Mia) et enregistrer.
 2. Recharger : le nom dans le menu compte (en-tÃªte) et sur la page Â« Mon compte Â» est le nouveau nom, sans reconnexion.
 3. MÃªme contrÃ´le aprÃ¨s un renommage par l'admin (Modifier le profil). Note : les comptes renommÃ©s avant ce correctif sont resynchronisÃ©s au prochain renommage ; l'en-tÃªte lit dÃ©jÃ  le nom du profil partenaire.
 
-### T-TABLEAU-PARTENAIRES â€” Tableau compact des partenaires â€” 5 min â€” Ã€ tester â€” date : â€”
+### T-TABLEAU-PARTENAIRES â€” Tableau compact des partenaires â€” 5 min â€” Validé le 13/11/2026
 1. Admin, Partenaires : tableau Nom, Pays, Savoir-faire, Commission (%), Statut, E-mail compte, E-mail contact (Â« â€” Â» si vide : repli sur le compte), Date, Actions ; la recherche trouve aussi par e-mail de contact.
 2. Tester recherche, onglets de statut, tri par date, pagination.
 3. Une seule ligne (~40 px) par partenaire ; colonne Actions alignÃ©e Ã  droite : Â« Modifier le profil Â», Â« GÃ©rer les crÃ©ations Â», Â« Statutâ€¦ Â».
@@ -704,7 +704,7 @@ Non vérifié : l'intérêt panier expire 30 min après la dernière synchronisa
 7. Flux normal : A confirme et paie (carte test 4242…) ; Attendu : commande créée, confirmation affichée, stock −1.
 Non vérifié : comportement réel selon navigateur (Safari/Firefox/Chrome mobile).
 
-### T-LIENS-PIECES — Noms de pièces cliquables au paiement — 5 min — Partiel : étapes 2, 3, 4, 6 validées le 13/11/2026 ; étape 5 : lien vu en capture, clic non confirmé
+### T-LIENS-PIECES — Noms de pièces cliquables au paiement — 5 min — Validé le 13/11/2026
 1. Compte client : ajouter une pièce P1 au panier, ouvrir /checkout (Passer commande).
 2. Dans le Récapitulatif (colonne de droite), cliquer le nom « 1 × <NOM de P1> ». Attendu : la fiche de P1 s'ouvre dans le même onglet.
 3. Retour du navigateur vers /checkout. Attendu : formulaire intact, panier inchangé.

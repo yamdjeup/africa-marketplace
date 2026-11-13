@@ -1,3 +1,4 @@
+import { cleanTrackingNumber } from "@/lib/tracking";
 import { ConfirmButton } from "@/components/admin/table-widgets";
 import { Pill } from "@/components/fournisseur/parts";
 import Link from "next/link";
@@ -57,7 +58,7 @@ export default async function AdminOrders({ params, searchParams }: { params: Pr
                 <p className="text-xs text-muted-foreground">
                   {fmt.format(s.createdAt)} · {s.order.fullName} · {eur(s.subtotalCents)}
                   {s.status === "PENDING" ? ` · ${tr(locale, "échéance", "due")} ${fmt.format(s.acceptBy)}` : ""}
-                  {s.trackingNumber ? ` · ${s.carrier} ${s.trackingNumber}` : ""}
+                  {s.trackingNumber ? ` · ${s.carrier} ${cleanTrackingNumber(s.trackingNumber)}` : ""}
                 </p>
                 {isOpenStatus(s.status) && s.status !== "SHIPPED" && (
                   <form action={adminCancelSubOrder} className="flex flex-wrap items-end gap-2">

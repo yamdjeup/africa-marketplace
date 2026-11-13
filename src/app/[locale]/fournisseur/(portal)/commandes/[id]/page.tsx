@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { CARRIERS } from "@/lib/tracking";
+import { CARRIERS, cleanTrackingNumber } from "@/lib/tracking";
 import { formatPhone } from "@/lib/phone";
 import { Pill, inputCls } from "@/components/fournisseur/parts";
 import { db } from "@/lib/db";
@@ -115,7 +115,7 @@ export default async function PartnerOrder({ params, searchParams }: { params: P
 
       {sub.status === "SHIPPED" && (
         <section className="space-y-3 rounded-lg border p-4 text-sm">
-          <p>{tr(locale, "Expédiée le", "Shipped on")} {sub.shippedAt ? fmt.format(sub.shippedAt) : ""} — {sub.carrier} · {sub.trackingNumber}</p>
+          <p>{tr(locale, "Expédiée le", "Shipped on")} {sub.shippedAt ? fmt.format(sub.shippedAt) : ""} — {sub.carrier} · {cleanTrackingNumber(sub.trackingNumber)}</p>
           {!ro && <form action={deliverOrderAction}>{hidden}<button className={btn} type="submit">{tr(locale, "Marquer livrée", "Mark as delivered")}</button></form>}
         </section>
       )}

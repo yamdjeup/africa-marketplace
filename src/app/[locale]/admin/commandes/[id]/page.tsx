@@ -1,3 +1,4 @@
+import { cleanTrackingNumber } from "@/lib/tracking";
 import Link from "next/link";
 import { formatPhone } from "@/lib/phone";
 import { notFound } from "next/navigation";
@@ -61,7 +62,7 @@ export default async function AdminOrderDetail({ params }: { params: Promise<{ l
         <p>{o.fullName} · <a className="underline" href={`mailto:${o.email}`}>{o.email}</a></p>
         <p>{o.address}, {o.postalCode} {o.city}, {o.country}</p>
         <p>{tr(locale, "Téléphone", "Phone")} : {o.phone ? <a className="underline" href={`tel:${o.phone}`}>{formatPhone(o.phone)}</a> : "—"}</p>
-        <p>{tr(locale, "Suivi", "Tracking")} : {sub.trackingNumber ? `${sub.carrier} ${sub.trackingNumber}` : "—"}</p>
+        <p>{tr(locale, "Suivi", "Tracking")} : {sub.trackingNumber ? `${sub.carrier} ${cleanTrackingNumber(sub.trackingNumber)}` : "—"}</p>
         {sub.reason && <p>{tr(locale, "Motif", "Reason")} : {sub.reason}</p>}
       </section>
 

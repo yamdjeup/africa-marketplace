@@ -88,7 +88,15 @@ export function CheckoutForm({
         {state.error && (
           <p role="alert" className="text-sm text-destructive">
             {state.error === "empty" ? t.empty : t.errors[state.error]}
-            {(state.error === "stock" || state.error === "reserved") && state.item ? ` : ${state.item}` : ""}
+            {(state.error === "stock" || state.error === "reserved") && state.item ? (
+              <>
+                {" : "}
+                {(() => {
+                  const hit = lines.find((l) => l.name === state.item);
+                  return hit ? <Link href={`/${locale}/produits/${hit.slug}`} className="underline underline-offset-4">{state.item}</Link> : state.item;
+                })()}
+              </>
+            ) : ""}
           </p>
         )}
 
@@ -211,7 +219,7 @@ export function CheckoutForm({
           {lines.map((l) => (
             <li key={`${l.slug}|${l.size ?? ""}`} className="flex justify-between gap-3">
               <span>
-                {l.quantity} × {l.name}
+                {l.quantity} × <Link href={`/${locale}/produits/${l.slug}`} className="underline underline-offset-4 hover:text-terracotta">{l.name}</Link>
                 {l.size ? ` (${l.size})` : ""}
               </span>
               <span>{formatEur(l.priceCents * l.quantity, locale)}</span>

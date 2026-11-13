@@ -685,7 +685,7 @@ Note A-T27 : T-STOCK-NOM étapes 2–3 et Test 4 (course de stock) sont écrits 
 ### T-MESSAGES-RESERVATION - Urgence panier et pièce réservée - 10 min - À tester
 1. Admin : mettre une pièce P1 à stock 1 (attendre 30 min ou annuler la réservation si elle est déjà réservée). Utiliser deux navigateurs différents : B (anonyme ou compte B) et A (compte client A).
 2. B : ajouter P1 au panier, SANS confirmer.
-3. A : ouvrir la fiche P1 (B reste sur la sienne, ouverte et visible, SANS recharger). Attendu pour A : bandeau « Dépêchez-vous : un autre client a cette pièce dans son panier. » en haut de la fiche (aucune identité). Attendu pour B : le même bandeau apparaît tout seul en 5 secondes maximum, sans recharger. Si A retire P1 de son panier, il disparaît chez B en 5 secondes maximum (onglet visible ; onglet en arrière-plan : mis à jour au retour dessus).
+3. A : ouvrir la fiche P1 (B reste sur la sienne, ouverte et visible, SANS recharger). Attendu pour A : bandeau pleine largeur, fond bleu nuit et texte clair (bien contrasté), en haut de la fiche sous le menu sans le masquer : « Dépêchez-vous : un autre client a cette pièce dans son panier. » (aucune identité). Attendu pour B : le même bandeau apparaît tout seul en 5 secondes maximum, sans recharger. Si A retire P1 de son panier, il disparaît chez B en 5 secondes maximum (onglet visible ; onglet en arrière-plan : mis à jour au retour dessus).
 4. A : cliquer « Ajouter au panier ». Attendu : le même message reste affiché. B : recharger la fiche P1. Attendu : le message est visible ET le bouton de B est désactivé et indique « Ajouté au panier » (P1 est déjà dans son panier, stock 1). Pour une pièce à stock 3 : après avoir ajouté 3 pièces, bouton désactivé ; avec 2 ajoutées, bouton encore actif.
 5. A : cliquer « Confirmer », rester sur la page Stripe (réservation 30 min).
 6. B : depuis son panier déjà ouvert, cliquer « Confirmer ». Attendu : « Cette pièce vient d'être réservée par un autre client : <NOM de P1> ».
@@ -703,3 +703,13 @@ Non vérifié : l'intérêt panier expire 30 min après la dernière synchronisa
 6. Variante bfcache : répéter 2–3 puis avancer (→) puis reculer (←) ; Attendu : réservation libérée à nouveau sans erreur.
 7. Flux normal : A confirme et paie (carte test 4242…) ; Attendu : commande créée, confirmation affichée, stock −1.
 Non vérifié : comportement réel selon navigateur (Safari/Firefox/Chrome mobile).
+
+### T-LIENS-PIECES — Noms de pièces cliquables au paiement — 5 min — À tester
+1. Compte client : ajouter une pièce P1 au panier, ouvrir /checkout (Passer commande).
+2. Dans le Récapitulatif (colonne de droite), cliquer le nom « 1 × <NOM de P1> ». Attendu : la fiche de P1 s'ouvre dans le même onglet.
+3. Retour du navigateur vers /checkout. Attendu : formulaire intact, panier inchangé.
+4. Dans le bloc « Colis » (étape livraison), cliquer le nom de P1. Attendu : fiche de P1.
+5. Erreur : B a P1 au panier, A confirme (reste sur Stripe), B clique « Confirmer ». Attendu : « Cette pièce vient d'être réservée par un autre client : <NOM> », le nom est un lien vers la fiche.
+6. Panier (/cart) : le nom et la vignette de P1 sont cliquables (déjà le cas).
+Note : aller sur une fiche ne libère aucune réservation (seul l'affichage de /checkout ou /cart après un départ vers Stripe la libère).
+Non automatisé : liens vérifiés par lecture du code uniquement (pas de test de rendu).

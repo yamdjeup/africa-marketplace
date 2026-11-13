@@ -36,7 +36,7 @@ export function InCartNotice({ slug, locale }: { slug: string; locale: string })
 
   if (!others) return null;
   return (
-    <p role="status" aria-live="polite" className="pointer-events-none fixed inset-x-4 top-20 z-40 mx-auto w-fit max-w-md rounded-md border border-accent bg-background p-3 text-center text-sm font-medium shadow-lg">
+    <p role="status" aria-live="polite" className="rounded-md border border-primary bg-primary px-4 py-3 text-center text-sm font-medium text-primary-foreground shadow-md">
       {locale === "en" ? "Hurry: another customer has this piece in their cart." : "Dépêchez-vous : un autre client a cette pièce dans son panier."}
     </p>
   );

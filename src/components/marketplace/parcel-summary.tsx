@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCart } from "@/lib/cart";
 import type { Locale } from "@/lib/i18n";
 
@@ -30,7 +31,7 @@ export function ParcelSummary({ locale }: { locale: Locale }) {
             <ul className="text-muted-foreground">
               {ls.map((l) => (
                 <li key={`${l.slug}|${l.size ?? ""}`}>
-                  {l.quantity} × {l.name}
+                  {l.quantity} × <Link href={`/${locale}/produits/${l.slug}`} className="underline underline-offset-4 hover:text-terracotta">{l.name}</Link>
                   {l.size ? ` (${l.size})` : ""}
                 </li>
               ))}

@@ -64,6 +64,7 @@ export default async function ProductPage({ params }: Props) {
 
   return (
     <div className="space-y-12">
+      {!urgent && <InCartNotice slug={p.slug} locale={locale} />}
       {adminUser && (
         <div role="region" aria-label="Admin" className="flex flex-wrap items-center gap-3 rounded-md border border-accent bg-accent/15 p-3 text-sm">
           <strong>Admin :</strong>
@@ -115,7 +116,6 @@ export default async function ProductPage({ params }: Props) {
             {p.stock === 0 ? t.outOfStock : t.inStock(p.stock)}
             {p.edition && !(p.stock > 0 && p.stock <= 1 && /pi[eè]ce unique|unique piece/i.test(p.edition)) ? ` · ${locale === "fr" ? "Édition" : "Edition"} ${p.edition}` : ""}
           </p>
-          {!urgent && <InCartNotice slug={p.slug} locale={locale} />}
           {urgent && (
             <p role="status" className="rounded-md border border-accent bg-accent/15 p-3 text-sm font-medium">
               {locale === "fr" ? "Réservée par un autre client : elle peut redevenir disponible si son paiement n'aboutit pas." : "Reserved by another customer: it may become available again if their payment is not completed."}

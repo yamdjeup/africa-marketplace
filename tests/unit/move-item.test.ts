@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { moveItem } from "@/lib/move-item";
 
+import { stockTabOf } from "@/lib/stock-list";
+describe("onglet Stocks/Journal", () => {
+  it("parse tab : journal sinon stock", () => {
+    expect(stockTabOf("journal")).toBe("journal");
+    expect(stockTabOf("x")).toBe("stock");
+    expect(stockTabOf(undefined)).toBe("stock");
+  });
+});
+
 describe("réordonnancement des photos", () => {
   it("monte, descend, ignore les bornes et ne mute pas", () => {
     const a = ["a", "b", "c"];

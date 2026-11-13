@@ -29,6 +29,7 @@ DerniÃ¨re exÃ©cution (11/11/2026, lot admin + e-mails de retour) : Vitest 62
 | A-T22 | T | Alertes « de nouveau disponible » : envoi unique, échec Resend (ou exception) = non marquée envoyée, stock 0/réservé = rien, favori/achetée = close | `tests/unit/restock-period.test.ts` (Vitest, base simulée) | OK 4/4 — 12/11/2026 | T-RETOUR-DISPO, T-ENVOI-IMMEDIAT-DISPO (logique) |
 | A-T24 | T | Liste « Stock par création » (admin + partenaire) : filtres titre/catégorie/statut/variante/tri/période (dernier mouvement) exécutés pour de vrai ; Réinitialiser remet la période sur « Toutes les dates » (formulaires remontés via key, défaut « all ») | `tests/unit/stock-pages.db.test.ts` (base jetable, CI) + `tests/unit/list-reset.test.ts` | À lancer sur base jetable (CI) ; unit local OK | `npm run test:all` |
 | A-T25 | T | Réordonnancement des photos : moveItem (monter/descendre, glisser-déposer, bornes, 1re = couverture) | `tests/unit/move-item.test.ts` | OK 2/2 | `npm run test:all` |
+| A-T26 | T | Onglets Stocks / Journal : parse du paramètre tab (défaut stock) | `tests/unit/move-item.test.ts` | OK | `npm run test:all` |
 | A-T23 | T | Réveil de la base de test (Neon en veille) : connect_timeout ajouté si absent, retry/backoff sur P1001, abandon sur autre erreur ; sonde TCP sans client Prisma (régression CI sqlite) | `tests/unit/db-wake.test.ts` (Vitest) | OK 5/5 — 12/11/2026 | `npm run test:db` (logique) |
 | A-M1 | M | Fournisseur e-mail : Resend (from, reply_to, sans mention interdite) ; repli Gmail / aucun sans erreur | `tests/unit/email-provider.test.ts` (Vitest) | OK 2/2 â€” 10/11/2026 | T-MAIL-FROM (payload) |
 | A-M2 | M | Mur d'accÃ¨s : images `/api/media/<id>` et `/images/artworks/*` publiques, reste fermÃ© | `tests/unit/proxy-images.test.ts` (Vitest) | OK 2/2 â€” 10/11/2026 | T-MAIL-FROM 3 |
@@ -491,6 +492,12 @@ Statut : À tester
 4. Enregistrer, rouvrir la création : l'ordre est conservé.
 5. Fiche produit (galerie), cartes du catalogue et page de la boutique : 1re photo = couverture, galerie dans le nouvel ordre.
 6. Admin : l'édition de la création (si accessible) reprend le même ordre.
+
+### T-ONGLETS-STOCK-JOURNAL — Onglets Stocks / Journal — 10 min — À tester — date : —
+1. Partenaire > Stocks : deux onglets « Stocks » et « Journal des mouvements de stock » (même style que Commandes) ; seul l'onglet actif est affiché, l'URL contient tab=stock ou tab=journal.
+2. Onglet Stocks : filtrer (statut, titre…), paginer : l'onglet reste Stocks et les filtres sont conservés. Réinitialiser : champs vides, période « Toutes les dates ».
+3. Onglet Journal : filtrer (type, période Aujourd'hui, plage…), paginer : l'onglet reste Journal. Réinitialiser : période « Toutes les dates ».
+4. Recharger la page sur tab=journal : on reste sur le Journal. Répéter côté admin (Admin > Stocks).
 
 ### T-RETOUR-DISPO — Prévenu quand une pièce redevient disponible — 15 min — À tester — date : —
 1. Compte A : mettre une pièce unique au panier, « Confirmer » (réservation 30 min), ne pas payer, revenir en arrière.

@@ -8,12 +8,13 @@ import { journalOrder, journalWhere } from "@/lib/stock-journal";
 import type { Locale } from "@/lib/i18n";
 import { PAGE_SIZE } from "@/lib/admin-works";
 import { StockListView } from "@/components/marketplace/stock-list-view";
-import { loadStockList, STOCK_LIST_KEYS } from "@/lib/stock-list";
+import { StockTabs } from "@/components/marketplace/stock-tabs";
+import { loadStockList, stockTabOf, STOCK_LIST_KEYS } from "@/lib/stock-list";
 
 export const metadata = { title: "Stocks", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
-type SP = Partial<Record<(typeof STOCK_LIST_KEYS)[number] | "sp", string>> & { p?: string; mp?: string; jd?: string; jq?: string; jt?: string; jfrom?: string; jto?: string; jwho?: string; jr?: string; jdir?: string };
+type SP = { tab?: string } & Partial<Record<(typeof STOCK_LIST_KEYS)[number] | "sp", string>> & { p?: string; mp?: string; jd?: string; jq?: string; jt?: string; jfrom?: string; jto?: string; jwho?: string; jr?: string; jdir?: string };
 const JKEYS = ["jd", "jq", "jt", "jfrom", "jto", "jwho", "jr", "jdir"] as const;
 
 export default async function PartnerStocksPage({ params, searchParams }: { params: Promise<{ locale: Locale }>; searchParams: Promise<SP> }) {
@@ -26,6 +27,7 @@ export default async function PartnerStocksPage({ params, searchParams }: { para
   const supplierId = ctx.supplier.id;
   const dtf = (d: Date) => d.toLocaleString(fr ? "fr-FR" : "en-GB", { timeZone: "Europe/Paris", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 
+  const tab = stockTabOf(sp.tab);
   const list = await loadStockList(sp, [supplierId], fr);
   const own = await db.product.findMany({ where: { supplierId }, select: { slug: true, name: true, nameEn: true } });
   const titleOf = new Map(own.map((o) => [o.slug, fr ? o.name : o.nameEn]));
@@ -43,6 +45,7 @@ export default async function PartnerStocksPage({ params, searchParams }: { para
     const u = new URLSearchParams();
     const merged: Record<string, string | undefined> = { ...sp, ...o };
     for (const k of ["mp", ...JKEYS, ...STOCK_LIST_KEYS]) if (merged[k]) u.set(k, merged[k]!);
+    u.set("tab", tab);
     return `${base}?${u.toString()}`;
   };
   const pager = (cur: number, n: number, key: "p" | "mp") => (
@@ -56,11 +59,13 @@ export default async function PartnerStocksPage({ params, searchParams }: { para
   return (
     <>
       <h1 className="font-heading text-3xl text-primary">{tr(locale, "Stocks", "Stock")}</h1>
-      <StockListView locale={locale} sp={sp} action={base} data={list} hidden={Object.fromEntries(JKEYS.map((k) => [k, sp[k]]).concat([["mp", sp.mp]]))} adjust={(s) => `/${locale}/fournisseur/oeuvres/${s}#stock`} />
-
+      <StockTabs locale={locale} base={base} tab={tab} />
+      {tab === "stock" ? (
+      <StockListView locale={locale} sp={sp} action={base} data={list} hidden={Object.fromEntries(JKEYS.map((k) => [k, sp[k]]).concat([["mp", sp.mp], ["tab", "stock"]]))} adjust={(s) => `/${locale}/fournisseur/oeuvres/${s}#stock`} />
+      ) : (
       <section className="space-y-3">
         <h2 className="font-heading text-2xl text-primary">{tr(locale, "Journal des mouvements de stock", "Stock movement log")}</h2>
-        <StockFilters pf="j" locale={locale} sp={jsp} action={base} hidden={Object.fromEntries(STOCK_LIST_KEYS.map((k) => [k, sp[k]]))} />
+        <StockFilters pf="j" locale={locale} sp={jsp} action={base} hidden={Object.fromEntries(STOCK_LIST_KEYS.map((k) => [k, sp[k]]).concat([["tab", "journal"]]))} />
         {moves.length === 0 ? <p className="text-sm text-muted-foreground">{tr(locale, "Aucun mouvement.", "No movements.")}</p> : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px] text-left text-sm">
@@ -79,6 +84,7 @@ export default async function PartnerStocksPage({ params, searchParams }: { para
         )}
         {pager(Math.min(mpage, mpages), mpages, "mp")}
       </section>
+      )}
     </>
   );
 }

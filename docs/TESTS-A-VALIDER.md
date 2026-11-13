@@ -121,7 +121,7 @@ PrÃ©requis : migration 0023 appliquÃ©e ; un colis livrÃ© (compte client) ;
 |---|---|---|---|---|
 | T-GA4 | GA4 + consentement | 15 min | Ã€ tester | â€” |
 | T-COLIS | Multi-colis + annulation | 20 min | TestÃ© | 12/11/2026 |
-| T-SUIVI | Suivi de livraison + remboursement (lots 1â€“2) | 15 min | Partiel : étapes 1, 2 validées ; 3 : UPS validé, « absent pour Autre » à tester ; 4 validée 13/11 ; restent 5, 6, 7 | 12–13/11/2026 |
+| T-SUIVI | Suivi de livraison + remboursement (lots 1â€“2) | 15 min | Partiel : étapes 1, 2, 3, 4 validées ; restent 5, 6, 7 | 12–13/11/2026 |
 | T-MAILS | E-mails Farfetch | 10 min | Validé (étapes 1–4) | 12–13/11/2026 |
 | T-AIDE | Pages d'aide FR/EN | 10 min | Validé | 12–13/11/2026 |
 | T-ADMIN-FILTRES | Filtres, pagination et pastilles (admin + partenaire) ; e-mails de retour | 20 min | Ã€ tester | â€” |
@@ -161,7 +161,7 @@ PrÃ©requis : Client connectÃ© ; articles de 2 crÃ©ateurs ; 2 comptes crÃ�
 PrÃ©requis : migration 0020 appliquÃ©e.
 1. CrÃ©ateur : commande acceptÃ©e, formulaire d'expÃ©dition : choisir UPS, saisir un numÃ©ro, valider. — Validé 13/11/2026 (AM-B197F3C1, UPS, suivi 1Z999AA10123456784 : page commande sans virgule).
 2. Mail Â« en route Â» : lien Â« Suivre mon colis Â» vers la page UPS avec le numÃ©ro. — Validé 13/11/2026 (e-mail FR « en route » reçu 21:19 ; lien → ups.com/track?tracknum=1Z999AA10123456784 sans %2C ; UPS répond Delivered/No Information Available = numéro d'exemple). Nettoyage de la virgule saisie : couvert par A-T38 (auto), non testé à la main (saisie avec virgule inconnue).
-3. Compte client, dÃ©tail de commande : lien Â« Suivre mon colis Â» prÃ©sent ; absent pour un transporteur Â« Autre Â». — Lien présent côté compte client : validé 13/11/2026 pour UPS ; « absent pour Autre » : À tester.
+3. Compte client, dÃ©tail de commande : lien Â« Suivre mon colis Â» prÃ©sent ; absent pour un transporteur Â« Autre Â». — Lien présent côté compte client : validé 13/11/2026 pour UPS ; « absent pour Autre » : Validé 13/11/2026 (AM-BD9FB414 : page « Autre · suivi 123456789 » sans « Suivre mon colis » ; e-mail 21:25 FR « (Autre, suivi 123456789) », bouton « Suivre ma commande » vers le compte).
 4. Marquer livrÃ© : mail Â« livrÃ©e Â» avec le mÃªme lien. — Validé 13/11/2026 (AM-B197F3C1 : page « Commande livrée », colis « Livrée » 13/11, lien « Suivre mon colis » ; e-mail 21:21 « Votre commande est livrée » avec « Suivre mon colis »).
 5. Annuler un colis sans STRIPE_SECRET_KEY : Â« remboursement en cours de traitement Â», `refundStatus` = MANUAL en base.
 6. Avec une clÃ© Stripe de test et `stripePaymentIntentId` posÃ© sur la commande : annulation = DONE, mail Â« remboursement effectuÃ© Â», visible dans Stripe.

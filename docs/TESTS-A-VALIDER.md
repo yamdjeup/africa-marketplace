@@ -18,13 +18,13 @@ DerniÃ¨re exÃ©cution (11/11/2026, lot admin + e-mails de retour) : Vitest 62
 | A-T1 | T | Webhook Stripe : signature valide/invalide/expirÃ©e/absente | `tests/unit/stripe-signature.test.ts` (Vitest) | OK 5/5 â€” 10/11/2026 | T-STRIPE 8 |
 | A-T2 | T | Webhook HTTP : 400 si signature invalide, 200 si valide | `e2e/lot-t.spec.ts` (Playwright) | OK 2/2 â€” 10/11/2026 | T-STRIPE 8 |
 | A-T3 | T | Remboursement : DONE / FAILED / MANUAL / AWAITING, idempotence | `tests/unit/refund.test.ts` (Vitest) | OK 8/8 â€” 10/11/2026 | T-REMB (logique) |
-| A-T4 | T | Double annulation concurrente, annulation aprÃ¨s expÃ©dition, expiration 48 h, droits d'accÃ¨s, AWAITING (base rÃ©elle) | `tests/unit/suborders.db.test.ts` (Vitest) | IgnorÃ© 6/6 (sans `TEST_DATABASE_URL`) â€” Ã  lancer avec `npm run test:all` | T-COLIS (logique) |
+| A-T4 | T | Double annulation concurrente, annulation aprÃ¨s expÃ©dition, expiration 48 h, droits d'accÃ¨s, AWAITING (base rÃ©elle) | `tests/unit/suborders.db.test.ts` (Vitest) | OK en CI (run #42 vert, suite Vitest/Playwright complète) — 13/11/2026 | T-COLIS (logique) |
 | A-T5 | T | Garde-fou base de test (refuse prod/mÃªme URL/clÃ© live) | `tests/unit/guard.test.ts` (Vitest) | OK 4/4 â€” 10/11/2026 | â€” |
 | A-T6 | T | E-mails : aucune mention interdite, images en URL absolue https | `tests/unit/emails.test.ts` (Vitest) | OK 5/5 â€” 10/11/2026 | T-MAILS 1 (URL ; rendu visuel reste manuel) |
 | A-T7 | T | Bandeau : aucune requÃªte GA ni cookie `_ga` avant consentement/refus ; choix mÃ©morisÃ© ; accepter charge gtag | `e2e/lot-t.spec.ts` (Playwright) | OK 3/3 â€” 10/11/2026 | T-GA4 (parties rÃ©seau/cookies) |
 | A-T8 | T | Pages d'aide FR/EN : 200, texte prÃ©sent, sans mention interdite (7 pages Ã— 2 langues ; exemple de nÂ° de commande au format rÃ©el AM-1A2B3C4D) | `e2e/lot-t.spec.ts` (Playwright) | OK 14/14 â€” 10/11/2026 | T-AIDE (hors relecture) |
 | A-T9 | T | AccÃ¨s : visiteur redirigÃ© depuis admin, retours admin, commandes partenaire, commandes client | `e2e/lot-t.spec.ts` (Playwright) | OK 4/4 â€” 10/11/2026 | H (accÃ¨s) |
-| A-T20 | T | Pages Stocks admin + partenaire et filtres de période : requêtes réellement exécutées (avec/sans filtres, périodes tous/aujourd'hui/7/30/personnalisée, journal, réservations actives) | `tests/unit/stock-pages.db.test.ts` (Vitest, base jetable) | Écrit ; ignoré sans `TEST_DATABASE_URL` (non exécuté localement) — à lancer avec `npm run test:all` ; tsc, eslint, build OK | T-ONGLETS-STOCKS, T-PERIODE-FILTRES |
+| A-T20 | T | Pages Stocks admin + partenaire et filtres de période : requêtes réellement exécutées (avec/sans filtres, périodes tous/aujourd'hui/7/30/personnalisée, journal, réservations actives) | `tests/unit/stock-pages.db.test.ts` (Vitest, base jetable) | OK en CI (run #42 vert, suite Vitest/Playwright complète) — 13/11/2026 | T-ONGLETS-STOCKS, T-PERIODE-FILTRES |
 | A-T21 | T | Sélecteur de période des listes : toutes dates par défaut, aujourd'hui/7 j/30 j, plage personnalisée, valeur inconnue | `tests/unit/restock-period.test.ts` (Vitest) | OK en CI (#39, #42) — 13/11/2026 | T-PERIODE-FILTRES (logique) |
 | A-T22 | T | Alertes « de nouveau disponible » : envoi unique, échec Resend (ou exception) = non marquée envoyée, stock 0/réservé = rien, favori/achetée = close | `tests/unit/restock-period.test.ts` (Vitest, base simulée) | OK en CI (#39, #42) — 13/11/2026 | T-RETOUR-DISPO, T-ENVOI-IMMEDIAT-DISPO (logique) |
 | A-T24 | T | Liste « Stock par création » (admin + partenaire) : filtres titre/catégorie/statut/variante/tri/période (dernier mouvement) exécutés pour de vrai ; Réinitialiser remet la période sur « Toutes les dates » (formulaires remontés via key, défaut « all ») | `tests/unit/stock-pages.db.test.ts` (base jetable, CI) + `tests/unit/list-reset.test.ts` | OK en CI (#39, #42) — 13/11/2026 | `npm run test:all` |
@@ -44,15 +44,15 @@ DerniÃ¨re exÃ©cution (11/11/2026, lot admin + e-mails de retour) : Vitest 62
 | A-F11 | F | URL de retour Stripe/liens : domaine de la requÃªte (liste blanche epomta.com, epomta-demo.vercel.app), sinon origine configurÃ©e | `tests/unit/origin.test.ts` (Vitest) | OK 3/3 â€” 11/11/2026 | T-DOMAINE |
 | A-F12 | F | Nom d'article cliquable vers la fiche produit dans le rÃ©capitulatif e-mail (annulÃ©e, en routeâ€¦) | `tests/unit/email-item-link.test.ts` (Vitest) | OK 2/2 â€” 11/11/2026 | T-RACHAT-LIEN |
 | A-F13 | F | Mur d'accÃ¨s actif sur epomta.com, www.epomta.com et epomta-demo.vercel.app (page, API ; exemptions webhook/mÃ©dias conservÃ©es) ; robots.txt Disallow + noindex | `tests/unit/wall-hosts.test.ts` (Vitest) + `e2e/access.spec.ts` | OK 3/3 unit â€” 12/11/2026 | T-MUR-EPOMTA |
-| A-F14 | F | Transporteur Â« Autre Â» â†’ Â« Other Â» en EN (`carrierLabel`) ; image exemple non bloquÃ©e par le mur (`/images/examples/*`) | `tests/unit/partner-profile.test.ts`, `tests/unit/proxy-images.test.ts` (Vitest) | Ã€ lancer | T-AUTRE-EN, T-IMG-EXEMPLE |
-| A-F15 | F | Profil partenaire : validation e-mail/tÃ©lÃ©phone/adresse ; journal Â« champ : ancienne â†’ nouvelle valeur Â» | `tests/unit/partner-profile.test.ts` (Vitest) | Ã€ lancer | T-PROFIL-PARTENAIRE, T-PROFIL-ADMIN || A-F10 | F | Montants des e-mails au format de la langue (EN Â« â‚¬55.00 Â», FR Â« 55,00 â‚¬ Â») | `tests/unit/money-locale.test.ts` (Vitest) | OK 2/2 â€” 11/11/2026 | T-MAILS (format EN) |
-| A-F16 | F | E-mails partenaire envoyÃ©s Ã  l'e-mail de contact du profil, repli sur l'e-mail du compte (partnerRecipient) | `tests/unit/partner-recipient.test.ts` (Vitest) | Ã€ lancer | T-EMAIL-CONTACT |
+| A-F14 | F | Transporteur Â« Autre Â» â†’ Â« Other Â» en EN (`carrierLabel`) ; image exemple non bloquÃ©e par le mur (`/images/examples/*`) | `tests/unit/partner-profile.test.ts`, `tests/unit/proxy-images.test.ts` (Vitest) | OK en CI (run #42 vert, suite Vitest/Playwright complète) — 13/11/2026 | T-AUTRE-EN, T-IMG-EXEMPLE |
+| A-F15 | F | Profil partenaire : validation e-mail/tÃ©lÃ©phone/adresse ; journal Â« champ : ancienne â†’ nouvelle valeur Â» | `tests/unit/partner-profile.test.ts` (Vitest) | OK en CI (run #42 vert, suite Vitest/Playwright complète) — 13/11/2026 | T-PROFIL-PARTENAIRE, T-PROFIL-ADMIN || A-F10 | F | Montants des e-mails au format de la langue (EN Â« â‚¬55.00 Â», FR Â« 55,00 â‚¬ Â») | `tests/unit/money-locale.test.ts` (Vitest) | OK 2/2 â€” 11/11/2026 | T-MAILS (format EN) |
+| A-F16 | F | E-mails partenaire envoyÃ©s Ã  l'e-mail de contact du profil, repli sur l'e-mail du compte (partnerRecipient) | `tests/unit/partner-recipient.test.ts` (Vitest) | OK en CI (run #42 vert, suite Vitest/Playwright complète) — 13/11/2026 | T-EMAIL-CONTACT |
 | A-F17 | F | Â« use server Â» en premiÃ¨re instruction de tous les fichiers *actions.ts (Ã©vite l'Ã©chec du build Vercel) | `tests/unit/use-server.test.ts` (Vitest) | OK 1/1 â€” 12/11/2026 | â€” |
-| A-F18 | F | Paiement avant commande : rÃ©servation 30 min sans commande ni e-mail ; commande + colis crÃ©Ã©s une seule fois au paiement (idempotent) ; reconfirmation du mÃªme acheteur ; libÃ©ration/balayage ; paiement aprÃ¨s expiration (re-rÃ©servation, sinon aucune commande + remboursement) ; erreur de stock nominative | `tests/unit/checkout-hold.db.test.ts` (Vitest, base jetable `TEST_DATABASE_URL`, exÃ©cutÃ© en CI) ; filtre archivage dans `tests/unit/admin-list.test.ts` | Ã€ lancer en CI (non exÃ©cutable sans PostgreSQL local) | T-PAIEMENT-AVANT-COMMANDE, T-RESERVATION-IMPAYEE, T-STOCK-NOM, T-ARCHIVAGE |
-| A-F19 | F | Archivage des commandes impayées (simulation sans écriture ; ignore expédiées/remboursées) | `tests/unit/archive-unpaid.test.ts` (Vitest) | À lancer | T-ARCHIVAGE |
-| A-F20 | F | E-mail au partenaire quand l'admin annule un colis ou à l'expiration 48 h (motif, n° de colis, lien) | `tests/unit/partner-cancel-email.test.ts` (Vitest) | À lancer | T-ANNUL-ADMIN-PARTENAIRE |
-| A-F21 | F | E-mail « Votre pièce est de nouveau disponible » (FR/EN, lien fiche, disponibilité non garantie) | `tests/unit/restock-watch.test.ts` (Vitest) | À lancer | T-RETOUR-DISPO |
-| A-F9 | F | Mur d'accÃ¨s : API et images hors exemptions bloquÃ©es (401), artworks e-mail publics (â‰  401), manifeste/icÃ´nes PWA | `e2e/access.spec.ts` (Playwright) | OK 5/5 en local â€” 11/11/2026 (CI Ã  relancer) | â€” |
+| A-F18 | F | Paiement avant commande : rÃ©servation 30 min sans commande ni e-mail ; commande + colis crÃ©Ã©s une seule fois au paiement (idempotent) ; reconfirmation du mÃªme acheteur ; libÃ©ration/balayage ; paiement aprÃ¨s expiration (re-rÃ©servation, sinon aucune commande + remboursement) ; erreur de stock nominative | `tests/unit/checkout-hold.db.test.ts` (Vitest, base jetable `TEST_DATABASE_URL`, exÃ©cutÃ© en CI) ; filtre archivage dans `tests/unit/admin-list.test.ts` | OK en CI (run #42 vert, suite Vitest/Playwright complète) — 13/11/2026 | T-PAIEMENT-AVANT-COMMANDE, T-RESERVATION-IMPAYEE, T-STOCK-NOM, T-ARCHIVAGE |
+| A-F19 | F | Archivage des commandes impayées (simulation sans écriture ; ignore expédiées/remboursées) | `tests/unit/archive-unpaid.test.ts` (Vitest) | OK en CI (run #42 vert, suite Vitest/Playwright complète) — 13/11/2026 | T-ARCHIVAGE |
+| A-F20 | F | E-mail au partenaire quand l'admin annule un colis ou à l'expiration 48 h (motif, n° de colis, lien) | `tests/unit/partner-cancel-email.test.ts` (Vitest) | OK en CI (run #42 vert, suite Vitest/Playwright complète) — 13/11/2026 | T-ANNUL-ADMIN-PARTENAIRE |
+| A-F21 | F | E-mail « Votre pièce est de nouveau disponible » (FR/EN, lien fiche, disponibilité non garantie) | `tests/unit/restock-watch.test.ts` (Vitest) | OK en CI (run #42 vert, suite Vitest/Playwright complète) — 13/11/2026 | T-RETOUR-DISPO |
+| A-F9 | F | Mur d'accÃ¨s : API et images hors exemptions bloquÃ©es (401), artworks e-mail publics (â‰  401), manifeste/icÃ´nes PWA | `e2e/access.spec.ts` (Playwright) | OK en CI (run #42 vert, suite Vitest/Playwright complète) — 13/11/2026 | â€” |
 
 Parcours Playwright historiques (`e2e/journey.spec.ts`, `access.spec.ts`, `alerts.spec.ts`, `search.spec.ts`, `order-email.spec.ts`, `mobile.spec.ts`) : inchangÃ©s, non relancÃ©s dans ce lot.
 
@@ -456,7 +456,7 @@ Prérequis : Stripe en mode test (carte 4242 4242 4242 4242), webhook `checkout.
 4. Tri « Ancien d'abord » : l'ordre s'inverse (récent d'abord par défaut). Page 2 (si > 50 lignes) : les filtres sont conservés. Réinitialiser : tous les mouvements.
 5. Partenaire : Mes créations, section « Journal des mouvements de stock » : mêmes filtres ; seules SES créations apparaissent ; les filtres de la liste des créations restent actifs. Pas d'export CSV du journal (non existant).
 ### T-PERIODE-FILTRES — Sélecteur de période sur tous les filtres à dates — Validé le 13/11/2026
-Statut : À tester
+Statut : Validé — Date : 13/11/2026
 1. Admin : ouvrir Candidatures, Partenaires, Commandes, Versements, Retours, Créations à modérer, Stocks.
 2. Vérifier le sélecteur « Période » : Toutes les dates (défaut), Aujourd'hui, 7 jours, 30 jours, Plage personnalisée.
 3. Choisir « Aujourd'hui » : la liste se filtre seule ; « Plage personnalisée » : saisir Du/Au puis Filtrer.
@@ -464,14 +464,14 @@ Statut : À tester
 5. Partenaire : mêmes vérifications sur Commandes, Paiements et le journal de Stocks.
 
 ### T-ONGLETS-STOCKS — Onglets Créations / Stocks — Validé le 13/11/2026
-Statut : À tester
+Statut : Validé — Date : 13/11/2026
 1. Partenaire : la barre affiche « Créations » et « Stocks » (plus « Créations et stock »).
 2. « Créations » : liste et gestion, sans journal.
 3. « Stocks » : par création/variante, total, réservé, dispo, badge « Stock bas »/« Épuisée », bouton « Ajuster le stock » ; dessous, journal filtrable (période incluse).
 4. Admin : onglet « Stocks » après « Retours » : stock total/réservé/dispo par création et partenaire, réservations actives (e-mail, quantité, heure d'expiration), journal filtrable.
 5. Journal admin : la colonne Création affiche le titre (+ variante + partenaire), pas le slug. Liens depuis « Gérer les créations » toujours présents.
 ### T-ENVOI-IMMEDIAT-DISPO — E-mail « de nouveau disponible » envoyé tout de suite — Validé le 13/11/2026
-Statut : À tester
+Statut : Validé — Date : 13/11/2026
 1. Compte A : cliquer « Me prévenir » sur une pièce épuisée (ou laisser une réservation expirer sans payer).
 2. Compte B : réserver la dernière pièce (Confirmer) puis fermer l'onglet Stripe ; ou admin : annuler un colis contenant la pièce.
 3. Attendre l'expiration (30 min) puis ouvrir la fiche produit (déclenche le balayage), ou attendre l'événement Stripe d'expiration.

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import { createPayout } from "@/lib/ledger";
+import { payOutSupplier } from "@/lib/payout";
 import { isAdminEmail } from "@/lib/supplier";
 import { emailPartnerPayout } from "@/lib/supplier-email";
 import { partnerRecipient } from "@/lib/partner-recipient";
@@ -21,11 +21,13 @@ async function admin() {
 export async function markPayoutAction(f: FormData) {
   const email = await admin();
   const supplierId = String(f.get("supplierId") ?? "");
-  const payout = await createPayout(db, supplierId, email);
-  if (!payout) redirect(`${path}?error=nothing`);
   const s = await db.supplier.findUnique({ where: { id: supplierId }, include: { user: { select: { email: true } } } });
-  const to = s ? partnerRecipient(s, s.user?.email) : null;
-  if (s && to) await emailPartnerPayout({ email: to, name: s.displayName, locale: "fr" }, payout.amountCents, payout.reference);
+  if (!s) redirect(`${path}?error=nothing`);
+  const res = await payOutSupplier(db, s, email);
+  if (!res.ok) redirect(`${path}?error=${res.reason}`);
+  const payout = res.payout;
+  const to = partnerRecipient(s, s.user?.email);
+  if (to) await emailPartnerPayout({ email: to, name: s.displayName, locale: "fr" }, payout.amountCents, payout.reference);
   revalidatePath(path);
   redirect(`${path}?ok=paid`);
 }

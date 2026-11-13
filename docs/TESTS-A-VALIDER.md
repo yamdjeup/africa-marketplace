@@ -18,19 +18,19 @@ DerniÃ¨re exÃ©cution (11/11/2026, lot admin + e-mails de retour) : Vitest 62
 | A-T1 | T | Webhook Stripe : signature valide/invalide/expirÃ©e/absente | `tests/unit/stripe-signature.test.ts` (Vitest) | OK 5/5 â€” 10/11/2026 | T-STRIPE 8 |
 | A-T2 | T | Webhook HTTP : 400 si signature invalide, 200 si valide | `e2e/lot-t.spec.ts` (Playwright) | OK 2/2 â€” 10/11/2026 | T-STRIPE 8 |
 | A-T3 | T | Remboursement : DONE / FAILED / MANUAL / AWAITING, idempotence | `tests/unit/refund.test.ts` (Vitest) | OK 8/8 â€” 10/11/2026 | T-REMB (logique) |
-| A-T4 | T | Double annulation concurrente, annulation aprÃ¨s expÃ©dition, expiration 48 h, droits d'accÃ¨s, AWAITING (base rÃ©elle) | `tests/unit/suborders.db.test.ts` (Vitest) | IgnorÃ© 6/6 (sans `TEST_DATABASE_URL`) â€” Ã  lancer avec `npm run test:all` | T-COLIS (logique) |
+| A-T4 | T | Double annulation concurrente, annulation aprÃ¨s expÃ©dition, expiration 48 h, droits d'accÃ¨s, AWAITING (base rÃ©elle) | `tests/unit/suborders.db.test.ts` (Vitest) | OK en CI (run #42 vert, suite Vitest/Playwright complète) — 13/11/2026 | T-COLIS (logique) |
 | A-T5 | T | Garde-fou base de test (refuse prod/mÃªme URL/clÃ© live) | `tests/unit/guard.test.ts` (Vitest) | OK 4/4 â€” 10/11/2026 | â€” |
 | A-T6 | T | E-mails : aucune mention interdite, images en URL absolue https | `tests/unit/emails.test.ts` (Vitest) | OK 5/5 â€” 10/11/2026 | T-MAILS 1 (URL ; rendu visuel reste manuel) |
 | A-T7 | T | Bandeau : aucune requÃªte GA ni cookie `_ga` avant consentement/refus ; choix mÃ©morisÃ© ; accepter charge gtag | `e2e/lot-t.spec.ts` (Playwright) | OK 3/3 â€” 10/11/2026 | T-GA4 (parties rÃ©seau/cookies) |
 | A-T8 | T | Pages d'aide FR/EN : 200, texte prÃ©sent, sans mention interdite (7 pages Ã— 2 langues ; exemple de nÂ° de commande au format rÃ©el AM-1A2B3C4D) | `e2e/lot-t.spec.ts` (Playwright) | OK 14/14 â€” 10/11/2026 | T-AIDE (hors relecture) |
 | A-T9 | T | AccÃ¨s : visiteur redirigÃ© depuis admin, retours admin, commandes partenaire, commandes client | `e2e/lot-t.spec.ts` (Playwright) | OK 4/4 â€” 10/11/2026 | H (accÃ¨s) |
-| A-T20 | T | Pages Stocks admin + partenaire et filtres de période : requêtes réellement exécutées (avec/sans filtres, périodes tous/aujourd'hui/7/30/personnalisée, journal, réservations actives) | `tests/unit/stock-pages.db.test.ts` (Vitest, base jetable) | Écrit ; ignoré sans `TEST_DATABASE_URL` (non exécuté localement) — à lancer avec `npm run test:all` ; tsc, eslint, build OK | T-ONGLETS-STOCKS, T-PERIODE-FILTRES |
-| A-T21 | T | Sélecteur de période des listes : toutes dates par défaut, aujourd'hui/7 j/30 j, plage personnalisée, valeur inconnue | `tests/unit/restock-period.test.ts` (Vitest) | OK 4/4 — 12/11/2026 | T-PERIODE-FILTRES (logique) |
-| A-T22 | T | Alertes « de nouveau disponible » : envoi unique, échec Resend (ou exception) = non marquée envoyée, stock 0/réservé = rien, favori/achetée = close | `tests/unit/restock-period.test.ts` (Vitest, base simulée) | OK 4/4 — 12/11/2026 | T-RETOUR-DISPO, T-ENVOI-IMMEDIAT-DISPO (logique) |
-| A-T24 | T | Liste « Stock par création » (admin + partenaire) : filtres titre/catégorie/statut/variante/tri/période (dernier mouvement) exécutés pour de vrai ; Réinitialiser remet la période sur « Toutes les dates » (formulaires remontés via key, défaut « all ») | `tests/unit/stock-pages.db.test.ts` (base jetable, CI) + `tests/unit/list-reset.test.ts` | À lancer sur base jetable (CI) ; unit local OK | `npm run test:all` |
-| A-T25 | T | Réordonnancement des photos : moveItem (monter/descendre, glisser-déposer, bornes, 1re = couverture) | `tests/unit/move-item.test.ts` | OK 2/2 | `npm run test:all` |
-| A-T26 | T | Onglets Stocks / Journal : parse du paramètre tab (défaut stock) | `tests/unit/move-item.test.ts` | OK | `npm run test:all` |
-| A-T23 | T | Réveil de la base de test (Neon en veille) : connect_timeout ajouté si absent, retry/backoff sur P1001, abandon sur autre erreur ; sonde TCP sans client Prisma (régression CI sqlite) | `tests/unit/db-wake.test.ts` (Vitest) | OK 5/5 — 12/11/2026 | `npm run test:db` (logique) |
+| A-T20 | T | Pages Stocks admin + partenaire et filtres de période : requêtes réellement exécutées (avec/sans filtres, périodes tous/aujourd'hui/7/30/personnalisée, journal, réservations actives) | `tests/unit/stock-pages.db.test.ts` (Vitest, base jetable) | OK en CI (run #42 vert, suite Vitest/Playwright complète) — 13/11/2026 | T-ONGLETS-STOCKS, T-PERIODE-FILTRES |
+| A-T21 | T | Sélecteur de période des listes : toutes dates par défaut, aujourd'hui/7 j/30 j, plage personnalisée, valeur inconnue | `tests/unit/restock-period.test.ts` (Vitest) | OK en CI (#39, #42) — 13/11/2026 | T-PERIODE-FILTRES (logique) |
+| A-T22 | T | Alertes « de nouveau disponible » : envoi unique, échec Resend (ou exception) = non marquée envoyée, stock 0/réservé = rien, favori/achetée = close | `tests/unit/restock-period.test.ts` (Vitest, base simulée) | OK en CI (#39, #42) — 13/11/2026 | T-RETOUR-DISPO, T-ENVOI-IMMEDIAT-DISPO (logique) |
+| A-T24 | T | Liste « Stock par création » (admin + partenaire) : filtres titre/catégorie/statut/variante/tri/période (dernier mouvement) exécutés pour de vrai ; Réinitialiser remet la période sur « Toutes les dates » (formulaires remontés via key, défaut « all ») | `tests/unit/stock-pages.db.test.ts` (base jetable, CI) + `tests/unit/list-reset.test.ts` | OK en CI (#39, #42) — 13/11/2026 | `npm run test:all` |
+| A-T25 | T | Réordonnancement des photos : moveItem (monter/descendre, glisser-déposer, bornes, 1re = couverture) | `tests/unit/move-item.test.ts` | OK en CI (#39, #42) — 13/11/2026 | `npm run test:all` |
+| A-T26 | T | Onglets Stocks / Journal : parse du paramètre tab (défaut stock) | `tests/unit/move-item.test.ts` | OK en CI (#39, #42) — 13/11/2026 | `npm run test:all` |
+| A-T23 | T | Réveil de la base de test (Neon en veille) : connect_timeout ajouté si absent, retry/backoff sur P1001, abandon sur autre erreur ; sonde TCP sans client Prisma (régression CI sqlite) | `tests/unit/db-wake.test.ts` (Vitest) | OK en CI (#39, #42) — 13/11/2026 | `npm run test:db` (logique) |
 | A-M1 | M | Fournisseur e-mail : Resend (from, reply_to, sans mention interdite) ; repli Gmail / aucun sans erreur | `tests/unit/email-provider.test.ts` (Vitest) | OK 2/2 â€” 10/11/2026 | T-MAIL-FROM (payload) |
 | A-M2 | M | Mur d'accÃ¨s : images `/api/media/<id>` et `/images/artworks/*` publiques, reste fermÃ© | `tests/unit/proxy-images.test.ts` (Vitest) | OK 2/2 â€” 10/11/2026 | T-MAIL-FROM 3 |
 | A-E1 | E | Retours : Ã©ligibilitÃ© (livrÃ©, 30 j, doublon), propriÃ©taire, motif, dÃ©cision unique, remboursement DONE/Ã©chec + Ã©criture comptable annulÃ©e | `tests/unit/returns.test.ts` (Vitest) | OK 11/11 â€” 10/11/2026 | T-RETOUR 3-7 (logique) |
@@ -44,15 +44,15 @@ DerniÃ¨re exÃ©cution (11/11/2026, lot admin + e-mails de retour) : Vitest 62
 | A-F11 | F | URL de retour Stripe/liens : domaine de la requÃªte (liste blanche epomta.com, epomta-demo.vercel.app), sinon origine configurÃ©e | `tests/unit/origin.test.ts` (Vitest) | OK 3/3 â€” 11/11/2026 | T-DOMAINE |
 | A-F12 | F | Nom d'article cliquable vers la fiche produit dans le rÃ©capitulatif e-mail (annulÃ©e, en routeâ€¦) | `tests/unit/email-item-link.test.ts` (Vitest) | OK 2/2 â€” 11/11/2026 | T-RACHAT-LIEN |
 | A-F13 | F | Mur d'accÃ¨s actif sur epomta.com, www.epomta.com et epomta-demo.vercel.app (page, API ; exemptions webhook/mÃ©dias conservÃ©es) ; robots.txt Disallow + noindex | `tests/unit/wall-hosts.test.ts` (Vitest) + `e2e/access.spec.ts` | OK 3/3 unit â€” 12/11/2026 | T-MUR-EPOMTA |
-| A-F14 | F | Transporteur Â« Autre Â» â†’ Â« Other Â» en EN (`carrierLabel`) ; image exemple non bloquÃ©e par le mur (`/images/examples/*`) | `tests/unit/partner-profile.test.ts`, `tests/unit/proxy-images.test.ts` (Vitest) | Ã€ lancer | T-AUTRE-EN, T-IMG-EXEMPLE |
-| A-F15 | F | Profil partenaire : validation e-mail/tÃ©lÃ©phone/adresse ; journal Â« champ : ancienne â†’ nouvelle valeur Â» | `tests/unit/partner-profile.test.ts` (Vitest) | Ã€ lancer | T-PROFIL-PARTENAIRE, T-PROFIL-ADMIN || A-F10 | F | Montants des e-mails au format de la langue (EN Â« â‚¬55.00 Â», FR Â« 55,00 â‚¬ Â») | `tests/unit/money-locale.test.ts` (Vitest) | OK 2/2 â€” 11/11/2026 | T-MAILS (format EN) |
-| A-F16 | F | E-mails partenaire envoyÃ©s Ã  l'e-mail de contact du profil, repli sur l'e-mail du compte (partnerRecipient) | `tests/unit/partner-recipient.test.ts` (Vitest) | Ã€ lancer | T-EMAIL-CONTACT |
+| A-F14 | F | Transporteur Â« Autre Â» â†’ Â« Other Â» en EN (`carrierLabel`) ; image exemple non bloquÃ©e par le mur (`/images/examples/*`) | `tests/unit/partner-profile.test.ts`, `tests/unit/proxy-images.test.ts` (Vitest) | OK en CI (run #42 vert, suite Vitest/Playwright complète) — 13/11/2026 | T-AUTRE-EN, T-IMG-EXEMPLE |
+| A-F15 | F | Profil partenaire : validation e-mail/tÃ©lÃ©phone/adresse ; journal Â« champ : ancienne â†’ nouvelle valeur Â» | `tests/unit/partner-profile.test.ts` (Vitest) | OK en CI (run #42 vert, suite Vitest/Playwright complète) — 13/11/2026 | T-PROFIL-PARTENAIRE, T-PROFIL-ADMIN || A-F10 | F | Montants des e-mails au format de la langue (EN Â« â‚¬55.00 Â», FR Â« 55,00 â‚¬ Â») | `tests/unit/money-locale.test.ts` (Vitest) | OK 2/2 â€” 11/11/2026 | T-MAILS (format EN) |
+| A-F16 | F | E-mails partenaire envoyÃ©s Ã  l'e-mail de contact du profil, repli sur l'e-mail du compte (partnerRecipient) | `tests/unit/partner-recipient.test.ts` (Vitest) | OK en CI (run #42 vert, suite Vitest/Playwright complète) — 13/11/2026 | T-EMAIL-CONTACT |
 | A-F17 | F | Â« use server Â» en premiÃ¨re instruction de tous les fichiers *actions.ts (Ã©vite l'Ã©chec du build Vercel) | `tests/unit/use-server.test.ts` (Vitest) | OK 1/1 â€” 12/11/2026 | â€” |
-| A-F18 | F | Paiement avant commande : rÃ©servation 30 min sans commande ni e-mail ; commande + colis crÃ©Ã©s une seule fois au paiement (idempotent) ; reconfirmation du mÃªme acheteur ; libÃ©ration/balayage ; paiement aprÃ¨s expiration (re-rÃ©servation, sinon aucune commande + remboursement) ; erreur de stock nominative | `tests/unit/checkout-hold.db.test.ts` (Vitest, base jetable `TEST_DATABASE_URL`, exÃ©cutÃ© en CI) ; filtre archivage dans `tests/unit/admin-list.test.ts` | Ã€ lancer en CI (non exÃ©cutable sans PostgreSQL local) | T-PAIEMENT-AVANT-COMMANDE, T-RESERVATION-IMPAYEE, T-STOCK-NOM, T-ARCHIVAGE |
-| A-F19 | F | Archivage des commandes impayées (simulation sans écriture ; ignore expédiées/remboursées) | `tests/unit/archive-unpaid.test.ts` (Vitest) | À lancer | T-ARCHIVAGE |
-| A-F20 | F | E-mail au partenaire quand l'admin annule un colis ou à l'expiration 48 h (motif, n° de colis, lien) | `tests/unit/partner-cancel-email.test.ts` (Vitest) | À lancer | T-ANNUL-ADMIN-PARTENAIRE |
-| A-F21 | F | E-mail « Votre pièce est de nouveau disponible » (FR/EN, lien fiche, disponibilité non garantie) | `tests/unit/restock-watch.test.ts` (Vitest) | À lancer | T-RETOUR-DISPO |
-| A-F9 | F | Mur d'accÃ¨s : API et images hors exemptions bloquÃ©es (401), artworks e-mail publics (â‰  401), manifeste/icÃ´nes PWA | `e2e/access.spec.ts` (Playwright) | OK 5/5 en local â€” 11/11/2026 (CI Ã  relancer) | â€” |
+| A-F18 | F | Paiement avant commande : rÃ©servation 30 min sans commande ni e-mail ; commande + colis crÃ©Ã©s une seule fois au paiement (idempotent) ; reconfirmation du mÃªme acheteur ; libÃ©ration/balayage ; paiement aprÃ¨s expiration (re-rÃ©servation, sinon aucune commande + remboursement) ; erreur de stock nominative | `tests/unit/checkout-hold.db.test.ts` (Vitest, base jetable `TEST_DATABASE_URL`, exÃ©cutÃ© en CI) ; filtre archivage dans `tests/unit/admin-list.test.ts` | OK en CI (run #42 vert, suite Vitest/Playwright complète) — 13/11/2026 | T-PAIEMENT-AVANT-COMMANDE, T-RESERVATION-IMPAYEE, T-STOCK-NOM, T-ARCHIVAGE |
+| A-F19 | F | Archivage des commandes impayées (simulation sans écriture ; ignore expédiées/remboursées) | `tests/unit/archive-unpaid.test.ts` (Vitest) | OK en CI (run #42 vert, suite Vitest/Playwright complète) — 13/11/2026 | T-ARCHIVAGE |
+| A-F20 | F | E-mail au partenaire quand l'admin annule un colis ou à l'expiration 48 h (motif, n° de colis, lien) | `tests/unit/partner-cancel-email.test.ts` (Vitest) | OK en CI (run #42 vert, suite Vitest/Playwright complète) — 13/11/2026 | T-ANNUL-ADMIN-PARTENAIRE |
+| A-F21 | F | E-mail « Votre pièce est de nouveau disponible » (FR/EN, lien fiche, disponibilité non garantie) | `tests/unit/restock-watch.test.ts` (Vitest) | OK en CI (run #42 vert, suite Vitest/Playwright complète) — 13/11/2026 | T-RETOUR-DISPO |
+| A-F9 | F | Mur d'accÃ¨s : API et images hors exemptions bloquÃ©es (401), artworks e-mail publics (â‰  401), manifeste/icÃ´nes PWA | `e2e/access.spec.ts` (Playwright) | OK en CI (run #42 vert, suite Vitest/Playwright complète) — 13/11/2026 | â€” |
 
 Parcours Playwright historiques (`e2e/journey.spec.ts`, `access.spec.ts`, `alerts.spec.ts`, `search.spec.ts`, `order-email.spec.ts`, `mobile.spec.ts`) : inchangÃ©s, non relancÃ©s dans ce lot.
 
@@ -437,54 +437,54 @@ Prérequis : Stripe en mode test (carte 4242 4242 4242 4242), webhook `checkout.
 2. Attendu : l'acheteur reçoit l'e-mail d'annulation ET le partenaire reçoit « colis … annulé » (motif, n° de colis, bouton vers sa commande) sur son e-mail de contact (sinon e-mail du compte).
 3. Refus par le partenaire : pas d'e-mail à lui-même. Expiration 48 h : e-mail au partenaire.
 
-### T-ME-PREVENIR — Bouton « Me prévenir quand elle est disponible » — 10 min — À tester — date : —
+### T-ME-PREVENIR — Bouton « Me prévenir quand elle est disponible » — 10 min — Validé le 13/11/2026
 1. Ouvrir la fiche d'une pièce épuisée (ou réservée par un autre acheteur) NON connecté : bouton « Me prévenir quand elle est disponible » visible ; clic : renvoi vers la connexion, puis retour sur la fiche après connexion.
 2. Connecté : clic sur le bouton. Attendu : message « Vous serez prévenu(e) dès qu'elle est disponible » et bouton « Annuler l'alerte » ; recharger la page : état conservé.
 3. « Annuler l'alerte » : le message disparaît, le bouton revient ; plus d'e-mail.
 4. Réactiver, remettre du stock (ou libérer la réservation), lancer /api/alerts/run : e-mail « Votre pièce est de nouveau disponible » reçu UNE fois ; relancer : pas de doublon. Pièce en favori ou déjà achetée : pas de cet e-mail.
 5. Pièce disponible : le bouton n'apparaît pas. Vérifier en EN.
-### T-ADMIN-STOCK — L'admin voit le stock et son journal — 10 min — À tester — date : —
+### T-ADMIN-STOCK — L'admin voit le stock et son journal — 10 min — Validé le 13/11/2026
 1. Admin > Partenaires > « Gérer les créations » d'un partenaire : chaque création affiche Stock total, Réservé, Dispo. (stock − réservé) et un lien « Journal du stock ».
 2. Compte acheteur : « Confirmer » une pièce (réservation 30 min, sans payer). Recharger la page admin : sous la création, ligne « Réservation en cours AM-… · e-mail acheteur · quantité · expire à HH:MM » ; Réservé augmente, Dispo. diminue.
 3. Clic « Journal du stock » : page /admin/stock filtrée sur la création (date, création, type, qté, motif, auteur) ; le motif « Réservation en attente de paiement » apparaît.
 4. Lien « Journal des mouvements de stock de ce partenaire » : journal filtré sur ce partenaire.
 5. Journal global : /admin/stock (aussi via le lien sous le titre « Journal des mouvements de stock » de Admin > Créations). Filtrer par partenaire, création, dates ; pagination 50 lignes. Aucune modification de stock possible côté admin.
-### T-FILTRES-JOURNAL-STOCK — Filtres du journal des mouvements de stock (admin et partenaire) — 10 min — À tester — date : —
+### T-FILTRES-JOURNAL-STOCK — Filtres du journal des mouvements de stock (admin et partenaire) — 10 min — Validé le 13/11/2026
 1. Admin : /fr/admin/stock. Vérifier les champs : Partenaire, Création (titre), Type, Du, Au, Auteur/acheteur (e-mail), Motif, Tri ; boutons Filtrer et Réinitialiser.
 2. Filtrer par Type « Réservation » : seules les lignes Réservation restent. Ajouter un titre de création : la liste se réduit à cette création.
 3. Filtrer par Motif « en attente de paiement », puis par e-mail d'un acheteur : résultats cohérents. Période Du/Au : seules les lignes de la période.
 4. Tri « Ancien d'abord » : l'ordre s'inverse (récent d'abord par défaut). Page 2 (si > 50 lignes) : les filtres sont conservés. Réinitialiser : tous les mouvements.
 5. Partenaire : Mes créations, section « Journal des mouvements de stock » : mêmes filtres ; seules SES créations apparaissent ; les filtres de la liste des créations restent actifs. Pas d'export CSV du journal (non existant).
-### T-PERIODE-FILTRES — Sélecteur de période sur tous les filtres à dates
-Statut : À tester
+### T-PERIODE-FILTRES — Sélecteur de période sur tous les filtres à dates — Validé le 13/11/2026
+Statut : Validé — Date : 13/11/2026
 1. Admin : ouvrir Candidatures, Partenaires, Commandes, Versements, Retours, Créations à modérer, Stocks.
 2. Vérifier le sélecteur « Période » : Toutes les dates (défaut), Aujourd'hui, 7 jours, 30 jours, Plage personnalisée.
 3. Choisir « Aujourd'hui » : la liste se filtre seule ; « Plage personnalisée » : saisir Du/Au puis Filtrer.
 4. Pagination : la période reste appliquée. Réinitialiser : retour à « Toutes les dates ».
 5. Partenaire : mêmes vérifications sur Commandes, Paiements et le journal de Stocks.
 
-### T-ONGLETS-STOCKS — Onglets Créations / Stocks
-Statut : À tester
+### T-ONGLETS-STOCKS — Onglets Créations / Stocks — Validé le 13/11/2026
+Statut : Validé — Date : 13/11/2026
 1. Partenaire : la barre affiche « Créations » et « Stocks » (plus « Créations et stock »).
 2. « Créations » : liste et gestion, sans journal.
 3. « Stocks » : par création/variante, total, réservé, dispo, badge « Stock bas »/« Épuisée », bouton « Ajuster le stock » ; dessous, journal filtrable (période incluse).
 4. Admin : onglet « Stocks » après « Retours » : stock total/réservé/dispo par création et partenaire, réservations actives (e-mail, quantité, heure d'expiration), journal filtrable.
 5. Journal admin : la colonne Création affiche le titre (+ variante + partenaire), pas le slug. Liens depuis « Gérer les créations » toujours présents.
-### T-ENVOI-IMMEDIAT-DISPO — E-mail « de nouveau disponible » envoyé tout de suite
-Statut : À tester
+### T-ENVOI-IMMEDIAT-DISPO — E-mail « de nouveau disponible » envoyé tout de suite — Validé le 13/11/2026
+Statut : Validé — Date : 13/11/2026
 1. Compte A : cliquer « Me prévenir » sur une pièce épuisée (ou laisser une réservation expirer sans payer).
 2. Compte B : réserver la dernière pièce (Confirmer) puis fermer l'onglet Stripe ; ou admin : annuler un colis contenant la pièce.
 3. Attendre l'expiration (30 min) puis ouvrir la fiche produit (déclenche le balayage), ou attendre l'événement Stripe d'expiration.
 4. Résultat : le compte A reçoit l'e-mail dans la minute (sans attendre le cron de 07:00), une seule fois.
 5. Vercel > Settings > Cron Jobs : /api/alerts/run (07:00) et /api/orders/sweep (06:00) listés ; variable CRON_SECRET définie.
-### T-FILTRES-STOCK-RESET — Filtres des listes de stock et Réinitialiser — 15 min — À tester — date : —
+### T-FILTRES-STOCK-RESET — Filtres des listes de stock et Réinitialiser — 15 min — Validé le 13/11/2026
 1. Admin > Stocks : section « Stock par création ». Filtrer Statut = « Stock bas », puis « Épuisée », « Avec réservation » : seules les lignes correspondantes restent ; les compteurs entre parenthèses sont cohérents.
 2. Saisir un titre partiel, une variante, une catégorie, un partenaire : le tableau se réduit ; passer à la page 2 (si > 50 lignes) conserve les filtres.
 3. Période « Dernier mouvement » = Aujourd'hui / 7 j / 30 j / Plage : ne garde que les créations dont le dernier mouvement de stock tombe dans la période. Cliquer Réinitialiser : tout est vide et la période revient sur « Toutes les dates ».
 4. Même chose côté partenaire (Stocks) : les anciens onglets Toutes/Stock bas/Épuisées sont le filtre Statut ; bouton « Ajuster le stock » toujours présent.
 5. /admin/commandes : choisir « Aujourd'hui » puis « Plage personnalisée », Réinitialiser : période = « Toutes les dates », URL sans d/from/to. Répéter sur candidatures, partenaires, versements, retours, paiements, créations à modérer (défaut désormais « Toutes les dates »), journaux de stock admin et partenaire, commandes partenaire.
 
-### T-ORDRE-PHOTOS — Réordonner les photos d'une création — 10 min — À tester — date : —
+### T-ORDRE-PHOTOS — Réordonner les photos d'une création — 10 min — Validé le 13/11/2026
 1. Compte partenaire > Créations > modifier une création ayant 3 photos (sur mobile aussi).
 1ter. Pendant le glisser : un aperçu de la photo suit le curseur/doigt, la vignette d'origine est atténuée avec bordure pointillée, les autres vignettes se décalent en direct avec transition ; au relâchement l'ordre est conservé (souris et mobile).
 1bis. Glisser une vignette (souris, puis doigt sur mobile) sur une autre : elle prend sa place ; vérifier qu'aucun bouton ne se chevauche (couverture, ← → ✕ sur leur propre ligne, desktop et mobile).
@@ -494,13 +494,13 @@ Statut : À tester
 5. Fiche produit (galerie), cartes du catalogue et page de la boutique : 1re photo = couverture, galerie dans le nouvel ordre.
 6. Admin : l'édition de la création (si accessible) reprend le même ordre.
 
-### T-ONGLETS-STOCK-JOURNAL — Onglets Stocks / Journal — 10 min — À tester — date : —
+### T-ONGLETS-STOCK-JOURNAL — Onglets Stocks / Journal — 10 min — Validé le 13/11/2026
 1. Partenaire > Stocks : deux onglets « Stocks » et « Journal des mouvements de stock » (même style que Commandes) ; seul l'onglet actif est affiché, l'URL contient tab=stock ou tab=journal.
 2. Onglet Stocks : filtrer (statut, titre…), paginer : l'onglet reste Stocks et les filtres sont conservés. Réinitialiser : champs vides, période « Toutes les dates ».
 3. Onglet Journal : filtrer (type, période Aujourd'hui, plage…), paginer : l'onglet reste Journal. Réinitialiser : période « Toutes les dates ».
 4. Recharger la page sur tab=journal : on reste sur le Journal. Répéter côté admin (Admin > Stocks).
 
-### T-RETOUR-DISPO — Prévenu quand une pièce redevient disponible — 15 min — À tester — date : —
+### T-RETOUR-DISPO — Prévenu quand une pièce redevient disponible — 15 min — Validé le 13/11/2026
 1. Compte A : mettre une pièce unique au panier, « Confirmer » (réservation 30 min), ne pas payer, revenir en arrière.
 2. Compte B (autre navigateur, pièce NON en favori) : tenter la même pièce : message « plus disponible » (tentative mémorisée).
 3. Laisser expirer la réservation de A (ou annuler le paiement), puis lancer /api/alerts/run (ou attendre le cron).

@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import { categories, creators, products } from "../src/data";
 import { exampleCreators, exampleProducts } from "../src/data/examples";
 
+import { purgeTestResidue } from "./test-residue";
 const prisma = new PrismaClient();
 
 async function main() {
@@ -61,6 +62,7 @@ async function main() {
 
   // Retire les anciennes données (couture) absentes du jeu actuel ; les commandes qui y renvoient sont supprimées.
   // Le jeu d'exemple (seed séparé, voir seed.examples.ts) est conservé s'il existe.
+  await purgeTestResidue(prisma);
   const keep = [...products.map((p) => p.slug), ...exampleProducts.map((p) => p.slug)];
   await prisma.orderItem.deleteMany({ where: { productSlug: { notIn: keep }, product: { supplierId: null } } });
   // Les œuvres et artistes créés par des partenaires (supplierId non nul) ne sont jamais supprimés par le seed.

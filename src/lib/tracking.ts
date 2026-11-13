@@ -11,9 +11,14 @@ export function carrierLabel(carrier: string, fr: boolean): string {
   return /^\s*(autre|other)\s*$/i.test(carrier) ? (fr ? "Autre" : "Other") : carrier;
 }
 
+/** Numéro de suivi assaini : retire espaces, virgules et points-virgules (saisie ou copier-coller). */
+export function cleanTrackingNumber(raw: string): string {
+  return (raw ?? "").replace(/[\s,;]+/g, "");
+}
+
 /** URL de suivi du transporteur (lien uniquement, aucun appel externe) ; null si transporteur inconnu. */
 export function trackingUrl(carrier: string, trackingNumber: string): string | null {
-  const n = encodeURIComponent(trackingNumber.trim());
+  const n = encodeURIComponent(cleanTrackingNumber(trackingNumber));
   if (!n) return null;
   const b = BUILDERS.find(([re]) => re.test(carrier));
   return b ? b[1](n) : null;

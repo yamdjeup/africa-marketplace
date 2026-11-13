@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import { RETURN_LABELS, returnEligibility, showShippedNotice, type ReturnStatus } from "@/lib/returns";
 import type { Locale } from "@/lib/i18n";
 import { subLabel } from "@/lib/suborders";
-import { carrierLabel, trackingUrl } from "@/lib/tracking";
+import { carrierLabel, cleanTrackingNumber, trackingUrl } from "@/lib/tracking";
 import { tr } from "@/lib/tr";
 
 // Suivi client par boutique : « Vendu et expédié par [boutique] », état et suivi d'expédition réels.
@@ -39,7 +39,7 @@ export async function SubOrderTracking({ orderId, locale, canCancel = false }: {
               ))}
             </ul>
             {s.status === "PENDING" && <p className="text-xs text-muted-foreground">{tr(locale, "En attente de la réponse de la boutique (48 h maximum).", "Waiting for the shop's reply (48 h maximum).")}</p>}
-            {s.trackingNumber && <p>{tr(locale, "Expédiée le", "Shipped on")} {s.shippedAt ? fmt.format(s.shippedAt) : ""} — {carrierLabel(s.carrier, locale === "fr")} · {tr(locale, "suivi", "tracking")} {s.trackingNumber}</p>}
+            {s.trackingNumber && <p>{tr(locale, "Expédiée le", "Shipped on")} {s.shippedAt ? fmt.format(s.shippedAt) : ""} — {carrierLabel(s.carrier, locale === "fr")} · {tr(locale, "suivi", "tracking")} {cleanTrackingNumber(s.trackingNumber)}</p>}
             {s.trackingNumber && trackingUrl(s.carrier, s.trackingNumber) && <p><a href={trackingUrl(s.carrier, s.trackingNumber)!} target="_blank" rel="noopener noreferrer" className="font-medium underline">{tr(locale, "Suivre mon colis", "Track my parcel")}</a></p>}
             {s.deliveredAt && <p>{tr(locale, "Livrée le", "Delivered on")} {fmt.format(s.deliveredAt)}</p>}
             {s.reason && ["REFUSED", "CANCELLED"].includes(s.status) && <p>{tr(locale, "Motif : ", "Reason: ")}{s.reason}</p>}

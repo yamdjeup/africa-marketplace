@@ -486,6 +486,7 @@ Statut : À tester
 
 ### T-ORDRE-PHOTOS — Réordonner les photos d'une création — 10 min — À tester — date : —
 1. Compte partenaire > Créations > modifier une création ayant 3 photos (sur mobile aussi).
+1ter. Pendant le glisser : un aperçu de la photo suit le curseur/doigt, la vignette d'origine est atténuée avec bordure pointillée, les autres vignettes se décalent en direct avec transition ; au relâchement l'ordre est conservé (souris et mobile).
 1bis. Glisser une vignette (souris, puis doigt sur mobile) sur une autre : elle prend sa place ; vérifier qu'aucun bouton ne se chevauche (couverture, ← → ✕ sur leur propre ligne, desktop et mobile).
 2. Sous chaque photo, cliquer → : la photo passe en position suivante ; ← la remonte ; ← désactivé sur la 1re, → sur la dernière.
 3. Mettre une autre photo en 1re position (ou « Couverture ») : elle affiche le badge Couverture.

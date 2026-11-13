@@ -41,29 +41,29 @@ export function PhotoUploader({ name, initial, max, kind = "photo", fr, label, h
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const input = useRef<HTMLInputElement>(null);
-  const [drag, setDrag] = useState<number | null>(null);
+  const [drag, setDrag] = useState<{ url: string; x: number; y: number } | null>(null);
 
-  // Glisser-déposer par pointer events (souris et tactile) : la cible est la vignette sous le doigt.
-  function startDrag(e: React.PointerEvent, from: number) {
+  // Glisser-déposer (souris et tactile) : aperçu fantôme sous le doigt, réordonnancement en direct au survol.
+  function startDrag(e: React.PointerEvent, url: string) {
     e.preventDefault();
-    let over = from;
-    setDrag(from);
+    setDrag({ url, x: e.clientX, y: e.clientY });
     const move = (ev: PointerEvent) => {
+      setDrag({ url, x: ev.clientX, y: ev.clientY });
       const li = document.elementFromPoint(ev.clientX, ev.clientY)?.closest("[data-photo-index]");
-      if (li) over = Number(li.getAttribute("data-photo-index"));
+      if (!li) return;
+      const to = Number(li.getAttribute("data-photo-index"));
+      setUrls((cur) => { const from = cur.indexOf(url); return from < 0 || from === to ? cur : moveItem(cur, from, to); });
     };
     const up = () => {
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", up);
       window.removeEventListener("pointercancel", up);
       setDrag(null);
-      if (over !== from) setUrls((cur) => moveItem(cur, from, over));
     };
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", up);
     window.addEventListener("pointercancel", up);
   }
-
   async function addFiles(list: File[]) {
     setError("");
     setBusy(true);
@@ -101,14 +101,18 @@ export function PhotoUploader({ name, initial, max, kind = "photo", fr, label, h
 
   return (
     <div className="space-y-2">
+      {drag && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={drag.url} alt="" className="pointer-events-none fixed z-50 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rotate-3 rounded-md border object-cover opacity-90 shadow-xl" style={{ left: drag.x, top: drag.y }} />
+      )}
       <input type="hidden" name={name} value={JSON.stringify(urls)} />
       <p className="text-sm font-medium">{label}</p>
       {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
       <ul className="flex flex-wrap gap-3">
         {urls.map((u, i) => (
-          <li key={u} data-photo-index={i} className={`flex w-28 flex-col gap-1 rounded-md border p-1 text-xs ${drag === i ? "opacity-50" : ""}`}>
+          <li key={u} data-photo-index={i} className={`flex w-28 flex-col gap-1 rounded-md border p-1 text-xs transition-all duration-150 ${drag?.url === u ? "border-2 border-dashed border-primary bg-primary/10 opacity-40" : ""}`}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={u} alt="" draggable={false} onPointerDown={(e) => kind === "photo" && urls.length > 1 && startDrag(e, i)} className={`h-24 w-full rounded object-cover ${kind === "photo" && urls.length > 1 ? "cursor-grab touch-none" : ""}`} />
+            <img src={u} alt="" draggable={false} onPointerDown={(e) => kind === "photo" && urls.length > 1 && startDrag(e, u)} className={`h-24 w-full rounded object-cover ${kind === "photo" && urls.length > 1 ? "cursor-grab touch-none" : ""}`} />
             {kind === "photo" && (i === 0 ? <span className="rounded bg-accent/20 px-1 py-1 text-center font-medium">{fr ? "Couverture" : "Cover"}</span> : <button type="button" className="min-h-8 rounded border px-1" onClick={() => setUrls([u, ...urls.filter((x) => x !== u)])}>{fr ? "Couverture" : "Cover"}</button>)}
             <div className="grid grid-cols-3 gap-1">
               {kind === "photo" && urls.length > 1 ? (

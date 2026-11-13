@@ -21,6 +21,7 @@ import { isAdminEmail } from "@/lib/supplier";
 import { formatEur, getDict, type Locale } from "@/lib/i18n";
 import { NotifyButton } from "@/components/marketplace/notify-button";
 import { db } from "@/lib/db";
+import { InCartNotice } from "@/components/marketplace/in-cart-notice";
 import { buyerKeyOf, releaseExpiredHolds } from "@/lib/checkout-hold";
 import { ApproxPrice } from "@/components/marketplace/approx-price";
 
@@ -114,9 +115,10 @@ export default async function ProductPage({ params }: Props) {
             {p.stock === 0 ? t.outOfStock : t.inStock(p.stock)}
             {p.edition && !(p.stock > 0 && p.stock <= 1 && /pi[eè]ce unique|unique piece/i.test(p.edition)) ? ` · ${locale === "fr" ? "Édition" : "Edition"} ${p.edition}` : ""}
           </p>
+          {!urgent && <InCartNotice slug={p.slug} locale={locale} />}
           {urgent && (
             <p role="status" className="rounded-md border border-accent bg-accent/15 p-3 text-sm font-medium">
-              {locale === "fr" ? "Dépêchez-vous : un autre client est en train de réserver cette pièce. Elle peut redevenir disponible si son paiement n'aboutit pas." : "Hurry: another customer is currently reserving this piece. It may become available again if their payment is not completed."}
+              {locale === "fr" ? "Réservée par un autre client : elle peut redevenir disponible si son paiement n'aboutit pas." : "Reserved by another customer: it may become available again if their payment is not completed."}
             </p>
           )}
           <AddToCart

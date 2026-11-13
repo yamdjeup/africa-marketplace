@@ -34,6 +34,7 @@ DerniÃ¨re exÃ©cution (11/11/2026, lot admin + e-mails de retour) : Vitest 62
 | A-T29 | Raison du refus de stock : « réservée par un autre client » (stock présent mais réservé) vs « épuisée » (`stockReason`, `tests/unit/stock-reason.test.ts`) | OK en CI #51 (vert global ; log détaillé non lu)| 14/11/2026 |
 | A-T30 | Retour arrière Stripe (cancel_url → /api/checkout/cancel) libère la réservation avec le bon jeton, pas avec un mauvais (checkout-hold.db.test.ts) | OK en CI #51 (vert global ; log détaillé non lu) | 13/11/2026 |
 | A-T31 | Retour NAVIGATEUR depuis Stripe : cookie httpOnly `ep_hold` (numéro.jeton) posé à la confirmation ; `HoldReturnGuard` (pages /checkout et /cart, au montage et au `pageshow` bfcache) appelle `POST /api/checkout/cancel` ; libération idempotente (`checkout-hold.db.test.ts`) | OK en CI #52 (statut vert vu par l'utilisateur, log détaillé non lu) ; cookie/composant non testés automatiquement | 13/11/2026 |
+| A-T32 | Intérêt panier anonyme (`CartInterest`, jeton navigateur) : vu par un autre navigateur, jamais par soi-même, expiré après 30 min, retiré avec le panier (`checkout-hold.db.test.ts`) | Écrit, à lancer en CI (composant/API non testés automatiquement) | 13/11/2026 |
 | A-T28 | Purge des résidus de test avant seed (`prisma/test-residue.ts`, `test-residue.test.ts`) : dépendances supprimées avant les produits test-hold | OK en CI #47 (vert global, log détaillé non lu) | 13/11/2026 |
 | A-T23 | T | Réveil de la base de test (Neon en veille) : connect_timeout ajouté si absent, retry/backoff sur P1001, abandon sur autre erreur ; sonde TCP sans client Prisma (régression CI sqlite) | `tests/unit/db-wake.test.ts` (Vitest) | OK en CI (#39, #42, #47) — 13/11/2026 | `npm run test:db` (logique) |
 | A-M1 | M | Fournisseur e-mail : Resend (from, reply_to, sans mention interdite) ; repli Gmail / aucun sans erreur | `tests/unit/email-provider.test.ts` (Vitest) | OK 2/2 â€” 10/11/2026 | T-MAIL-FROM (payload) |
@@ -679,14 +680,17 @@ Validé manuellement par l'utilisateur ; couvert aussi par A-F19 (logique, simul
 
 Note A-T27 : T-STOCK-NOM étapes 2–3 et Test 4 (course de stock) sont écrits ; manuel restant = seulement l'affichage du message à l'écran. T-RESERVATION 4 / T-PAIEMENT 4–5 : paiement après expiration déjà couvert en logique (test existant) ; remboursement Stripe réel non automatisé.
 
-### T-MESSAGES-RESERVATION (ajout) - 5 min - A tester
-1. Compte admin : mettre une piece P1 a stock 1 (attendre 30 min ou annuler la reservation si deja reservee).
-2. Navigateur B (autre compte ou anonyme) : ouvrir la fiche P1 ET ajouter P1 au panier, sans confirmer ; laisser l'onglet fiche ouvert.
-3. Navigateur A (client connecte) : ajouter P1, cliquer Confirmer, rester sur la page Stripe.
-4. B : dans le panier deja ouvert, cliquer Confirmer. Attendu : « Cette pièce vient d'être réservée par un autre client : <NOM de P1> ».
-5. B : recharger la fiche P1. Attendu : bouton « Épuisé » et message « Dépêchez-vous : un autre client est en train de réserver cette pièce… » (aucune identité affichée). Note : sans rechargement, la fiche ouverte avant reste inchangée.
-6. A : rouvrir la fiche P1. Attendu : pas de message d'urgence (A détient la réservation).
-7. Pièce à stock 0 : Confirmer depuis un panier. Attendu : « Cette pièce n'est plus disponible : <NOM> » (libellé distinct).
+### T-MESSAGES-RESERVATION - Urgence panier et pièce réservée - 10 min - À tester
+1. Admin : mettre une pièce P1 à stock 1 (attendre 30 min ou annuler la réservation si elle est déjà réservée). Utiliser deux navigateurs différents : B (anonyme ou compte B) et A (compte client A).
+2. B : ajouter P1 au panier, SANS confirmer.
+3. A : ouvrir la fiche P1. Attendu : « Dépêchez-vous : un autre client a cette pièce dans son panier. » (aucune identité).
+4. A : cliquer « Ajouter au panier ». Attendu : le même message reste affiché. B, après rechargement de la fiche P1 : voit aussi le message (A l'a dans son panier).
+5. A : cliquer « Confirmer », rester sur la page Stripe (réservation 30 min).
+6. B : depuis son panier déjà ouvert, cliquer « Confirmer ». Attendu : « Cette pièce vient d'être réservée par un autre client : <NOM de P1> ».
+7. B : recharger la fiche P1. Attendu : « Épuisé » et « Réservée par un autre client : elle peut redevenir disponible si son paiement n'aboutit pas. » (plus de « Dépêchez-vous »).
+8. A : cliquer la flèche « ← » de Stripe. Attendu : réservation libérée ; B recharge la fiche : « Ajouter au panier » disponible.
+9. Admin : mettre une pièce P2 à stock 0, l'ajouter au panier d'un client puis Confirmer. Attendu : « Cette pièce n'est plus disponible : <NOM de P2> » (libellé distinct).
+Non vérifié : l'intérêt panier expire 30 min après la dernière synchronisation ; un panier abandonné non rouvert disparaît donc au bout de 30 min.
 
 ### T-RETOUR-NAVIGATEUR — Retour du navigateur depuis Stripe — 5 min — Validé le 13/11/2026 (utilisateur)
 1. Admin : mettre une pièce P à stock 1 (admin > Stocks).

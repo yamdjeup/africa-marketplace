@@ -8,8 +8,8 @@ on:
     branches: [main]
 
 concurrency:
-  group: tests-${{ github.ref }}
-  cancel-in-progress: true
+  group: tests-base-jetable
+  cancel-in-progress: false
 
 jobs:
   tests:

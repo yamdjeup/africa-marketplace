@@ -32,6 +32,7 @@ describe.skipIf(!enabled)("réservation de paiement (base de test)", () => {
     await db.product.create({ data: { slug, name: `Pièce ${tag}`, nameEn: `Piece ${tag}`, description: "d", descriptionEn: "d", story: "s", storyEn: "s", categorySlug: "test-hold", creatorSlug: "test-hold", priceCents: 5000, materials: [], sizes: [], images: [], stock: 1, supplierId } });
   });
   afterAll(async () => {
+    await db.cartInterest.deleteMany({ where: { token: { in: ["a-token-aaaaaaaaaaaaaaaa", "b-token-aaaaaaaaaaaaaaaa"] } } });
     if (!db) return;
     await db.checkoutHold.deleteMany({ where: { number: { startsWith: `AM-H${tag}` } } });
     await db.subOrder.deleteMany({ where: { number: { startsWith: `AM-H${tag}` } } });
@@ -62,6 +63,19 @@ describe.skipIf(!enabled)("réservation de paiement (base de test)", () => {
     expect((await product()).reserved).toBe(1);
     expect(await cancelHoldWithToken(db, number, p.editToken)).toBe(true);
     expect((await product()).reserved).toBe(0);
+  });
+
+  it("intérêt panier (A-T32) : vu par un autre navigateur, jamais par soi-même, expiré après 30 min, retiré avec le panier", async () => {
+    const { syncInterest, othersHaveInCart } = await import("@/lib/cart-interest");
+    const b = "b-token-aaaaaaaaaaaaaaaa";
+    const a = "a-token-aaaaaaaaaaaaaaaa";
+    const t0 = new Date();
+    await syncInterest(db, b, [slug], t0);
+    expect(await othersHaveInCart(db, slug, a, t0)).toBe(true);
+    expect(await othersHaveInCart(db, slug, b, t0)).toBe(false);
+    expect(await othersHaveInCart(db, slug, a, new Date(t0.getTime() + 31 * 60 * 1000))).toBe(false);
+    await syncInterest(db, b, [], t0);
+    expect(await othersHaveInCart(db, slug, a, t0)).toBe(false);
   });
 
   it("retour navigateur (A-T31) : libération répétée idempotente, stock rendu une seule fois", async () => {

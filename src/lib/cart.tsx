@@ -1,5 +1,6 @@
 "use client";
 
+import { interestToken } from "@/lib/interest-token";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
 export type CartLine = {
@@ -40,6 +41,19 @@ function read(): CartLine[] {
   }
 }
 
+function pushInterest(lines: CartLine[]) {
+  try {
+    void fetch("/api/cart-interest", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: interestToken(), slugs: lines.map((l) => l.slug) }),
+      keepalive: true,
+    }).catch(() => undefined);
+  } catch {
+    /* suivi d'intérêt facultatif */
+  }
+}
+
 const noopSubscribe = () => () => {};
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
@@ -48,8 +62,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Hydratation depuis localStorage après le premier rendu (évite un écart SSR/client).
+    const initial = read();
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setLines(read());
+    setLines(initial);
+    if (initial.length > 0) pushInterest(initial);
     const onStorage = (e: StorageEvent) => {
       if (e.key === STORAGE_KEY) setLines(read());
     };
@@ -65,6 +81,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       } catch {
         /* stockage indisponible : le panier reste en mémoire */
       }
+      pushInterest(next);
       return next;
     });
   }, []);

@@ -456,6 +456,17 @@ model CheckoutHold {
   @@index([status, expiresAt])
 }
 
+/// Intérêt anonyme : pièce présente dans le panier d'un navigateur (jeton aléatoire), expire après 30 min sans mise à jour.
+model CartInterest {
+  id        String   @id @default(cuid())
+  token     String
+  slug      String
+  updatedAt DateTime @default(now())
+
+  @@unique([token, slug])
+  @@index([slug, updatedAt])
+}
+
 /// Acheteur à prévenir quand une pièce redevient disponible (réservation non aboutie ou tentative bloquée). source : HOLD | BLOCKED.
 model RestockWatch {
   id          String    @id @default(cuid())

@@ -39,6 +39,7 @@ DerniÃ¨re exÃ©cution (11/11/2026, lot admin + e-mails de retour) : Vitest 62
 | A-T34 | Sondage de l'intérêt panier toutes les 5 s (onglet visible, nettoyage au démontage ; bandeau fixe non bloquant) : constante testée (`tests/unit/interest-poll.test.ts`) | OK en CI (statut vert confirmé par l'utilisateur le 13/11, run exact et log non lus) ; rendu navigateur non automatisé | 13/11/2026 |
 | A-T35 | L'admin ajuste le stock d'une pièce de partenaire : motif obligatoire, journal avec l'e-mail de l'admin, refus sous le réservé (`tests/unit/checkout-hold.db.test.ts`, base jetable) | OK en CI — 13/11/2026 (vert global ; log détaillé non lu) | 13/11/2026 |
 | A-T36 | Remboursement Stripe (mock `fetch`, sans base ni appel réel) : sans clé → MANUAL (T-SUIVI 5) ; AWAITING puis paiement confirmé → remboursement créé (T-REMB 6) ; deux annulations simultanées → même clé d'idempotence, rien une fois DONE (T-SUIVI 7) (`tests/unit/refund.test.ts`, avec les cas DONE/FAILED/AWAITING existants = T-SUIVI 6, T-REMB 7) | Écrit, à lancer en CI | 13/11/2026 |
+| A-T37 | Prérequis de publication stores (sans réseau) : manifest PWA, icônes 192/512/maskable aux tailles réelles, apple-touch 180×180, sw.js, accès sans mur, appId identique Capacitor/Android/iOS, URL HTTPS, page hors ligne, liens CGV/confidentialité/cookies en pied de page (`tests/unit/store-readiness.test.ts`, 7 tests, passés en local) | Écrit, à lancer en CI | 13/11/2026 |
 | A-T28 | Purge des résidus de test avant seed (`prisma/test-residue.ts`, `test-residue.test.ts`) : dépendances supprimées avant les produits test-hold | OK en CI #47 (vert global, log détaillé non lu) | 13/11/2026 |
 | A-T23 | T | Réveil de la base de test (Neon en veille) : connect_timeout ajouté si absent, retry/backoff sur P1001, abandon sur autre erreur ; sonde TCP sans client Prisma (régression CI sqlite) | `tests/unit/db-wake.test.ts` (Vitest) | OK en CI (#39, #42, #47) — 13/11/2026 | `npm run test:db` (logique) |
 | A-M1 | M | Fournisseur e-mail : Resend (from, reply_to, sans mention interdite) ; repli Gmail / aucun sans erreur | `tests/unit/email-provider.test.ts` (Vitest) | OK 2/2 â€” 10/11/2026 | T-MAIL-FROM (payload) |
@@ -726,3 +727,25 @@ Compte : admin. Pièce de test : « Choupi Tree » (ou toute pièce).
 5. Quantité -9999, motif « Trop » → message rouge « ne peut pas descendre sous le stock réservé » ; rien ne change.
 6. Onglet Journal (/fr/admin/stock?tab=journal) : 2 lignes (+2, -2) avec les motifs et Auteur = e-mail de l'admin.
 7. Côté partenaire de la pièce, Mes créations > Stock > Historique : les 2 mouvements sont visibles.
+
+### T-STORES — Publication Google Play et App Store
+
+Constat vérifié dans le code (13/11/2026) : l'approche retenue est **Capacitor** pour les deux stores (`capacitor.config.ts`, dossiers `android/` et `ios/`, appId `com.epomta.app`, coque WebView chargeant le site). Pas de TWA : donc pas de `assetlinks.json` ni d'`apple-app-site-association` (non nécessaires sans liens d'application). Détails et brouillon de fiche : `docs/APP-NATIVE.md`.
+
+**Automatisé (A-T37)** : manifest, icônes, sw.js, appId cohérent, HTTPS, page hors ligne, liens légaux.
+
+**Lacunes constatées (à traiter avant soumission)**
+- **Aucune suppression de compte par l'utilisateur** (aucune fonction trouvée dans `src/`; seul le partenaire peut être révoqué/anonymisé par l'admin). Exigée par Apple (suppression dans l'app) et par Google Play (lien de suppression) — d'après mes connaissances, **non revérifié** auprès des règles actuelles.
+- Push natives non implémentées ; APK/iOS jamais testés sur appareil (cf. APP-NATIVE.md).
+- `server.url` pointe encore vers l'hôte Vercel provisoire : à remplacer par epomta.com avant publication.
+- Risque Apple 4.2 (site emballé) : à renforcer ; **non vérifié**.
+
+**À faire à la main (vous)**
+1. Créer le compte Google Play Console (coût indiqué dans APP-NATIVE.md : 25 $, une fois — non revérifié).
+2. Créer le compte Apple Developer Program (99 €/an selon APP-NATIVE.md — non revérifié).
+3. Préparer les captures (tailles listées dans APP-NATIVE.md), l'icône 512×512 et l'image 1024×500.
+4. Remplir les fiches (textes FR/EN : brouillon dans APP-NATIVE.md).
+5. Remplir « Sécurité des données » (Google) et « Confidentialité des données » (Apple) à partir de /fr/support/privacy.
+6. Paiements : les pièces sont des biens physiques payés via Stripe ; vérifier auprès des règles Apple/Google si l'achat intégré est exigé ou non (**non vérifié**).
+7. Fournir un compte de démonstration et le mot de passe d'accès aux relecteurs.
+8. Valider : Android sur un vrai téléphone (APK du workflow android-apk) ; iOS via TestFlight.

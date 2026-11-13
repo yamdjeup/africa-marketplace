@@ -154,6 +154,25 @@ describe.skipIf(!enabled)("réservation de paiement (base de test)", () => {
     expect(await db.order.count({ where: { number } })).toBe(0);
   });
 
+  it("A-T35 : l'admin ajuste le stock d'une pièce de partenaire ; motif obligatoire, journal avec l'e-mail de l'admin, jamais sous le réservé", async () => {
+    const { adminAdjustStock } = await import("@/lib/admin-stock-adjust");
+    const admin = { id: "admin-x", email: `admin-${tag}@example.test` };
+    const base = { slug, variant: null, admin };
+    expect(await adminAdjustStock({ ...base, type: "ADJUST", delta: 2, reason: "  " })).toBe("reason");
+    expect(await adminAdjustStock({ ...base, type: "ADJUST", delta: 0, reason: "x" })).toBe("delta");
+    expect(await adminAdjustStock({ ...base, slug: "inconnu-xyz", type: "ADJUST", delta: 1, reason: "x" })).toBe("notfound");
+    const before = (await product()).stock;
+    expect(await adminAdjustStock({ ...base, type: "ENTRY", delta: 3, reason: "Réception atelier" })).toBe("ok");
+    expect((await product()).stock).toBe(before + 3);
+    const mv = await db.stockMovement.findFirstOrThrow({ where: { productSlug: slug, reason: "Réception atelier" } });
+    expect(mv.authorLabel).toBe(admin.email);
+    expect(mv.quantity).toBe(3);
+    expect(await adminAdjustStock({ ...base, type: "ADJUST", delta: -100, reason: "trop" })).toBe("below");
+    expect((await product()).stock).toBe(before + 3);
+    expect(await adminAdjustStock({ ...base, type: "ADJUST", delta: -3, reason: "Casse" })).toBe("ok");
+    expect((await product()).stock).toBe(before);
+  });
+
   const extraProduct = (suffix: string, stock: number) => {
     const s = `hold-${tag.toLowerCase()}-${suffix}`;
     return db.product.create({ data: { slug: s, name: `Pièce ${suffix} ${tag}`, nameEn: `Piece ${suffix} ${tag}`, description: "d", descriptionEn: "d", story: "s", storyEn: "s", categorySlug: "test-hold", creatorSlug: "test-hold", priceCents: 5000, materials: [], sizes: [], images: [], stock, supplierId } });

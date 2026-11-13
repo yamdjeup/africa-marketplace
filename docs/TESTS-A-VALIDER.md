@@ -37,6 +37,7 @@ DerniÃ¨re exÃ©cution (11/11/2026, lot admin + e-mails de retour) : Vitest 62
 | A-T32 | Intérêt panier anonyme (`CartInterest`, jeton navigateur) : vu par un autre navigateur, jamais par soi-même, expiré après 30 min, retiré avec le panier (`checkout-hold.db.test.ts`) | OK en CI (statut vert confirmé par l'utilisateur le 13/11, run exact et log non lus) ; composant/API non testés automatiquement | 13/11/2026 |
 | A-T33 | Bouton « Ajouter au panier » désactivé (« Ajouté au panier ») au chargement si la pièce est déjà dans le panier local, à la quantité max (`cartQuantity`, `tests/unit/cart-quantity.test.ts`) | OK en CI (statut vert confirmé par l'utilisateur le 13/11, run exact et log non lus) ; rendu navigateur non automatisé | 13/11/2026 |
 | A-T34 | Sondage de l'intérêt panier toutes les 5 s (onglet visible, nettoyage au démontage ; bandeau fixe non bloquant) : constante testée (`tests/unit/interest-poll.test.ts`) | OK en CI (statut vert confirmé par l'utilisateur le 13/11, run exact et log non lus) ; rendu navigateur non automatisé | 13/11/2026 |
+| A-T35 | L'admin ajuste le stock d'une pièce de partenaire : motif obligatoire, journal avec l'e-mail de l'admin, refus sous le réservé (`tests/unit/checkout-hold.db.test.ts`, base jetable) | Écrit, à lancer en CI | 13/11/2026 |
 | A-T28 | Purge des résidus de test avant seed (`prisma/test-residue.ts`, `test-residue.test.ts`) : dépendances supprimées avant les produits test-hold | OK en CI #47 (vert global, log détaillé non lu) | 13/11/2026 |
 | A-T23 | T | Réveil de la base de test (Neon en veille) : connect_timeout ajouté si absent, retry/backoff sur P1001, abandon sur autre erreur ; sonde TCP sans client Prisma (régression CI sqlite) | `tests/unit/db-wake.test.ts` (Vitest) | OK en CI (#39, #42, #47) — 13/11/2026 | `npm run test:db` (logique) |
 | A-M1 | M | Fournisseur e-mail : Resend (from, reply_to, sans mention interdite) ; repli Gmail / aucun sans erreur | `tests/unit/email-provider.test.ts` (Vitest) | OK 2/2 â€” 10/11/2026 | T-MAIL-FROM (payload) |
@@ -713,3 +714,13 @@ Non vérifié : comportement réel selon navigateur (Safari/Firefox/Chrome mobil
 6. Panier (/cart) : le nom et la vignette de P1 sont cliquables (déjà le cas).
 Note : aller sur une fiche ne libère aucune réservation (seul l'affichage de /checkout ou /cart après un départ vers Stripe la libère).
 Non automatisé : liens vérifiés par lecture du code uniquement (pas de test de rendu).
+
+### T-ADMIN-AJUSTER-STOCK — L'admin ajuste le stock — 5 min — À tester — date : —
+Compte : admin. Pièce de test : « Choupi Tree » (ou toute pièce).
+1. Ouvrir /fr/admin/stock, onglet Stocks : chaque ligne a un bouton « Ajuster le stock ». Noter Physique / Réservé / Disponible (unités) de la pièce.
+2. Cliquer « Ajuster le stock » sur la pièce : la page affiche ces mêmes valeurs.
+3. Type « Entrée de stock », quantité 2, motif vide → le navigateur refuse (champ obligatoire). Saisir le motif « Test admin » → « Appliquer » : message vert « Stock mis à jour et journalisé » ; Physique +2 unités.
+4. Type « Correction (+/−) », quantité -2, motif « Test admin retrait » → Physique revient à la valeur initiale.
+5. Quantité -9999, motif « Trop » → message rouge « ne peut pas descendre sous le stock réservé » ; rien ne change.
+6. Onglet Journal (/fr/admin/stock?tab=journal) : 2 lignes (+2, -2) avec les motifs et Auteur = e-mail de l'admin.
+7. Côté partenaire de la pièce, Mes créations > Stock > Historique : les 2 mouvements sont visibles.

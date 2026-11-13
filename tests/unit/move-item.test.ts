@@ -10,6 +10,11 @@ describe("réordonnancement des photos", () => {
     expect(moveItem(a, 2, 3)).toEqual(a);
     expect(a).toEqual(["a", "b", "c"]);
   });
+  it("glisser la 1re vignette en dernière position (dépôt) conserve toutes les photos", () => {
+    const r = moveItem(["a", "b", "c", "d"], 0, 3);
+    expect(r).toEqual(["b", "c", "d", "a"]);
+    expect([...r].sort()).toEqual(["a", "b", "c", "d"]);
+  });
   it("la 1re position devient la couverture", () => {
     expect(moveItem(["a", "b", "c"], 2, 0)[0]).toBe("c");
   });

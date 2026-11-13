@@ -60,6 +60,27 @@ Parcours Playwright historiques (`e2e/journey.spec.ts`, `access.spec.ts`, `alert
 
 Les tests ci-dessous restent manuels (rendu visuel, e-mails dans Gmail, mobile, relecture des textes, tableau de bord Stripe). Quand un point est couvert par le bloc B, c'est indiquÃ©.
 
+### Classification d'automatisation des tests restants (13/11/2026)
+Lu dans le code : tests existants. Rien ci-dessous n'est passé « Validé » : seul l'utilisateur valide un test manuel. Aucun test exécuté contre une base Neon en local (pas d'accès) ; les tests DB tournent en CI.
+
+| Test manuel | Classe | Raison / couverture existante |
+|---|---|---|
+| T-STOCK-NOM (2) | Automatisable sûr — déjà fait | `checkout-hold.db.test.ts` « autre acheteur : erreur de stock nominative » (StockError, item = nom). Reste manuel : le libellé affiché à l'écran (étapes 2–3, panier de 2 pièces non couvert). |
+| T-RESERVATION-IMPAYEE 1–3 | Sûr — déjà fait (logique) | `checkout-hold.db.test.ts` : retour arrière, balayage > 30 min, aucune commande. Manuel : vraie page Stripe (retour navigateur, attente 30 min). |
+| T-RESERVATION-IMPAYEE 4 / T-PAIEMENT 4–5 | Probable | Paiement après expiration couvert en logique (test « paiement après libération ») ; le remboursement Stripe réel exige le bac à sable Stripe + webhook : non écrit. |
+| Test 4 course de stock | Probable | Concurrence DB possible (Promise.all sur createHold) ; non écrit, non exécutable ici sans base. |
+| T-AUTRE-EN | Partiel | `carrierLabel("Autre", false) === "Other"` testé (`partner-profile.test.ts`, A-F14). Reste manuel : rendu réel e-mail EN + page commande. |
+| T-NOM-ENTETE | Je ne sais pas | Dépend de la session/JWT après renommage : non testé, ne rien inventer. |
+| T-TABLEAU-PARTENAIRES | Probable (requêtes) / non automatisable (rendu 40 px, modale) | Filtres/tri/pagination = `admin-list.test.ts` ; rendu visuel manuel. |
+| T-DOMAINE-OFFICIEL | Non automatisable | Domaine de prod, Google OAuth, webhook Stripe réel, e-mails reçus. Liste blanche = A-F11. |
+| T-GA4 | Probable (Playwright) | Bandeau/cookies testables en navigateur ; non écrit. Requêtes GA réelles : manuel. |
+| T-STRIPE 6–7, T-REMB 6–8 | Je ne sais pas | Dépendent du bac à sable Stripe + webhook ; non écrits. |
+| T-SUIVI 1–2, 5–7 | Je ne sais pas | UPS/transporteur réel, e-mails reçus. |
+| T24 | Non automatisable en entier | Parcours multi-comptes + Gmail ; `journey.spec.ts` couvre une partie (non relu ici). |
+| H-01..H-16 | Non classés | Non relus un par un ; ne rien supposer. |
+
+Restes manuels indispensables : (1) boîte Gmail : réception, images, liens ; (2) rendu mobile réel ; (3) page Stripe réelle (retour arrière, expiration) ; (4) suivi UPS réel ; (5) connexion Google ; (6) consentement GA4 (étapes 1–8 de T-GA4).
+
 ## Lots rÃ©cents
 
 ### T-MAIL-FROM — E-mail réel depuis contact@epomta.com — 10 min — Validé le 12–13/11/2026 (étape 3 images incluse, confirmée par l'utilisateur)

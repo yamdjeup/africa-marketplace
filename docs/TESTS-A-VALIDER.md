@@ -252,28 +252,39 @@ Rédigé sans modifier le code. Seuls les écrans/e-mails/Stripe réels restent 
 1. (6) Client : « Confirmer », arriver sur Stripe, abandonner. Attendu : aucun e-mail, aucune commande payée.
 2. (7) Payer un colis puis admin/partenaire : annuler. Attendu : remboursement Stripe du montant du colis (€) + e-mail.
 
-**T-REMB 5–8** — étape 5 (expiration 48 h) : à ce jour le test d'expiration est déclaré OK par l'utilisateur ; non revérifié par moi. Restent 6, 7, 8 :
-1. (6) Voir lignes 6 du fichier : « Rembourser (Stripe) » → statut « Remboursé », remboursement du montant (€) dans le dashboard sandbox, e-mail client.
-2. (7) Clé Stripe invalide (sandbox cassée) : `refundStatus` = FAILED, message neutre « nous revenons vers vous » sans montant ; log `[refund]`.
-3. (8) Sans paiement Stripe : aucune mention de remboursement ; « Marquer remboursé (manuel) » → statut « Remboursé ».
-(Le texte exact des étapes 6–8 est dans la section T-REMB ; je n'ai pas réécrit ce que je n'ai pas relu entièrement.)
-
+**T-REMB 5–8 (≈ 25 min, Stripe sandbox, carte 4242 4242 4242 4242).** Étape 5 (colis sans réponse 48 h) : l'utilisateur a déclaré l'expiration OK ; je ne l'ai pas revérifiée. Prérequis : STRIPE_SECRET_KEY de test, webhook déclaré.
+1. (6) Client A : payer une commande (1 pièce, montant noté en €). Avant que le webhook n'ait été traité (ou en désactivant temporairement l'endpoint dans Stripe), partenaire : « Refuser » le colis avec un motif. Attendu : `refundStatus` = AWAITING (base ou page admin). Puis Stripe > Développeurs > Webhooks > « Renvoyer » l'événement checkout.session.completed : un remboursement du montant du colis (€) apparaît dans Stripe > Paiements, statut DONE, e-mail client.
+2. (7) Avec une clé Stripe invalide (modifier STRIPE_SECRET_KEY sur Vercel en préprod, ou environnement de test, jamais la prod) : payer par un autre moyen de test puis refuser. Attendu : `refundStatus` = FAILED avec `refundNote` explicite ; ligne `[refund]` dans les logs Vercel ; e-mail et page commande du client : message neutre « nous revenons vers vous », sans montant. Remettre la bonne clé.
+3. (7 bis) Commande sans paiement Stripe (aucun `stripePaymentIntentId`) : annuler le colis. Attendu : aucune mention de remboursement ni de montant.
+4. (8) L'étape « commande AM-ECAD4CB3 à rattraper » est périmée : la remplacer par une nouvelle commande payée puis refusée ; vérifier qu'un seul remboursement est créé même en renvoyant deux fois l'événement.
 ### Phase 3 — UPS et recette historique (≈ 1 h+)
 
-**T-SUIVI 1–2, 5–7** : (1) partenaire : commande acceptée, expédier avec UPS + numéro ; (2) e-mail « en route » : lien « Suivre mon colis » vers la page UPS avec ce numéro ; 5–7 : voir la section T-SUIVI (non reprises ici, non relues en détail).
-
-**H-01..H-16 — classification (lue d'après les titres, non exhaustive)** :
+**T-SUIVI 1–2 et 5–7 (≈ 25 min).** Prérequis : migration 0020 appliquée.
+1. (1) Partenaire : ouvrir une commande acceptée > « Marquer expédiée » : transporteur UPS, numéro de suivi (ex. 1Z999AA10123456784), valider.
+2. (2) Client : e-mail « en route » dans Gmail : bouton/lien « Suivre mon colis » ouvre la page UPS avec ce numéro. Non automatisable : dépend d'UPS et de Gmail.
+3. (5) Environnement sans STRIPE_SECRET_KEY : annuler un colis. Attendu : texte « remboursement en cours de traitement » ; `refundStatus` = MANUAL en base.
+4. (6) Avec clé Stripe de test et `stripePaymentIntentId` sur la commande : annuler un colis payé. Attendu : `refundStatus` = DONE, e-mail « remboursement effectué », remboursement du montant (€) visible dans Stripe sandbox.
+5. (7) Clé invalide : `refundStatus` = FAILED, texte « en cours de traitement ». Ouvrir deux onglets sur le même colis et cliquer « Annuler » dans les deux : un seul remboursement dans Stripe.
+**H-01..H-16 — classification (relus en entier le 13/11/2026 ; les étapes numérotées de chaque H sont déjà détaillées et autonomes dans leur propre section — je ne les ai pas recopiées pour ne pas créer de doublon divergent)** :
 | Test | Classe | Raison |
 |---|---|---|
-| H-02 Créations et stock | Partiel | `stock-pages.db.test.ts`, `checkout-hold.db.test.ts` couvrent le stock ; création/modération = manuel |
-| H-06 Suspension | Partiel | listes couvertes (`admin-list.test.ts`) ; actions + motif = manuel |
-| H-07 Commandes par partenaire | Partiel | `suborders.db.test.ts` couvre colis/stock ; e-mails et écrans = manuel |
-| H-12 Traduction automatique | Je ne sais pas | dépend d'un service externe ; non testé |
-| H-13 Fiche création | Manuel (visuel) | mentions et dimensions à l'écran |
-| H-14 Paiements | Partiel | `refund.test.ts` ; registre/versements à l'écran = manuel |
-| H-01, H-03, H-04, H-05, H-08..H-11, H-15, H-16 | Je ne sais pas | non relus un par un ; à classer avant d'inventer |
-Pas de test Playwright écrit pour H : exécution impossible ici (pas de Neon), donc rien marqué « Écrit ».
-
+| H-01 Candidature (18 ét.) | Partiel | étapes 1–4 (redirections/accès) et 7, 9 (validation fichiers) = logique automatisable, non écrit ; e-mails 5, 12–14, miniatures 8, 10, rendu 16–18 = manuel |
+| H-02 Créations et stock (en-tête) | Partiel | `db:check-stock` et tests stock en CI ; saisie = manuel |
+| H-03 Partenaire créations (8 ét.) | Manuel | formulaire, photos, signature ; étape 7 stock couvert en partie par `stock-pages.db.test.ts` |
+| H-04 Admin créations (22 ét.) | Partiel | tableaux/filtres/dates/CSV : requêtes couvertes en partie (`admin-list`, `list-reset`) ; lightbox, couleurs, mobile, e-mails = manuel |
+| H-05 Client stock (4 ét.) | Partiel | états de stock et deuxième client = `checkout-hold.db.test.ts` (A-T27) ; e-mail « stock bas » non vérifié automatiquement |
+| H-06 Suspension (8 ét.) | Partiel | audit/journal : `partner-profile.test.ts` ne couvre pas la suspension (je ne sais pas) ; popups, e-mails = manuel |
+| H-07 Commandes par partenaire (en-tête) | Partiel | `suborders.db.test.ts`, `db:check-orders` |
+| H-08 Achat (2 ét.) | Partiel | scission par partenaire = `suborders.db.test.ts` ; blocs d'écran et e-mails = manuel |
+| H-09 Partenaire commandes (5 ét.) | Partiel | stock Vente/Libération = tests DB ; compteurs, e-mails = manuel |
+| H-10 48 h/relance/escalade (1 ét.) | Partiel | `npm run db:check-orders` simule les délais (script existant, non lu en détail, non lancé ici) ; e-mails = manuel |
+| H-11 Admin commandes (3 ét.) | Manuel | écran, annulation avec motif, « Voir comme » |
+| H-12 Traduction (5 ét.) | Je ne sais pas | `npm run db:check-translate` existe (non lu) ; DeepL = service externe, clé requise |
+| H-13 Fiche création (2 ét.) | Manuel (visuel) | mentions et libellés à l'écran |
+| H-14 Paiements (en-tête) | Partiel | `db:check-orders` annonce commission 15 %, attente→disponible→versé ; non lancé ici |
+| H-15 Partenaire paiements (2 ét.) | Manuel | cartes et tableau à l'écran |
+| H-16 Admin versements (5 ét.) | Partiel | calculs/idempotence couverts par `db:check-orders` (non lancé) ; boutons, e-mail « versement effectué (test) » = manuel |
+Aucun nouveau test écrit à cette étape : un test exécutable en CI nécessite la lecture des scripts `db:check-*` et une base que je n'ai pas ; rien n'est donc marqué « Écrit ». Ordre conseillé pour H : H-13, H-11, H-15, H-16, H-08, H-09, H-06, H-05, H-03, H-04, H-01, H-10, H-12 en dernier.
 ### Phase 4 — bloqués / non automatisables
 - T-GA4 (1–11) : navigateur privé + outils réseau ; `NEXT_PUBLIC_GA_ID` requis.
 - T-DOMAINE-OFFICIEL (1–4) : domaine de prod, Google OAuth, webhook réel.

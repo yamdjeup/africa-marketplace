@@ -688,7 +688,7 @@ Note A-T27 : T-STOCK-NOM étapes 2–3 et Test 4 (course de stock) sont écrits 
 6. A : rouvrir la fiche P1. Attendu : pas de message d'urgence (A détient la réservation).
 7. Pièce à stock 0 : Confirmer depuis un panier. Attendu : « Cette pièce n'est plus disponible : <NOM> » (libellé distinct).
 
-### T-RETOUR-NAVIGATEUR — Retour du navigateur depuis Stripe — 5 min — À tester
+### T-RETOUR-NAVIGATEUR — Retour du navigateur depuis Stripe — 5 min — Validé le 13/11/2026 (utilisateur)
 1. Admin : mettre une pièce P à stock 1 (admin > Stocks).
 2. Compte A (client) : ajouter P au panier, cliquer « Confirmer » ; la page Stripe s'ouvre (mode test).
 3. Utiliser le bouton Retour du NAVIGATEUR (flèche du navigateur, pas la flèche « ← » de Stripe). Attendu : retour sur le formulaire /checkout ou le panier.

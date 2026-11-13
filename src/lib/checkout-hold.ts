@@ -80,6 +80,14 @@ export async function releaseHold(db: PrismaClient, number: string, reason = "Pa
   return true;
 }
 
+/** Retour arrière depuis Stripe (cancel_url) : libère la réservation si le jeton correspond. */
+export async function cancelHoldWithToken(db: PrismaClient, number: string, token: string) {
+  const hold = await db.checkoutHold.findUnique({ where: { number } });
+  if (!hold || hold.status !== "HELD") return false;
+  if ((hold.payload as unknown as HoldPayload).editToken !== token) return false;
+  return releaseHold(db, number, "Retour depuis la page de paiement");
+}
+
 /** Retour arrière puis reconfirmation : libère les réservations en cours du même acheteur. */
 export async function releaseBuyerHolds(db: PrismaClient, buyerKey: string) {
   const holds = await db.checkoutHold.findMany({ where: { buyerKey, status: "HELD" }, select: { number: true } });

@@ -24,6 +24,12 @@ describe("réordonnancement des photos", () => {
     expect(r).toEqual(["b", "c", "d", "a"]);
     expect([...r].sort()).toEqual(["a", "b", "c", "d"]);
   });
+  it("réordonnancement en direct : déplacements successifs conservent les photos", () => {
+    let l = ["a", "b", "c", "d"];
+    for (const to of [1, 2, 3, 1]) l = moveItem(l, l.indexOf("a"), to);
+    expect(l.indexOf("a")).toBe(1);
+    expect([...l].sort()).toEqual(["a", "b", "c", "d"]);
+  });
   it("la 1re position devient la couverture", () => {
     expect(moveItem(["a", "b", "c"], 2, 0)[0]).toBe("c");
   });

@@ -127,7 +127,7 @@ PrÃ©requis : migration 0023 appliquÃ©e ; un colis livrÃ© (compte client) ;
 | T-ADMIN-FILTRES | Filtres, pagination et pastilles (admin + partenaire) ; e-mails de retour | 20 min | Ã€ tester | â€” |
 | T24 | Parcours de commande complet (achat â†’ livraison) | 20 min | Ã€ tester | â€” |
 | T-STRIPE | Paiement Stripe Checkout + webhook (lot 0) | 15 min | Partiel : étapes 1, 2, 3, 4, 5, 7, 8 validées ; reste 6 ; étape 7 validée 13/11/2026 | 12–13/11/2026 |
-| T-REMB | Remboursement au refus/expiration/annulation | 15 min | Partiel : étapes 1, 2, 3, 4 (admin validée 13/11 ; client à tester) validées + expiration (5) testée ; restent 6, 7, 8 | 12–13/11/2026 |
+| T-REMB | Remboursement au refus/expiration/annulation | 15 min | Partiel : étapes 1, 2, 3, 4 (admin validée 13/11 ; client validée 12/11, déclarée) validées + expiration (5) testée ; restent 6, 7, 8 | 12–13/11/2026 |
 | H-01 Ã  H-16 | Lots A Ã  D, suspension, traduction, fiche crÃ©ation | 60 min | Ã€ tester | â€” |
 
 ### T-GA4 â€” GA4 et bandeau de consentement
@@ -189,7 +189,7 @@ PrÃ©requis : migration 0022 ; STRIPE_SECRET_KEY de test ; commande payÃ©e vi
 1. Client : commande payÃ©e (carte 4242â€¦), webhook reÃ§u (`stripePaymentIntentId` renseignÃ©). â€” TESTÃ‰ 10/11/2026
 2. CrÃ©ateur : refuser le colis avec un motif. RÃ©sultat : Stripe > Paiements > Refund crÃ©Ã© (montant du colis), `refundStatus` = DONE. â€” TESTÃ‰ 10/11/2026
 3. Compte client et e-mail Â« Commande annulÃ©e Â» (refus, expiration, annulation client/admin) : Â« Vous serez remboursÃ© de X,XX â‚¬ â€¦ sous 5 Ã  10 jours ouvrÃ©s Â» (FR et EN). — Validé 13/11/2026 (AM-A3343DEF, Choupi Tree 2 000 €, annulée par l'admin : remboursement Stripe sandbox 2 000,00 € Refunded, e-mail FR « sous 5 à 10 jours ouvrés » reçu 21:06, même mention sur la page commande, stock revenu à 2) ; FR seulement pour l'annulation admin, EN non confirmé
-4. Refaire avec annulation client, puis annulation admin : mÃªme rÃ©sultat. — Variante annulation ADMIN : Validé 13/11/2026 (AM-A3343DEF, voir étape 3). Variante annulation CLIENT : À tester (non prouvée).
+4. Refaire avec annulation client, puis annulation admin : mÃªme rÃ©sultat. — Variante annulation ADMIN : Validé 13/11/2026 (AM-A3343DEF, voir étape 3). Variante annulation CLIENT : Validé 12/11/2026 — déclaré par l'utilisateur, sans capture dans le fichier.
 5. Colis sans rÃ©ponse 48 h (expirÃ©) : remboursement crÃ©Ã© au passage du cron.
 6. Refuser un colis avant le webhook (paiement non confirmÃ©) : `refundStatus` = AWAITING ; renvoyer le webhook : remboursement crÃ©Ã©.
 7. ClÃ© Stripe invalide : `refundStatus` = FAILED, `refundNote` explicite, ligne `[refund]` dans les logs Vercel ; e-mail et compte : message neutre Â« nous revenons vers vous Â», sans montant. Sans paiement Stripe : aucune mention de remboursement.

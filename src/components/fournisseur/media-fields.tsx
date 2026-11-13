@@ -41,6 +41,28 @@ export function PhotoUploader({ name, initial, max, kind = "photo", fr, label, h
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const input = useRef<HTMLInputElement>(null);
+  const [drag, setDrag] = useState<number | null>(null);
+
+  // Glisser-déposer par pointer events (souris et tactile) : la cible est la vignette sous le doigt.
+  function startDrag(e: React.PointerEvent, from: number) {
+    e.preventDefault();
+    let over = from;
+    setDrag(from);
+    const move = (ev: PointerEvent) => {
+      const li = document.elementFromPoint(ev.clientX, ev.clientY)?.closest("[data-photo-index]");
+      if (li) over = Number(li.getAttribute("data-photo-index"));
+    };
+    const up = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointercancel", up);
+      setDrag(null);
+      if (over !== from) setUrls((cur) => moveItem(cur, from, over));
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    window.addEventListener("pointercancel", up);
+  }
 
   async function addFiles(list: File[]) {
     setError("");
@@ -84,25 +106,18 @@ export function PhotoUploader({ name, initial, max, kind = "photo", fr, label, h
       {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
       <ul className="flex flex-wrap gap-3">
         {urls.map((u, i) => (
-          <li key={u} className="w-28 space-y-1 text-xs">
+          <li key={u} data-photo-index={i} className={`flex w-28 flex-col gap-1 rounded-md border p-1 text-xs ${drag === i ? "opacity-50" : ""}`}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={u} alt="" className="h-28 w-28 rounded-md border object-cover" />
-            <div className="flex gap-1">
-              {kind === "photo" && i > 0 && (
-                <button type="button" className="min-h-8 flex-1 rounded border px-1" onClick={() => setUrls([u, ...urls.filter((x) => x !== u)])}>
-                  {fr ? "Couverture" : "Cover"}
-                </button>
-              )}
-              {kind === "photo" && i === 0 && <span className="flex-1 rounded bg-accent/20 px-1 py-1 text-center font-medium">{fr ? "Couverture" : "Cover"}</span>}
-              {kind === "photo" && urls.length > 1 && (
+            <img src={u} alt="" draggable={false} onPointerDown={(e) => kind === "photo" && urls.length > 1 && startDrag(e, i)} className={`h-24 w-full rounded object-cover ${kind === "photo" && urls.length > 1 ? "cursor-grab touch-none" : ""}`} />
+            {kind === "photo" && (i === 0 ? <span className="rounded bg-accent/20 px-1 py-1 text-center font-medium">{fr ? "Couverture" : "Cover"}</span> : <button type="button" className="min-h-8 rounded border px-1" onClick={() => setUrls([u, ...urls.filter((x) => x !== u)])}>{fr ? "Couverture" : "Cover"}</button>)}
+            <div className="grid grid-cols-3 gap-1">
+              {kind === "photo" && urls.length > 1 ? (
                 <>
-                  <button type="button" disabled={i === 0} className="min-h-8 rounded border px-2 disabled:opacity-40" onClick={() => setUrls(moveItem(urls, i, i - 1))} aria-label={fr ? `Monter la photo ${i + 1}` : `Move photo ${i + 1} up`}>←</button>
-                  <button type="button" disabled={i === urls.length - 1} className="min-h-8 rounded border px-2 disabled:opacity-40" onClick={() => setUrls(moveItem(urls, i, i + 1))} aria-label={fr ? `Descendre la photo ${i + 1}` : `Move photo ${i + 1} down`}>→</button>
+                  <button type="button" disabled={i === 0} className="min-h-8 rounded border disabled:opacity-40" onClick={() => setUrls(moveItem(urls, i, i - 1))} aria-label={fr ? `Reculer la photo ${i + 1}` : `Move photo ${i + 1} earlier`}>←</button>
+                  <button type="button" disabled={i === urls.length - 1} className="min-h-8 rounded border disabled:opacity-40" onClick={() => setUrls(moveItem(urls, i, i + 1))} aria-label={fr ? `Avancer la photo ${i + 1}` : `Move photo ${i + 1} later`}>→</button>
                 </>
-              )}
-              <button type="button" className="min-h-8 rounded border px-2 text-destructive" onClick={() => remove(u)} aria-label={fr ? "Supprimer" : "Remove"}>
-                ✕
-              </button>
+              ) : <span className="col-span-2" />}
+              <button type="button" className="min-h-8 rounded border text-destructive" onClick={() => remove(u)} aria-label={fr ? "Supprimer" : "Remove"}>✕</button>
             </div>
           </li>
         ))}

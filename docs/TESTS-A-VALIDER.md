@@ -28,7 +28,7 @@ DerniÃ¨re exÃ©cution (11/11/2026, lot admin + e-mails de retour) : Vitest 62
 | A-T21 | T | Sélecteur de période des listes : toutes dates par défaut, aujourd'hui/7 j/30 j, plage personnalisée, valeur inconnue | `tests/unit/restock-period.test.ts` (Vitest) | OK 4/4 — 12/11/2026 | T-PERIODE-FILTRES (logique) |
 | A-T22 | T | Alertes « de nouveau disponible » : envoi unique, échec Resend (ou exception) = non marquée envoyée, stock 0/réservé = rien, favori/achetée = close | `tests/unit/restock-period.test.ts` (Vitest, base simulée) | OK 4/4 — 12/11/2026 | T-RETOUR-DISPO, T-ENVOI-IMMEDIAT-DISPO (logique) |
 | A-T24 | T | Liste « Stock par création » (admin + partenaire) : filtres titre/catégorie/statut/variante/tri/période (dernier mouvement) exécutés pour de vrai ; Réinitialiser remet la période sur « Toutes les dates » (formulaires remontés via key, défaut « all ») | `tests/unit/stock-pages.db.test.ts` (base jetable, CI) + `tests/unit/list-reset.test.ts` | À lancer sur base jetable (CI) ; unit local OK | `npm run test:all` |
-| A-T25 | T | Réordonnancement des photos : moveItem (monter/descendre, bornes, 1re = couverture) | `tests/unit/move-item.test.ts` | OK 2/2 | `npm run test:all` |
+| A-T25 | T | Réordonnancement des photos : moveItem (monter/descendre, glisser-déposer, bornes, 1re = couverture) | `tests/unit/move-item.test.ts` | OK 2/2 | `npm run test:all` |
 | A-T23 | T | Réveil de la base de test (Neon en veille) : connect_timeout ajouté si absent, retry/backoff sur P1001, abandon sur autre erreur ; sonde TCP sans client Prisma (régression CI sqlite) | `tests/unit/db-wake.test.ts` (Vitest) | OK 5/5 — 12/11/2026 | `npm run test:db` (logique) |
 | A-M1 | M | Fournisseur e-mail : Resend (from, reply_to, sans mention interdite) ; repli Gmail / aucun sans erreur | `tests/unit/email-provider.test.ts` (Vitest) | OK 2/2 â€” 10/11/2026 | T-MAIL-FROM (payload) |
 | A-M2 | M | Mur d'accÃ¨s : images `/api/media/<id>` et `/images/artworks/*` publiques, reste fermÃ© | `tests/unit/proxy-images.test.ts` (Vitest) | OK 2/2 â€” 10/11/2026 | T-MAIL-FROM 3 |
@@ -485,6 +485,7 @@ Statut : À tester
 
 ### T-ORDRE-PHOTOS — Réordonner les photos d'une création — 10 min — À tester — date : —
 1. Compte partenaire > Créations > modifier une création ayant 3 photos (sur mobile aussi).
+1bis. Glisser une vignette (souris, puis doigt sur mobile) sur une autre : elle prend sa place ; vérifier qu'aucun bouton ne se chevauche (couverture, ← → ✕ sur leur propre ligne, desktop et mobile).
 2. Sous chaque photo, cliquer → : la photo passe en position suivante ; ← la remonte ; ← désactivé sur la 1re, → sur la dernière.
 3. Mettre une autre photo en 1re position (ou « Couverture ») : elle affiche le badge Couverture.
 4. Enregistrer, rouvrir la création : l'ordre est conservé.

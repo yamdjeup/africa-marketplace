@@ -14,6 +14,9 @@ export class StockError extends Error {
   }
 }
 
+/** « reserved » : le stock existe mais il est réservé par d'autres clients ; « soldout » : plus de stock. */
+export const stockReason = (p: { stock: number; reserved: number }, needed: number): "reserved" | "soldout" => (p.reserved > 0 && p.stock >= needed ? "reserved" : "soldout");
+
 export type HoldLine = { slug: string; name: string; size: string | null; quantity: number; unitPriceCents: number; supplierId: string | null };
 export type HoldPayload = {
   locale: string;

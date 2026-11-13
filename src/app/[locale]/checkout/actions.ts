@@ -15,10 +15,10 @@ import { isAddressEditable, isOrderOwner } from "@/lib/order-edit";
 import { notifySubOrder, runSubOrderSweep } from "@/lib/order-notify";
 import { createCheckoutSession, stripeEnabled } from "@/lib/stripe-checkout";
 import { recordWatch } from "@/lib/restock-watch";
-import { attachSession, buyerKeyOf, consumeHold, createHold, releaseBuyerHolds, releaseHold, StockError, type HoldPayload } from "@/lib/checkout-hold";
+import { attachSession, buyerKeyOf, consumeHold, createHold, releaseBuyerHolds, releaseHold, StockError, stockReason, type HoldPayload } from "@/lib/checkout-hold";
 import { notifyLowStock, snapshotAvail } from "@/lib/stock-alerts";
 
-export type CheckoutState = { error?: "required" | "email" | "postal" | "stock" | "unknown" | "empty"; item?: string; values?: Record<string, string> };
+export type CheckoutState = { error?: "required" | "email" | "postal" | "stock" | "reserved" | "unknown" | "empty"; item?: string; values?: Record<string, string> };
 
 type CartInput = { slug: string; size: string | null; quantity: number }[];
 
@@ -105,7 +105,7 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
     const used = (stockUsed.get(key) ?? 0) + line.quantity;
     if (used > (variant ? variant.stock - variant.reserved : p.stock - p.reserved)) {
       await recordWatch(db, { buyerKey: buyerKeyOf(user?.id ?? null, email), email, locale, slugs: [p.slug], source: "BLOCKED" }).catch(() => undefined);
-      return fail("stock", p.name);
+      return fail(stockReason({ stock: variant ? variant.stock : p.stock, reserved: variant ? variant.reserved : p.reserved }, used) === "reserved" ? "reserved" : "stock", p.name);
     }
     stockUsed.set(key, used);
     totalCents += p.priceCents * line.quantity;
@@ -141,7 +141,7 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
   } catch (e) {
     if (e instanceof StockError) {
       await recordWatch(db, { buyerKey: buyerKeyOf(user?.id ?? null, email), email, locale, slugs: payload.lines.map((l) => l.slug), source: "BLOCKED" }).catch(() => undefined);
-      return fail("stock", e.item);
+      return fail("reserved", e.item);
     }
     throw e;
   }

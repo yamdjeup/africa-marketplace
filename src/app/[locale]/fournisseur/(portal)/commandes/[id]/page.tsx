@@ -22,7 +22,7 @@ const ERR: Record<string, [string, string]> = {
 const OK: Record<string, [string, string]> = {
   accepted: ["Commande acceptée. Le client est prévenu.", "Order accepted. The customer was notified."],
   refused: ["Commande refusée ; stock libéré, client prévenu.", "Order declined; stock released, customer notified."],
-  preparing: ["Marquée en préparation.", "Marked as preparing."],
+  preparing: ["Marquée en préparation ; client prévenu par e-mail.", "Marked as preparing; customer notified by e-mail."],
   shipped: ["Expédiée ; stock confirmé, client prévenu.", "Shipped; stock confirmed, customer notified."],
   delivered: ["Marquée livrée.", "Marked as delivered."],
 };

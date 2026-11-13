@@ -42,7 +42,7 @@ DerniÃ¨re exÃ©cution (11/11/2026, lot admin + e-mails de retour) : Vitest 62
 | A-T35 | L'admin ajuste le stock d'une pièce de partenaire : motif obligatoire, journal avec l'e-mail de l'admin, refus sous le réservé (`tests/unit/checkout-hold.db.test.ts`, base jetable) | OK en CI — 13/11/2026 (vert global ; log détaillé non lu) | 13/11/2026 |
 | A-T36 | Remboursement Stripe (mock `fetch`, sans base ni appel réel) : sans clé → MANUAL (T-SUIVI 5) ; AWAITING puis paiement confirmé → remboursement créé (T-REMB 6) ; deux annulations simultanées → même clé d'idempotence, rien une fois DONE (T-SUIVI 7) (`tests/unit/refund.test.ts`, avec les cas DONE/FAILED/AWAITING existants = T-SUIVI 6, T-REMB 7) | OK en CI #60 — 13/11/2026 (vert global ; log détaillé non lu) | 13/11/2026 |
 | A-T37 | Prérequis de publication stores (sans réseau) : manifest PWA, icônes 192/512/maskable aux tailles réelles, apple-touch 180×180, sw.js, accès sans mur, appId identique Capacitor/Android/iOS, URL HTTPS, page hors ligne, liens CGV/confidentialité/cookies en pied de page (`tests/unit/store-readiness.test.ts`, 7 tests, passés en local) | OK en CI #60 — 13/11/2026 (vert global ; log détaillé non lu) | 13/11/2026 |
-| A-T38 | Numéro de suivi assaini : virgule/point-virgule/espaces retirés, URL UPS sans %2C, pas de lien si vide (`tests/unit/tracking-clean.test.ts`, 3 tests passés en local ; + garde : affichages compte/admin/partenaire/e-mails) ; nettoyage appliqué à la saisie partenaire, à la page commande, au lien et aux e-mails FR/EN | OK en CI #61 — 13/11/2026 (vert global ; log détaillé non lu) | 13/11/2026 |
+| A-T38 | Numéro de suivi assaini : virgule/point-virgule/espaces retirés, URL UPS sans %2C, pas de lien si vide (`tests/unit/tracking-clean.test.ts`, 4 tests ; + garde : affichages compte/admin/partenaire/e-mails) ; nettoyage appliqué à la saisie partenaire, à la page commande, au lien et aux e-mails FR/EN | OK en CI #61 (3 tests) puis #63 (4 tests, garde d'affichage admin) — 13/11/2026 (vert global ; log détaillé non lu) | 13/11/2026 |
 | A-T28 | Purge des résidus de test avant seed (`prisma/test-residue.ts`, `test-residue.test.ts`) : dépendances supprimées avant les produits test-hold | OK en CI #47 (vert global, log détaillé non lu) | 13/11/2026 |
 | A-T23 | T | Réveil de la base de test (Neon en veille) : connect_timeout ajouté si absent, retry/backoff sur P1001, abandon sur autre erreur ; sonde TCP sans client Prisma (régression CI sqlite) | `tests/unit/db-wake.test.ts` (Vitest) | OK en CI (#39, #42, #47) — 13/11/2026 | `npm run test:db` (logique) |
 | A-M1 | M | Fournisseur e-mail : Resend (from, reply_to, sans mention interdite) ; repli Gmail / aucun sans erreur | `tests/unit/email-provider.test.ts` (Vitest) | OK 2/2 â€” 10/11/2026 | T-MAIL-FROM (payload) |
@@ -119,18 +119,19 @@ PrÃ©requis : migration 0023 appliquÃ©e ; un colis livrÃ© (compte client) ;
 
 | ID | Lot | DurÃ©e | Statut | Date |
 |---|---|---|---|---|
-| T-GA4 | GA4 + consentement | 15 min | Ã€ tester | â€” |
+| T-GA4 | GA4 + consentement | 15 min | Bloqué (pas de propriété GA4) | 13/11/2026 |
 | T-COLIS | Multi-colis + annulation | 20 min | TestÃ© | 12/11/2026 |
 | T-SUIVI | Suivi de livraison + remboursement (lots 1â€“2) | 15 min | Partiel : étapes 1, 2, 3, 4 validées ; restent 5, 6, 7 | 12–13/11/2026 |
 | T-MAILS | E-mails Farfetch | 10 min | Validé (étapes 1–4) | 12–13/11/2026 |
 | T-AIDE | Pages d'aide FR/EN | 10 min | Validé | 12–13/11/2026 |
 | T-ADMIN-FILTRES | Filtres, pagination et pastilles (admin + partenaire) ; e-mails de retour | 20 min | Validé (déclaré par l'utilisateur, sans capture) | avant le 13/11/2026 |
 | T24 | Parcours de commande complet (achat â†’ livraison) | 20 min | Ã€ tester | â€” |
-| T-STRIPE | Paiement Stripe Checkout + webhook (lot 0) | 15 min | Partiel : étapes 1, 2, 3, 4, 5, 7, 8 validées ; reste 6 ; étape 7 validée 13/11/2026 | 12–13/11/2026 |
+| T-STRIPE | Paiement Stripe Checkout + webhook (lot 0) | 15 min | Validé (étapes 1–8 ; 6 et 7 le 13/11/2026) | 12–13/11/2026 |
 | T-REMB | Remboursement au refus/expiration/annulation | 15 min | Partiel : étapes 1, 2, 3, 4 (admin validée 13/11 ; client validée 12/11, déclarée) validées + expiration (5) testée ; restent 6, 7, 8 | 12–13/11/2026 |
 | H-01 Ã  H-16 | Lots A Ã  D, suspension, traduction, fiche crÃ©ation | 60 min | Ã€ tester | â€” |
 
 ### T-GA4 â€” GA4 et bandeau de consentement
+> **Bloqué 13/11/2026** : pas de propriété GA4 ; `NEXT_PUBLIC_GA_ID` absente/invalide sur Vercel Production, donc aucun bandeau en prod (`layout.tsx:79`, comportement normal). Vu : étape 2 conforme (aucune requête Google, Chrome privé vierge). Pour débloquer : créer la propriété GA4, ajouter `NEXT_PUBLIC_GA_ID` (G-…) en Production, redéployer.
 PrÃ©requis : `NEXT_PUBLIC_GA_ID` dÃ©fini (ex. G-XXXX) ; navigation privÃ©e, onglet RÃ©seau/Application des outils dÃ©veloppeur ouvert.
 1. Ouvrir `/fr` en navigation privÃ©e. RÃ©sultat : bandeau avec Â« Accepter tout Â», Â« Refuser tout Â», Â« Personnaliser Â».
 2. Avant tout clic : onglet RÃ©seau, aucune requÃªte vers googletagmanager/google-analytics ; Application > Cookies : aucun `_ga`.
@@ -180,7 +181,7 @@ PrÃ©requis : migration 0021 appliquÃ©e ; clÃ©s Stripe de test ; webhook `/
 3. Payer avec la carte de test 4242 4242 4242 4242 : retour sur la confirmation de commande. â€” TESTÃ‰ 10/11/2026
 4. VÃ©rifier : e-mail Â« reÃ§ue Â» et notification au crÃ©ateur arrivent aprÃ¨s le paiement (webhook), une seule fois. â€” TESTÃ‰ 10/11/2026
 5. En base : `stripePaymentIntentId` renseignÃ©, `paymentPending` = false. â€” TESTÃ‰ 10/11/2026
-6. Abandonner sur la page Stripe : aucun e-mail envoyÃ©, commande en attente de paiement.
+6. Abandonner sur la page Stripe : aucun e-mail envoyÃ©, commande en attente de paiement. — Étapes 2–4 vues 13/11/2026 (fermeture de l'onglet Stripe sans payer : Stocks bague Réservé 1 / Dispo 0, réservation epomtaclient0 jusqu'à 22:06 ; page bague côté B « Épuisé », « Réservée par un autre client »). Libération automatique : Validé 13/11/2026 (Stocks 22:09 : Bague Total 1, Réservé 0, Dispo 1, dernier mouvement 22:07, aucune réservation active ; page côté B : « Ajouter au panier » revenu). Validé 13/11/2026. La flèche « ← » Stripe n'a pas été testée ici (couverte par T-RESERVATION-IMPAYEE).
 7. Annuler ensuite un colis payÃ© : remboursement Stripe automatique (voir T-SUIVI). — Validé 13/11/2026 (AM-A3343DEF, Choupi Tree 2 000 €, annulée par l'admin : remboursement Stripe sandbox 2 000,00 € Refunded, e-mail FR « sous 5 à 10 jours ouvrés » reçu 21:06, même mention sur la page commande, stock revenu à 2)
 8. Webhook avec signature invalide (curl) : rÃ©ponse 400. â€” TESTÃ‰ 10/11/2026
 

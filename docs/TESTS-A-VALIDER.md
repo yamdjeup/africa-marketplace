@@ -119,7 +119,7 @@ PrÃ©requis : migration 0023 appliquÃ©e ; un colis livrÃ© (compte client) ;
 
 | ID | Lot | DurÃ©e | Statut | Date |
 |---|---|---|---|---|
-| T-GA4 | GA4 + consentement | 15 min | Ã€ tester | â€” |
+| T-GA4 | GA4 + consentement | 15 min | Bloqué (pas de propriété GA4) | 13/11/2026 |
 | T-COLIS | Multi-colis + annulation | 20 min | TestÃ© | 12/11/2026 |
 | T-SUIVI | Suivi de livraison + remboursement (lots 1â€“2) | 15 min | Partiel : étapes 1, 2, 3, 4 validées ; restent 5, 6, 7 | 12–13/11/2026 |
 | T-MAILS | E-mails Farfetch | 10 min | Validé (étapes 1–4) | 12–13/11/2026 |
@@ -131,6 +131,7 @@ PrÃ©requis : migration 0023 appliquÃ©e ; un colis livrÃ© (compte client) ;
 | H-01 Ã  H-16 | Lots A Ã  D, suspension, traduction, fiche crÃ©ation | 60 min | Ã€ tester | â€” |
 
 ### T-GA4 â€” GA4 et bandeau de consentement
+> **Bloqué 13/11/2026** : pas de propriété GA4 ; `NEXT_PUBLIC_GA_ID` absente/invalide sur Vercel Production, donc aucun bandeau en prod (`layout.tsx:79`, comportement normal). Vu : étape 2 conforme (aucune requête Google, Chrome privé vierge). Pour débloquer : créer la propriété GA4, ajouter `NEXT_PUBLIC_GA_ID` (G-…) en Production, redéployer.
 PrÃ©requis : `NEXT_PUBLIC_GA_ID` dÃ©fini (ex. G-XXXX) ; navigation privÃ©e, onglet RÃ©seau/Application des outils dÃ©veloppeur ouvert.
 1. Ouvrir `/fr` en navigation privÃ©e. RÃ©sultat : bandeau avec Â« Accepter tout Â», Â« Refuser tout Â», Â« Personnaliser Â».
 2. Avant tout clic : onglet RÃ©seau, aucune requÃªte vers googletagmanager/google-analytics ; Application > Cookies : aucun `_ga`.

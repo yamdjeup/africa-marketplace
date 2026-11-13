@@ -5,6 +5,7 @@ import { PAYOUT_FILTERS, has, ledgerWhere, pageArgs, pageCount, parseList, payou
 import { db } from "@/lib/db";
 import type { Locale } from "@/lib/i18n";
 import { balances } from "@/lib/ledger";
+import { connectEnabled } from "@/lib/stripe-connect";
 import { tr } from "@/lib/tr";
 import { ConfirmButton } from "@/components/admin/confirm-button";
 import { markPayoutAction, releaseEntryAction, setCommissionAction } from "../versements-actions";
@@ -40,7 +41,7 @@ export default async function PayoutsAdmin({ params, searchParams }: { params: P
     released: ["Gain rendu disponible.", "Earning made available."],
     rate: ["Commission mise à jour (appliquée aux prochaines livraisons).", "Commission updated (applies to future deliveries)."],
   };
-  const err: Record<string, [string, string]> = { nothing: ["Aucun solde disponible à verser.", "No available balance to pay out."], rate: ["Taux invalide (0 à 50 %).", "Invalid rate (0–50%)."] };
+  const err: Record<string, [string, string]> = { kyc: ["Versement bloqu\u00e9 : le compte Stripe du partenaire n'est pas v\u00e9rifi\u00e9.", "Payout blocked: the partner's Stripe account is not verified."], transfer: ["Le transfert Stripe a \u00e9chou\u00e9 : rien n'a \u00e9t\u00e9 marqu\u00e9 vers\u00e9, r\u00e9essayez.", "The Stripe transfer failed: nothing was marked as paid, try again."], nothing: ["Aucun solde disponible à verser.", "No available balance to pay out."], rate: ["Taux invalide (0 à 50 %).", "Invalid rate (0–50%)."] };
   return (
     <>
       <h1 className="font-heading text-3xl text-primary">{tr(locale, "Versements", "Payouts")}</h1>
@@ -54,7 +55,7 @@ export default async function PayoutsAdmin({ params, searchParams }: { params: P
           {rows.map(({ s, bal }) => (
             <li key={s.id} className="space-y-2 p-3 text-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <strong>{s.displayName}</strong>
+                <strong>{s.displayName}</strong>{connectEnabled() && <span className="rounded border px-2 py-0.5 text-xs" data-testid="connect-status">Stripe : {s.stripeConnectStatus}</span>}
                 <span className="text-muted-foreground">{tr(locale, "En attente", "Pending")} {eur(bal.pending)} · {tr(locale, "Disponible", "Available")} <strong className="text-foreground">{eur(bal.available)}</strong> · {tr(locale, "Versé", "Paid")} {eur(bal.paid)}</span>
               </div>
               <p className="text-xs text-muted-foreground">{tr(locale, "Ventes", "Sales")} {eur(bal.gross)} · {tr(locale, "commission plateforme", "platform commission")} {eur(bal.commission)}</p>

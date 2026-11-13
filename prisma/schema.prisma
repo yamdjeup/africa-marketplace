@@ -200,6 +200,12 @@ model Supplier {
   isDemo         Boolean  @default(false)
   /// Signature de l'artiste (MediaFile privé), enregistrée une seule fois
   signatureFileId String?
+  /// Stripe Connect (Express, sandbox) : compte connecté et statut dérivé de account.updated
+  stripeAccountId        String?  @unique
+  stripeConnectStatus    String   @default("NONE")
+  stripeDetailsSubmitted Boolean  @default(false)
+  stripePayoutsEnabled   Boolean  @default(false)
+  stripeRequirementsDue  String   @default("")
   createdAt      DateTime @default(now())
 }
 
@@ -413,6 +419,7 @@ model Payout {
   entryCount  Int
   reference   String
   paidBy      String
+  stripeTransferId String?
   paidAt      DateTime @default(now())
 
   @@index([supplierId])

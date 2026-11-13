@@ -51,3 +51,23 @@ Sources lues : `docs/connect/connect-cross-border-payouts` et `docs/global-payou
 3. **Mobile money** (Orange Money, MTN MoMo, Wave) via agrégateur (ex. CinetPay, Flutterwave, Paystack…) : adapté à l'Afrique de l'Ouest/Centrale, intégration et KYC à étudier (non vérifié ici).
 4. **Global Payouts Stripe** : à étudier si disponible pour notre pays ; demander à Stripe sales.
 **Recommandation** : ne pas implémenter Connect Express maintenant (inadapté aux partenaires africains). Garder le registre + versements manuels, ajouter un KYC interne léger (pièce d'identité + coordonnées de paiement), et interroger Stripe sur Global Payouts / comparer Wise. Le code Connect déjà ébauché (non commité) reste utile seulement pour des partenaires dans les régions supportées. En attente de l'accord de l'utilisateur.
+
+## Mise à jour 13/11/2026 — plateforme en Belgique : éligibilité probablement NON
+Faits lus dans la doc Stripe (pages `global-payouts`, `global-payouts/payout-methods`, `connect-cross-border-payouts`) :
+- Global Payouts : émetteurs en disponibilité générale = **US et UK uniquement** ; la Belgique (BE) figure seulement en **préversion privée** (accès sur demande). Il exige aussi Stripe **Treasury** et fonctionne avec des « recipients » (pas des comptes Express). Pays africains destinataires (liste vérifiée par l'utilisateur) : Bénin, Côte d'Ivoire, Sénégal, Afrique du Sud, Algérie, Botswana, Égypte, Éthiopie, Gambie, Kenya, Madagascar, Maroc, Maurice, Mozambique, Namibie, Rwanda, Tanzanie, Tunisie ; **absents : Cameroun, Nigeria, Ghana, RDC, Mali, Burkina Faso**.
+- Connect cross-border : seulement US/UK/EEE/Canada/Suisse des deux côtés → pas d'Afrique subsaharienne.
+- Conclusion : avec un compte plateforme belge, ni Express ni Global Payouts (hors préversion) ne sont garantis. **À confirmer par le support Stripe.** Non lu : conditions de la préversion, frais, personnes physiques acceptées ou non, API exacte de Global Payouts (le code d'ébauche appelle l'API Express v1, non adaptée à Global Payouts).
+
+### Brouillon de question au support Stripe (à envoyer)
+> Bonjour, nous exploitons une marketplace d'art et de couture (compte plateforme établi en Belgique, paiements en EUR) et souhaitons verser leurs ventes à des créateurs indépendants (personnes physiques et petites structures) situés au Bénin, en Côte d'Ivoire, au Sénégal (XOF) et au Cameroun. 1) Est-il possible, depuis un compte belge, de verser à ces pays via Connect (comptes Express/Custom, accord « recipient » ou autre) ? 2) Global Payouts est-il accessible à une plateforme belge (préversion privée) ? Quels délais, prérequis (Treasury) et frais ? 3) Les bénéficiaires personnes physiques sans société sont-ils acceptés, avec quelles pièces KYC ? 4) Le Cameroun est-il prévu ? 5) Existe-t-il une alternative recommandée (ex. partenaire de payout) pour ces corridors ? Merci.
+
+### Comparaison des plans B (non vérifié sauf mention)
+| Option | Avantages | Limites / inconnues |
+| --- | --- | --- |
+| Virement manuel + KYC interne (actuel) | Aucun coût d'intégration, fonctionne pour tous les pays, registre déjà en place | Charge manuelle, frais bancaires/SWIFT de notre banque (non chiffrés), conformité KYC/LCB-FT à notre charge |
+| Wise (Business, éventuellement API) | Virements locaux dans de nombreuses devises | Non vérifié : couverture XOF/XAF (Cameroun), frais, limites, ouverture d'un compte Business belge, API pour paiements en lot |
+| Mobile money (Orange Money, MTN MoMo, Wave) via agrégateur | Très répandu chez les créateurs, rapide | Non vérifié : agrégateur à choisir, couverture par pays, frais, contrat/KYC marchand, conformité (licences) |
+Recommandation provisoire : garder versements manuels + KYC interne léger ; ne pas poursuivre Connect avant la réponse de Stripe ; évaluer Wise en parallèle (compte Business, test sur un virement réel de faible montant hors production du POC).
+
+### État de l'implémentation (gelée)
+Écrit (non testé en sandbox, non branché dans l'UI) : champs Supplier/Payout + migration 0027, `src/lib/stripe-connect.ts` (interrupteur `STRIPE_CONNECT_ENABLED`, désactivé par défaut), `src/lib/payout.ts` (blocage + transfert + annulation du registre), `src/lib/connect-countries.ts`, action « Configurer mes paiements » (non affichée), webhook `account.updated`, badge admin. Connect désactivé = comportement manuel inchangé. Pas de tests A-T dédiés ni bloc T-CONNECT : prévus seulement après la réponse de Stripe.

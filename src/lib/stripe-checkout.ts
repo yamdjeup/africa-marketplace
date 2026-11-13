@@ -22,7 +22,7 @@ export async function createCheckoutSession(order: { number: string; email: stri
   params.set("customer_email", order.email);
   params.set("client_reference_id", order.number);
   params.set("success_url", `${origin}/${order.locale}/checkout/confirmation/${order.number}?t=${order.editToken}`);
-  params.set("cancel_url", `${origin}/${order.locale}/cart`);
+  params.set("cancel_url", `${origin}/api/checkout/cancel?n=${order.number}&t=${order.editToken}&l=${order.locale === "en" ? "en" : "fr"}`);
   params.set("expires_at", String(Math.floor(Date.now() / 1000) + Math.max(30, holdMinutes) * 60 + 30));
   params.set("metadata[orderNumber]", order.number);
   params.set("payment_intent_data[metadata][orderNumber]", order.number);

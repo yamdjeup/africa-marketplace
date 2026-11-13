@@ -56,6 +56,11 @@ export default async function ProductPage({ params }: Props) {
     ? (await db.restockWatch.count({ where: { buyerKey: buyerKeyOf(sUser.id, sUser.email), productSlug: p.slug } })) > 0
     : false;
 
+  const raw = await db.product.findUnique({ where: { slug: p.slug }, select: { reserved: true } });
+  const ownKey = sUser?.id && sUser.email ? buyerKeyOf(sUser.id, sUser.email) : null;
+  const ownHold = ownKey ? (await db.checkoutHold.findMany({ where: { buyerKey: ownKey, status: "HELD" }, select: { payload: true } })).some((h) => JSON.stringify(h.payload).includes(`"slug":"${p.slug}"`)) : false;
+  const urgent = (raw?.reserved ?? 0) > 0 && !ownHold;
+
   return (
     <div className="space-y-12">
       {adminUser && (
@@ -109,6 +114,11 @@ export default async function ProductPage({ params }: Props) {
             {p.stock === 0 ? t.outOfStock : t.inStock(p.stock)}
             {p.edition && !(p.stock > 0 && p.stock <= 1 && /pi[eè]ce unique|unique piece/i.test(p.edition)) ? ` · ${locale === "fr" ? "Édition" : "Edition"} ${p.edition}` : ""}
           </p>
+          {urgent && (
+            <p role="status" className="rounded-md border border-accent bg-accent/15 p-3 text-sm font-medium">
+              {locale === "fr" ? "Dépêchez-vous : un autre client est en train de réserver cette pièce. Elle peut redevenir disponible si son paiement n'aboutit pas." : "Hurry: another customer is currently reserving this piece. It may become available again if their payment is not completed."}
+            </p>
+          )}
           <AddToCart
             key={p.slug}
             locale={locale}

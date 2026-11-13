@@ -31,7 +31,10 @@ DerniÃ¨re exÃ©cution (11/11/2026, lot admin + e-mails de retour) : Vitest 62
 | A-T25 | T | Réordonnancement des photos : moveItem (monter/descendre, glisser-déposer, bornes, 1re = couverture) | `tests/unit/move-item.test.ts` | OK en CI (#39, #42, #47) — 13/11/2026 | `npm run test:all` |
 | A-T26 | T | Onglets Stocks / Journal : parse du paramètre tab (défaut stock) | `tests/unit/move-item.test.ts` | OK en CI (#39, #42, #47) — 13/11/2026 | `npm run test:all` |
 | A-T27 | Course de stock (2 réservations simultanées, stock 1 : un seul gagnant, erreur nommant la pièce) ; panier de 2 pièces dont une épuisée (message cite la pièce, aucune réservation pour l'autre) — `checkout-hold.db.test.ts` | OK en CI #47 (vert global, log détaillé non lu) | 13/11/2026 |
+| A-T29 | Raison du refus de stock : « réservée par un autre client » (stock présent mais réservé) vs « épuisée » (`stockReason`, `tests/unit/stock-reason.test.ts`) | OK en local (Vitest, 3 tests) ; affichage fiche/checkout non automatisé | 14/11/2026 |
+| A-T30 | Retour arrière Stripe (cancel_url → /api/checkout/cancel) libère la réservation avec le bon jeton, pas avec un mauvais (checkout-hold.db.test.ts) | Écrit, à lancer en CI | 13/11/2026 |
 | A-T28 | Purge des résidus de test avant seed (`prisma/test-residue.ts`, `test-residue.test.ts`) : dépendances supprimées avant les produits test-hold | OK en CI #47 (vert global, log détaillé non lu) | 13/11/2026 |
+| A-T29 | Raison du refus de stock : « réservée par un autre client » (stock présent mais réservé) vs « épuisée » (`stockReason`, `tests/unit/stock-reason.test.ts`) | OK en local (Vitest, 3 tests) ; affichage fiche/checkout non automatisé | 14/11/2026 |
 | A-T23 | T | Réveil de la base de test (Neon en veille) : connect_timeout ajouté si absent, retry/backoff sur P1001, abandon sur autre erreur ; sonde TCP sans client Prisma (régression CI sqlite) | `tests/unit/db-wake.test.ts` (Vitest) | OK en CI (#39, #42, #47) — 13/11/2026 | `npm run test:db` (logique) |
 | A-M1 | M | Fournisseur e-mail : Resend (from, reply_to, sans mention interdite) ; repli Gmail / aucun sans erreur | `tests/unit/email-provider.test.ts` (Vitest) | OK 2/2 â€” 10/11/2026 | T-MAIL-FROM (payload) |
 | A-M2 | M | Mur d'accÃ¨s : images `/api/media/<id>` et `/images/artworks/*` publiques, reste fermÃ© | `tests/unit/proxy-images.test.ts` (Vitest) | OK 2/2 â€” 10/11/2026 | T-MAIL-FROM 3 |
@@ -215,10 +218,17 @@ Rédigé sans modifier le code. Seuls les écrans/e-mails/Stripe réels restent 
 
 **T-STOCK-NOM (affichage, 5 min)** — le fait est testé en CI (A-T27) ; reste le libellé à l'écran.
 1. Partenaire : mettre une pièce à stock 1.
-2. Client A : panier, « Confirmer », rester sur la page Stripe (ne pas payer).
-3. Client B (navigation privée, autre e-mail) : ajouter la même pièce, « Confirmer ». Attendu : message de stock citant le NOM de la pièce ; aucune page Stripe ouverte.
-4. Client B : panier de 2 pièces (la pièce prise + une pièce en stock). Attendu : le message cite la pièce prise, pas l'autre.
-5. Fermer l'onglet de A, puis admin > Stocks : la pièce redevient disponible après 30 min (ou voir T-RESERVATION).
+2. Client A ET client B (navigation privée, autre e-mail) : ajouter la même pièce à leur panier, SANS cliquer sur « Confirmer » (si A confirme avant, la pièce est réservée et B ne peut plus l'ajouter : bouton désactivé).
+3. Client A : « Confirmer », rester sur la page Stripe (ne pas payer).
+4. Client B, sur son panier déjà ouvert (ne pas recharger la fiche) : « Confirmer ». Attendu : message de stock citant le NOM de la pièce ; aucune page Stripe ouverte.
+5. Fermer l'onglet de A, puis admin > Stocks : la pièce redevient disponible après 30 min (ou annuler la réservation côté admin). Remettre P1 à stock 1 avant la variante.
+
+Variante 2 pièces (autonome) :
+1. Partenaire : P1 à stock 1, P2 avec du stock (au moins 2). Aucune réservation en cours sur P1.
+2. Client A : ajouter P1 au panier, SANS confirmer.
+3. Client B (navigation privée, autre e-mail) : ajouter P1 ET P2 au panier, SANS confirmer ; laisser l'onglet panier ouvert.
+4. Client A : « Confirmer », rester sur la page Stripe (ne pas payer).
+5. Client B, depuis son panier déjà ouvert (sans recharger) : « Confirmer ». Attendu : message de stock citant le NOM de P1, pas P2 ; aucune page Stripe ; P2 non réservée.
 
 **T-NOM-ENTETE (2 min)** — non automatisé (session/JWT : je ne sais pas le tester sans navigateur connecté, rien d'écrit).
 1. Partenaire : Mon profil, renommer en « Test Nom 1 €-», enregistrer.
@@ -541,9 +551,9 @@ Prérequis : Stripe en mode test (carte 4242 4242 4242 4242), webhook `checkout.
 4. Cas limite : payer après l'expiration (session encore ouverte) : la commande est créée si le stock est toujours là ; sinon aucune commande, remboursement Stripe automatique et e-mail « Votre paiement est remboursé » au client (montant en €).
 
 ### T-STOCK-NOM — Erreur de stock nommant l'article — 5 min — À tester — date : —
-1. Mettre une pièce à stock 1 ; avec le compte A, « Confirmer » et rester sur Stripe (réservation en cours).
-2. Avec le compte B (autre e-mail), tenter de commander la même pièce. Attendu : message de stock citant le NOM de la pièce, aucune réservation ni commande créée pour B.
-3. Panier de 2 pièces dont une seule épuisée : le message cite la pièce épuisée.
+1. Mettre une pièce à stock 1 ; comptes A et B (autre e-mail) ajoutent la pièce au panier SANS confirmer.
+2. A clique « Confirmer » et reste sur Stripe (réservation en cours) ; puis B, sur son panier déjà ouvert, clique « Confirmer ». Attendu : message de stock citant le NOM de la pièce, aucune réservation ni commande créée pour B.
+3. Variante panier de 2 pièces, autonome : remettre P1 à stock 1 (attendre 30 min ou annuler la réservation) ; P2 avec du stock ; A ajoute P1 sans confirmer ; B ajoute P1 ET P2 sans confirmer, onglet panier ouvert ; A clique « Confirmer » et reste sur Stripe ; B clique « Confirmer » depuis son panier déjà ouvert. Attendu : le message cite la pièce épuisée.
 
 ### T-ANNUL-ADMIN-PARTENAIRE — Le partenaire est prévenu d'une annulation admin — 5 min — Validé le 12–13/11/2026
 1. Admin > Commandes : annuler le colis d'un partenaire avec un motif.
@@ -668,3 +678,12 @@ Validé manuellement par l'utilisateur ; couvert aussi par A-F19 (logique, simul
 3. Ouvrir les e-mails de commande : mÃªme contrÃ´le. Les pages Retours et remboursements restent inchangÃ©es.
 
 Note A-T27 : T-STOCK-NOM étapes 2–3 et Test 4 (course de stock) sont écrits ; manuel restant = seulement l'affichage du message à l'écran. T-RESERVATION 4 / T-PAIEMENT 4–5 : paiement après expiration déjà couvert en logique (test existant) ; remboursement Stripe réel non automatisé.
+
+### T-MESSAGES-RESERVATION (ajout) - 5 min - A tester
+1. Compte admin : mettre une piece P1 a stock 1 (attendre 30 min ou annuler la reservation si deja reservee).
+2. Navigateur B (autre compte ou anonyme) : ouvrir la fiche P1 ET ajouter P1 au panier, sans confirmer ; laisser l'onglet fiche ouvert.
+3. Navigateur A (client connecte) : ajouter P1, cliquer Confirmer, rester sur la page Stripe.
+4. B : dans le panier deja ouvert, cliquer Confirmer. Attendu : « Cette pièce vient d'être réservée par un autre client : <NOM de P1> ».
+5. B : recharger la fiche P1. Attendu : bouton « Épuisé » et message « Dépêchez-vous : un autre client est en train de réserver cette pièce… » (aucune identité affichée). Note : sans rechargement, la fiche ouverte avant reste inchangée.
+6. A : rouvrir la fiche P1. Attendu : pas de message d'urgence (A détient la réservation).
+7. Pièce à stock 0 : Confirmer depuis un panier. Attendu : « Cette pièce n'est plus disponible : <NOM> » (libellé distinct).

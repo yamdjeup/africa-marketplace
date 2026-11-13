@@ -14,6 +14,9 @@ export class StockError extends Error {
   }
 }
 
+/** « reserved » : le stock existe mais il est réservé par d'autres clients ; « soldout » : plus de stock. */
+export const stockReason = (p: { stock: number; reserved: number }, needed: number): "reserved" | "soldout" => (p.reserved > 0 && p.stock >= needed ? "reserved" : "soldout");
+
 export type HoldLine = { slug: string; name: string; size: string | null; quantity: number; unitPriceCents: number; supplierId: string | null };
 export type HoldPayload = {
   locale: string;
@@ -75,6 +78,14 @@ export async function releaseHold(db: PrismaClient, number: string, reason = "Pa
     await flushRestockSafe();
   }
   return true;
+}
+
+/** Retour arrière depuis Stripe (cancel_url) : libère la réservation si le jeton correspond. */
+export async function cancelHoldWithToken(db: PrismaClient, number: string, token: string) {
+  const hold = await db.checkoutHold.findUnique({ where: { number } });
+  if (!hold || hold.status !== "HELD") return false;
+  if ((hold.payload as unknown as HoldPayload).editToken !== token) return false;
+  return releaseHold(db, number, "Retour depuis la page de paiement");
 }
 
 /** Retour arrière puis reconfirmation : libère les réservations en cours du même acheteur. */

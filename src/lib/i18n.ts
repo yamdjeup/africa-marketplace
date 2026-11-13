@@ -404,7 +404,8 @@ const fr = {
     errors: {
       required: "Veuillez remplir tous les champs obligatoires.",
       email: "Adresse e-mail invalide.",
-      stock: "Un article n'est plus disponible en quantité suffisante.",
+      stock: "Cette pièce n'est plus disponible",
+      reserved: "Cette pièce vient d'être réservée par un autre client",
       unknown: "Une pièce de votre panier n'existe plus.",
       postal: "Code postal invalide pour ce pays.",
     },
@@ -951,7 +952,8 @@ const en: Dict = {
     errors: {
       required: "Please fill in all required fields.",
       email: "Invalid email address.",
-      stock: "An item is no longer available in the requested quantity.",
+      stock: "This piece is no longer available",
+      reserved: "This piece has just been reserved by another customer",
       unknown: "A piece in your cart no longer exists.",
       postal: "Invalid postal code for this country.",
     },

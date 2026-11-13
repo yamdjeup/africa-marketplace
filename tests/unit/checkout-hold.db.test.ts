@@ -53,6 +53,17 @@ describe.skipIf(!enabled)("réservation de paiement (base de test)", () => {
     expect(await db.order.count({ where: { number } })).toBe(0);
   });
 
+  it("retour arrière Stripe (cancel_url) : jeton valide libère la réservation, mauvais jeton non", async () => {
+    const { createHold, cancelHoldWithToken } = await import("@/lib/checkout-hold");
+    const number = num();
+    const p = payload("c@test.example");
+    await createHold(db, p, number);
+    expect(await cancelHoldWithToken(db, number, "mauvais")).toBe(false);
+    expect((await product()).reserved).toBe(1);
+    expect(await cancelHoldWithToken(db, number, p.editToken)).toBe(true);
+    expect((await product()).reserved).toBe(0);
+  });
+
   it("retour arrière puis reconfirmation du même acheteur : jamais « plus disponible »", async () => {
     const { createHold } = await import("@/lib/checkout-hold");
     await createHold(db, payload("same@test.example"), num());

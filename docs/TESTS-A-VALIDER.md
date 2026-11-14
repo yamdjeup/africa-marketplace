@@ -175,17 +175,17 @@ PrÃ©requis : migration 0020 appliquÃ©e.
 7. ClÃ© invalide : FAILED, texte Â« en cours de traitement Â». Deux onglets : un seul remboursement.
 
 ### T-MAILS â€” e-mails clients
-1. Passer une commande : e-mail Â« reÃ§ue Â» centrÃ©, logo, titre en majuscules, vignette (image visible : TESTÃ‰ le 10/11/2026), taille (Ã— 1 Â· M), total, adresse, aide, pied.
-2. Marquer expÃ©diÃ© : e-mail Â« en route Â» avec bouton Â« Suivre ma commande Â», adresse, Â« Colis X sur N Â».
-3. Marquer livrÃ© : bouton Â« Voir ma commande Â».
-4. VÃ©rifier : aucune mention dÃ©mo/fictif/simulÃ©, pas de Â« Livraison : Offerte Â», nom propre du crÃ©ateur, rendu mobile.
+1. Passer une commande : e-mail Â« reÃ§ue Â» centrÃ©, logo, titre en majuscules, vignette (image visible : TESTÃ‰ le 10/11/2026), taille (Ã— 1 Â· M), total, adresse, aide, pied. — Validé via T24 / T-MAIL-FROM (e-mail reçu, images vues ; vignette testée 10/11/2026). Non vu explicitement : chaque élément (taille, aide, pied).
+2. Marquer expÃ©diÃ© : e-mail Â« en route Â» avec bouton Â« Suivre ma commande Â», adresse, Â« Colis X sur N Â». — Validé via T-SUIVI 2 et T24 (13/11/2026) : bouton et lien UPS. Non vu explicitement : « Colis X sur N » ; e-mail « acceptée » jamais vu.
+3. Marquer livrÃ© : bouton Â« Voir ma commande Â». — Validé via T-SUIVI 4 (13/11/2026, AM-B197F3C1 : e-mail « livrée » avec lien).
+4. VÃ©rifier : aucune mention dÃ©mo/fictif/simulÃ©, pas de Â« Livraison : Offerte Â», nom propre du crÃ©ateur, rendu mobile. — À tester (aucune preuve écrite) : relire les e-mails déjà reçus.
 
 ### T-STRIPE â€” paiement Stripe (lot 0)
 PrÃ©requis : migration 0021 appliquÃ©e ; clÃ©s Stripe de test ; webhook `/api/stripe/webhook` (Ã©vÃ©nement checkout.session.completed) dÃ©clarÃ© dans Stripe avec STRIPE_WEBHOOK_SECRET.
 1. Sans STRIPE_SECRET_KEY : passer commande, confirmation et e-mails immÃ©diats comme avant.
-2. Avec les clÃ©s : Client, panier, Â« Commander Â» : redirection vers la page Stripe, montant correct. â€” TESTÃ‰ 10/11/2026
+2. Avec les clÃ©s : Client, panier, Â« Commander Â» : redirection vers la page Stripe, montant correct. â€” TESTÃ‰ 10/11/2026 — Validé via T24 (13/11/2026) : achat AM-E6987B4E 22:23, paiement Stripe, e-mails reçus ; confirmé par le test du 10/11/2026. Non revu séparément le 14/11.
 3. Payer avec la carte de test 4242 4242 4242 4242 : retour sur la confirmation de commande. â€” TESTÃ‰ 10/11/2026
-4. VÃ©rifier : e-mail Â« reÃ§ue Â» et notification au crÃ©ateur arrivent aprÃ¨s le paiement (webhook), une seule fois. â€” TESTÃ‰ 10/11/2026
+4. VÃ©rifier : e-mail Â« reÃ§ue Â» et notification au crÃ©ateur arrivent aprÃ¨s le paiement (webhook), une seule fois. â€” TESTÃ‰ 10/11/2026 — Validé via T24 (13/11/2026) : achat AM-E6987B4E 22:23, paiement Stripe, e-mails reçus ; confirmé par le test du 10/11/2026. Non revu séparément le 14/11.
 5. En base : `stripePaymentIntentId` renseignÃ©, `paymentPending` = false. â€” TESTÃ‰ 10/11/2026
 6. Abandonner sur la page Stripe : aucun e-mail envoyÃ©, commande en attente de paiement. — Étapes 2–4 vues 13/11/2026 (fermeture de l'onglet Stripe sans payer : Stocks bague Réservé 1 / Dispo 0, réservation epomtaclient0 jusqu'à 22:06 ; page bague côté B « Épuisé », « Réservée par un autre client »). Libération automatique : Validé 13/11/2026 (Stocks 22:09 : Bague Total 1, Réservé 0, Dispo 1, dernier mouvement 22:07, aucune réservation active ; page côté B : « Ajouter au panier » revenu). Validé 13/11/2026. La flèche « ← » Stripe n'a pas été testée ici (couverte par T-RESERVATION-IMPAYEE).
 7. Annuler ensuite un colis payÃ© : remboursement Stripe automatique (voir T-SUIVI). — Validé 13/11/2026 (AM-A3343DEF, Choupi Tree 2 000 €, annulée par l'admin : remboursement Stripe sandbox 2 000,00 € Refunded, e-mail FR « sous 5 à 10 jours ouvrés » reçu 21:06, même mention sur la page commande, stock revenu à 2)
@@ -193,8 +193,8 @@ PrÃ©requis : migration 0021 appliquÃ©e ; clÃ©s Stripe de test ; webhook `/
 
 ### T-REMB â€” remboursement au refus / expiration / annulation
 PrÃ©requis : migration 0022 ; STRIPE_SECRET_KEY de test ; commande payÃ©e via Stripe.
-1. Client : commande payÃ©e (carte 4242â€¦), webhook reÃ§u (`stripePaymentIntentId` renseignÃ©). â€” TESTÃ‰ 10/11/2026
-2. CrÃ©ateur : refuser le colis avec un motif. RÃ©sultat : Stripe > Paiements > Refund crÃ©Ã© (montant du colis), `refundStatus` = DONE. â€” TESTÃ‰ 10/11/2026
+1. Client : commande payÃ©e (carte 4242â€¦), webhook reÃ§u (`stripePaymentIntentId` renseignÃ©). â€” TESTÃ‰ 10/11/2026 — Validé via le test du 10/11/2026 et T-REMB 3–4 / T-STRIPE 7 (annulation admin AM-A3343DEF, Refund Stripe sandbox 2 000,00 €, 13/11/2026). Refus par le créateur : non revu séparément sur une commande récente.
+2. CrÃ©ateur : refuser le colis avec un motif. RÃ©sultat : Stripe > Paiements > Refund crÃ©Ã© (montant du colis), `refundStatus` = DONE. â€” TESTÃ‰ 10/11/2026 — Validé via le test du 10/11/2026 et T-REMB 3–4 / T-STRIPE 7 (annulation admin AM-A3343DEF, Refund Stripe sandbox 2 000,00 €, 13/11/2026). Refus par le créateur : non revu séparément sur une commande récente.
 3. Compte client et e-mail Â« Commande annulÃ©e Â» (refus, expiration, annulation client/admin) : Â« Vous serez remboursÃ© de X,XX â‚¬ â€¦ sous 5 Ã  10 jours ouvrÃ©s Â» (FR et EN). — Validé 13/11/2026 (AM-A3343DEF, Choupi Tree 2 000 €, annulée par l'admin : remboursement Stripe sandbox 2 000,00 € Refunded, e-mail FR « sous 5 à 10 jours ouvrés » reçu 21:06, même mention sur la page commande, stock revenu à 2) ; FR seulement pour l'annulation admin, EN non confirmé
 4. Refaire avec annulation client, puis annulation admin : mÃªme rÃ©sultat. — Variante annulation ADMIN : Validé 13/11/2026 (AM-A3343DEF, voir étape 3). Variante annulation CLIENT : Validé 12/11/2026 — déclaré par l'utilisateur, sans capture dans le fichier.
 5. Colis sans rÃ©ponse 48 h (expirÃ©) : remboursement crÃ©Ã© au passage du cron.

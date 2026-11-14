@@ -7,7 +7,7 @@ import type { Locale } from "@/lib/i18n";
 import { balances } from "@/lib/ledger";
 import { connectEnabled } from "@/lib/stripe-connect";
 import { tr } from "@/lib/tr";
-import { ConfirmButton } from "@/components/admin/confirm-button";
+import { ConfirmButton } from "@/components/admin/table-widgets";
 import { markPayoutAction, releaseEntryAction, setCommissionAction } from "../versements-actions";
 
 export const dynamic = "force-dynamic";
@@ -82,7 +82,7 @@ export default async function PayoutsAdmin({ params, searchParams }: { params: P
             {pendingEntries.map((e) => (
               <li key={e.id} className="flex flex-wrap items-center justify-between gap-2 p-3">
                 <span>{names.get(e.supplierId)} · {num.get(e.subOrderId)} · {eur(e.netCents)} · {tr(locale, "disponible le", "available on")} {fmt.format(e.availableAt)}</span>
-                <form action={releaseEntryAction}><input type="hidden" name="id" value={e.id} /><ConfirmButton className={buttonVariants({ variant: "outline", className: "min-h-11" })} title={tr(locale, "Ignore le délai de retour : le gain devient payable tout de suite.", "Skips the return period: the earning becomes payable now.")} message={tr(locale, "Rendre ce gain disponible maintenant, sans attendre la fin du délai de retour ?", "Make this earning available now, without waiting for the return period to end?")}>{tr(locale, "Rendre disponible maintenant (ignorer le délai de retour)", "Make available now (skip the return period)")}</ConfirmButton></form>
+                <form action={releaseEntryAction}><input type="hidden" name="id" value={e.id} /><ConfirmButton en={locale === "en"} className={buttonVariants({ variant: "outline", className: "min-h-11" })} title={tr(locale, "Rendre ce gain disponible ?", "Make this earning available?")} message={tr(locale, "Rendre ce gain disponible maintenant, sans attendre la fin du délai de retour ?", "Make this earning available now, without waiting for the return period to end?")}>{tr(locale, "Rendre disponible maintenant (ignorer le délai de retour)", "Make available now (skip the return period)")}</ConfirmButton></form>
               </li>
             ))}
           </ul>

@@ -784,3 +784,12 @@ Prérequis : un compte e-mail + mot de passe (A) avec une vraie boîte de récep
 ### T-MDP-OUBLIE-BIS — Messages du formulaire de réinitialisation — 3 min — Partiel 14/11/2026 : étape 2 validée ; étape 1 laissée à la CI (A-T41)
 1. Ouvrir un lien de réinitialisation valide, saisir « court » dans les 2 champs, cliquer « Enregistrer » : message Epomta rouge « Le mot de passe doit contenir au moins 8 caractères et être identique à la confirmation. » (plus de bulle native en anglais) ; rien n'est modifié. — Non rejouée à la main : règle « moins de 8 caractères » couverte en CI par A-T41 ; message FR/EN non revu à l'écran.
 2. Sur /fr/forgot-password, saisir une adresse sans compte et valider : le message « Aucun compte… » s'affiche et l'adresse saisie reste dans le champ. — Validé 14/11/2026 (capture 12:48).
+
+### T-DIALOGUE-CONFIRM — Fenêtre de confirmation Epomta (annulation de colis) — 5 min — À tester (15/11/2026)
+Remplace la boîte native du navigateur (« epomta.com says », OK/Cancel) par la fenêtre du site. Aucun test automatique : pas de jsdom dans le projet, vérification statique tsc/eslint seulement.
+1. Compte client : Mon compte › Mes commandes › commande avec un colis « À accepter », « Acceptée » ou « En préparation » : cliquer « Annuler ma commande ». Résultat : fenêtre du site (fond assombri) titrée « Annuler ce colis ? », texte « Cette action est irréversible. Vous serez remboursé intégralement. », boutons « Garder ma commande » (focus au départ) et « Annuler le colis ». Aucune boîte native.
+2. Clavier : Tab reste dans la fenêtre (2 boutons) ; Échap la ferme et le focus revient sur « Annuler ma commande ».
+3. Cliquer « Garder ma commande » (ou en dehors de la fenêtre) : rien n'est annulé, statut inchangé.
+4. Cliquer à nouveau « Annuler ma commande » puis « Annuler le colis ». Résultat : colis « Annulée », mention de remboursement.
+5. Même parcours en `/en` : « Cancel this parcel? », « Keep my order », « Cancel parcel ».
+6. Admin › Versements : « Rendre disponible maintenant (ignorer le délai de retour) » ouvre la fenêtre du site « Rendre ce gain disponible ? » avec « Confirmer » / « Annuler » ; Annuler ne fait rien.

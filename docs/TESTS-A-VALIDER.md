@@ -760,7 +760,8 @@ Constat vérifié dans le code (13/11/2026) : l'approche retenue est **Capacitor
 7. Fournir un compte de démonstration et le mot de passe d'accès aux relecteurs.
 8. Valider : Android sur un vrai téléphone (APK du workflow android-apk) ; iOS via TestFlight.
 
-### T-RAPPEL-PREPARATION — Rappel partenaire à 24 h si colis « Acceptée » — 10 min — À tester
+### T-RAPPEL-PREPARATION — Rappel partenaire à 24 h si colis « Acceptée » — 10 min — En cours depuis le 14/11/2026 (contrôles les 15 et 16/11)
+Lancé le 14/11/2026 : commande AM-38FD407C-1 (Bague de Marquis Argent 925, 30 €, créateur Mimi) passée à 11:52, acceptée vers 12:53 (heure locale), jamais mise en préparation (NE PAS la marquer avant le 16/11). Contrôles : 15/11 après 07:00 (heure locale) : aucun rappel (moins de 24 h écoulées au cron de 06:00 UTC si l'acceptation date de 12:53) ; 16/11 après 07:00 : rappel au créateur + alerte admin, rien pour le client, colis toujours « Acceptée ». Résultats : à consigner.
 Règle : 24 h après l'acceptation, si le colis est toujours « Acceptée » : e-mail de rappel au partenaire + e-mail à l'admin (ADMIN_EMAILS), une seule fois, sans annulation ni remboursement, client non prévenu. Le cron Vercel /api/orders/sweep tourne 1 fois par jour (06:00 UTC) : le rappel part au premier passage après 24 h (entre 24 h et 48 h).
 1. Client : passer une commande ; créateur : l'accepter et ne PAS cliquer « Marquer en préparation ».
 2. Attendre 24 h, puis déclencher le balayage (cron du jour ou appel manuel autorisé de /api/orders/sweep). Attendu : le créateur reçoit « colis … à préparer » avec lien vers la commande ; l'admin reçoit « Colis … accepté depuis plus de 24 h » ; le client ne reçoit rien.

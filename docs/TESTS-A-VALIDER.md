@@ -178,7 +178,7 @@ PrÃ©requis : migration 0020 appliquÃ©e.
 1. Passer une commande : e-mail Â« reÃ§ue Â» centrÃ©, logo, titre en majuscules, vignette (image visible : TESTÃ‰ le 10/11/2026), taille (Ã— 1 Â· M), total, adresse, aide, pied. — Validé via T24 / T-MAIL-FROM (e-mail reçu, images vues ; vignette testée 10/11/2026). Non vu explicitement : chaque élément (taille, aide, pied).
 2. Marquer expÃ©diÃ© : e-mail Â« en route Â» avec bouton Â« Suivre ma commande Â», adresse, Â« Colis X sur N Â». — Validé via T-SUIVI 2 et T24 (13/11/2026) : bouton et lien UPS. Non vu explicitement : « Colis X sur N » ; e-mail « acceptée » jamais vu.
 3. Marquer livrÃ© : bouton Â« Voir ma commande Â». — Validé via T-SUIVI 4 (13/11/2026, AM-B197F3C1 : e-mail « livrée » avec lien).
-4. VÃ©rifier : aucune mention dÃ©mo/fictif/simulÃ©, pas de Â« Livraison : Offerte Â», nom propre du crÃ©ateur, rendu mobile. — À tester (aucune preuve écrite) : relire les e-mails déjà reçus.
+4. VÃ©rifier : aucune mention dÃ©mo/fictif/simulÃ©, pas de Â« Livraison : Offerte Â», nom propre du crÃ©ateur, rendu mobile. — Validé le 14/11/2026 sur déclaration de l'utilisateur (e-mails déjà relus ; captures dans les sections T24, T-SUIVI et 3bis, 10–14/11/2026).
 
 ### T-STRIPE â€” paiement Stripe (lot 0)
 PrÃ©requis : migration 0021 appliquÃ©e ; clÃ©s Stripe de test ; webhook `/api/stripe/webhook` (Ã©vÃ©nement checkout.session.completed) dÃ©clarÃ© dans Stripe avec STRIPE_WEBHOOK_SECRET.

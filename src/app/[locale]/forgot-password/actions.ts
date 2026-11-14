@@ -26,8 +26,8 @@ export async function forgotPassword(_prev: ResetState, f: FormData): Promise<Re
       const e = resetEmail(m);
       return sendEmail({ to: m.to, subject: e.subject, text: `${e.text}\n${m.url}`, html: renderEmailHtml({ locale: m.locale, title: e.title, paragraphs: [e.text], cta: { label: e.cta, url: m.url } }) });
     });
-    if (r.status === "limited") return { error: "limited" };
-    if (r.status === "unknown") return { error: "unknown" };
+    if (r.status === "limited") return { error: "limited", email };
+    if (r.status === "unknown") return { error: "unknown", email };
     return { done: r.status, email };
   } catch (err) {
     console.warn("[password-reset]", (err as Error).message);

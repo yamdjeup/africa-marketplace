@@ -12,6 +12,7 @@ export default defineConfig({
     include: ["tests/**/*.test.ts"],
     environment: "node",
     fileParallelism: false,
+    server: { deps: { inline: ["next-auth"] } },
     testTimeout: 30_000,
   },
 });

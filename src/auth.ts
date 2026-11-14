@@ -59,8 +59,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       user.id = row.id;
       return true;
     },
-    jwt({ token, user }) {
-      if (user?.id) token.sub = user.id;
+    // sessionVersion : une réinitialisation de mot de passe invalide les autres sessions.
+    async jwt({ token, user }) {
+      if (user?.id) {
+        token.sub = user.id;
+        token.sv = (await db.user.findUnique({ where: { id: user.id }, select: { sessionVersion: true } }))?.sessionVersion ?? 0;
+        return token;
+      }
+      if (token.sub) {
+        const row = await db.user.findUnique({ where: { id: token.sub }, select: { sessionVersion: true } });
+        if (!row || row.sessionVersion !== ((token.sv as number | undefined) ?? 0)) return null;
+      }
       return token;
     },
     session({ session, token }) {

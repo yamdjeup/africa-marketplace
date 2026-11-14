@@ -7,6 +7,7 @@ import Google from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
 import { randomBytes } from "node:crypto";
 import { db } from "@/lib/db";
+import { sessionVersionValid } from "@/lib/session-version";
 import { SOCIAL_ENABLED, SOCIAL_HASH_PREFIX } from "@/lib/social-providers";
 
 declare module "next-auth" {
@@ -68,12 +69,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       if (token.sub) {
         const row = await db.user.findUnique({ where: { id: token.sub }, select: { sessionVersion: true } });
-        if (!row || row.sessionVersion !== ((token.sv as number | undefined) ?? 0)) return null;
+        if (!sessionVersionValid(token.sv, row?.sessionVersion)) return null;
       }
       return token;
     },
-    session({ session, token }) {
-      if (token.sub) session.user.id = token.sub;
+    // Seconde vérification : sans utilisateur, la session est traitée comme absente.
+    async session({ session, token }) {
+      if (!token.sub) return session;
+      const row = await db.user.findUnique({ where: { id: token.sub }, select: { sessionVersion: true } });
+      if (!sessionVersionValid(token.sv, row?.sessionVersion)) return { expires: session.expires } as typeof session;
+      session.user.id = token.sub;
       return session;
     },
   },

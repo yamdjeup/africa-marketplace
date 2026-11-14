@@ -770,8 +770,8 @@ Prérequis : un compte e-mail + mot de passe (A) avec une vraie boîte de récep
 2. Saisir une adresse inconnue : message neutre « Si un compte existe… », aucun e-mail reçu.
 3. Saisir l'e-mail de A : même message neutre ; e-mail « réinitialisation de votre mot de passe » reçu (gabarit Epomta, bouton « Choisir un nouveau mot de passe », mention 1 h).
 4. Ouvrir le lien : formulaire à 2 champs. Saisir 2 mots de passe différents, ou de moins de 8 caractères : erreur, rien n'est modifié. Saisir un mot de passe valide identique deux fois : redirection vers /fr/login avec « Mot de passe modifié ».
-5. Se connecter avec le nouveau mot de passe : OK ; l'ancien : refusé.
-6. Rouvrir le même lien : « lien invalide, expiré ou déjà utilisé » (usage unique). Même résultat pour un lien de plus de 1 h.
-7. 2e navigateur (session de A ouverte avant l'étape 4) : après rechargement, A est déconnecté.
-8. Refaire 4 demandes pour la même adresse en moins d'1 h : la page affiche toujours le même message neutre, mais 3 e-mails au plus arrivent.
-9. Compte Google : demande avec son e-mail : e-mail « connexion Google » sans lien de réinitialisation.
+5. Se connecter sur /fr/login avec le nouveau mot de passe : connexion OK ; avec l'ancien : refusé.
+6. Rouvrir le lien reçu à l'étape 3 (déjà utilisé à l'étape 4) : « Ce lien est invalide, expiré ou déjà utilisé » + lien « Faire une nouvelle demande ». (Expiration à 1 h : couverte en CI par A-T41, non rejouée à la main.)
+7. 2e navigateur (session de A ouverte avant l'étape 4, voir prérequis) : recharger une page du compte (/fr/account) : A est déconnecté et renvoyé vers /fr/login.
+8. Compte Google (ou autre compte social) : sur /fr/forgot-password, saisir son e-mail : message neutre identique ; e-mail « connexion Google » sans lien de réinitialisation. Si aucun compte Google n'existe : étape non faisable, couverte en CI par A-T41.
+9. En dernier (elle bloque l'adresse IP 1 h) : sur /fr/forgot-password, refaire 4 demandes d'affilée pour l'adresse de A. Attendu : la page affiche à chaque fois le même message neutre ; au plus 3 demandes par e-mail et par adresse IP sont traitées par heure (les demandes des étapes 2, 3 et 8 comptent déjà pour l'IP, donc 0 à 1 e-mail arrive) ; la 4e n'envoie jamais d'e-mail ; après 1 h, une nouvelle demande refonctionne.

@@ -101,6 +101,13 @@ export function AuthForm({
           </div>
           {isRegister && <p className="text-xs text-muted-foreground">{t.passwordHint}</p>}
         </div>
+        {!isRegister && (
+          <p className="text-sm">
+            <Link className="underline" href={`/${locale}/forgot-password`}>
+              {locale === "fr" ? "Mot de passe oublié ?" : "Forgot your password?"}
+            </Link>
+          </p>
+        )}
         {state.error && (
           <p role="alert" className="text-sm text-destructive">
             {t.errors[state.error]}

@@ -9,7 +9,7 @@ import { renderEmailHtml } from "@/lib/email-layout";
 import { isLocale } from "@/lib/i18n";
 import { requestPasswordReset, resetEmail, resetPassword } from "@/lib/password-reset";
 
-export type ResetState = { done?: "sent" | "social"; error?: "email" | "password" | "invalid" | "unknown" | "limited" };
+export type ResetState = { done?: "sent" | "social"; email?: string; error?: "email" | "password" | "invalid" | "unknown" | "limited" };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const field = (f: FormData, n: string) => String(f.get(n) ?? "");
@@ -28,10 +28,10 @@ export async function forgotPassword(_prev: ResetState, f: FormData): Promise<Re
     });
     if (r.status === "limited") return { error: "limited" };
     if (r.status === "unknown") return { error: "unknown" };
-    return { done: r.status };
+    return { done: r.status, email };
   } catch (err) {
     console.warn("[password-reset]", (err as Error).message);
-    return { done: "sent" };
+    return { done: "sent", email };
   }
 }
 

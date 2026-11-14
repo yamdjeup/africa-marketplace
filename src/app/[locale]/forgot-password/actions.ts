@@ -9,7 +9,7 @@ import { renderEmailHtml } from "@/lib/email-layout";
 import { isLocale } from "@/lib/i18n";
 import { requestPasswordReset, resetEmail, resetPassword } from "@/lib/password-reset";
 
-export type ResetState = { done?: boolean; error?: "email" | "password" | "invalid" };
+export type ResetState = { done?: "sent" | "social"; error?: "email" | "password" | "invalid" | "unknown" | "limited" };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const field = (f: FormData, n: string) => String(f.get(n) ?? "");
@@ -22,14 +22,17 @@ export async function forgotPassword(_prev: ResetState, f: FormData): Promise<Re
   const hdr = await headers();
   const ip = (hdr.get("x-forwarded-for") ?? "").split(",")[0].trim().slice(0, 64);
   try {
-    await requestPasswordReset(db, { email, ip, locale, baseUrl: siteUrl() }, async (m) => {
+    const r = await requestPasswordReset(db, { email, ip, locale, baseUrl: siteUrl() }, async (m) => {
       const e = resetEmail(m);
       return sendEmail({ to: m.to, subject: e.subject, text: `${e.text}\n${m.url}`, html: renderEmailHtml({ locale: m.locale, title: e.title, paragraphs: [e.text], cta: { label: e.cta, url: m.url } }) });
     });
+    if (r.status === "limited") return { error: "limited" };
+    if (r.status === "unknown") return { error: "unknown" };
+    return { done: r.status };
   } catch (err) {
     console.warn("[password-reset]", (err as Error).message);
+    return { done: "sent" };
   }
-  return { done: true };
 }
 
 export async function submitNewPassword(_prev: ResetState, f: FormData): Promise<ResetState> {

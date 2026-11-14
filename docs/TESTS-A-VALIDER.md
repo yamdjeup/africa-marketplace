@@ -153,6 +153,7 @@ PrÃ©requis : `NEXT_PUBLIC_GA_ID` dÃ©fini (ex. G-XXXX) ; navigation privÃ©e
 
 ### T-COLIS â€” multi-colis et annulation
 PrÃ©requis : Client connectÃ© ; articles de 2 crÃ©ateurs ; 2 comptes crÃ©ateurs actifs.
+> **Note 15/11/2026** : faire ce test avec 2 pièces de 2 boutiques réellement distinctes (Mimi/LoliPat et Choupi/House of Marjón). L'incohérence vue sur AM-3427F8D2 (message « 2 colis », confirmation « Colis 1 sur 1 ») vient des données de test (œuvre Lozama Leombho rattachée à la boutique Mimi), pas d'un bug ; en production une boutique = un artiste.
 1. Panier avec 2 articles de 2 crÃ©ateurs : message Â« expÃ©diÃ©e en 2 colis, par 2 crÃ©ateurs diffÃ©rents, Ã  des dates diffÃ©rentes Â», Colis 1/2 et 2/2 avec Â« PrÃ©paration sous 2 jours ouvrÃ©s Â», aucune ligne de frais. Avec un seul crÃ©ateur : message au singulier.
 2. MÃªme bloc sur la page de paiement ; payer.
 3. Compte > Mes commandes > dÃ©tail : cartes Â« Colis 1 sur 2 Â» et Â« Colis 2 sur 2 Â», bouton Â« Annuler ma commande Â» sur chacune.

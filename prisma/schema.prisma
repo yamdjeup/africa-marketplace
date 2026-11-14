@@ -356,6 +356,8 @@ model SubOrder {
   acceptBy       DateTime
   reminderSentAt DateTime?
   escalatedAt    DateTime?
+  /// Rappel unique : colis encore « Acceptée » 24 h après l'acceptation (sans annulation)
+  prepReminderSentAt DateTime?
   decidedAt      DateTime?
   reason         String    @default("")
   carrier        String    @default("")

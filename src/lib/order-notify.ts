@@ -7,10 +7,10 @@ import { buildPartnerCancelEmail } from "@/lib/partner-cancel-email";
 import { partnerRecipient } from "@/lib/partner-recipient";
 import { carrierLabel, cleanTrackingNumber, trackingUrl } from "@/lib/tracking";
 import { releaseExpiredHolds } from "@/lib/checkout-hold";
-import { sweepSubOrders } from "@/lib/suborders";
+import { sweepSubOrders, sweepPrepReminders } from "@/lib/suborders";
 import { settleSubRefund } from "@/lib/refund";
 
-export type SubEvent = "NEW" | "REMINDER" | "ESCALATION" | "ACCEPTED" | "PREPARING" | "REFUSED" | "EXPIRED" | "CANCELLED" | "PARTNER_CANCELLED" | "PARTNER_EXPIRED" | "SHIPPED" | "DELIVERED";
+export type SubEvent = "NEW" | "REMINDER" | "ESCALATION" | "PREP_REMINDER" | "PREP_ESCALATION" | "ACCEPTED" | "PREPARING" | "REFUSED" | "EXPIRED" | "CANCELLED" | "PARTNER_CANCELLED" | "PARTNER_EXPIRED" | "SHIPPED" | "DELIVERED";
 
 export const eur = (c: number, fr = true) => new Intl.NumberFormat(fr ? "fr-FR" : "en-GB", { style: "currency", currency: "EUR" }).format(c / 100);
 
@@ -48,6 +48,21 @@ export async function notifySubOrder(event: SubEvent, subOrderId: string) {
       if (!partnerTo) return;
       const e = buildPartnerCancelEmail({ shop, number: sub.number, reason: sub.reason ?? "", kind: event === "PARTNER_EXPIRED" ? "EXPIRED" : "ADMIN", url: `${base}/fr/fournisseur/commandes/${sub.id}`, amount: eur(sub.subtotalCents) });
       await safeSend(partnerTo, e.subject, e.lines, e.html);
+      return;
+    }
+    if (event === "PREP_REMINDER") {
+      const partnerTo = partnerRecipient(supplier, owner?.email);
+      if (!partnerTo) return;
+      await safeSend(partnerTo, `E póm ta’ — colis ${sub.number} à préparer`, [
+        `Bonjour ${shop},`,
+        `Vous avez accepté le colis ${sub.number} (${list} — ${eur(sub.subtotalCents)}) il y a plus de 24 h et il n'est pas encore passé « En préparation ». Le client attend son envoi : merci de le préparer puis de l'expédier.`,
+        `${base}/fr/fournisseur/commandes/${sub.id}`,
+      ]);
+      return;
+    }
+    if (event === "PREP_ESCALATION") {
+      for (const to of (process.env.ADMIN_EMAILS ?? "").split(",").map((s) => s.trim()).filter(Boolean))
+        await safeSend(to, `Colis ${sub.number} accepté depuis plus de 24 h, non préparé (${shop})`, [`${shop} n'a pas passé le colis ${sub.number} (${eur(sub.subtotalCents)}) en préparation 24 h après l'acceptation. Rappel envoyé au partenaire ; aucune annulation.`, `${base}/fr/admin/commandes`]);
       return;
     }
     if (event === "ESCALATION") {
@@ -116,5 +131,10 @@ export async function runSubOrderSweep() {
     await notifySubOrder("EXPIRED", s.id);
     await notifySubOrder("PARTNER_EXPIRED", s.id);
   }
-  return { reminded: r.reminded.length, escalated: r.escalated.length, expired: r.expired.length };
+  const late = await sweepPrepReminders(db);
+  for (const s of late) {
+    await notifySubOrder("PREP_REMINDER", s.id);
+    await notifySubOrder("PREP_ESCALATION", s.id);
+  }
+  return { prepLate: late.length, reminded: r.reminded.length, escalated: r.escalated.length, expired: r.expired.length };
 }

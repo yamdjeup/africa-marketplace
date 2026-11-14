@@ -130,4 +130,17 @@ export async function sweepSubOrders(db: PrismaClient, now = new Date()) {
   return out;
 }
 
+export const PREP_REMIND_AFTER_HOURS = 24;
+
+/** Colis encore « Acceptée » 24 h après l'acceptation : un seul rappel (partenaire + admin), aucune annulation. */
+export async function sweepPrepReminders(db: PrismaClient, now = new Date()) {
+  const late = await db.subOrder.findMany({ where: { status: "ACCEPTED", prepReminderSentAt: null, decidedAt: { lte: new Date(now.getTime() - PREP_REMIND_AFTER_HOURS * HOUR) } } });
+  const out: typeof late = [];
+  for (const s of late) {
+    const n = await db.subOrder.updateMany({ where: { id: s.id, status: "ACCEPTED", prepReminderSentAt: null }, data: { prepReminderSentAt: now } });
+    if (n.count === 1) out.push(s);
+  }
+  return out;
+}
+
 export type SubOrderWithItems = Prisma.SubOrderGetPayload<object>;

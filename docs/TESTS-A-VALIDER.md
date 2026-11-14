@@ -44,6 +44,7 @@ DerniÃ¨re exÃ©cution (11/11/2026, lot admin + e-mails de retour) : Vitest 62
 | A-T37 | Prérequis de publication stores (sans réseau) : manifest PWA, icônes 192/512/maskable aux tailles réelles, apple-touch 180×180, sw.js, accès sans mur, appId identique Capacitor/Android/iOS, URL HTTPS, page hors ligne, liens CGV/confidentialité/cookies en pied de page (`tests/unit/store-readiness.test.ts`, 7 tests, passés en local) | OK en CI #60 — 13/11/2026 (vert global ; log détaillé non lu) | 13/11/2026 |
 | A-T38 | Numéro de suivi assaini : virgule/point-virgule/espaces retirés, URL UPS sans %2C, pas de lien si vide (`tests/unit/tracking-clean.test.ts`, 4 tests ; + garde : affichages compte/admin/partenaire/e-mails) ; nettoyage appliqué à la saisie partenaire, à la page commande, au lien et aux e-mails FR/EN | OK en CI #61 (3 tests) puis #63 (4 tests, garde d'affichage admin) — 13/11/2026 (vert global ; log détaillé non lu) | 13/11/2026 |
 | A-T39 | E-mail client « Votre commande est en préparation » (FR/EN) envoyé quand le créateur clique « Marquer en préparation » : boutique, article, lien « Suivre ma commande » (`tests/unit/order-notify-preparing.test.ts`, 2 tests) | Écrit, à lancer en CI | 13/11/2026 |
+| A-T40 | Rappel à 24 h : colis encore « Acceptée » 24 h après l'acceptation (decidedAt) → un seul rappel (prepReminderSentAt), pas de rappel si récent ou déjà « En préparation », aucune annulation ni remboursement (`tests/unit/prep-reminder.db.test.ts`, base jetable) | Écrit, à lancer en CI | 14/11/2026 |
 | A-T28 | Purge des résidus de test avant seed (`prisma/test-residue.ts`, `test-residue.test.ts`) : dépendances supprimées avant les produits test-hold | OK en CI #47 (vert global, log détaillé non lu) | 13/11/2026 |
 | A-T23 | T | Réveil de la base de test (Neon en veille) : connect_timeout ajouté si absent, retry/backoff sur P1001, abandon sur autre erreur ; sonde TCP sans client Prisma (régression CI sqlite) | `tests/unit/db-wake.test.ts` (Vitest) | OK en CI (#39, #42, #47) — 13/11/2026 | `npm run test:db` (logique) |
 | A-M1 | M | Fournisseur e-mail : Resend (from, reply_to, sans mention interdite) ; repli Gmail / aucun sans erreur | `tests/unit/email-provider.test.ts` (Vitest) | OK 2/2 â€” 10/11/2026 | T-MAIL-FROM (payload) |
@@ -754,3 +755,10 @@ Constat vérifié dans le code (13/11/2026) : l'approche retenue est **Capacitor
 6. Paiements : les pièces sont des biens physiques payés via Stripe ; vérifier auprès des règles Apple/Google si l'achat intégré est exigé ou non (**non vérifié**).
 7. Fournir un compte de démonstration et le mot de passe d'accès aux relecteurs.
 8. Valider : Android sur un vrai téléphone (APK du workflow android-apk) ; iOS via TestFlight.
+
+### T-RAPPEL-PREPARATION — Rappel partenaire à 24 h si colis « Acceptée » — 10 min — À tester
+Règle : 24 h après l'acceptation, si le colis est toujours « Acceptée » : e-mail de rappel au partenaire + e-mail à l'admin (ADMIN_EMAILS), une seule fois, sans annulation ni remboursement, client non prévenu. Le cron Vercel /api/orders/sweep tourne 1 fois par jour (06:00 UTC) : le rappel part au premier passage après 24 h (entre 24 h et 48 h).
+1. Client : passer une commande ; créateur : l'accepter et ne PAS cliquer « Marquer en préparation ».
+2. Attendre 24 h, puis déclencher le balayage (cron du jour ou appel manuel autorisé de /api/orders/sweep). Attendu : le créateur reçoit « colis … à préparer » avec lien vers la commande ; l'admin reçoit « Colis … accepté depuis plus de 24 h » ; le client ne reçoit rien.
+3. Relancer le balayage. Attendu : aucun second e-mail. Le colis reste « Acceptée », sans remboursement.
+4. Créateur : « Marquer en préparation » puis attendre un balayage. Attendu : aucun nouveau rappel.

@@ -163,6 +163,8 @@ model User {
   email        String   @unique
   name         String
   passwordHash String
+  /// Incrémenté à chaque réinitialisation de mot de passe : invalide les autres sessions (JWT)
+  sessionVersion Int     @default(0)
   createdAt    DateTime @default(now())
   orders       Order[]
   addresses    Address[]
@@ -356,6 +358,8 @@ model SubOrder {
   acceptBy       DateTime
   reminderSentAt DateTime?
   escalatedAt    DateTime?
+  /// Rappel unique : colis encore « Acceptée » 24 h après l'acceptation (sans annulation)
+  prepReminderSentAt DateTime?
   decidedAt      DateTime?
   reason         String    @default("")
   carrier        String    @default("")
@@ -480,4 +484,25 @@ model RestockWatch {
 
   @@unique([buyerKey, productSlug])
   @@index([productSlug, notifiedAt])
+}
+
+/// Jeton de réinitialisation du mot de passe : seul le hash SHA-256 est stocké ; 1 h, usage unique.
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+/// Demandes de réinitialisation (limitation 3/h par e-mail et par IP) ; key = "email:…" ou "ip:…".
+model PasswordResetAttempt {
+  id        String   @id @default(cuid())
+  key       String
+  createdAt DateTime @default(now())
+
+  @@index([key, createdAt])
 }

@@ -43,6 +43,7 @@ DerniÃ¨re exÃ©cution (11/11/2026, lot admin + e-mails de retour) : Vitest 62
 | A-T36 | Remboursement Stripe (mock `fetch`, sans base ni appel réel) : sans clé → MANUAL (T-SUIVI 5) ; AWAITING puis paiement confirmé → remboursement créé (T-REMB 6) ; deux annulations simultanées → même clé d'idempotence, rien une fois DONE (T-SUIVI 7) (`tests/unit/refund.test.ts`, avec les cas DONE/FAILED/AWAITING existants = T-SUIVI 6, T-REMB 7) | OK en CI #60 — 13/11/2026 (vert global ; log détaillé non lu) | 13/11/2026 |
 | A-T37 | Prérequis de publication stores (sans réseau) : manifest PWA, icônes 192/512/maskable aux tailles réelles, apple-touch 180×180, sw.js, accès sans mur, appId identique Capacitor/Android/iOS, URL HTTPS, page hors ligne, liens CGV/confidentialité/cookies en pied de page (`tests/unit/store-readiness.test.ts`, 7 tests, passés en local) | OK en CI #60 — 13/11/2026 (vert global ; log détaillé non lu) | 13/11/2026 |
 | A-T38 | Numéro de suivi assaini : virgule/point-virgule/espaces retirés, URL UPS sans %2C, pas de lien si vide (`tests/unit/tracking-clean.test.ts`, 4 tests ; + garde : affichages compte/admin/partenaire/e-mails) ; nettoyage appliqué à la saisie partenaire, à la page commande, au lien et aux e-mails FR/EN | OK en CI #61 (3 tests) puis #63 (4 tests, garde d'affichage admin) — 13/11/2026 (vert global ; log détaillé non lu) | 13/11/2026 |
+| A-T39 | E-mail client « Votre commande est en préparation » (FR/EN) envoyé quand le créateur clique « Marquer en préparation » : boutique, article, lien « Suivre ma commande » (`tests/unit/order-notify-preparing.test.ts`, 2 tests) | Écrit, à lancer en CI | 13/11/2026 |
 | A-T28 | Purge des résidus de test avant seed (`prisma/test-residue.ts`, `test-residue.test.ts`) : dépendances supprimées avant les produits test-hold | OK en CI #47 (vert global, log détaillé non lu) | 13/11/2026 |
 | A-T23 | T | Réveil de la base de test (Neon en veille) : connect_timeout ajouté si absent, retry/backoff sur P1001, abandon sur autre erreur ; sonde TCP sans client Prisma (régression CI sqlite) | `tests/unit/db-wake.test.ts` (Vitest) | OK en CI (#39, #42, #47) — 13/11/2026 | `npm run test:db` (logique) |
 | A-M1 | M | Fournisseur e-mail : Resend (from, reply_to, sans mention interdite) ; repli Gmail / aucun sans erreur | `tests/unit/email-provider.test.ts` (Vitest) | OK 2/2 â€” 10/11/2026 | T-MAIL-FROM (payload) |
@@ -81,7 +82,7 @@ Lu dans le code : tests existants. Rien ci-dessous n'est passé « Validé » : 
 |---|---|---|
 | T-STOCK-NOM (2) | Automatisable sûr — écrit (A-T27, à lancer en CI) | `checkout-hold.db.test.ts` « autre acheteur : erreur de stock nominative » (StockError, item = nom). Reste manuel : le libellé affiché à l'écran (étapes 2–3, panier de 2 pièces non couvert). |
 | T-RESERVATION-IMPAYEE 1–3 | Sûr — déjà fait (logique) | `checkout-hold.db.test.ts` : retour arrière, balayage > 30 min, aucune commande. Manuel : vraie page Stripe (retour navigateur, attente 30 min). |
-| T-RESERVATION-IMPAYEE 4 / T-PAIEMENT 4–5 | Probable | Paiement après expiration couvert en logique (test « paiement après libération ») ; le remboursement Stripe réel exige le bac à sable Stripe + webhook : non écrit. |
+| T-RESERVATION-IMPAYEE 4 | Automatisé (non reproductible à la main) | Fenêtre ≤ 30 s ; couvert en CI par `checkout-hold.db.test.ts` (A-F18, « paiement après libération »). Remboursement Stripe réel non exercé (mock A-T36). T-PAIEMENT 4–5 : déjà validés à la main le 13/11. |
 | Test 4 course de stock | Probable | Concurrence DB possible (Promise.all sur createHold) ; non écrit, non exécutable ici sans base. |
 | T-AUTRE-EN | Partiel | `carrierLabel("Autre", false) === "Other"` testé (`partner-profile.test.ts`, A-F14). Reste manuel : rendu réel e-mail EN + page commande. |
 | T-NOM-ENTETE | Je ne sais pas | Dépend de la session/JWT après renommage : non testé, ne rien inventer. |
@@ -125,7 +126,7 @@ PrÃ©requis : migration 0023 appliquÃ©e ; un colis livrÃ© (compte client) ;
 | T-MAILS | E-mails Farfetch | 10 min | Validé (étapes 1–4) | 12–13/11/2026 |
 | T-AIDE | Pages d'aide FR/EN | 10 min | Validé | 12–13/11/2026 |
 | T-ADMIN-FILTRES | Filtres, pagination et pastilles (admin + partenaire) ; e-mails de retour | 20 min | Validé (déclaré par l'utilisateur, sans capture) | avant le 13/11/2026 |
-| T24 | Parcours de commande complet (achat â†’ livraison) | 20 min | Ã€ tester | â€” |
+| T24 | Parcours de commande complet (achat → livraison) | 20 min | Validé 13/11/2026 (AM-E6987B4E) | Captures Gmail + admin + page client |
 | T-STRIPE | Paiement Stripe Checkout + webhook (lot 0) | 15 min | Validé (étapes 1–8 ; 6 et 7 le 13/11/2026) | 12–13/11/2026 |
 | T-REMB | Remboursement au refus/expiration/annulation | 15 min | Partiel : étapes 1, 2, 3, 4 (admin validée 13/11 ; client validée 12/11, déclarée) validées + expiration (5) testée ; restent 6, 7, 8 | 12–13/11/2026 |
 | H-01 Ã  H-16 | Lots A Ã  D, suspension, traduction, fiche crÃ©ation | 60 min | Ã€ tester | â€” |
@@ -201,10 +202,10 @@ PrÃ©requis : migration 0022 ; STRIPE_SECRET_KEY de test ; commande payÃ©e vi
 2. Widget Â« Ce contenu vous semble-t-il pertinent ? Â» : cliquer Oui puis Pas vraiment.
 3. MÃªmes pages en `/en`. VÃ©rifier : retours par colis, signature transporteur, annulation depuis le compte, e-mail de contact inchangÃ©.
 
-### T24 â€” parcours complet
-1. Client : acheter 2 crÃ©ations (2 crÃ©ateurs), panier puis paiement.
-2. CrÃ©ateurs : accepter, prÃ©parer, expÃ©dier (transporteur + suivi), livrer.
-3. Client : suivre chaque colis, e-mails reÃ§us Ã  chaque Ã©tape.
+### T24 — parcours complet — Validé 13/11/2026 (commande AM-E6987B4E, 2 180 €)
+1. Client : acheter 2 crÃ©ations (2 crÃ©ateurs), panier puis paiement. — Validé 13/11/2026 : achat 22:23, AM-E6987B4E 2 180 € (colis -1 Mia Mia Gifts 2 000 €, UPS 1Z999AA10123456784 ; colis -2 Lunettes à cauris 180 €, House of Marjón, UPS 1Z999AA10123456785).
+2. CrÃ©ateurs : accepter, prÃ©parer, expÃ©dier (transporteur + suivi), livrer. — Validé 13/11/2026 : les 2 créateurs ont fait Accepter > Marquer en préparation > Marquer expédiée > Marquer livrée (badges et messages vus).
+3. Client : suivre chaque colis, e-mails reÃ§us Ã  chaque Ã©tape. Détail e-mail « en préparation » : 3bis. Client (compte avec e-mail réel) : passer une commande, la faire accepter par le créateur. Créateur : ouvrir la commande, cliquer « Marquer en préparation » ; message portail attendu « Marquée en préparation ; client prévenu par e-mail ». Client : dans la minute, recevoir « Votre commande est en préparation » (boutique, article, bouton « Suivre ma commande » ouvrant la commande) ; aucun autre e-mail ; EN si la commande est en anglais. À tester (prod 22:24–22:29 : AM-E6987B4E-1/-2 marqués avant ce correctif, aucun e-mail). — Validé 13/11/2026 (captures) : Gmail confirmation 22:23, acceptée ×2 22:24, expédiée ×2 22:32, livrée ×2 22:33 (contenu « livrée » vu : colis 1/2 et 2/2, Voir ma commande, Suivre mon colis) ; page client « Commande livrée », 2 colis Livrée, suivi UPS, Demander un retour. E-mails « expédiée » vus (captures) : colis 1/2 « Mimi a expédié votre commande (UPS, suivi 1Z999AA10123456784) » et colis 2/2 « Choupi a expédié votre commande (UPS, suivi 1Z999AA10123456785) », boutons « Suivre ma commande » / « Suivre mon colis », récapitulatif 2 000 € / 180 €. Aucun e-mail « en préparation » à l'époque (ajouté en local c0eff80) : 3bis reste À tester.
 4. Admin : voir les sous-commandes dans `/fr/admin/commandes` et le registre dans `/fr/admin/versements`. — Validé 13/11/2026 (captures admin : Versements AM-B197F3C1-1 · 1 700,00 € en attente, dispo le 20/11 20:21 = 2 000 € − 15 % de commission ; Commandes > Toutes : AM-B197F3C1-1 Livrée). Étapes 1–3 : exercées par morceaux, parcours complet non coché.
 
 ### T-ADMIN-FILTRES â€” Filtres, pastilles et e-mails de retour â€” 20 min — Validé — fait avant le 13/11/2026, déclaré par l'utilisateur, sans capture
@@ -555,11 +556,11 @@ Prérequis : Stripe en mode test (carte 4242 4242 4242 4242), webhook `checkout.
 4. Vérifier : une seule commande, un colis par partenaire, e-mail de confirmation acheteur (DA) et e-mail « nouvelle commande » au partenaire (une seule fois, même si Stripe renvoie l'événement).
 5. Stripe > Développeurs > Webhooks > événement : réponse 200 ; renvoyer l'événement : toujours une seule commande.
 
-### T-RESERVATION-IMPAYEE — Réservation impayée libérée, sans commande « Annulée » — 15 min — Partiel : étapes 1 à 3 validées le 13/11/2026 ; reste l'étape 4 (À tester)
+### T-RESERVATION-IMPAYEE — Réservation impayée libérée, sans commande « Annulée » — 15 min — Validé 13/11/2026 (étapes 1–3 testées à la main ; étape 4 couverte en CI)
 1. Client : « Confirmer », arriver sur Stripe, retour arrière du navigateur, « Confirmer » à nouveau (même e-mail).
 2. Attendu : jamais « plus disponible » ; l'ancienne réservation est libérée, une seule nouvelle réservation ; stock disponible de la pièce = stock − 1.
 3. Fermer l'onglet Stripe sans payer et attendre 30 à 35 min (ou laisser expirer la session). Attendu : stock disponible rétabli, AUCUNE commande (ni « Annulée ») dans les listes acheteur, partenaire et admin, aucun e-mail.
-4. Cas limite : payer après l'expiration (session encore ouverte) : la commande est créée si le stock est toujours là ; sinon aucune commande, remboursement Stripe automatique et e-mail « Votre paiement est remboursé » au client (montant en €).
+4. Cas limite : payer après l'expiration (session encore ouverte) : la commande est créée si le stock est toujours là ; sinon aucune commande, remboursement Stripe automatique et e-mail « Votre paiement est remboursé » au client (montant en €). — Non reproductible à la main (fenêtre ≤ 30 s : réservation 30 min, session Stripe 30 min + 30 s) ; couvert en CI par `checkout-hold.db.test.ts` (A-F18, test « paiement après libération »). Aucun test manuel prétendu ; remboursement Stripe réel non exercé (mock : A-T36).
 
 ### T-STOCK-NOM — Erreur de stock nommant l'article — 5 min — Validé le 13/11/2026
 1. Mettre une pièce à stock 1 ; comptes A et B (autre e-mail) ajoutent la pièce au panier SANS confirmer.

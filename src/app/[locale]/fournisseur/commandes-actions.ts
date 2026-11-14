@@ -51,6 +51,7 @@ export async function refuseOrderAction(f: FormData) {
 export async function prepareOrderAction(f: FormData) {
   const { id, supplierId, back } = await ctxOf(f);
   if (!(await prepareSub(db, id, supplierId))) redirect(back("?error=state"));
+  await notifySubOrder("PREPARING", id);
   done(back("?ok=preparing"));
 }
 

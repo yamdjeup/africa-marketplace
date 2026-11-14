@@ -203,9 +203,9 @@ PrÃ©requis : migration 0022 ; STRIPE_SECRET_KEY de test ; commande payÃ©e vi
 8. Commande AM-ECAD4CB3 : Ã  rattraper (voir handoff) ou nouvelle commande.
 
 ### T-AIDE â€” pages d'aide
-1. Ouvrir `/fr/support/faq`, `orders`, `payment`, `returns`, `terms`, `privacy`, `cookies`, `contact` : contenu complet, menu latÃ©ral commun.
-2. Widget Â« Ce contenu vous semble-t-il pertinent ? Â» : cliquer Oui puis Pas vraiment.
-3. MÃªmes pages en `/en`. VÃ©rifier : retours par colis, signature transporteur, annulation depuis le compte, e-mail de contact inchangÃ©.
+1. Ouvrir `/fr/support/faq`, `orders`, `payment`, `returns`, `terms`, `privacy`, `cookies`, `contact` : contenu complet, menu latÃ©ral commun. — Validé le 14/11/2026 sur déclaration de l'utilisateur (« tout est déjà OK ») ; A-T8 couvre les 200 et les textes FR/EN.
+2. Widget Â« Ce contenu vous semble-t-il pertinent ? Â» : cliquer Oui puis Pas vraiment. — Validé le 14/11/2026 sur déclaration de l'utilisateur (« tout est déjà OK ») ; A-T8 couvre les 200 et les textes FR/EN.
+3. MÃªmes pages en `/en`. VÃ©rifier : retours par colis, signature transporteur, annulation depuis le compte, e-mail de contact inchangÃ©. — Validé le 14/11/2026 sur déclaration de l'utilisateur (« tout est déjà OK ») ; A-T8 couvre les 200 et les textes FR/EN.
 
 ### T24 — parcours complet — Validé 13/11/2026 (commande AM-E6987B4E, 2 180 €)
 1. Client : acheter 2 crÃ©ations (2 crÃ©ateurs), panier puis paiement. — Validé 13/11/2026 : achat 22:23, AM-E6987B4E 2 180 € (colis -1 Mia Mia Gifts 2 000 €, UPS 1Z999AA10123456784 ; colis -2 Lunettes à cauris 180 €, House of Marjón, UPS 1Z999AA10123456785).

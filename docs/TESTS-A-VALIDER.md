@@ -13,7 +13,7 @@ Lancer : GitHub â€º Actions â€º Â« Tests automatisÃ©s Â» â€º R
 Parcours historiques (Actions #1, 10/11/2026) : search 4 et mobile 2 corrigÃ©s (textes pÃ©rimÃ©s, recherche "sculpture", langue mobile via /login, bouton Â« VÃ©rifier mon adresse Â»). journey.spec.ts : test 1 corrigÃ© ; les tests 2 Ã  11 (galerie, fiche Å“uvre/artiste, panier, inscription x2, connexion, checkout connectÃ©/invitÃ©/vide) sont marquÃ©s `test.skip` (Â« Ã  rÃ©Ã©crire : header/checkout 2 Ã©tapes Â») ; journey : 1 OK / 10 ignorÃ©s.
 
 DerniÃ¨re exÃ©cution : 10/11/2026 â€” Vitest 33 OK / 6 ignorÃ©s (base de test non disponible sur le poste de l'agent : sans Docker ni branche Neon) ; Playwright `e2e/lot-t.spec.ts` 23 OK.
-Bilan 14/11/2026 (02:12) : manuels validés ce jour — T24 (étapes 1–4), 3bis e-mail « en préparation », T-MDP-OUBLIE (étapes 1, 3, 5 ; 2 EN ; 4 cas valide ; 9 partiel) ; ÉCHEC T-MDP-OUBLIE étape 7 (à refaire après 865df25). Automatisés : A-T38 OK CI #61/#63 ; A-T39 OK CI #65 ; A-T40 OK CI #66 ; A-T41 OK CI #66 puis OK CI #69 (version modifiée) ; A-T42 OK CI #69. MàJ 14/11 11:18 : T-MDP-OUBLIE entièrement validé (étapes 1–9) ; A-T41/A-T42 OK CI #69 ; A-T43 écrit, à lancer en CI.
+Bilan 14/11/2026 (02:12) : manuels validés ce jour — T24 (étapes 1–4), 3bis e-mail « en préparation », T-MDP-OUBLIE (étapes 1, 3, 5 ; 2 EN ; 4 cas valide ; 9 partiel) ; ÉCHEC T-MDP-OUBLIE étape 7 (à refaire après 865df25). Automatisés : A-T38 OK CI #61/#63 ; A-T39 OK CI #65 ; A-T40 OK CI #66 ; A-T41 OK CI #66 puis OK CI #69 (version modifiée) ; A-T42 OK CI #69. MàJ 14/11 11:18 : T-MDP-OUBLIE entièrement validé (étapes 1–9) ; A-T41/A-T42 OK CI #69 ; A-T43 écrit, à lancer en CI. MàJ 14/11 12:48 : push 5bdd801 déployé (Vercel Ready), CI verte : A-T43 OK ; T-MDP-OUBLIE-BIS étape 2 validée.
 DerniÃ¨re exÃ©cution (11/11/2026, lot admin + e-mails de retour) : Vitest 62 OK / 6 ignorÃ©s (base de test indisponible sur le poste de l'agent) ; tsc et eslint sans erreur.
 
 | ID | Lot | Description | Fichier | Dernier rÃ©sultat | Couvre (manuel) |
@@ -48,7 +48,7 @@ DerniÃ¨re exÃ©cution (11/11/2026, lot admin + e-mails de retour) : Vitest 62
 | A-T40 | Rappel à 24 h : colis encore « Acceptée » 24 h après l'acceptation (decidedAt) → un seul rappel (prepReminderSentAt), pas de rappel si récent ou déjà « En préparation », aucune annulation ni remboursement (`tests/unit/prep-reminder.db.test.ts`, base jetable) | OK en CI #66 (26857db, 6 min 6 s) — 14/11/2026 (vert global ; log détaillé non lu) | 14/11/2026 |
 | A-T41 | Mot de passe oublié : e-mail inconnu → statut explicite « aucun compte », compte Google → statut social sans lien, jeton 1 h à usage unique, expiré/inconnu refusé, sessionVersion + 1, limitation 3/h par e-mail et par IP avec statut « limité » distinct (`tests/unit/password-reset.db.test.ts`, 4 tests, base jetable) | OK en CI #66 (version précédente), puis OK en CI #69 (version modifiée : message « aucun compte », limite distincte) — 14/11/2026 (vert global ; log détaillé non lu) | 14/11/2026 |
 | A-T42 | Logique de comparaison de version de session (jeton sans version = 0, différence = session invalidée, compte supprimé = invalidée) (`tests/unit/session-version.test.ts`, 2 tests, sans base) | OK en CI #69 — 14/11/2026 (2/2 en local ; vert global en CI ; log détaillé non lu) | 14/11/2026 |
-| A-T43 | Vraie fonction `auth()` (pages serveur) et route /api/auth/session avec base simulée : jeton avec sv périmé ou absent = pas de session ; sv à jour = session (`tests/unit/auth-session-version.test.ts`, 3 tests) | Écrit, 3/3 en local ; à lancer en CI | 14/11/2026 |
+| A-T43 | Vraie fonction `auth()` (pages serveur) et route /api/auth/session avec base simulée : jeton avec sv périmé ou absent = pas de session ; sv à jour = session (`tests/unit/auth-session-version.test.ts`, 3 tests) | OK en CI — 14/11/2026 (push 5bdd801, Vercel Ready, CI verte ; log détaillé non lu) | 14/11/2026 |
 | A-T28 | Purge des résidus de test avant seed (`prisma/test-residue.ts`, `test-residue.test.ts`) : dépendances supprimées avant les produits test-hold | OK en CI #47 (vert global, log détaillé non lu) | 13/11/2026 |
 | A-T23 | T | Réveil de la base de test (Neon en veille) : connect_timeout ajouté si absent, retry/backoff sur P1001, abandon sur autre erreur ; sonde TCP sans client Prisma (régression CI sqlite) | `tests/unit/db-wake.test.ts` (Vitest) | OK en CI (#39, #42, #47) — 13/11/2026 | `npm run test:db` (logique) |
 | A-M1 | M | Fournisseur e-mail : Resend (from, reply_to, sans mention interdite) ; repli Gmail / aucun sans erreur | `tests/unit/email-provider.test.ts` (Vitest) | OK 2/2 â€” 10/11/2026 | T-MAIL-FROM (payload) |
@@ -153,16 +153,17 @@ PrÃ©requis : `NEXT_PUBLIC_GA_ID` dÃ©fini (ex. G-XXXX) ; navigation privÃ©e
 
 ### T-COLIS â€” multi-colis et annulation
 PrÃ©requis : Client connectÃ© ; articles de 2 crÃ©ateurs ; 2 comptes crÃ©ateurs actifs.
-1. Panier avec 2 articles de 2 crÃ©ateurs : message Â« expÃ©diÃ©e en 2 colis, par 2 crÃ©ateurs diffÃ©rents, Ã  des dates diffÃ©rentes Â», Colis 1/2 et 2/2 avec Â« PrÃ©paration sous 2 jours ouvrÃ©s Â», aucune ligne de frais. Avec un seul crÃ©ateur : message au singulier.
-2. MÃªme bloc sur la page de paiement ; payer.
-3. Compte > Mes commandes > dÃ©tail : cartes Â« Colis 1 sur 2 Â» et Â« Colis 2 sur 2 Â», bouton Â« Annuler ma commande Â» sur chacune.
-4. Cliquer le bouton : confirmation ; Annuler ne fait rien.
-5. Confirmer : colis Â« AnnulÃ©e Â», mention de remboursement, commande globale non annulÃ©e.
-6. VÃ©rifier les e-mails (client et crÃ©ateur).
-7. CrÃ©ateur : passer l'autre colis Ã  Â« ExpÃ©diÃ© Â» : le bouton disparaÃ®t cÃ´tÃ© client, texte renvoyant au retour sous 30 jours ; mail Â« Colis 2 sur 2 Â».
-8. Annuler les 2 colis : Â« Commande annulÃ©e Â» ; tous livrÃ©s : Â« Commande livrÃ©e Â».
-9. Deux onglets : expÃ©dier dans l'un, annuler dans l'autre : aucune annulation.
-10. Avec un autre compte client : impossible d'annuler un colis Ã©tranger. Pages Aide FR/EN : texte d'annulation Ã  jour.
+> **Note 15/11/2026** : faire ce test avec 2 pièces de 2 boutiques réellement distinctes (Mimi/LoliPat et Choupi/House of Marjón). L'incohérence vue sur AM-3427F8D2 (message « 2 colis », confirmation « Colis 1 sur 1 ») vient des données de test (œuvre Lozama Leombho rattachée à la boutique Mimi), pas d'un bug ; en production une boutique = un artiste.
+1. Panier avec 2 articles de 2 crÃ©ateurs : message Â« expÃ©diÃ©e en 2 colis, par 2 crÃ©ateurs diffÃ©rents, Ã  des dates diffÃ©rentes Â», Colis 1/2 et 2/2 avec Â« PrÃ©paration sous 2 jours ouvrÃ©s Â», aucune ligne de frais. Avec un seul crÃ©ateur : message au singulier. — Validé 14/11/2026 : AM-4024EF61 (14/11/2026, Mimi 30 € + Choupi 380 €), captures utilisateur (message « 2 colis », Colis 1/2 et 2/2). Cas mono-créateur au singulier : non revu.
+2. MÃªme bloc sur la page de paiement ; payer. — Validé 14/11/2026 : AM-4024EF61 (14/11/2026, Mimi 30 € + Choupi 380 €), captures utilisateur (même bloc au paiement, confirmation « COLIS 1 SUR 2 / 2 SUR 2 »).
+3. Compte > Mes commandes > dÃ©tail : cartes Â« Colis 1 sur 2 Â» et Â« Colis 2 sur 2 Â», bouton Â« Annuler ma commande Â» sur chacune. — Validé 14/11/2026 : AM-4024EF61 (14/11/2026, Mimi 30 € + Choupi 380 €), captures utilisateur (cartes par colis).
+4. Cliquer le bouton : confirmation ; Annuler ne fait rien. — Validé 14/11/2026 : AM-4024EF61 (14/11/2026, Mimi 30 € + Choupi 380 €), captures utilisateur ; boîte de confirmation native du navigateur (OK/Cancel), remplacée ensuite par T-DIALOGUE-CONFIRM (à re-tester).
+5. Confirmer : colis Â« AnnulÃ©e Â», mention de remboursement, commande globale non annulÃ©e. — Validé 14/11/2026 : AM-4024EF61 (14/11/2026, Mimi 30 € + Choupi 380 €), captures utilisateur (colis 1 « Annulée », remboursement 30,00 €, colis 2 « À accepter », commande non annulée).
+6. VÃ©rifier les e-mails (client et crÃ©ateur). — Validé 14/11–15/11/2026 : e-mail client d'annulation AM-4024EF61-1 reçu (14/11) ; e-mail créateur Mimi « commande AM-4024EF61-1 annulée par le client » reçu le 15/11/2026 à 00:11, stock libéré mentionné (capture utilisateur).
+7. CrÃ©ateur : passer l'autre colis Ã  Â« ExpÃ©diÃ© Â» : le bouton disparaÃ®t cÃ´tÃ© client, texte renvoyant au retour sous 30 jours ; mail Â« Colis 2 sur 2 Â». — Validé 14/11/2026 : AM-4024EF61 (14/11/2026, Mimi 30 € + Choupi 380 €), captures utilisateur (colis 2 Expédiée UPS, bouton d'annulation disparu, texte retour sous 30 jours ; e-mails client « commande acceptée AM-4024EF61-2 » et « expédiée » avec « Colis 2 sur 2 »).
+8. Annuler les 2 colis : Â« Commande annulÃ©e Â» ; tous livrÃ©s : Â« Commande livrÃ©e Â». — Validé 15/11/2026 : commande AM-745A9BE3 (240 €, Mimi 30 € + Choupi 210 €), 2 colis annulés par le client → « Commande annulée », chaque colis « Annulée » avec remboursement (30,00 € et 210,00 €) (captures utilisateur). Cas « tous livrés → Commande livrée » : vu en T24-4 (13/11).
+9. Deux onglets : expÃ©dier dans l'un, annuler dans l'autre : aucune annulation. — Non vu à la main ; couvert en CI (A-T4).
+10. Avec un autre compte client : impossible d'annuler un colis Ã©tranger. Pages Aide FR/EN : texte d'annulation Ã  jour. — Non vu à la main ; couvert en CI (A-T4 / A-T8).
 
 ### T-SUIVI â€” suivi de livraison et remboursement (lots 1â€“2)
 PrÃ©requis : migration 0020 appliquÃ©e.
@@ -175,17 +176,17 @@ PrÃ©requis : migration 0020 appliquÃ©e.
 7. ClÃ© invalide : FAILED, texte Â« en cours de traitement Â». Deux onglets : un seul remboursement.
 
 ### T-MAILS â€” e-mails clients
-1. Passer une commande : e-mail Â« reÃ§ue Â» centrÃ©, logo, titre en majuscules, vignette (image visible : TESTÃ‰ le 10/11/2026), taille (Ã— 1 Â· M), total, adresse, aide, pied.
-2. Marquer expÃ©diÃ© : e-mail Â« en route Â» avec bouton Â« Suivre ma commande Â», adresse, Â« Colis X sur N Â».
-3. Marquer livrÃ© : bouton Â« Voir ma commande Â».
-4. VÃ©rifier : aucune mention dÃ©mo/fictif/simulÃ©, pas de Â« Livraison : Offerte Â», nom propre du crÃ©ateur, rendu mobile.
+1. Passer une commande : e-mail Â« reÃ§ue Â» centrÃ©, logo, titre en majuscules, vignette (image visible : TESTÃ‰ le 10/11/2026), taille (Ã— 1 Â· M), total, adresse, aide, pied. — Validé via T24 / T-MAIL-FROM (e-mail reçu, images vues ; vignette testée 10/11/2026). Non vu explicitement : chaque élément (taille, aide, pied).
+2. Marquer expÃ©diÃ© : e-mail Â« en route Â» avec bouton Â« Suivre ma commande Â», adresse, Â« Colis X sur N Â». — Validé via T-SUIVI 2 et T24 (13/11/2026) : bouton et lien UPS. Non vu explicitement : « Colis X sur N » ; e-mail « acceptée » jamais vu.
+3. Marquer livrÃ© : bouton Â« Voir ma commande Â». — Validé via T-SUIVI 4 (13/11/2026, AM-B197F3C1 : e-mail « livrée » avec lien).
+4. VÃ©rifier : aucune mention dÃ©mo/fictif/simulÃ©, pas de Â« Livraison : Offerte Â», nom propre du crÃ©ateur, rendu mobile. — Validé le 14/11/2026 sur déclaration de l'utilisateur (e-mails déjà relus ; captures dans les sections T24, T-SUIVI et 3bis, 10–14/11/2026).
 
 ### T-STRIPE â€” paiement Stripe (lot 0)
 PrÃ©requis : migration 0021 appliquÃ©e ; clÃ©s Stripe de test ; webhook `/api/stripe/webhook` (Ã©vÃ©nement checkout.session.completed) dÃ©clarÃ© dans Stripe avec STRIPE_WEBHOOK_SECRET.
 1. Sans STRIPE_SECRET_KEY : passer commande, confirmation et e-mails immÃ©diats comme avant.
-2. Avec les clÃ©s : Client, panier, Â« Commander Â» : redirection vers la page Stripe, montant correct. â€” TESTÃ‰ 10/11/2026
+2. Avec les clÃ©s : Client, panier, Â« Commander Â» : redirection vers la page Stripe, montant correct. â€” TESTÃ‰ 10/11/2026 — Validé via T24 (13/11/2026) : achat AM-E6987B4E 22:23, paiement Stripe, e-mails reçus ; confirmé par le test du 10/11/2026. Non revu séparément le 14/11.
 3. Payer avec la carte de test 4242 4242 4242 4242 : retour sur la confirmation de commande. â€” TESTÃ‰ 10/11/2026
-4. VÃ©rifier : e-mail Â« reÃ§ue Â» et notification au crÃ©ateur arrivent aprÃ¨s le paiement (webhook), une seule fois. â€” TESTÃ‰ 10/11/2026
+4. VÃ©rifier : e-mail Â« reÃ§ue Â» et notification au crÃ©ateur arrivent aprÃ¨s le paiement (webhook), une seule fois. â€” TESTÃ‰ 10/11/2026 — Validé via T24 (13/11/2026) : achat AM-E6987B4E 22:23, paiement Stripe, e-mails reçus ; confirmé par le test du 10/11/2026. Non revu séparément le 14/11.
 5. En base : `stripePaymentIntentId` renseignÃ©, `paymentPending` = false. â€” TESTÃ‰ 10/11/2026
 6. Abandonner sur la page Stripe : aucun e-mail envoyÃ©, commande en attente de paiement. — Étapes 2–4 vues 13/11/2026 (fermeture de l'onglet Stripe sans payer : Stocks bague Réservé 1 / Dispo 0, réservation epomtaclient0 jusqu'à 22:06 ; page bague côté B « Épuisé », « Réservée par un autre client »). Libération automatique : Validé 13/11/2026 (Stocks 22:09 : Bague Total 1, Réservé 0, Dispo 1, dernier mouvement 22:07, aucune réservation active ; page côté B : « Ajouter au panier » revenu). Validé 13/11/2026. La flèche « ← » Stripe n'a pas été testée ici (couverte par T-RESERVATION-IMPAYEE).
 7. Annuler ensuite un colis payÃ© : remboursement Stripe automatique (voir T-SUIVI). — Validé 13/11/2026 (AM-A3343DEF, Choupi Tree 2 000 €, annulée par l'admin : remboursement Stripe sandbox 2 000,00 € Refunded, e-mail FR « sous 5 à 10 jours ouvrés » reçu 21:06, même mention sur la page commande, stock revenu à 2)
@@ -193,8 +194,8 @@ PrÃ©requis : migration 0021 appliquÃ©e ; clÃ©s Stripe de test ; webhook `/
 
 ### T-REMB â€” remboursement au refus / expiration / annulation
 PrÃ©requis : migration 0022 ; STRIPE_SECRET_KEY de test ; commande payÃ©e via Stripe.
-1. Client : commande payÃ©e (carte 4242â€¦), webhook reÃ§u (`stripePaymentIntentId` renseignÃ©). â€” TESTÃ‰ 10/11/2026
-2. CrÃ©ateur : refuser le colis avec un motif. RÃ©sultat : Stripe > Paiements > Refund crÃ©Ã© (montant du colis), `refundStatus` = DONE. â€” TESTÃ‰ 10/11/2026
+1. Client : commande payÃ©e (carte 4242â€¦), webhook reÃ§u (`stripePaymentIntentId` renseignÃ©). â€” TESTÃ‰ 10/11/2026 — Validé via le test du 10/11/2026 et T-REMB 3–4 / T-STRIPE 7 (annulation admin AM-A3343DEF, Refund Stripe sandbox 2 000,00 €, 13/11/2026). Refus par le créateur : non revu séparément sur une commande récente.
+2. CrÃ©ateur : refuser le colis avec un motif. RÃ©sultat : Stripe > Paiements > Refund crÃ©Ã© (montant du colis), `refundStatus` = DONE. â€” TESTÃ‰ 10/11/2026 — Validé via le test du 10/11/2026 et T-REMB 3–4 / T-STRIPE 7 (annulation admin AM-A3343DEF, Refund Stripe sandbox 2 000,00 €, 13/11/2026). Refus par le créateur : non revu séparément sur une commande récente.
 3. Compte client et e-mail Â« Commande annulÃ©e Â» (refus, expiration, annulation client/admin) : Â« Vous serez remboursÃ© de X,XX â‚¬ â€¦ sous 5 Ã  10 jours ouvrÃ©s Â» (FR et EN). — Validé 13/11/2026 (AM-A3343DEF, Choupi Tree 2 000 €, annulée par l'admin : remboursement Stripe sandbox 2 000,00 € Refunded, e-mail FR « sous 5 à 10 jours ouvrés » reçu 21:06, même mention sur la page commande, stock revenu à 2) ; FR seulement pour l'annulation admin, EN non confirmé
 4. Refaire avec annulation client, puis annulation admin : mÃªme rÃ©sultat. — Variante annulation ADMIN : Validé 13/11/2026 (AM-A3343DEF, voir étape 3). Variante annulation CLIENT : Validé 12/11/2026 — déclaré par l'utilisateur, sans capture dans le fichier.
 5. Colis sans rÃ©ponse 48 h (expirÃ©) : remboursement crÃ©Ã© au passage du cron.
@@ -203,9 +204,9 @@ PrÃ©requis : migration 0022 ; STRIPE_SECRET_KEY de test ; commande payÃ©e vi
 8. Commande AM-ECAD4CB3 : Ã  rattraper (voir handoff) ou nouvelle commande.
 
 ### T-AIDE â€” pages d'aide
-1. Ouvrir `/fr/support/faq`, `orders`, `payment`, `returns`, `terms`, `privacy`, `cookies`, `contact` : contenu complet, menu latÃ©ral commun.
-2. Widget Â« Ce contenu vous semble-t-il pertinent ? Â» : cliquer Oui puis Pas vraiment.
-3. MÃªmes pages en `/en`. VÃ©rifier : retours par colis, signature transporteur, annulation depuis le compte, e-mail de contact inchangÃ©.
+1. Ouvrir `/fr/support/faq`, `orders`, `payment`, `returns`, `terms`, `privacy`, `cookies`, `contact` : contenu complet, menu latÃ©ral commun. — Validé le 14/11/2026 sur déclaration de l'utilisateur (« tout est déjà OK ») ; A-T8 couvre les 200 et les textes FR/EN.
+2. Widget Â« Ce contenu vous semble-t-il pertinent ? Â» : cliquer Oui puis Pas vraiment. — Validé le 14/11/2026 sur déclaration de l'utilisateur (« tout est déjà OK ») ; A-T8 couvre les 200 et les textes FR/EN.
+3. MÃªmes pages en `/en`. VÃ©rifier : retours par colis, signature transporteur, annulation depuis le compte, e-mail de contact inchangÃ©. — Validé le 14/11/2026 sur déclaration de l'utilisateur (« tout est déjà OK ») ; A-T8 couvre les 200 et les textes FR/EN.
 
 ### T24 — parcours complet — Validé 13/11/2026 (commande AM-E6987B4E, 2 180 €)
 1. Client : acheter 2 crÃ©ations (2 crÃ©ateurs), panier puis paiement. — Validé 13/11/2026 : achat 22:23, AM-E6987B4E 2 180 € (colis -1 Mia Mia Gifts 2 000 €, UPS 1Z999AA10123456784 ; colis -2 Lunettes à cauris 180 €, House of Marjón, UPS 1Z999AA10123456785).
@@ -760,7 +761,8 @@ Constat vérifié dans le code (13/11/2026) : l'approche retenue est **Capacitor
 7. Fournir un compte de démonstration et le mot de passe d'accès aux relecteurs.
 8. Valider : Android sur un vrai téléphone (APK du workflow android-apk) ; iOS via TestFlight.
 
-### T-RAPPEL-PREPARATION — Rappel partenaire à 24 h si colis « Acceptée » — 10 min — À tester
+### T-RAPPEL-PREPARATION — Rappel partenaire à 24 h si colis « Acceptée » — 10 min — En cours depuis le 14/11/2026 (contrôles les 15 et 16/11)
+Lancé le 14/11/2026 : commande AM-38FD407C-1 (Bague de Marquis Argent 925, 30 €, créateur Mimi) passée à 11:52, acceptée vers 12:53 (heure locale), jamais mise en préparation (NE PAS la marquer avant le 16/11). Contrôles : 15/11 après 07:00 (heure locale) : aucun rappel (moins de 24 h écoulées au cron de 06:00 UTC si l'acceptation date de 12:53) ; 16/11 après 07:00 : rappel au créateur + alerte admin, rien pour le client, colis toujours « Acceptée ». Résultats : à consigner.
 Règle : 24 h après l'acceptation, si le colis est toujours « Acceptée » : e-mail de rappel au partenaire + e-mail à l'admin (ADMIN_EMAILS), une seule fois, sans annulation ni remboursement, client non prévenu. Le cron Vercel /api/orders/sweep tourne 1 fois par jour (06:00 UTC) : le rappel part au premier passage après 24 h (entre 24 h et 48 h).
 1. Client : passer une commande ; créateur : l'accepter et ne PAS cliquer « Marquer en préparation ».
 2. Attendre 24 h, puis déclencher le balayage (cron du jour ou appel manuel autorisé de /api/orders/sweep). Attendu : le créateur reçoit « colis … à préparer » avec lien vers la commande ; l'admin reçoit « Colis … accepté depuis plus de 24 h » ; le client ne reçoit rien.
@@ -779,6 +781,15 @@ Prérequis : un compte e-mail + mot de passe (A) avec une vraie boîte de récep
 8. Compte Google (ou autre compte social) : sur /fr/forgot-password, saisir son e-mail : message « Ce compte utilise la connexion Google : il n'a pas de mot de passe. Un e-mail vous indique comment vous connecter. » ; e-mail « connexion Google » reçu, sans lien de réinitialisation. Si aucun compte Google n'existe : étape non faisable, couverte en CI par A-T41. — Validé 14/11/2026 : compte Google epomtaclient0@gmail.com, message à l'écran + e-mail de 11:16 sans lien.
 9. En dernier (elle bloque l'adresse IP 1 h) : sur /fr/forgot-password, refaire 4 demandes d'affilée avec l'e-mail de A. Attendu : au plus 3 demandes par e-mail et par adresse IP sont traitées par heure (les demandes des étapes 2, 3 et 8 comptent déjà pour l'IP, donc la limite peut être atteinte dès la 1re ou la 2e) ; une demande refusée affiche en rouge « Trop de demandes : 3 par heure au maximum. Réessayez dans 1 h. » et n'envoie aucun e-mail ; après 1 h, une nouvelle demande refonctionne. — Validé 14/11/2026 : message « Trop de demandes : 3 par heure au maximum. Réessayez dans 1 h. » à la 4e demande.
 
-### T-MDP-OUBLIE-BIS — Messages du formulaire de réinitialisation — 3 min — À tester
-1. Ouvrir un lien de réinitialisation valide, saisir « court » dans les 2 champs, cliquer « Enregistrer » : message Epomta rouge « Le mot de passe doit contenir au moins 8 caractères et être identique à la confirmation. » (plus de bulle native en anglais) ; rien n'est modifié.
-2. Sur /fr/forgot-password, saisir une adresse sans compte et valider : le message « Aucun compte… » s'affiche et l'adresse saisie reste dans le champ.
+### T-MDP-OUBLIE-BIS — Messages du formulaire de réinitialisation — 3 min — Partiel 14/11/2026 : étape 2 validée ; étape 1 laissée à la CI (A-T41)
+1. Ouvrir un lien de réinitialisation valide, saisir « court » dans les 2 champs, cliquer « Enregistrer » : message Epomta rouge « Le mot de passe doit contenir au moins 8 caractères et être identique à la confirmation. » (plus de bulle native en anglais) ; rien n'est modifié. — Non rejouée à la main : règle « moins de 8 caractères » couverte en CI par A-T41 ; message FR/EN non revu à l'écran.
+2. Sur /fr/forgot-password, saisir une adresse sans compte et valider : le message « Aucun compte… » s'affiche et l'adresse saisie reste dans le champ. — Validé 14/11/2026 (capture 12:48).
+
+### T-DIALOGUE-CONFIRM — Fenêtre de confirmation Epomta (annulation de colis) — 5 min — À tester (15/11/2026)
+Remplace la boîte native du navigateur (« epomta.com says », OK/Cancel) par la fenêtre du site. Aucun test automatique : pas de jsdom dans le projet, vérification statique tsc/eslint seulement.
+1. Compte client : Mon compte › Mes commandes › commande avec un colis « À accepter », « Acceptée » ou « En préparation » : cliquer « Annuler ma commande ». Résultat : fenêtre du site (fond assombri) titrée « Annuler ce colis ? », texte « Cette action est irréversible. Vous serez remboursé intégralement. », boutons « Garder ma commande » (focus au départ) et « Annuler le colis ». Aucune boîte native.
+2. Clavier : Tab reste dans la fenêtre (2 boutons) ; Échap la ferme et le focus revient sur « Annuler ma commande ».
+3. Cliquer « Garder ma commande » (ou en dehors de la fenêtre) : rien n'est annulé, statut inchangé.
+4. Cliquer à nouveau « Annuler ma commande » puis « Annuler le colis ». Résultat : colis « Annulée », mention de remboursement.
+5. Même parcours en `/en` : « Cancel this parcel? », « Keep my order », « Cancel parcel ».
+6. Admin › Versements : « Rendre disponible maintenant (ignorer le délai de retour) » ouvre la fenêtre du site « Rendre ce gain disponible ? » avec « Confirmer » / « Annuler » ; Annuler ne fait rien.

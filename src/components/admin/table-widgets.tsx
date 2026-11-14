@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 // Case « tout sélectionner » pour les cases `slug` du formulaire parent.
 export function SelectAll({ label }: { label: string }) {
@@ -21,15 +21,27 @@ export function SelectAll({ label }: { label: string }) {
 
 // Bouton de soumission demandant une confirmation avant envoi.
 // Fenêtre du site (Confirmer / Annuler) ; `askReason` ajoute un motif obligatoire (champ « reason » du formulaire parent).
-export function ConfirmButton({ message, className, name, value, children, askReason, title, en }: { message: string; className?: string; name?: string; value?: string; children: React.ReactNode; askReason?: boolean; title?: string; en?: boolean }) {
+export function ConfirmButton({ message, className, name, value, children, askReason, title, en, confirmLabel, cancelLabel }: { message: string; className?: string; name?: string; value?: string; children: React.ReactNode; askReason?: boolean; title?: string; en?: boolean; confirmLabel?: string; cancelLabel?: string }) {
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
   const ref = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    const trigger = ref.current;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+      if (e.key !== "Tab") return;
+      const items = dialogRef.current?.querySelectorAll<HTMLElement>("input, button:not(:disabled)");
+      if (!items?.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => { window.removeEventListener("keydown", onKey); trigger?.focus(); };
   }, [open]);
   const ok = !askReason || reason.trim().length >= 3;
   return (
@@ -39,9 +51,9 @@ export function ConfirmButton({ message, className, name, value, children, askRe
       </button>
       {askReason && <input type="hidden" name="reason" value={reason.trim()} />}
       {open && (
-        <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setOpen(false)}>
-          <div className="w-full max-w-sm space-y-3 rounded-lg bg-background p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
-            {title && <h2 className="font-heading text-xl">{title}</h2>}
+        <div role="dialog" aria-modal="true" aria-labelledby={title ? titleId : undefined} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setOpen(false)}>
+                  <div ref={dialogRef} className="w-full max-w-sm space-y-3 rounded-lg bg-background p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
+                    {title && <h2 id={titleId} className="font-heading text-xl">{title}</h2>}
             <p className="text-sm">{message}</p>
             {askReason && (
               <label className="block text-sm">{en ? "Reason (required)" : "Motif (obligatoire)"}
@@ -49,8 +61,8 @@ export function ConfirmButton({ message, className, name, value, children, askRe
               </label>
             )}
             <div className="flex justify-end gap-2">
-              <button type="button" className="inline-flex min-h-11 items-center rounded-md border px-4 text-sm" onClick={() => setOpen(false)}>{en ? "Cancel" : "Annuler"}</button>
-              <button type="button" disabled={!ok} className="inline-flex min-h-11 items-center rounded-md bg-primary px-4 text-sm text-primary-foreground disabled:opacity-50" onClick={() => { const b = ref.current; setOpen(false); b?.form?.requestSubmit(b); }}>{en ? "Confirm" : "Confirmer"}</button>
+              <button type="button" autoFocus={!askReason} className="inline-flex min-h-11 items-center rounded-md border px-4 text-sm" onClick={() => setOpen(false)}>{cancelLabel ?? (en ? "Cancel" : "Annuler")}</button>
+              <button type="button" disabled={!ok} className="inline-flex min-h-11 items-center rounded-md bg-primary px-4 text-sm text-primary-foreground disabled:opacity-50" onClick={() => { const b = ref.current; setOpen(false); b?.form?.requestSubmit(b); }}>{confirmLabel ?? (en ? "Confirm" : "Confirmer")}</button>
             </div>
           </div>
         </div>

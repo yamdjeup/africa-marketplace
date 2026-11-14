@@ -154,16 +154,16 @@ PrÃ©requis : `NEXT_PUBLIC_GA_ID` dÃ©fini (ex. G-XXXX) ; navigation privÃ©e
 ### T-COLIS â€” multi-colis et annulation
 PrÃ©requis : Client connectÃ© ; articles de 2 crÃ©ateurs ; 2 comptes crÃ©ateurs actifs.
 > **Note 15/11/2026** : faire ce test avec 2 pièces de 2 boutiques réellement distinctes (Mimi/LoliPat et Choupi/House of Marjón). L'incohérence vue sur AM-3427F8D2 (message « 2 colis », confirmation « Colis 1 sur 1 ») vient des données de test (œuvre Lozama Leombho rattachée à la boutique Mimi), pas d'un bug ; en production une boutique = un artiste.
-1. Panier avec 2 articles de 2 crÃ©ateurs : message Â« expÃ©diÃ©e en 2 colis, par 2 crÃ©ateurs diffÃ©rents, Ã  des dates diffÃ©rentes Â», Colis 1/2 et 2/2 avec Â« PrÃ©paration sous 2 jours ouvrÃ©s Â», aucune ligne de frais. Avec un seul crÃ©ateur : message au singulier.
-2. MÃªme bloc sur la page de paiement ; payer.
-3. Compte > Mes commandes > dÃ©tail : cartes Â« Colis 1 sur 2 Â» et Â« Colis 2 sur 2 Â», bouton Â« Annuler ma commande Â» sur chacune.
-4. Cliquer le bouton : confirmation ; Annuler ne fait rien.
-5. Confirmer : colis Â« AnnulÃ©e Â», mention de remboursement, commande globale non annulÃ©e.
-6. VÃ©rifier les e-mails (client et crÃ©ateur).
-7. CrÃ©ateur : passer l'autre colis Ã  Â« ExpÃ©diÃ© Â» : le bouton disparaÃ®t cÃ´tÃ© client, texte renvoyant au retour sous 30 jours ; mail Â« Colis 2 sur 2 Â».
-8. Annuler les 2 colis : Â« Commande annulÃ©e Â» ; tous livrÃ©s : Â« Commande livrÃ©e Â».
-9. Deux onglets : expÃ©dier dans l'un, annuler dans l'autre : aucune annulation.
-10. Avec un autre compte client : impossible d'annuler un colis Ã©tranger. Pages Aide FR/EN : texte d'annulation Ã  jour.
+1. Panier avec 2 articles de 2 crÃ©ateurs : message Â« expÃ©diÃ©e en 2 colis, par 2 crÃ©ateurs diffÃ©rents, Ã  des dates diffÃ©rentes Â», Colis 1/2 et 2/2 avec Â« PrÃ©paration sous 2 jours ouvrÃ©s Â», aucune ligne de frais. Avec un seul crÃ©ateur : message au singulier. — Validé 14/11/2026 : AM-4024EF61 (14/11/2026, Mimi 30 € + Choupi 380 €), captures utilisateur (message « 2 colis », Colis 1/2 et 2/2). Cas mono-créateur au singulier : non revu.
+2. MÃªme bloc sur la page de paiement ; payer. — Validé 14/11/2026 : AM-4024EF61 (14/11/2026, Mimi 30 € + Choupi 380 €), captures utilisateur (même bloc au paiement, confirmation « COLIS 1 SUR 2 / 2 SUR 2 »).
+3. Compte > Mes commandes > dÃ©tail : cartes Â« Colis 1 sur 2 Â» et Â« Colis 2 sur 2 Â», bouton Â« Annuler ma commande Â» sur chacune. — Validé 14/11/2026 : AM-4024EF61 (14/11/2026, Mimi 30 € + Choupi 380 €), captures utilisateur (cartes par colis).
+4. Cliquer le bouton : confirmation ; Annuler ne fait rien. — Validé 14/11/2026 : AM-4024EF61 (14/11/2026, Mimi 30 € + Choupi 380 €), captures utilisateur ; boîte de confirmation native du navigateur (OK/Cancel), remplacée ensuite par T-DIALOGUE-CONFIRM (à re-tester).
+5. Confirmer : colis Â« AnnulÃ©e Â», mention de remboursement, commande globale non annulÃ©e. — Validé 14/11/2026 : AM-4024EF61 (14/11/2026, Mimi 30 € + Choupi 380 €), captures utilisateur (colis 1 « Annulée », remboursement 30,00 €, colis 2 « À accepter », commande non annulée).
+6. VÃ©rifier les e-mails (client et crÃ©ateur). — Partiel 14/11/2026 : e-mail client d'annulation AM-4024EF61-1 reçu. E-mail d'annulation côté créateur (Mimi) : NON vu.
+7. CrÃ©ateur : passer l'autre colis Ã  Â« ExpÃ©diÃ© Â» : le bouton disparaÃ®t cÃ´tÃ© client, texte renvoyant au retour sous 30 jours ; mail Â« Colis 2 sur 2 Â». — Validé 14/11/2026 : AM-4024EF61 (14/11/2026, Mimi 30 € + Choupi 380 €), captures utilisateur (colis 2 Expédiée UPS, bouton d'annulation disparu, texte retour sous 30 jours ; e-mails client « commande acceptée AM-4024EF61-2 » et « expédiée » avec « Colis 2 sur 2 »).
+8. Annuler les 2 colis : Â« Commande annulÃ©e Â» ; tous livrÃ©s : Â« Commande livrÃ©e Â». — NON vu : annuler les 2 colis → « Commande annulée ».
+9. Deux onglets : expÃ©dier dans l'un, annuler dans l'autre : aucune annulation. — Non vu à la main ; couvert en CI (A-T4).
+10. Avec un autre compte client : impossible d'annuler un colis Ã©tranger. Pages Aide FR/EN : texte d'annulation Ã  jour. — Non vu à la main ; couvert en CI (A-T4 / A-T8).
 
 ### T-SUIVI â€” suivi de livraison et remboursement (lots 1â€“2)
 PrÃ©requis : migration 0020 appliquÃ©e.

@@ -12,25 +12,25 @@ export type ResetSender = (m: ResetMail) => Promise<unknown>;
 
 export const hashToken = (t: string) => createHash("sha256").update(t).digest("hex");
 
-/** Demande de réinitialisation : réponse toujours neutre ; 3 demandes/h par e-mail et par IP (comptées même si le compte n'existe pas). */
+/** Demande de réinitialisation : statut explicite (inconnu / social / envoyé / limité) ; 3 demandes/h par e-mail et par IP (comptées même si le compte n'existe pas). */
 export async function requestPasswordReset(db: PrismaClient, input: { email: string; ip: string; locale: "fr" | "en"; baseUrl: string }, send: ResetSender, now = new Date()) {
   const email = input.email.trim().toLowerCase();
   const keys = [`email:${email}`, ...(input.ip ? [`ip:${input.ip}`] : [])];
   const since = new Date(now.getTime() - HOUR);
   for (const key of keys) {
-    if ((await db.passwordResetAttempt.count({ where: { key, createdAt: { gt: since } } })) >= RESET_MAX_PER_HOUR) return { limited: true };
+    if ((await db.passwordResetAttempt.count({ where: { key, createdAt: { gt: since } } })) >= RESET_MAX_PER_HOUR) return { limited: true, status: "limited" as const };
   }
   await db.passwordResetAttempt.createMany({ data: keys.map((key) => ({ key, createdAt: now })) });
   const user = await db.user.findUnique({ where: { email } });
-  if (!user) return { limited: false };
+  if (!user) return { limited: false, status: "unknown" as const };
   if (isSocialAccount(user.passwordHash)) {
     await send({ to: user.email, locale: input.locale, url: `${input.baseUrl}/${input.locale}/login`, social: true });
-    return { limited: false };
+    return { limited: false, status: "social" as const };
   }
   const token = randomBytes(32).toString("base64url");
   await db.passwordResetToken.create({ data: { userId: user.id, tokenHash: hashToken(token), expiresAt: new Date(now.getTime() + RESET_TTL_MIN * 60_000) } });
   await send({ to: user.email, locale: input.locale, url: `${input.baseUrl}/${input.locale}/reset-password?token=${token}`, social: false });
-  return { limited: false };
+  return { limited: false, status: "sent" as const };
 }
 
 export type ResetResult = "ok" | "invalid" | "password";

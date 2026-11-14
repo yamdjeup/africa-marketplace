@@ -32,12 +32,13 @@ describe.skipIf(!enabled)("mot de passe oublié (base de test)", () => {
     await db.user.deleteMany({ where: { id: { in: [uid, socialId] } } });
   });
 
-  it("e-mail inconnu : réponse identique, aucun e-mail ni jeton ; compte social : e-mail sans lien de réinitialisation", async () => {
+  it("e-mail inconnu : statut explicite « unknown », aucun e-mail ni jeton ; compte social : e-mail sans lien de réinitialisation", async () => {
     const n = mails.length;
-    expect(await req(`inconnu-${tag}@test.example`, `ip-a-${tag}`)).toEqual({ limited: false });
+    expect(await req(`inconnu-${tag}@test.example`, `ip-a-${tag}`)).toEqual({ limited: false, status: "unknown" });
     expect(mails.length).toBe(n);
     await req(`soc-${tag}@test.example`, `ip-b-${tag}`);
     expect(mails.at(-1)?.social).toBe(true);
+    expect((await req(`soc-${tag}@test.example`, `ip-b2-${tag}`)).status).toBe("social");
     expect(mails.at(-1)?.url).not.toContain("token=");
   });
 
@@ -67,7 +68,9 @@ describe.skipIf(!enabled)("mot de passe oublié (base de test)", () => {
   it("limitation : 4e demande en 1 h refusée par e-mail et par IP, reprise après 1 h", async () => {
     const email = `lim-${tag}@test.example`;
     for (let i = 0; i < 3; i++) expect((await req(email, `ip-e${i}-${tag}`)).limited).toBe(false);
-    expect((await req(email, `ip-f-${tag}`)).limited).toBe(true);
+    const blocked = await req(email, `ip-f-${tag}`);
+    expect(blocked.limited).toBe(true);
+    expect(blocked.status).toBe("limited");
     const ip = `ip-g-${tag}`;
     for (let i = 0; i < 3; i++) expect((await req(`x${i}-${tag}@test.example`, ip)).limited).toBe(false);
     expect((await req(`y-${tag}@test.example`, ip)).limited).toBe(true);

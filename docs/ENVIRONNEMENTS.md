@@ -199,3 +199,26 @@ Hôtes Neon (hôte seul, jamais de mot de passe ni de chaîne de connexion compl
 | Vidage commit prod | **FAIT** le 15/11/2026 vers 15h13 (workflow « Vidage prod », run #3 ; le run #2 avait été refusé par le garde-fou : confirmation absente, rien modifié). AVANT : 10 User, 6 Category, 25 Product, 3 Supplier, 49 Order, 48 SubOrder, 17 MediaFile, 24 Favorite, 3 Address, 16 TilaRateHit. APRÈS COMMIT : 1 User, 6 Category, 0 pour le reste. epomta.com/fr vérifié visuellement (accueil vide sans erreur). Reste à vérifier : connexion admin et menu Administration. |
 
 Vidage commit prod : mode `commit`, confirmation exacte `OUI-VIDER-LA-PROD-epomta`. Secours (à conserver plusieurs semaines) : branche Neon `backup-avant-vidage`.
+
+## 11. Éléments critiques avant la mise en prod / ouverture au public
+
+- **Passer au flux protégé avant l'ouverture au public** : `emails-farfetch` → simu → test → preprod → test → `main` (prod). Aujourd'hui `main` (prod) reçoit le code en premier et simu/preprod suivent ; rien ne doit arriver en prod sans validation préalable en simu puis preprod.
+- **Stripe sandbox actif sur simu et preprod** (validé sur simu) ; clé live uniquement en prod au lancement.
+
+Séquence cmd (flux protégé) :
+
+```
+cd C:\Users\SF6521\PycharmProjects\afrique-marketplace
+git fetch
+git checkout simu
+git merge --no-ff emails-farfetch -m "merge emails-farfetch vers simu"
+git push origin simu
+REM tests manuels sur https://simu.epomta.com, puis :
+git checkout preprod
+git merge --no-ff simu -m "merge simu vers preprod"
+git push origin preprod
+REM tests sur https://preprod.epomta.com, puis :
+git checkout main
+git merge --no-ff preprod -m "merge preprod vers main (prod)"
+git push origin main
+```

@@ -7,6 +7,7 @@ const MSG: Record<string, [string, string]> = {
   photo: ["Ajoutez au moins une photo pour soumettre la création.", "Add at least one photo to submit the piece."],
   desc: ["La description doit faire au moins 20 caractères pour soumettre la création.", "The description must be at least 20 characters to submit the piece."],
   readonly: ["Vue en lecture seule : aucune modification possible.", "Read-only view: no changes possible."],
+  decided: ["L'admin a déjà statué sur cette création : la soumission ne peut plus être annulée.", "The admin has already decided on this piece: the submission can no longer be cancelled."],
 };
 
 export function productErrorMessage(code: string, locale: string) {

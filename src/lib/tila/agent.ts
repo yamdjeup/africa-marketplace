@@ -40,6 +40,12 @@ export async function runTila(model: ChatModel, history: TilaTurn[], locale: "fr
     const reply = await model.complete(messages, { tools: calls < MAX_TOOL_CALLS });
     if (!reply.toolCalls.length || calls >= MAX_TOOL_CALLS) {
       content = reply.content ?? "";
+      if (!content.trim()) {
+        // Réponse vide (ex. raisonnement sans texte) : une relance sans outils avec consigne explicite.
+        const nudge = locale === "en" ? "Answer now in plain text, using the results above." : "Réponds maintenant en texte, à partir des résultats ci-dessus.";
+        const retry = await model.complete([...messages, { role: "user", content: nudge }], { tools: false });
+        content = retry.content ?? "";
+      }
       break;
     }
     messages.push({ role: "assistant", content: reply.content, tool_calls: reply.toolCalls });

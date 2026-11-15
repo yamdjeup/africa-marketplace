@@ -57,6 +57,24 @@ describe("Tílá : validation de la sortie du modèle (faux modèle)", () => {
     expect(r.reply.length).toBeGreaterThan(0);
   });
 
+  it("relance une fois sans outils quand le modèle répond vide après la recherche", async () => {
+    const log: ChatMessage[][] = [];
+    const model = scripted([
+      { content: null, toolCalls: [call("rechercher_creations", {})] },
+      { content: "", toolCalls: [] },
+      { content: "Je vous propose [[a]].", toolCalls: [] },
+    ], log);
+    const r = await runTila(model, [{ role: "user", content: "une tenue pour la fête de fin d'année" }], "fr", deps([P("a")]));
+    expect(r.reply).toContain("Je vous propose");
+    expect(r.products.map((p) => p.slug)).toEqual(["a"]);
+    expect(log).toHaveLength(3);
+  });
+
+  it("garde le message de repli si la relance est aussi vide", async () => {
+    const r = await runTila(scripted([{ content: "", toolCalls: [] }]), [{ role: "user", content: "x" }], "fr", deps([]));
+    expect(r.reply).toContain("reformuler");
+  });
+
   it("limite à 3 pièces et masque e-mail et téléphone avant l'envoi au modèle", async () => {
     const log: ChatMessage[][] = [];
     const model = scripted([

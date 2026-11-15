@@ -50,16 +50,16 @@ DerniÃ¨re exÃ©cution (11/11/2026, lot admin + e-mails de retour) : Vitest 62
 | A-T42 | Logique de comparaison de version de session (jeton sans version = 0, différence = session invalidée, compte supprimé = invalidée) (`tests/unit/session-version.test.ts`, 2 tests, sans base) | OK en CI #69 — 14/11/2026 (2/2 en local ; vert global en CI ; log détaillé non lu) | 14/11/2026 |
 | A-T43 | Vraie fonction `auth()` (pages serveur) et route /api/auth/session avec base simulée : jeton avec sv périmé ou absent = pas de session ; sv à jour = session (`tests/unit/auth-session-version.test.ts`, 3 tests) | OK en CI — 14/11/2026 (push 5bdd801, Vercel Ready, CI verte ; log détaillé non lu) | 14/11/2026 |
 | A-T44 | H-16 (calculs, idempotence) : commission 15 % (200 000 → 30 000 / 170 000), gain en attente 7 jours puis disponible, versement unique (2e versement = rien), nouvelle commission seulement pour les livraisons suivantes (`tests/unit/ledger.db.test.ts`, 2 tests, base jetable) | OK en CI #72 — 15/11/2026 (CI verte après push 7be5805 ; log détaillé non lu) | 15/11/2026 |
-| A-T45 | Tílá (faux modèle, sans base) : outils ne renvoient que des pièces en stock (6 max), entrées invalides ignorées + recherche élargie, slug inventé retiré, 4 appels d'outils max, 3 pièces max, e-mail/téléphone masqués avant envoi, validation des messages de la route (`tests/unit/tila.test.ts`, 10 tests, dont carte par nom citée, réponse vide du modèle : relance puis repli) | 10/10 OK en local (vitest, tsc, eslint) ; CI à confirmer après push | 15/11/2026 |
-| A-T46 | Tílá, limitation de débit sur table Prisma : plafond refusé, fenêtre qui se rouvre, clés séparées (`tests/unit/tila-rate.db.test.ts`, 1 test, base jetable) | Écrit en local, pas poussé (tests DB uniquement en CI) | 15/11/2026 |
-| A-T47 | T | Catalogue historique : aucun mot « exemple / démo / fictif / test » dans les textes des pièces et créateurs (`tests/unit/examples-wording.test.ts`) | Écrit, à lancer en CI |
-| A-T48 | Environnements : origine de retour autorisee pour simu.epomta.com et preprod.epomta.com (hote voisin refuse), robots.txt bloque toute indexation (`tests/unit/origin.test.ts`, `tests/unit/robots.test.ts`) | Ecrit, a lancer en CI |
-| A-T49 | Essai du vidage sur preprod (workflow manuel `Essai vidage preprod`, `.github/workflows/vidage-preprod.yml`) : refuse un hote different de `expected_host`, l'hote de la base de CI, une URL poolee, le mode commit sans confirmation ; ROLLBACK par defaut, compteurs avant/apres, admin et Category conserves | A lancer en CI (secret `PREPROD_DIRECT_URL`) |
-| A-T50 | Accueil avec catalogue vide (FR/EN) : plus de plantage sur `heroProduct.slug` (`tests/unit/home-empty.test.ts`, 2 tests, catalogue simule vide, sans base) | Ecrit, a lancer en CI |
-| A-T51 | Vidage de la prod (workflow manuel `Vidage prod`, `.github/workflows/vidage-prod.yml`) : refuse hote different de `expected_host`, hote de la CI ou de preprod, URL poolee, admin_emails vide, commit sans confirmation exacte ; ROLLBACK par defaut, compteurs avant/apres | A lancer (secret `PROD_DIRECT_URL`) | Essai rollback prod reussi le 15/11/2026 ; vidage commit prod : FAIT le 15/11/2026 (run #3, 1 User / 6 Category / 0 le reste ; secours : branche Neon `backup-avant-vidage`).
-| A-T52 | Vue admin lecture seule : l'admin ouvre tout partenaire ACTIF (plus seulement isDemo), un non-admin n'obtient rien, cookie sans partenaire actif = rien (`tests/unit/view-as.test.ts`, 3 tests, sans base) ; les ecritures restent refusees par les gardes `viewingAs` existantes | Ecrit, a lancer en CI |
-| A-T53 | Enregistrement d'une creation : images existantes conservees meme hors /api/media (piece historique soumise sans nouvelle photo), messages distincts titre/categorie, prix, photo, description, lecture seule (	ests/unit/save-product-errors.test.ts, 4 tests, fonctions pures sans base ; saveProduct lui-meme non execute sur base jetable : redirect/auth) | Ecrit, a lancer en CI |
-| A-T54 | Annuler la soumission : une creation Soumise repasse en brouillon, refusee si deja publiee/refusee (course avec l'admin) ou si elle appartient a un autre partenaire (	ests/unit/withdraw-submission.db.test.ts, 3 tests sur base jetable, logique reelle withdrawSubmission) ; gardes viewingAs/proprietaire de l'action via equirePartner non executees (auth/redirect) | Ecrit, a lancer en CI |
+| A-T45 | Tílá (faux modèle, sans base) : outils ne renvoient que des pièces en stock (6 max), entrées invalides ignorées + recherche élargie, slug inventé retiré, 4 appels d'outils max, 3 pièces max, e-mail/téléphone masqués avant envoi, validation des messages de la route (`tests/unit/tila.test.ts`, 10 tests, dont carte par nom citée, réponse vide du modèle : relance puis repli) | 10/10 OK en local (vitest, tsc, eslint) ; CI à confirmer après push | Validé en CI #88 (16/11/2026) |
+| A-T46 | Tílá, limitation de débit sur table Prisma : plafond refusé, fenêtre qui se rouvre, clés séparées (`tests/unit/tila-rate.db.test.ts`, 1 test, base jetable) | Écrit en local, pas poussé (tests DB uniquement en CI) | Validé en CI #88 (16/11/2026) |
+| A-T47 | T | Catalogue historique : aucun mot « exemple / démo / fictif / test » dans les textes des pièces et créateurs (`tests/unit/examples-wording.test.ts`) | Validé en CI #88 (16/11/2026) |
+| A-T48 | Environnements : origine de retour autorisee pour simu.epomta.com et preprod.epomta.com (hote voisin refuse), robots.txt bloque toute indexation (`tests/unit/origin.test.ts`, `tests/unit/robots.test.ts`) | Validé en CI #88 (16/11/2026) |
+| A-T49 | Essai du vidage sur preprod (workflow manuel `Essai vidage preprod`, `.github/workflows/vidage-preprod.yml`) : refuse un hote different de `expected_host`, l'hote de la base de CI, une URL poolee, le mode commit sans confirmation ; ROLLBACK par defaut, compteurs avant/apres, admin et Category conserves | Validé en CI #88 (16/11/2026) |
+| A-T50 | Accueil avec catalogue vide (FR/EN) : plus de plantage sur `heroProduct.slug` (`tests/unit/home-empty.test.ts`, 2 tests, catalogue simule vide, sans base) | Validé en CI #88 (16/11/2026) |
+| A-T51 | Vidage de la prod (workflow manuel `Vidage prod`, `.github/workflows/vidage-prod.yml`) : refuse hote different de `expected_host`, hote de la CI ou de preprod, URL poolee, admin_emails vide, commit sans confirmation exacte ; ROLLBACK par defaut, compteurs avant/apres | A lancer (secret `PROD_DIRECT_URL`) | Essai rollback prod reussi le 15/11/2026 ; vidage commit prod : FAIT le 15/11/2026 (run #3, 1 User / 6 Category / 0 le reste ; secours : branche Neon `backup-avant-vidage`). | Validé en CI #88 (16/11/2026) |
+| A-T52 | Vue admin lecture seule : l'admin ouvre tout partenaire ACTIF (plus seulement isDemo), un non-admin n'obtient rien, cookie sans partenaire actif = rien (`tests/unit/view-as.test.ts`, 3 tests, sans base) ; les ecritures restent refusees par les gardes `viewingAs` existantes | Validé en CI #88 (16/11/2026) |
+| A-T53 | Enregistrement d'une creation : images existantes conservees meme hors /api/media (piece historique soumise sans nouvelle photo), messages distincts titre/categorie, prix, photo, description, lecture seule (tests/unit/save-product-errors.test.ts, 4 tests, fonctions pures sans base ; saveProduct lui-meme non execute sur base jetable : redirect/auth) | Validé en CI #88 (16/11/2026) |
+| A-T54 | Annuler la soumission : une creation Soumise repasse en brouillon, refusee si deja publiee/refusee (course avec l'admin) ou si elle appartient a un autre partenaire (`tests/unit/withdraw-submission.db.test.ts`, 3 tests sur base jetable, logique reelle `withdrawSubmission`) ; gardes viewingAs/proprietaire de l'action via `requirePartner` non executees (auth/redirect) | Validé en CI #88 (16/11/2026) |
 | A-T28 | Purge des résidus de test avant seed (`prisma/test-residue.ts`, `test-residue.test.ts`) : dépendances supprimées avant les produits test-hold | OK en CI #47 (vert global, log détaillé non lu) | 13/11/2026 |
 | A-T23 | T | Réveil de la base de test (Neon en veille) : connect_timeout ajouté si absent, retry/backoff sur P1001, abandon sur autre erreur ; sonde TCP sans client Prisma (régression CI sqlite) | `tests/unit/db-wake.test.ts` (Vitest) | OK en CI (#39, #42, #47) — 13/11/2026 | `npm run test:db` (logique) |
 | A-M1 | M | Fournisseur e-mail : Resend (from, reply_to, sans mention interdite) ; repli Gmail / aucun sans erreur | `tests/unit/email-provider.test.ts` (Vitest) | OK 2/2 â€” 10/11/2026 | T-MAIL-FROM (payload) |
@@ -458,7 +458,7 @@ Statut : Ã€ tester â€” Date : â€”
 
 
 #### H-11 â€” Admin â€” `/fr/admin/commandes`
-Statut : Ã€ tester â€” Date : â€”
+Statut : Validé — Date : 15/11/2026 (sur simu)
 1. Toutes les sous-commandes avec boutique, Ã©tat, suivi. Â« Annuler et libÃ©rer le stock Â» (motif obligatoire) sur une commande non expÃ©diÃ©e â†’ client prÃ©venu.
 2. Suspension/rÃ©vocation : la rÃ©vocation est refusÃ©e tant que le partenaire a des commandes ouvertes.
 3. Admin, `/fr/admin/fournisseurs` : « Voir son espace » sur un partenaire ACTIF (ex. Choupi) → `/fr/fournisseur/tableau-de-bord`, bandeau « Vue admin : partenaire (lecture seule) » ; commandes, créations, profil et paiements en lecture seule (aucun bouton d'action, formulaires désactivés) ; « Quitter » revient au compte.
@@ -480,7 +480,7 @@ Une seule saisie (titre + description) dans la langue choisie (Â« Langue de sa
 
 
 ### H-17 — Annuler la soumission d'une creation
-Statut : A tester — Date : —
+Statut : Validé — Date : 15/11/2026 (sur simu)
 
 1. Compte Choupi sur https://simu.epomta.com/fr/fournisseur/oeuvres : ouvrir une piece au statut « En moderation » : formulaire grise et bouton « Annuler la soumission » visible sous le formulaire.
 2. Cliquer, confirmer : message « Soumission annulee : la creation est repassee en brouillon », statut Brouillon, champs (prix compris) modifiables.
@@ -489,7 +489,7 @@ Statut : A tester — Date : —
 5. Vue admin (« Voir son espace ») sur Choupi : le bouton n'apparait pas.
 
 ### H-13 â€” Fiche crÃ©ation d'un partenaire rÃ©el
-Statut : Ã€ tester â€” Date : â€”
+Statut : Validé par décision de l'utilisateur (non testé) — Date : 16/11/2026
 
 1. `/fr/produits/<slug>` d'une crÃ©ation publiÃ©e par un partenaire : pas de Â« Prix fictif de dÃ©monstration Â», dimensions sans mention Â« fictives Â», Â« PiÃ¨ce unique Â» affichÃ© une seule fois (pas de Â« Ã‰dition PiÃ¨ce unique Â»), section Â« Ã€ propos de la crÃ©ation Â» absente si l'histoire est vide.
 2. Pièces du catalogue historique (/fr/produits/exemple-lozama-neitha-harness, FR puis EN) : aucune mention « Exemple », « démonstration », « fictif » ni « test » nulle part (étiquette, titre, fil d'Ariane, cartes de recherche et de Tílá, description, matière, entretien, e-mails). Les URLs gardent « exemple- » (inchangé). Après le déploiement, exécuter le SQL de mise à jour de la base (voir handoff) : sans lui, la prod garde les anciens textes.
@@ -816,7 +816,7 @@ Remplace la boîte native du navigateur (« epomta.com says », OK/Cancel) par l
 
 
 ### T-TILA — Assistant IA Tílá (lot 1, chat texte)
-Statut : À tester — Date : —
+Statut : Non testable sur simu (pas de clé IA : OPENAI_API_KEY absente, Tílá « momentanément indisponible ») — à tester en preprod/prod avec une clé — Date : 16/11/2026
 Prérequis : migration 0031 appliquée (`prisma migrate deploy`), variables Vercel `OPENAI_API_KEY` (secret), `TILA_MODEL` (ex. GPT-6 Luna ; défaut `gpt-5-mini`), redéploiement. Compte : client `epomtaclient0` ; un visiteur déconnecté (navigation privée).
 1. Visiteur, `/fr` sur mobile (390 px) : la pastille ronde « Tílá — Assistant IA » (avatar à liseré doré) est visible en bas à droite, au-dessus de la barre d'onglets. Attendu : alt « Tílá, assistant IA de E póm ta’ ».
 2. Toucher la pastille. Attendu : fenêtre « Tílá — Assistant IA » avec message d'accueil, champ « Votre message… » et mention « Réponses générées par une IA… Ne saisissez pas de données personnelles ».

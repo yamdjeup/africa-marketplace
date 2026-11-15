@@ -75,6 +75,15 @@ describe("Tílá : validation de la sortie du modèle (faux modèle)", () => {
     expect(r.reply).toContain("reformuler");
   });
 
+  it("affiche la carte d'une pièce citée par son nom sans balise", async () => {
+    const model = scripted([
+      { content: null, toolCalls: [call("rechercher_creations", {})] },
+      { content: "Essayez Pièce a ou Pièce b [[b]].", toolCalls: [] },
+    ]);
+    const r = await runTila(model, [{ role: "user", content: "x" }], "fr", deps([P("a"), P("b")]));
+    expect(r.products.map((p) => p.slug).sort()).toEqual(["a", "b"]);
+  });
+
   it("limite à 3 pièces et masque e-mail et téléphone avant l'envoi au modèle", async () => {
     const log: ChatMessage[][] = [];
     const model = scripted([

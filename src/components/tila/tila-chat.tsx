@@ -14,6 +14,7 @@ const T = {
     badge: "Assistant IA",
     open: "Ouvrir Tílá, l'assistant IA d'achat",
     close: "Fermer",
+    enlarge: "Agrandir la photo de Tílá",
     alt: "Tílá, assistant IA de E póm ta’",
     hello: "Bonjour, je suis Tílá, votre assistant IA. Dites-moi ce que vous cherchez (occasion, tissu, budget) et je vous montre des pièces en stock.",
     placeholder: "Votre message…",
@@ -27,6 +28,7 @@ const T = {
     badge: "AI assistant",
     open: "Open Tílá, the AI shopping assistant",
     close: "Close",
+    enlarge: "Enlarge Tílá's photo",
     alt: "Tílá, AI assistant of E póm ta’",
     hello: "Hello, I'm Tílá, your AI assistant. Tell me what you are looking for (occasion, fabric, budget) and I'll show you pieces in stock.",
     placeholder: "Your message…",
@@ -44,6 +46,7 @@ export function TilaChat({ locale }: { locale: Locale }) {
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [zoom, setZoom] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const openerRef = useRef<HTMLButtonElement>(null);
@@ -53,13 +56,14 @@ export function TilaChat({ locale }: { locale: Locale }) {
     inputRef.current?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
+        if (zoom) return setZoom(false);
         setOpen(false);
         openerRef.current?.focus();
       }
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [open]);
+  }, [open, zoom]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "end" });
@@ -121,7 +125,9 @@ export function TilaChat({ locale }: { locale: Locale }) {
           className="fixed inset-x-2 bottom-2 z-50 flex max-h-[80vh] flex-col rounded-xl border bg-background shadow-2xl md:inset-x-auto md:bottom-6 md:right-4 md:w-96"
         >
           <header className="flex items-center gap-3 border-b p-3">
-            {avatar(40)}
+            <button type="button" onClick={() => setZoom(true)} aria-label={t.enlarge} className="rounded-full">
+              {avatar(40)}
+            </button>
             <div className="flex-1 leading-tight">
               <p className="font-semibold">{t.name}</p>
               <p className="text-xs text-muted-foreground">{t.badge}</p>
@@ -162,6 +168,14 @@ export function TilaChat({ locale }: { locale: Locale }) {
           </form>
           <p className="px-3 pb-2 text-[11px] text-muted-foreground">{t.notice}</p>
         </section>
+      )}
+      {open && zoom && (
+        <div role="dialog" aria-modal="true" aria-label={t.alt} onClick={() => setZoom(false)} className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4">
+          <button type="button" autoFocus onClick={() => setZoom(false)} aria-label={t.close} className="absolute right-3 top-3 rounded bg-white/90 px-3 py-1 text-2xl leading-none text-black">
+            ×
+          </button>
+          <Image src="/tila-avatar.jpeg" alt={t.alt} width={1254} height={1254} onClick={(e) => e.stopPropagation()} className="max-h-[85vh] w-auto max-w-full rounded-lg object-contain" />
+        </div>
       )}
     </>
   );

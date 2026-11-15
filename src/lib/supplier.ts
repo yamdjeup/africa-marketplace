@@ -35,6 +35,6 @@ export async function getPortalContext(): Promise<PortalContext | null> {
   if (!isAdminEmail(session.user.email)) return null;
   const id = (await cookies()).get(VIEW_AS_COOKIE)?.value;
   if (!id) return null;
-  const demo = await db.supplier.findFirst({ where: { id, isDemo: true, status: "ACTIVE" } });
+  const demo = await db.supplier.findFirst({ where: { id, status: "ACTIVE" } });
   return demo ? { supplier: demo, viewingAs: true } : null;
 }

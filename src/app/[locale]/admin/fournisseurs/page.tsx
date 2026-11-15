@@ -81,7 +81,7 @@ export default async function SuppliersPage({ params, searchParams }: { params: 
                 <td className="whitespace-nowrap p-2">{s.createdAt.toLocaleDateString(dateFmt)}</td>
                 <td className="p-2">
                   <div className="flex items-center justify-end gap-2 whitespace-nowrap">
-                    {s.isDemo && (
+                    {s.status === "ACTIVE" && (
                       <form action={setViewAs}>
                         <input type="hidden" name="locale" value={locale} />
                         <input type="hidden" name="supplierId" value={s.id} />

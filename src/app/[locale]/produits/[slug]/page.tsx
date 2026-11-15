@@ -90,7 +90,6 @@ export default async function ProductPage({ params }: Props) {
             <div className="flex items-center justify-between gap-2">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="secondary">{categoryLabel}</Badge>
-                {p.isExample && <Badge variant="outline">{t.example}</Badge>}
               </div>
               <div className="flex items-center gap-2">
                 <ShareButton title={p.name} text={`${p.name} — ${creator.name}`} label={locale === "fr" ? "Partager cette création" : "Share this creation"} />

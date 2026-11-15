@@ -52,6 +52,7 @@ DerniÃ¨re exÃ©cution (11/11/2026, lot admin + e-mails de retour) : Vitest 62
 | A-T44 | H-16 (calculs, idempotence) : commission 15 % (200 000 → 30 000 / 170 000), gain en attente 7 jours puis disponible, versement unique (2e versement = rien), nouvelle commission seulement pour les livraisons suivantes (`tests/unit/ledger.db.test.ts`, 2 tests, base jetable) | OK en CI #72 — 15/11/2026 (CI verte après push 7be5805 ; log détaillé non lu) | 15/11/2026 |
 | A-T45 | Tílá (faux modèle, sans base) : outils ne renvoient que des pièces en stock (6 max), entrées invalides ignorées + recherche élargie, slug inventé retiré, 4 appels d'outils max, 3 pièces max, e-mail/téléphone masqués avant envoi, validation des messages de la route (`tests/unit/tila.test.ts`, 10 tests, dont carte par nom citée, réponse vide du modèle : relance puis repli) | 10/10 OK en local (vitest, tsc, eslint) ; CI à confirmer après push | 15/11/2026 |
 | A-T46 | Tílá, limitation de débit sur table Prisma : plafond refusé, fenêtre qui se rouvre, clés séparées (`tests/unit/tila-rate.db.test.ts`, 1 test, base jetable) | Écrit en local, pas poussé (tests DB uniquement en CI) | 15/11/2026 |
+| A-T47 | T | Catalogue historique : aucun mot « exemple / démo / fictif / test » dans les textes des pièces et créateurs (`tests/unit/examples-wording.test.ts`) | Écrit, à lancer en CI |
 | A-T28 | Purge des résidus de test avant seed (`prisma/test-residue.ts`, `test-residue.test.ts`) : dépendances supprimées avant les produits test-hold | OK en CI #47 (vert global, log détaillé non lu) | 13/11/2026 |
 | A-T23 | T | Réveil de la base de test (Neon en veille) : connect_timeout ajouté si absent, retry/backoff sur P1001, abandon sur autre erreur ; sonde TCP sans client Prisma (régression CI sqlite) | `tests/unit/db-wake.test.ts` (Vitest) | OK en CI (#39, #42, #47) — 13/11/2026 | `npm run test:db` (logique) |
 | A-M1 | M | Fournisseur e-mail : Resend (from, reply_to, sans mention interdite) ; repli Gmail / aucun sans erreur | `tests/unit/email-provider.test.ts` (Vitest) | OK 2/2 â€” 10/11/2026 | T-MAIL-FROM (payload) |
@@ -475,7 +476,7 @@ Une seule saisie (titre + description) dans la langue choisie (Â« Langue de sa
 Statut : Ã€ tester â€” Date : â€”
 
 1. `/fr/produits/<slug>` d'une crÃ©ation publiÃ©e par un partenaire : pas de Â« Prix fictif de dÃ©monstration Â», dimensions sans mention Â« fictives Â», Â« PiÃ¨ce unique Â» affichÃ© une seule fois (pas de Â« Ã‰dition PiÃ¨ce unique Â»), section Â« Ã€ propos de la crÃ©ation Â» absente si l'histoire est vide.
-2. Les piÃ¨ces du catalogue de dÃ©mo historique (Â« exemple-â€¦ Â») gardent leurs mentions de dÃ©monstration.
+2. Pièces du catalogue historique (/fr/produits/exemple-lozama-neitha-harness, FR puis EN) : aucune mention « Exemple », « démonstration », « fictif » ni « test » nulle part (étiquette, titre, fil d'Ariane, cartes de recherche et de Tílá, description, matière, entretien, e-mails). Les URLs gardent « exemple- » (inchangé). Après le déploiement, exécuter le SQL de mise à jour de la base (voir handoff) : sans lui, la prod garde les anciens textes.
 
 
 ### H-14 â€” Lot D â€” Paiements (test)

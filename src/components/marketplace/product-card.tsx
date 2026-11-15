@@ -32,7 +32,6 @@ export function ProductCard({ product, locale, soldOut }: { product: ProductView
           />
         )}
         <div className="absolute left-2 top-2 flex flex-col items-start gap-1">
-          {product.isExample && <Badge variant="outline" className="bg-background">{t.example}</Badge>}
           {product.stock === 1 && !product.isExample && <Badge variant="secondary">{t.badgeUnique}</Badge>}
           {product.isNew && <Badge>{t.badgeNew}</Badge>}
         </div>

@@ -13,6 +13,7 @@ import { notifyLowStock, snapshotAvail } from "@/lib/stock-alerts";
 import { ensureCreator } from "@/lib/partner-creator";
 import { getPortalContext, isAdminEmail } from "@/lib/supplier";
 import { emailAdminProductSubmitted } from "@/lib/supplier-email";
+import { splitImageUrls } from "@/lib/image-urls";
 
 const s = (f: FormData, k: string, max = 4000) => String(f.get(k) ?? "").trim().slice(0, max);
 const loc = (f: FormData) => (s(f, "locale") === "en" ? "en" : "fr");
@@ -53,17 +54,13 @@ async function ownedProduct(slug: string, supplierId: string) {
 
 // Garde uniquement les URL /api/media/<id> appartenant au compte (aucune URL externe).
 async function ownedUrls(raw: string, ownerIds: string | string[], max: number, keep: string[] = []) {
-  let list: unknown = [];
-  try {
-    list = JSON.parse(raw);
-  } catch {}
-  const urls = (Array.isArray(list) ? list : []).map(String).filter((u) => /^\/api\/media\/[\w-]+$/.test(u)).slice(0, max);
+  const { urls, media, kept } = splitImageUrls(raw, max, keep);
   if (urls.length === 0) return [];
-  const ids = urls.map((u) => u.split("/").pop()!);
-  const rows = await db.mediaFile.findMany({ where: { id: { in: ids }, ownerUserId: { in: Array.isArray(ownerIds) ? ownerIds : [ownerIds] } }, select: { id: true } });
-  // `keep` : médias déjà attachés à l'œuvre (ex. saisis par l'admin), conservés lors d'une modification par le partenaire.
-  const ok = new Set([...rows.map((r) => r.id), ...keep.map((u) => u.split("/").pop()!)]);
-  return urls.filter((u) => ok.has(u.split("/").pop()!));
+  const ids = media.map((u) => u.split("/").pop()!);
+  const rows = ids.length ? await db.mediaFile.findMany({ where: { id: { in: ids }, ownerUserId: { in: Array.isArray(ownerIds) ? ownerIds : [ownerIds] } }, select: { id: true } }) : [];
+  // `kept` : images déjà attachées à l'œuvre (saisies par l'admin, historiques), conservées lors d'une modification.
+  const ok = new Set(rows.map((r) => r.id));
+  return urls.filter((u) => kept.includes(u) || ok.has(u.split("/").pop()!));
 }
 
 export async function saveProduct(formData: FormData) {
@@ -122,7 +119,8 @@ export async function saveProduct(formData: FormData) {
   if (priceCents < 100) fail("price");
 
   const photos = await ownedUrls(s(formData, "photos", 4000), ownerIds, 6, Array.isArray(existing?.images) ? (existing!.images as string[]) : []);
-  if (intent !== "draft" && (photos.length === 0 || mainDesc.length < 20)) fail("incomplete");
+  if (intent !== "draft" && photos.length === 0) fail("photo");
+  if (intent !== "draft" && mainDesc.length < 20) fail("desc");
 
   const isArt = ART_CATEGORIES.includes(categorySlug);
   const edition = isArt ? s(formData, "edition", 40) || null : null;

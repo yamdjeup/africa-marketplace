@@ -174,8 +174,8 @@ export function TilaChat({ locale }: { locale: Locale }) {
           <button type="button" autoFocus onClick={() => setZoom(false)} aria-label={t.close} className="absolute right-3 top-3 rounded bg-white/90 px-3 py-1 text-2xl leading-none text-black">
             ×
           </button>
-          <div onClick={(e) => e.stopPropagation()} className="aspect-square w-[min(85vw,85vh,32rem)] overflow-hidden rounded-full border-4 border-amber-500">
-            <Image src="/tila-avatar.jpeg" alt={t.alt} width={1254} height={1254} className="h-full w-full scale-[1.04] object-cover" />
+          <div onClick={(e) => e.stopPropagation()} className="          aspect-square w-[min(85vw,85vh,32rem)] shrink-0 overflow-hidden rounded-full">
+                      <Image src="/tila-avatar.jpeg" alt={t.alt} width={1208} height={1208} className="h-full w-full object-cover object-center" />
           </div>
         </div>
       )}

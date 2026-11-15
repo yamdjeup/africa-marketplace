@@ -196,6 +196,6 @@ Hôtes Neon (hôte seul, jamais de mot de passe ni de chaîne de connexion compl
 | Preprod vidée réellement | FAIT (workflow « Essai vidage preprod », rollback puis commit, 15/11/2026) |
 | Accueil sur base vide corrigé | FAIT (A-T50) |
 | Essai rollback prod | FAIT (workflow « Vidage prod », 15/11/2026, compteurs identiques avant/après) |
-| Vidage commit prod | **À EXÉCUTER** (passer à « fait » seulement sur preuve : logs du workflow) |
+| Vidage commit prod | **FAIT** le 15/11/2026 vers 15h13 (workflow « Vidage prod », run #3 ; le run #2 avait été refusé par le garde-fou : confirmation absente, rien modifié). AVANT : 10 User, 6 Category, 25 Product, 3 Supplier, 49 Order, 48 SubOrder, 17 MediaFile, 24 Favorite, 3 Address, 16 TilaRateHit. APRÈS COMMIT : 1 User, 6 Category, 0 pour le reste. epomta.com/fr vérifié visuellement (accueil vide sans erreur). Reste à vérifier : connexion admin et menu Administration. |
 
-Vidage commit prod : mode `commit`, confirmation exacte `OUI-VIDER-LA-PROD-epomta`. Secours : branche Neon `backup-avant-vidage`.
+Vidage commit prod : mode `commit`, confirmation exacte `OUI-VIDER-LA-PROD-epomta`. Secours (à conserver plusieurs semaines) : branche Neon `backup-avant-vidage`.

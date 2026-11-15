@@ -7,6 +7,7 @@ import { auth } from "@/auth";
 import { MobileTabBar } from "@/components/marketplace/mobile-tab-bar";
 import { NativeBridge } from "@/components/marketplace/native-bridge";
 import { SiteHeader } from "@/components/marketplace/site-header";
+import { TilaChat } from "@/components/tila/tila-chat";
 import { CartProvider } from "@/lib/cart";
 import { FavoritesProvider } from "@/lib/favorites";
 import { getDict, isLocale } from "@/lib/i18n";
@@ -74,6 +75,7 @@ export default async function LocaleLayout({
           </main>
           <SiteFooter locale={locale} />
           <MobileTabBar locale={locale} loggedIn={Boolean((await auth())?.user)} />
+          <TilaChat locale={locale} />
           </FavoritesProvider>
         </CartProvider>
         {gaId && <CookieConsent locale={locale} gaId={gaId} />}

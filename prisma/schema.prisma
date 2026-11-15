@@ -506,3 +506,12 @@ model PasswordResetAttempt {
 
   @@index([key, createdAt])
 }
+
+/// Limitation de debit de l'assistante Tila : une ligne par message, cle = IP hachee ou compte.
+model TilaRateHit {
+  id        String   @id @default(cuid())
+  key       String
+  createdAt DateTime @default(now())
+
+  @@index([key, createdAt])
+}

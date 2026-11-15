@@ -14,6 +14,7 @@ import { ensureCreator } from "@/lib/partner-creator";
 import { getPortalContext, isAdminEmail } from "@/lib/supplier";
 import { emailAdminProductSubmitted } from "@/lib/supplier-email";
 import { splitImageUrls } from "@/lib/image-urls";
+import { withdrawSubmission } from "@/lib/product-withdraw";
 
 const s = (f: FormData, k: string, max = 4000) => String(f.get(k) ?? "").trim().slice(0, max);
 const loc = (f: FormData) => (s(f, "locale") === "en" ? "en" : "fr");
@@ -230,6 +231,18 @@ export async function submitProduct(formData: FormData) {
   await db.product.update({ where: { slug: p.slug }, data: { status: "SUBMITTED", submittedAt: new Date(), rejectReason: null, decidedAt: null } });
   await emailAdminProductSubmitted(supplier.displayName, p.name);
   redirect(`${back}?saved=submit`);
+}
+
+export async function withdrawProduct(formData: FormData) {
+  const locale = loc(formData);
+  const { supplier } = await requirePartner(locale);
+  const slug = s(formData, "slug", 120);
+  const back = `/${locale}/fournisseur/oeuvres/${slug}`;
+  const r = await withdrawSubmission(db, slug, supplier.id);
+  if (r === "notfound") redirect(`/${locale}/fournisseur/oeuvres`);
+  revalidatePath("/[locale]/fournisseur/oeuvres", "page");
+  revalidatePath("/[locale]/admin/oeuvres", "page");
+  redirect(r === "ok" ? `${back}?saved=withdrawn` : `${back}?error=decided`);
 }
 
 export async function deleteProduct(formData: FormData) {

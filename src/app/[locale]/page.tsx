@@ -80,6 +80,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: L
             <span className="max-md:hidden">{t.home.heroCta}</span>
           </Link>
         </div>
+        {heroProduct ? (
         <Link
           href={`/${locale}/produits/${heroProduct.slug}`}
           className="relative block aspect-[4/3] overflow-hidden rounded-lg bg-muted max-md:-mx-4 max-md:order-first max-md:aspect-[4/5] max-md:rounded-none lg:aspect-auto lg:h-[34rem] lg:rounded-none"
@@ -95,6 +96,11 @@ export default async function HomePage({ params }: { params: Promise<{ locale: L
           />
           <div className="kente-band absolute inset-x-0 bottom-0 h-2" />
         </Link>
+        ) : (
+          <div className="relative block aspect-[4/3] overflow-hidden rounded-lg bg-muted max-md:-mx-4 max-md:order-first max-md:rounded-none lg:aspect-auto lg:h-[34rem] lg:rounded-none">
+            <div className="kente-band absolute inset-x-0 bottom-0 h-2" />
+          </div>
+        )}
       </section>
 
       <section aria-labelledby="cats" className="space-y-4">

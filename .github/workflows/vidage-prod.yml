@@ -1,0 +1,106 @@
+name: Vidage prod
+
+# Vidage de la PROD (docs/ENVIRONNEMENTS.md §5). Autorisé par l'utilisateur ; preprod déjà vidée et validée.
+# Manuel. Par défaut : ROLLBACK (rien n'est modifié). Refuse toute base autre que celle annoncée.
+on:
+  workflow_dispatch:
+    inputs:
+      expected_host:
+        description: "Hôte Neon de la PROD (copié depuis Neon, sans mot de passe), ex. ep-xxx.eu-central-1.aws.neon.tech"
+        required: true
+      admin_emails:
+        description: "Adresses admin à conserver, séparées par des virgules"
+        required: true
+      mode:
+        description: "rollback (essai, défaut) ou commit (vide réellement la prod)"
+        required: true
+        default: rollback
+        type: choice
+        options: [rollback, commit]
+      confirmation:
+        description: "Pour le mode commit uniquement : saisir OUI-VIDER-LA-PROD-epomta"
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  vidage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PROD_DIRECT_URL: ${{ secrets.PROD_DIRECT_URL }}
+      PREPROD_DIRECT_URL: ${{ secrets.PREPROD_DIRECT_URL }}
+      TEST_DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+      EXPECTED_HOST: ${{ inputs.expected_host }}
+      ADMIN_EMAILS_KEEP: ${{ inputs.admin_emails }}
+      MODE: ${{ inputs.mode }}
+      CONFIRM: ${{ inputs.confirmation }}
+    steps:
+      - name: Garde-fous
+        run: |
+          set -eu
+          [ -n "$PROD_DIRECT_URL" ] || { echo "Secret PROD_DIRECT_URL absent"; exit 1; }
+          host=$(printf '%s' "$PROD_DIRECT_URL" | sed -E 's#^[a-z]+://[^@]*@([^/:?]+).*#\1#')
+          [ "$host" = "$EXPECTED_HOST" ] || { echo "Refus : l'hote du secret ne correspond pas a expected_host"; exit 1; }
+          if [ -n "$TEST_DATABASE_URL" ]; then
+            ci=$(printf '%s' "$TEST_DATABASE_URL" | sed -E 's#^[a-z]+://[^@]*@([^/:?]+).*#\1#')
+            [ "$host" != "$ci" ] || { echo "Refus : meme hote que la base de CI"; exit 1; }
+          fi
+          if [ -n "$PREPROD_DIRECT_URL" ]; then
+                      pp=$(printf '%s' "$PREPROD_DIRECT_URL" | sed -E 's#^[a-z]+://[^@]*@([^/:?]+).*#\1#')
+                      [ "$host" != "$pp" ] || { echo "Refus : meme hote que preprod"; exit 1; }
+                    fi
+                    case "$host" in *-pooler*) echo "Refus : utiliser l'URL DIRECTE (sans -pooler)"; exit 1;; esac
+          if [ "$MODE" = "commit" ] && [ "$CONFIRM" != "OUI-VIDER-LA-PROD-epomta" ]; then
+            echo "Refus : confirmation absente pour le mode commit"; exit 1
+          fi
+          [ -n "$ADMIN_EMAILS_KEEP" ] || { echo "Refus : admin_emails vide"; exit 1; }
+          echo "Hote verifie : $host (mode $MODE)"
+
+      - name: Vidage (compteurs avant/après)
+        run: |
+          set -eu
+          if [ "$MODE" = "commit" ]; then END="COMMIT;"; else END="ROLLBACK;"; fi
+          admins=$(printf '%s' "$ADMIN_EMAILS_KEEP" | tr 'A-Z' 'a-z' | tr -d ' ')
+          counts="SELECT 'User' AS t, count(*) FROM \"User\"
+            UNION ALL SELECT 'Category', count(*) FROM \"Category\"
+            UNION ALL SELECT 'Product', count(*) FROM \"Product\"
+            UNION ALL SELECT 'Supplier', count(*) FROM \"Supplier\"
+            UNION ALL SELECT 'Order', count(*) FROM \"Order\"
+            UNION ALL SELECT 'SubOrder', count(*) FROM \"SubOrder\"
+            UNION ALL SELECT 'MediaFile', count(*) FROM \"MediaFile\"
+            UNION ALL SELECT 'Favorite', count(*) FROM \"Favorite\"
+            UNION ALL SELECT 'Address', count(*) FROM \"Address\"
+            UNION ALL SELECT 'TilaRateHit', count(*) FROM \"TilaRateHit\";"
+          psql "$PROD_DIRECT_URL" -v ON_ERROR_STOP=1 -v admins="$admins" <<SQL
+          SELECT current_database() AS base, current_user AS utilisateur;
+          \echo '--- AVANT ---'
+          $counts
+          BEGIN;
+          SET LOCAL app.vidage_confirme = 'OUI-VIDER-LA-PROD-epomta';
+          DO \$\$
+          BEGIN
+            IF coalesce(current_setting('app.vidage_confirme', true), '') <> 'OUI-VIDER-LA-PROD-epomta' THEN
+              RAISE EXCEPTION 'Vidage refuse : confirmation absente';
+            END IF;
+          END \$\$;
+          TRUNCATE
+            "OrderItem", "SubOrder", "ReturnRequest", "LedgerEntry", "Payout", "Order",
+            "CheckoutHold", "CartInterest", "RestockWatch",
+            "StockMovement", "ProductVariant", "Product", "CreatorSlugAlias", "Creator",
+            "MediaFile",
+            "PartnerAudit", "ApplicationFile", "SupplierApplication", "Supplier",
+            "PushSubscription", "Favorite", "Address",
+            "PasswordResetToken", "PasswordResetAttempt", "TilaRateHit"
+          CASCADE;
+          DELETE FROM "User" WHERE lower(email) <> ALL (string_to_array(:'admins', ','));
+          \echo '--- APRES (dans la transaction) ---'
+          $counts
+          $END
+          \echo '--- FIN : $END ---'
+          SQL
+          if [ "$MODE" != "commit" ]; then
+            echo "--- VERIFICATION : rien n'a change (apres ROLLBACK) ---"
+            psql "$PROD_DIRECT_URL" -v ON_ERROR_STOP=1 -c "$counts"
+          fi

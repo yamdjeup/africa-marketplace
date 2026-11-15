@@ -95,8 +95,8 @@ Règle ferme : **on ne vide jamais la prod avant que sa copie soit faite ET vér
     - [ ] Aucun e-mail réel envoyé depuis simu pendant les tests.
     - **STOP : ne pas continuer sans l'accord écrit de l'utilisateur** (message explicite « OK vider la prod »). Sans cet accord, s'arrêter ici : la prod reste intacte.
 17. Après l'accord écrit : annoncer la fenêtre de maintenance ; re-créer une branche Neon de secours fraîche `secours-avant-vidage-AAAAMMJJ` depuis `main` (même si celle de l'étape 1 existe) et contrôler qu'elle est visible dans Neon > Branches. Ne pas la supprimer avant plusieurs semaines.
-18. Essayer d'abord le script §5 sur la branche `preprod` (copie de la prod) pour valider le résultat.
-19. Exécuter le script §5 sur la branche `main`, dans la console SQL Neon : le nom de la base et de la branche s'affichent en tête ; relire avant de lancer. Par défaut le script s'annule (ROLLBACK) : il faut éditer volontairement deux lignes (confirmation et COMMIT).
+18. Essai du script §5 sur `preprod` : FAIT et validé (workflow `Essai vidage preprod`, rollback puis commit : 1 User admin, 6 Category, le reste à 0). Le bug d'accueil sur base vide (`heroProduct` undefined) a été corrigé (A-T50).
+19. Vidage de la prod, autorisé par l'utilisateur : workflow manuel `Vidage prod` (`.github/workflows/vidage-prod.yml`, secret `PROD_DIRECT_URL` = URL Neon DIRECTE de la branche production). Lancer d'abord en mode rollback (défaut), lire les compteurs avant/après, puis mode commit avec la confirmation `OUI-VIDER-LA-PROD-epomta`. Prérequis : branche de secours Neon (étape 17) et accord écrit.
 20. Vérifier : connexion admin sur epomta.com ; catalogue vide (accueil sans erreur) ; `ADMIN_EMAILS` de la prod = adresse(s) conservée(s). En cas de problème : restaurer depuis la branche de secours (Neon > Restore) puis reprendre.
 21. Selon la date d'ouverture : retirer ou garder le mur d'accès ; activer l'indexation dans `robots` (changement de code §2.2).
 ## 5. Script de vidage de la prod (à exécuter UNIQUEMENT sur la branche `main` de Neon, étape 19)
@@ -183,3 +183,19 @@ Risques :
 - Google OAuth : URI de redirection manquante → erreur `redirect_uri_mismatch`.
 - Données personnelles dans simu : la copie contient des comptes (adresses de test de l'utilisateur) ; si des vrais clients existent plus tard, ne plus copier la prod vers simu sans anonymisation.
 - Migrations divergentes entre envs : toujours merger dans l'ordre preprod → main.
+
+## 10. Journal d'avancement (15/11/2026)
+
+Hôtes Neon (hôte seul, jamais de mot de passe ni de chaîne de connexion complète) :
+- prod : `ep-mute-mouse-b9qc9uxw.c-7.eu-central-1.aws.neon.tech`
+- preprod : `ep-bold-mud-b99fqpet.c-7.eu-central-1.aws.neon.tech`
+
+| Élément | Statut |
+|---|---|
+| Demande de l'utilisateur | preprod ET prod doivent être vidées (admin + Category conservés) |
+| Preprod vidée réellement | FAIT (workflow « Essai vidage preprod », rollback puis commit, 15/11/2026) |
+| Accueil sur base vide corrigé | FAIT (A-T50) |
+| Essai rollback prod | FAIT (workflow « Vidage prod », 15/11/2026, compteurs identiques avant/après) |
+| Vidage commit prod | **FAIT** le 15/11/2026 vers 15h13 (workflow « Vidage prod », run #3 ; le run #2 avait été refusé par le garde-fou : confirmation absente, rien modifié). AVANT : 10 User, 6 Category, 25 Product, 3 Supplier, 49 Order, 48 SubOrder, 17 MediaFile, 24 Favorite, 3 Address, 16 TilaRateHit. APRÈS COMMIT : 1 User, 6 Category, 0 pour le reste. epomta.com/fr vérifié visuellement (accueil vide sans erreur). Reste à vérifier : connexion admin et menu Administration. |
+
+Vidage commit prod : mode `commit`, confirmation exacte `OUI-VIDER-LA-PROD-epomta`. Secours (à conserver plusieurs semaines) : branche Neon `backup-avant-vidage`.

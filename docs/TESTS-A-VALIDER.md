@@ -54,6 +54,11 @@ DerniÃ¨re exÃ©cution (11/11/2026, lot admin + e-mails de retour) : Vitest 62
 | A-T46 | Tílá, limitation de débit sur table Prisma : plafond refusé, fenêtre qui se rouvre, clés séparées (`tests/unit/tila-rate.db.test.ts`, 1 test, base jetable) | Écrit en local, pas poussé (tests DB uniquement en CI) | 15/11/2026 |
 | A-T47 | T | Catalogue historique : aucun mot « exemple / démo / fictif / test » dans les textes des pièces et créateurs (`tests/unit/examples-wording.test.ts`) | Écrit, à lancer en CI |
 | A-T48 | Environnements : origine de retour autorisee pour simu.epomta.com et preprod.epomta.com (hote voisin refuse), robots.txt bloque toute indexation (`tests/unit/origin.test.ts`, `tests/unit/robots.test.ts`) | Ecrit, a lancer en CI |
+| A-T49 | Essai du vidage sur preprod (workflow manuel `Essai vidage preprod`, `.github/workflows/vidage-preprod.yml`) : refuse un hote different de `expected_host`, l'hote de la base de CI, une URL poolee, le mode commit sans confirmation ; ROLLBACK par defaut, compteurs avant/apres, admin et Category conserves | A lancer en CI (secret `PREPROD_DIRECT_URL`) |
+| A-T50 | Accueil avec catalogue vide (FR/EN) : plus de plantage sur `heroProduct.slug` (`tests/unit/home-empty.test.ts`, 2 tests, catalogue simule vide, sans base) | Ecrit, a lancer en CI |
+| A-T51 | Vidage de la prod (workflow manuel `Vidage prod`, `.github/workflows/vidage-prod.yml`) : refuse hote different de `expected_host`, hote de la CI ou de preprod, URL poolee, admin_emails vide, commit sans confirmation exacte ; ROLLBACK par defaut, compteurs avant/apres | A lancer (secret `PROD_DIRECT_URL`) | Essai rollback prod reussi le 15/11/2026 ; vidage commit prod : FAIT le 15/11/2026 (run #3, 1 User / 6 Category / 0 le reste ; secours : branche Neon `backup-avant-vidage`).
+| A-T52 | Vue admin lecture seule : l'admin ouvre tout partenaire ACTIF (plus seulement isDemo), un non-admin n'obtient rien, cookie sans partenaire actif = rien (`tests/unit/view-as.test.ts`, 3 tests, sans base) ; les ecritures restent refusees par les gardes `viewingAs` existantes | Ecrit, a lancer en CI |
+| A-T53 | Enregistrement d'une creation : images existantes conservees meme hors /api/media (piece historique soumise sans nouvelle photo), messages distincts titre/categorie, prix, photo, description, lecture seule (	ests/unit/save-product-errors.test.ts, 4 tests, fonctions pures sans base ; saveProduct lui-meme non execute sur base jetable : redirect/auth) | Ecrit, a lancer en CI |
 | A-T28 | Purge des résidus de test avant seed (`prisma/test-residue.ts`, `test-residue.test.ts`) : dépendances supprimées avant les produits test-hold | OK en CI #47 (vert global, log détaillé non lu) | 13/11/2026 |
 | A-T23 | T | Réveil de la base de test (Neon en veille) : connect_timeout ajouté si absent, retry/backoff sur P1001, abandon sur autre erreur ; sonde TCP sans client Prisma (régression CI sqlite) | `tests/unit/db-wake.test.ts` (Vitest) | OK en CI (#39, #42, #47) — 13/11/2026 | `npm run test:db` (logique) |
 | A-M1 | M | Fournisseur e-mail : Resend (from, reply_to, sans mention interdite) ; repli Gmail / aucun sans erreur | `tests/unit/email-provider.test.ts` (Vitest) | OK 2/2 â€” 10/11/2026 | T-MAIL-FROM (payload) |
@@ -455,7 +460,7 @@ Statut : Ã€ tester â€” Date : â€”
 Statut : Ã€ tester â€” Date : â€”
 1. Toutes les sous-commandes avec boutique, Ã©tat, suivi. Â« Annuler et libÃ©rer le stock Â» (motif obligatoire) sur une commande non expÃ©diÃ©e â†’ client prÃ©venu.
 2. Suspension/rÃ©vocation : la rÃ©vocation est refusÃ©e tant que le partenaire a des commandes ouvertes.
-3. Â« Voir comme Â» un partenaire de dÃ©mo : commandes en lecture seule.
+3. Admin, `/fr/admin/fournisseurs` : « Voir son espace » sur un partenaire ACTIF (ex. Choupi) → `/fr/fournisseur/tableau-de-bord`, bandeau « Vue admin : partenaire (lecture seule) » ; commandes, créations, profil et paiements en lecture seule (aucun bouton d'action, formulaires désactivés) ; « Quitter » revient au compte.
 
 Limites : paiement = test (aucun dÃ©bit) ; retour/litige et retour de stock aprÃ¨s livraison au lot E ; e-mails partenaires en franÃ§ais.
 

@@ -4,7 +4,7 @@ import { inputCls } from "@/components/fournisseur/parts";
 import { CURRENCIES } from "@/lib/currency";
 import { tr } from "@/lib/tr";
 import type { Locale } from "@/lib/i18n";
-import { saveProduct } from "@/app/[locale]/fournisseur/oeuvres-actions";
+import { saveProduct, withdrawProduct } from "@/app/[locale]/fournisseur/oeuvres-actions";
 
 type P = {
   slug: string; name: string; nameEn: string; description: string; descriptionEn: string; sourceLang?: string; translationState?: string; categorySlug: string;
@@ -20,6 +20,7 @@ export function ProductForm({ locale, categories, product, readOnly, adminFor }:
   const locked = product?.status === "SUBMITTED";
   const republish = product?.status === "PUBLISHED" && !adminFor && !readOnly;
   return (
+    <>
     <form action={saveProduct} className="max-w-3xl space-y-5">
       <input type="hidden" name="locale" value={locale} />
       {adminFor && <input type="hidden" name="asSupplier" value={adminFor.id} />}
@@ -109,5 +110,13 @@ export function ProductForm({ locale, categories, product, readOnly, adminFor }:
       </fieldset>
       {locked && <p className="text-sm text-muted-foreground">{tr(locale, "Création en cours de modération : modification impossible.", "Creation under review: editing is locked.")}</p>}
     </form>
+    {locked && !readOnly && !adminFor && product && (
+      <form action={withdrawProduct} className="max-w-3xl">
+        <input type="hidden" name="locale" value={locale} />
+        <input type="hidden" name="slug" value={product.slug} />
+        <ConfirmButton message={tr(locale, "Annuler la soumission ? La création repasse en brouillon pour que vous puissiez la corriger puis la resoumettre.", "Cancel the submission? The creation goes back to draft so you can fix it and resubmit.")} className="min-h-11 rounded-md border px-5 text-sm font-medium">{tr(locale, "Annuler la soumission", "Cancel submission")}</ConfirmButton>
+      </form>
+    )}
+    </>
   );
 }

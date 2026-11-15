@@ -30,7 +30,7 @@ export default async function EditWorkPage({ params, searchParams }: Props) {
   return (
     <>
       <h1 className="font-heading text-3xl text-primary">{fr ? p.name : p.nameEn}</h1>
-      {sp.saved && <p role="status" className="rounded-md border border-accent bg-accent/15 p-3 text-sm">{tr(locale, "Enregistré.", "Saved.")}</p>}
+      {sp.saved && <p role="status" className="rounded-md border border-accent bg-accent/15 p-3 text-sm">{sp.saved === "withdrawn" ? tr(locale, "Soumission annulée : la création est repassée en brouillon.", "Submission cancelled: the creation is back to draft.") : tr(locale, "Enregistré.", "Saved.")}</p>}
       {sp.error && <p role="alert" className="rounded-md border border-destructive p-3 text-sm text-destructive">{productErrorMessage(sp.error, locale)}</p>}
       {p.status === "REJECTED" && p.rejectReason && <p className="rounded-md border border-destructive p-3 text-sm"><strong>{tr(locale, "Refusée : ", "Rejected: ")}</strong>{p.rejectReason}</p>}
       <ProductForm locale={locale} categories={categories} product={p} readOnly={ro} />

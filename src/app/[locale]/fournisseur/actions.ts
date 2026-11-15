@@ -105,7 +105,7 @@ async function ownedMediaId(raw: string, userId: string | null) {
   return row?.ownerUserId === userId ? id : null;
 }
 
-// Admin seulement : ouvre l'espace d'un partenaire de démonstration (jamais d'un vrai partenaire).
+// Admin seulement : ouvre l'espace d'un partenaire actif en lecture seule (écritures refusées tant que viewingAs).
 export async function setViewAs(formData: FormData) {
   const locale = loc(formData);
   const session = await auth();
@@ -116,7 +116,7 @@ export async function setViewAs(formData: FormData) {
     jar.delete(VIEW_AS_COOKIE);
     redirect(`/${locale}/account`);
   }
-  const demo = await db.supplier.findFirst({ where: { id, isDemo: true, status: "ACTIVE" } });
+  const demo = await db.supplier.findFirst({ where: { id, status: "ACTIVE" } });
   if (!demo) redirect(`/${locale}/admin`);
   jar.set(VIEW_AS_COOKIE, demo.id, { httpOnly: true, sameSite: "lax", path: "/", maxAge: 8 * 3600 });
   redirect(`/${locale}/fournisseur/tableau-de-bord`);

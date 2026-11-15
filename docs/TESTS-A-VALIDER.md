@@ -798,11 +798,12 @@ Remplace la boîte native du navigateur (« epomta.com says », OK/Cancel) par l
 6. Admin › Versements : « Rendre disponible maintenant (ignorer le délai de retour) » ouvre la fenêtre du site « Rendre ce gain disponible ? » avec « Confirmer » / « Annuler » ; Annuler ne fait rien. — Validé 15/11/2026 (capture : fenêtre Epomta « Rendre ce gain disponible ? » avec Annuler / Confirmer).
 
 
-### T-TILA — Assistante IA Tílá (lot 1, chat texte)
+### T-TILA — Assistant IA Tílá (lot 1, chat texte)
 Statut : À tester — Date : —
 Prérequis : migration 0031 appliquée (`prisma migrate deploy`), variables Vercel `OPENAI_API_KEY` (secret), `TILA_MODEL` (ex. GPT-6 Luna ; défaut `gpt-5-mini`), redéploiement. Compte : client `epomtaclient0` ; un visiteur déconnecté (navigation privée).
-1. Visiteur, `/fr` sur mobile (390 px) : la pastille ronde « Tílá — Assistante IA » (avatar à liseré doré) est visible en bas à droite, au-dessus de la barre d'onglets. Attendu : alt « Tílá, assistante IA de E póm ta’ ».
-2. Toucher la pastille. Attendu : fenêtre « Tílá — Assistante IA » avec message d'accueil, champ « Votre message… » et mention « Réponses générées par une IA… Ne saisissez pas de données personnelles ».
+1. Visiteur, `/fr` sur mobile (390 px) : la pastille ronde « Tílá — Assistant IA » (avatar à liseré doré) est visible en bas à droite, au-dessus de la barre d'onglets. Attendu : alt « Tílá, assistant IA de E póm ta’ ».
+2. Toucher la pastille. Attendu : fenêtre « Tílá — Assistant IA » avec message d'accueil, champ « Votre message… » et mention « Réponses générées par une IA… Ne saisissez pas de données personnelles ».
+2bis. Dans la fenêtre, toucher l'avatar de l'en-tête. Attendu : photo agrandie sur fond sombre, lisible à 390 px (alt « Tílá, assistant IA de E póm ta’ »). Fermeture par clic sur le fond, par la croix ×, ou par Échap (la fenêtre de chat reste ouverte). Au clavier : Tab jusqu'à l'avatar, Entrée pour ouvrir.
 3. Écrire « J'ai besoin d'une tenue pour la fête de fin d'année ». Attendu : réponse brève en français et 1 à 3 cartes (vignette, nom, créateur, prix en €) de pièces réellement au catalogue et en stock.
 4. Toucher une carte. Attendu : ouverture de la fiche `/fr/produits/<slug>` correspondante, prix identique, pièce achetable.
 5. Écrire « Trouve-moi une tenue en wax qui m'ira, budget 150 € max ». Attendu : pièces avec un prix ≤ 150 € ou message honnête « rien ne correspond » avec suggestion d'élargir.

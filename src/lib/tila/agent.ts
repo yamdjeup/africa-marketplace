@@ -77,6 +77,6 @@ export async function runTila(model: ChatModel, history: TilaTurn[], locale: "fr
     .replace(/[ \t]+\n/g, "\n")
     .replace(/ {2,}/g, " ")
     .trim();
-  const fallback = locale === "en" ? "Sorry, I could not find an answer. Could you rephrase?" : "Désolée, je n'ai pas de réponse. Pouvez-vous reformuler ?";
+  const fallback = locale === "en" ? "Sorry, I could not find an answer. Could you rephrase?" : "Désolé, je n'ai pas de réponse. Pouvez-vous reformuler ?";
   return { reply: text || fallback, products: shown };
 }

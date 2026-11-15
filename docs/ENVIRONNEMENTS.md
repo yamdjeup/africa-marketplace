@@ -95,8 +95,8 @@ Règle ferme : **on ne vide jamais la prod avant que sa copie soit faite ET vér
     - [ ] Aucun e-mail réel envoyé depuis simu pendant les tests.
     - **STOP : ne pas continuer sans l'accord écrit de l'utilisateur** (message explicite « OK vider la prod »). Sans cet accord, s'arrêter ici : la prod reste intacte.
 17. Après l'accord écrit : annoncer la fenêtre de maintenance ; re-créer une branche Neon de secours fraîche `secours-avant-vidage-AAAAMMJJ` depuis `main` (même si celle de l'étape 1 existe) et contrôler qu'elle est visible dans Neon > Branches. Ne pas la supprimer avant plusieurs semaines.
-18. Essayer d'abord le script §5 sur la branche `preprod` (copie de la prod) pour valider le résultat.
-19. Exécuter le script §5 sur la branche `main`, dans la console SQL Neon : le nom de la base et de la branche s'affichent en tête ; relire avant de lancer. Par défaut le script s'annule (ROLLBACK) : il faut éditer volontairement deux lignes (confirmation et COMMIT).
+18. Essai du script §5 sur `preprod` : FAIT et validé (workflow `Essai vidage preprod`, rollback puis commit : 1 User admin, 6 Category, le reste à 0). Le bug d'accueil sur base vide (`heroProduct` undefined) a été corrigé (A-T50).
+19. Vidage de la prod, autorisé par l'utilisateur : workflow manuel `Vidage prod` (`.github/workflows/vidage-prod.yml`, secret `PROD_DIRECT_URL` = URL Neon DIRECTE de la branche production). Lancer d'abord en mode rollback (défaut), lire les compteurs avant/après, puis mode commit avec la confirmation `OUI-VIDER-LA-PROD-epomta`. Prérequis : branche de secours Neon (étape 17) et accord écrit.
 20. Vérifier : connexion admin sur epomta.com ; catalogue vide (accueil sans erreur) ; `ADMIN_EMAILS` de la prod = adresse(s) conservée(s). En cas de problème : restaurer depuis la branche de secours (Neon > Restore) puis reprendre.
 21. Selon la date d'ouverture : retirer ou garder le mur d'accès ; activer l'indexation dans `robots` (changement de code §2.2).
 ## 5. Script de vidage de la prod (à exécuter UNIQUEMENT sur la branche `main` de Neon, étape 19)

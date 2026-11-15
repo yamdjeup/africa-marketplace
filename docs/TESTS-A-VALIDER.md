@@ -409,7 +409,7 @@ Statut : Ã€ tester â€” Date : â€”
 
 
 ### H-06 â€” Suspension / rÃ©vocation d'un partenaire (`/fr/admin/fournisseurs`)
-Statut : Ã€ tester â€” Date : â€”
+Statut : Validé par l'utilisateur (12/11/2026), « tout OK ». Preuves : e-mails suspension/réactivation Choupi du 12/11 (12:46, 12:47) et journal d'audit admin (Suspendu « test » 11:46:20, Réactivé 11:47:11). Étape 8 (révocation) non citée dans les preuves — Date : 12/11/2026
 Migration additive 0012 (`PartnerAudit`). Les partenaires de dÃ©mo ne sont pas concernÃ©s.
 1. Admin : sur un vrai partenaire, une seule ligne : champ Â« Motif Â» + liste Â« Action Â» (Actif : Suspendre/RÃ©voquer ; Suspendu : RÃ©activer/RÃ©voquer) + Â« Valider Â». Sans motif (Suspendre/RÃ©voquer) â†’ blocage du formulaire ; avec motif â†’ popup Â« Confirmer la suspension ? Â» (Oui/Non) ; Â« Non Â» n'exÃ©cute rien ; Â« Oui Â» â†’ statut Suspendu, e-mail au partenaire, entrÃ©e au journal d'audit.
 2. Chaque ligne affiche Â« Partenaire depuis le JJ/MM/AAAA Â» ; le journal (tableau date, partenaire, action, motif, auteur), groupÃ© par partenaire en ordre chronologique, contient Â« CrÃ©ation du compte partenaire (candidature acceptÃ©e) Â» (y compris pour les anciens), puis chaque Suspension, RÃ©activation, RÃ©vocation avec date/heure, motif et auteur.

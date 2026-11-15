@@ -11,11 +11,11 @@ type Msg = { role: "user" | "assistant"; content: string; products?: Card[] };
 const T = {
   fr: {
     name: "Tílá",
-    badge: "Assistante IA",
-    open: "Ouvrir Tílá, l'assistante IA d'achat",
+    badge: "Assistant IA",
+    open: "Ouvrir Tílá, l'assistant IA d'achat",
     close: "Fermer",
-    alt: "Tílá, assistante IA de E póm ta’",
-    hello: "Bonjour, je suis Tílá, votre assistante IA. Dites-moi ce que vous cherchez (occasion, tissu, budget) et je vous montre des pièces en stock.",
+    alt: "Tílá, assistant IA de E póm ta’",
+    hello: "Bonjour, je suis Tílá, votre assistant IA. Dites-moi ce que vous cherchez (occasion, tissu, budget) et je vous montre des pièces en stock.",
     placeholder: "Votre message…",
     send: "Envoyer",
     notice: "Réponses générées par une IA, qui peut se tromper. Ne saisissez pas de données personnelles.",

@@ -183,3 +183,19 @@ Risques :
 - Google OAuth : URI de redirection manquante → erreur `redirect_uri_mismatch`.
 - Données personnelles dans simu : la copie contient des comptes (adresses de test de l'utilisateur) ; si des vrais clients existent plus tard, ne plus copier la prod vers simu sans anonymisation.
 - Migrations divergentes entre envs : toujours merger dans l'ordre preprod → main.
+
+## 10. Journal d'avancement (15/11/2026)
+
+Hôtes Neon (hôte seul, jamais de mot de passe ni de chaîne de connexion complète) :
+- prod : `ep-mute-mouse-b9qc9uxw.c-7.eu-central-1.aws.neon.tech`
+- preprod : `ep-bold-mud-b99fqpet.c-7.eu-central-1.aws.neon.tech`
+
+| Élément | Statut |
+|---|---|
+| Demande de l'utilisateur | preprod ET prod doivent être vidées (admin + Category conservés) |
+| Preprod vidée réellement | FAIT (workflow « Essai vidage preprod », rollback puis commit, 15/11/2026) |
+| Accueil sur base vide corrigé | FAIT (A-T50) |
+| Essai rollback prod | FAIT (workflow « Vidage prod », 15/11/2026, compteurs identiques avant/après) |
+| Vidage commit prod | **FAIT** le 15/11/2026 vers 15h13 (workflow « Vidage prod », run #3 ; le run #2 avait été refusé par le garde-fou : confirmation absente, rien modifié). AVANT : 10 User, 6 Category, 25 Product, 3 Supplier, 49 Order, 48 SubOrder, 17 MediaFile, 24 Favorite, 3 Address, 16 TilaRateHit. APRÈS COMMIT : 1 User, 6 Category, 0 pour le reste. epomta.com/fr vérifié visuellement (accueil vide sans erreur). Reste à vérifier : connexion admin et menu Administration. |
+
+Vidage commit prod : mode `commit`, confirmation exacte `OUI-VIDER-LA-PROD-epomta`. Secours (à conserver plusieurs semaines) : branche Neon `backup-avant-vidage`.

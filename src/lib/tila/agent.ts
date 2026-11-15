@@ -77,6 +77,12 @@ export async function runTila(model: ChatModel, history: TilaTurn[], locale: "fr
     .replace(/[ \t]+\n/g, "\n")
     .replace(/ {2,}/g, " ")
     .trim();
+  // Pièce citée par son nom sans balise [[slug]] : on affiche quand même sa carte.
+  const lower = text.toLowerCase();
+  for (const p of known.values()) {
+    if (shown.length >= MAX_SHOWN) break;
+    if (!shown.includes(p) && p.name.length > 2 && lower.includes(p.name.toLowerCase())) shown.push(p);
+  }
   const fallback = locale === "en" ? "Sorry, I could not find an answer. Could you rephrase?" : "Désolé, je n'ai pas de réponse. Pouvez-vous reformuler ?";
   return { reply: text || fallback, products: shown };
 }

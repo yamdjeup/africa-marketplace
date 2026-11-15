@@ -50,6 +50,8 @@ DerniÃ¨re exÃ©cution (11/11/2026, lot admin + e-mails de retour) : Vitest 62
 | A-T42 | Logique de comparaison de version de session (jeton sans version = 0, différence = session invalidée, compte supprimé = invalidée) (`tests/unit/session-version.test.ts`, 2 tests, sans base) | OK en CI #69 — 14/11/2026 (2/2 en local ; vert global en CI ; log détaillé non lu) | 14/11/2026 |
 | A-T43 | Vraie fonction `auth()` (pages serveur) et route /api/auth/session avec base simulée : jeton avec sv périmé ou absent = pas de session ; sv à jour = session (`tests/unit/auth-session-version.test.ts`, 3 tests) | OK en CI — 14/11/2026 (push 5bdd801, Vercel Ready, CI verte ; log détaillé non lu) | 14/11/2026 |
 | A-T44 | H-16 (calculs, idempotence) : commission 15 % (200 000 → 30 000 / 170 000), gain en attente 7 jours puis disponible, versement unique (2e versement = rien), nouvelle commission seulement pour les livraisons suivantes (`tests/unit/ledger.db.test.ts`, 2 tests, base jetable) | OK en CI #72 — 15/11/2026 (CI verte après push 7be5805 ; log détaillé non lu) | 15/11/2026 |
+| A-T45 | Tílá (faux modèle, sans base) : outils ne renvoient que des pièces en stock (6 max), entrées invalides ignorées + recherche élargie, slug inventé retiré, 4 appels d'outils max, 3 pièces max, e-mail/téléphone masqués avant envoi, validation des messages de la route (`tests/unit/tila.test.ts`, 7 tests) | 7/7 OK en local (vitest, tsc, eslint) ; CI à confirmer après push | 15/11/2026 |
+| A-T46 | Tílá, limitation de débit sur table Prisma : plafond refusé, fenêtre qui se rouvre, clés séparées (`tests/unit/tila-rate.db.test.ts`, 1 test, base jetable) | Écrit en local, pas poussé (tests DB uniquement en CI) | 15/11/2026 |
 | A-T28 | Purge des résidus de test avant seed (`prisma/test-residue.ts`, `test-residue.test.ts`) : dépendances supprimées avant les produits test-hold | OK en CI #47 (vert global, log détaillé non lu) | 13/11/2026 |
 | A-T23 | T | Réveil de la base de test (Neon en veille) : connect_timeout ajouté si absent, retry/backoff sur P1001, abandon sur autre erreur ; sonde TCP sans client Prisma (régression CI sqlite) | `tests/unit/db-wake.test.ts` (Vitest) | OK en CI (#39, #42, #47) — 13/11/2026 | `npm run test:db` (logique) |
 | A-M1 | M | Fournisseur e-mail : Resend (from, reply_to, sans mention interdite) ; repli Gmail / aucun sans erreur | `tests/unit/email-provider.test.ts` (Vitest) | OK 2/2 â€” 10/11/2026 | T-MAIL-FROM (payload) |
@@ -794,3 +796,21 @@ Remplace la boîte native du navigateur (« epomta.com says », OK/Cancel) par l
 4. Cliquer à nouveau « Annuler ma commande » puis « Annuler le colis ». Résultat : colis « Annulée », mention de remboursement. — Validé 15/11/2026 en production (commande AM-5C3A79A8, 30 €) : fenêtre « Annuler ce colis ? » vue en capture ; « Garder ma commande », Échap et « Annuler le colis » déclarés OK par l'utilisateur.
 5. Même parcours en `/en` : « Cancel this parcel? », « Keep my order », « Cancel parcel ». — Validé 15/11/2026 sur déclaration de l'utilisateur (« all good »), sans capture.
 6. Admin › Versements : « Rendre disponible maintenant (ignorer le délai de retour) » ouvre la fenêtre du site « Rendre ce gain disponible ? » avec « Confirmer » / « Annuler » ; Annuler ne fait rien. — Validé 15/11/2026 (capture : fenêtre Epomta « Rendre ce gain disponible ? » avec Annuler / Confirmer).
+
+
+### T-TILA — Assistante IA Tílá (lot 1, chat texte)
+Statut : À tester — Date : —
+Prérequis : migration 0031 appliquée (`prisma migrate deploy`), variables Vercel `OPENAI_API_KEY` (secret), `TILA_MODEL` (ex. GPT-6 Luna ; défaut `gpt-5-mini`), redéploiement. Compte : client `epomtaclient0` ; un visiteur déconnecté (navigation privée).
+1. Visiteur, `/fr` sur mobile (390 px) : la pastille ronde « Tílá — Assistante IA » (avatar à liseré doré) est visible en bas à droite, au-dessus de la barre d'onglets. Attendu : alt « Tílá, assistante IA de E póm ta’ ».
+2. Toucher la pastille. Attendu : fenêtre « Tílá — Assistante IA » avec message d'accueil, champ « Votre message… » et mention « Réponses générées par une IA… Ne saisissez pas de données personnelles ».
+3. Écrire « J'ai besoin d'une tenue pour la fête de fin d'année ». Attendu : réponse brève en français et 1 à 3 cartes (vignette, nom, créateur, prix en €) de pièces réellement au catalogue et en stock.
+4. Toucher une carte. Attendu : ouverture de la fiche `/fr/produits/<slug>` correspondante, prix identique, pièce achetable.
+5. Écrire « Trouve-moi une tenue en wax qui m'ira, budget 150 € max ». Attendu : pièces avec un prix ≤ 150 € ou message honnête « rien ne correspond » avec suggestion d'élargir.
+6. Écrire « Quelle est la capitale de la France ? ». Attendu : refus poli, retour à la recherche de pièces.
+7. Écrire une adresse e-mail et un numéro de téléphone dans un message. Attendu : Tílá invite à ne pas partager de données personnelles ; (contrôle côté serveur : A-T45).
+8. Passer la langue en EN (`/en`), poser « I need an outfit for a party ». Attendu : interface et réponse en anglais, prix en €.
+9. Clavier (bureau) : ouvrir la pastille, taper, Entrée envoie, Échap ferme et rend le focus à la pastille. Attendu : aucun piège de focus.
+10. Envoyer plus de 30 messages en moins d'une heure depuis le même réseau. Attendu : message « Vous avez posé beaucoup de questions : réessayez dans un moment » (HTTP 429), puis retour à la normale après la fenêtre.
+11. Retirer temporairement `OPENAI_API_KEY` (préproduction uniquement). Attendu : « Tílá est momentanément indisponible », sans page d'erreur.
+12. Avec une pièce à stock 0 ou d'un partenaire suspendu : elle n'apparaît jamais dans les propositions.
+Automatisé : A-T45 (faux modèle), A-T46 (limitation de débit, base jetable).

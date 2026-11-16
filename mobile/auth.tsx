@@ -104,7 +104,7 @@ function GoogleButton({ auth, onError }: { auth: Auth; onError: (m: string | nul
       if (idToken) onError(await auth.google(idToken));
     } catch (e) {
       const code = (e as { code?: string }).code;
-      if (code !== statusCodes.SIGN_IN_CANCELLED) onError("Connexion Google impossible. Réessayez.");
+      if (code !== statusCodes.SIGN_IN_CANCELLED) onError(`Connexion Google impossible. Réessayez. (code : ${code ?? "?"} — ${(e as Error).message ?? ""})`);
     }
     setBusy(false);
   };

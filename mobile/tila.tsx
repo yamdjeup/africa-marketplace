@@ -91,7 +91,7 @@ export function TilaButton({ onOpenSlug }: { onOpenSlug: (slug: string) => void 
 }
 
 const st = StyleSheet.create({
-  fab: { position: "absolute", right: 12, bottom: 70, flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "#1c3060", borderRadius: 40, paddingVertical: 4, paddingLeft: 4, paddingRight: 14, elevation: 6 },
+  fab: { position: "absolute", right: 12, bottom: 100, flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "#1c3060", borderRadius: 40, paddingVertical: 4, paddingLeft: 4, paddingRight: 14, elevation: 6 },
   fabImg: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: "#f59e0b" },
   fabName: { color: "#fff", fontWeight: "600", fontSize: 14 },
   fabBadge: { color: "#fff", opacity: 0.8, fontSize: 11 },

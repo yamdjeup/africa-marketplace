@@ -131,7 +131,7 @@ function DetailBody({ p, onClose, fav, onFav, onAdd, token, onNeedLogin, onOpenR
               </Pressable>
             ) : null}
             {x?.hasCertificate ? <Text style={{ marginTop: 10, color: "#221812" }}>✓ Certificat d’authenticité fourni</Text> : null}
-            {x?.careInstructions ? <View style={{ marginTop: 12 }}><Text style={{ fontWeight: "600", color: "#221812" }}>Entretien</Text><Text style={s.meta}>{x.careInstructions}</Text></View> : null}
+            {x?.careInstructions ? <View style={{ marginTop: 12 }}><Text style={{ fontWeight: "600", color: "#221812" }}>{tr("Entretien", "Care")}</Text><Text style={s.meta}>{x.careInstructions}</Text></View> : null}
             {p.story ? <Text style={[s.body, { marginTop: 12 }]}>{p.story}</Text> : null}
             {x?.related?.length ? (
               <View style={{ marginTop: 20 }}>
@@ -182,7 +182,7 @@ function DetailBody({ p, onClose, fav, onFav, onAdd, token, onNeedLogin, onOpenR
                   );
                 })}
               </View>
-              {missing ? <Text style={{ color: "#b42318", marginTop: 6 }}>Veuillez choisir une taille.</Text> : null}
+              {missing ? <Text style={{ color: "#b42318", marginTop: 6 }}>{tr("Veuillez choisir une taille.", "Please choose a size.")}</Text> : null}
             </View>
           ) : null}
           <Pressable onPress={buy} style={({ pressed }) => [s.cta, { opacity: pressed ? 0.6 : 1 }]}>
@@ -284,7 +284,7 @@ function Main() {
             <Text style={s.h2}>Mon compte</Text>
             <Text style={s.body}>Langue : Français</Text>
             <Text style={s.body}>Le suivi des commandes se fait par e-mail et sur le site.</Text>
-            <Pressable style={[s.cta, { marginTop: 16 }]} onPress={() => WebBrowser.openBrowserAsync(`${API_URL}/fr/login`)}><Text style={s.ctaText}>Mon compte sur le site</Text></Pressable>
+            <Pressable style={[s.cta, { marginTop: 16 }]} onPress={() => WebBrowser.openBrowserAsync(`${API_URL}/fr/login`)}><Text style={s.ctaText}>{tr("Mon compte sur le site", "My account on the website")}</Text></Pressable>
             <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => WebBrowser.openBrowserAsync(`${API_URL}/fr/support`)}><Text style={s.ctaText}>Besoin d’aide ?</Text></Pressable>
           </ScrollView>
         )}

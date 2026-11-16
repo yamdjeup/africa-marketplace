@@ -1,3 +1,4 @@
+import { tr } from "./region";
 import { useEffect, useState } from "react";
 import { Badges } from "./badges";
 import { ActivityIndicator, Image, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -34,7 +35,7 @@ export function CreatorScreen({ slug, onClose, onOpenSlug }: { slug: string; onC
       <SafeAreaProvider><SafeAreaView style={{ flex: 1, backgroundColor: "#faf6ee" }}>
         <Pressable onPress={onClose} hitSlop={12} style={{ height: 44, justifyContent: "center", paddingHorizontal: 16 }} accessibilityLabel="Retour"><Text style={{ fontSize: 28, color: "#221812" }}>←</Text></Pressable>
         {!c && !missing && <ActivityIndicator />}
-        {missing && <Text style={[st.p, { padding: 16 }]}>Artiste introuvable</Text>}
+        {missing && <Text style={[st.p, { padding: 16 }]}>{tr("Artiste introuvable", "Artist not found")}</Text>}
         {c && (
           <ScrollView contentContainerStyle={{ padding: 16, gap: 20 }}>
             <View style={{ alignItems: "center", gap: 8 }}>

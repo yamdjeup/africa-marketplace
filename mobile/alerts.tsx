@@ -39,14 +39,14 @@ export function AlertsScreen({ token, onBack }: { token: string; onBack: () => v
   return (
     <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
       <Pressable onPress={onBack} hitSlop={12} style={{ height: 44, justifyContent: "center" }} accessibilityLabel="Retour"><Text style={{ fontSize: 28 }}>←</Text></Pressable>
-      <Text style={s.h2}>Recevoir des alertes</Text>
-      <Text style={s.mut}>Recevoir des alertes sur vos favoris et votre panier via</Text>
+      <Text style={s.h2}>{tr("Recevoir des alertes", "Get alerts")}</Text>
+      <Text style={s.mut}>{tr("Recevoir des alertes sur vos favoris et votre panier via", "Get alerts about your favourites and your cart via")}</Text>
       {row("Notification push", !!pushTok, togglePush)}
       {msg ? <Text style={s.mut}>{msg}</Text> : null}
       {row("E-mail", email, (v) => { setEmail(v); save({ email: v }); })}
-      <Text style={[s.h3]}>Envie de plus ?</Text>
+      <Text style={[s.h3]}>{tr("Envie de plus ?", "Want more?")}</Text>
       {row("Recevoir des notifications sur les promotions, nouveautés et stocks", promo, (v) => { setPromo(v); save({ promo: v }); })}
-      <Pressable onPress={sendTest} style={{ minHeight: 44, justifyContent: "center", paddingHorizontal: 20, borderWidth: 1, borderColor: "#221812", alignSelf: "flex-start", marginTop: 8 }}><Text style={{ color: "#221812" }}>Envoyer un e-mail de test</Text></Pressable>
+      <Pressable onPress={sendTest} style={{ minHeight: 44, justifyContent: "center", paddingHorizontal: 20, borderWidth: 1, borderColor: "#221812", alignSelf: "flex-start", marginTop: 8 }}><Text style={{ color: "#221812" }}>{tr("Envoyer un e-mail de test", "Send a test email")}</Text></Pressable>
       {testMsg ? <Text style={{ color: "#221812", marginTop: 8 }}>{testMsg}</Text> : null}
     </ScrollView>
   );

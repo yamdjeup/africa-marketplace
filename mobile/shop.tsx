@@ -1,3 +1,4 @@
+import { tr } from "./region";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { ActivityIndicator, FlatList, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { API_URL } from "./config";
@@ -156,7 +157,7 @@ export function ShopScreen<P extends Item>({ initialCategory, renderItem, onOpen
       </View>
       {extras && extras.artists.length > 0 && (
         <View>
-          <Text style={st.h2}>Artistes</Text>
+          <Text style={st.h2}>{tr("Artistes", "Artists")}</Text>
           {artistRow(extras.artists)}
           {items.length > 0 && <Text style={st.h2}>Créations</Text>}
         </View>
@@ -239,25 +240,25 @@ function RefineSheet({ initial, baseOptions, total, onClose, onApply }: { initia
     <View style={st.sheet}>
       <View style={st.sheetTop}>
         <Pressable onPress={onClose} accessibilityLabel="Fermer" hitSlop={10}><Text style={{ fontSize: 24, color: "#221812" }}>✕</Text></Pressable>
-        <Pressable onPress={() => { setCount(null); setV(EMPTY); }}><Text style={{ textDecorationLine: "underline", color: "#221812" }}>Tout effacer</Text></Pressable>
+        <Pressable onPress={() => { setCount(null); setV(EMPTY); }}><Text style={{ textDecorationLine: "underline", color: "#221812" }}>{tr("Tout effacer", "Clear all")}</Text></Pressable>
       </View>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
         <TextInput value={v.q} onChangeText={(t) => set("q", t)} placeholder="Rechercher une création" placeholderTextColor="#8a7d70" style={st.input} />
-        <Text style={st.sheetH}>Trier par</Text>
+        <Text style={st.sheetH}>{tr("Trier par", "Sort by")}</Text>
         {([["pick", "Notre sélection"], ["new", "Nouveautés"], ["price-desc", "Prix décroissant"], ["price-asc", "Prix croissant"]] as const).map(([k, l]) => (
           <Pressable key={k} onPress={() => set("sort", k)} style={st.radioRow}>
             <Text style={{ color: "#221812" }}>{l}</Text>
             <View style={[st.radio, v.sort === k && st.radioOn]} />
           </Pressable>
         ))}
-        <Text style={st.sheetH}>Filtrer par</Text>
+        <Text style={st.sheetH}>{tr("Filtrer par", "Filter by")}</Text>
         {group("category", "Catégorie", opts.categories, "Toutes")}
         {group("artist", "Artistes", opts.artists, "Tous")}
         {group("material", "Matière", opts.materials, "Toutes")}
         {group("technique", "Techniques", opts.techniques, "Toutes")}
         {group("country", "Pays / région", opts.countries, "Tous")}
         {sizes.options.length > 0 && group("size", sizes.kind === "ring" ? "Tour de doigt" : "Tailles", sizes.options.map((o) => ({ value: o, label: o })), "Tous")}
-        <Text style={[st.groupHead, { marginTop: 8 }]}>Fourchette de prix (EUR)</Text>
+        <Text style={[st.groupHead, { marginTop: 8 }]}>{tr("Fourchette de prix (EUR)", "Price range (EUR)")}</Text>
         <View style={{ flexDirection: "row", gap: 8 }}>
           <TextInput value={v.min} onChangeText={(t) => set("min", t.replace(/[^\d]/g, ""))} keyboardType="number-pad" placeholder="Min" placeholderTextColor="#8a7d70" accessibilityLabel="Prix Min" style={[st.input, { flex: 1 }]} />
           <TextInput value={v.max} onChangeText={(t) => set("max", t.replace(/[^\d]/g, ""))} keyboardType="number-pad" placeholder="Max" placeholderTextColor="#8a7d70" accessibilityLabel="Prix Max" style={[st.input, { flex: 1 }]} />

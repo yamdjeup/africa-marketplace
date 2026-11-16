@@ -1,3 +1,4 @@
+import { tr } from "./region";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { authed } from "./api";
@@ -42,7 +43,7 @@ function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: numbe
       {p.items.map((it, k) => <Text key={k}>{it.quantity} × {it.name}{it.size ? ` (${it.size})` : ""}</Text>)}
       {p.status === "PENDING" && <Text style={s.mut}>En attente de la réponse de la boutique (48 h maximum).</Text>}
       {p.shippedAt && <Text style={s.mut}>Expédiée le {date(p.shippedAt)}{p.carrier ? ` · ${p.carrier}` : ""}{p.trackingNumber ? ` · ${p.trackingNumber}` : ""}</Text>}
-      {p.trackingUrl && <Pressable onPress={() => Linking.openURL(p.trackingUrl!)}><Text style={s.link}>Suivre mon colis</Text></Pressable>}
+      {p.trackingUrl && <Pressable onPress={() => Linking.openURL(p.trackingUrl!)}><Text style={s.link}>{tr("Suivre mon colis", "Track my parcel")}</Text></Pressable>}
       {p.deliveredAt && <Text style={s.mut}>Livrée le {date(p.deliveredAt)}</Text>}
       {p.reason && <Text style={s.mut}>Motif : {p.reason}</Text>}
       {["REFUSED", "EXPIRED", "CANCELLED"].includes(p.status) && (
@@ -50,13 +51,13 @@ function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: numbe
           {refunded ? `Vous serez remboursé de ${eur(p.subtotalCents)} sur votre moyen de paiement sous 5 à 10 jours ouvrés.` : p.refundStatus === "FAILED" ? "Nous revenons vers vous au sujet de votre remboursement." : "Commande annulée."}
         </Text>
       )}
-      {p.canCancel && <Pressable disabled={busy} onPress={cancel}><Text style={s.link}>Annuler ma commande</Text></Pressable>}
+      {p.canCancel && <Pressable disabled={busy} onPress={cancel}><Text style={s.link}>{tr("Annuler ma commande", "Cancel my order")}</Text></Pressable>}
       {p.returnStatus && <Text style={s.bold}>{p.returnStatus}</Text>}
       {p.canReturn && (
         <View style={{ gap: 6, marginTop: 4 }}>
-          <Text style={s.bold}>Motif du retour</Text>
+          <Text style={s.bold}>{tr("Motif du retour", "Return reason")}</Text>
           <TextInput value={reason} onChangeText={setReason} multiline maxLength={1000} style={s.input} placeholderTextColor="#6b5d52" selectionColor="#1c3060" />
-          <Pressable disabled={busy} onPress={ask}><Text style={s.link}>Demander un retour</Text></Pressable>
+          <Pressable disabled={busy} onPress={ask}><Text style={s.link}>{tr("Demander un retour", "Request a return")}</Text></Pressable>
         </View>
       )}
       {!!msg && <Text style={{ color: "#a33" }}>{msg}</Text>}
@@ -75,7 +76,7 @@ export function OrdersScreen({ token, onBack }: { token: string; onBack: () => v
   return (
     <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
       <Pressable onPress={onBack} hitSlop={8} style={{ marginBottom: 8 }}><Text style={s.link}>← Mon compte</Text></Pressable>
-      <Text style={s.h2}>Mes commandes</Text>
+      <Text style={s.h2}>{tr("Mes commandes", "My orders")}</Text>
       {orders === null && <ActivityIndicator />}
       {orders?.length === 0 && <Text style={s.mut}>Vous n’avez pas encore de commande.</Text>}
       {orders?.map((o) => (

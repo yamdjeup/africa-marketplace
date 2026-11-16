@@ -1,3 +1,4 @@
+import { tr } from "./region";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { API_URL } from "./config";
@@ -37,13 +38,13 @@ export function SupportScreen({ onBack, initialSlug }: { onBack: () => void; ini
               <View style={st.feedback}>
                 {answer === null ? (
                   <>
-                    <Text style={{ fontWeight: "600", color: "#221812" }}>Ce contenu vous semble-t-il pertinent ?</Text>
+                    <Text style={{ fontWeight: "600", color: "#221812" }}>{tr("Ce contenu vous semble-t-il pertinent ?", "Was this content helpful?")}</Text>
                     <View style={{ flexDirection: "row", gap: 8, marginTop: 8 }}>
-                      <Pressable onPress={() => setAnswer(true)} style={st.btn}><Text style={st.btnText}>Oui</Text></Pressable>
-                      <Pressable onPress={() => setAnswer(false)} style={st.btn}><Text style={st.btnText}>Pas vraiment</Text></Pressable>
+                      <Pressable onPress={() => setAnswer(true)} style={st.btn}><Text style={st.btnText}>{tr("Oui", "Yes")}</Text></Pressable>
+                      <Pressable onPress={() => setAnswer(false)} style={st.btn}><Text style={st.btnText}>{tr("Pas vraiment", "Not really")}</Text></Pressable>
                     </View>
                   </>
-                ) : <Text style={{ color: "#221812" }}>Merci pour votre retour.</Text>}
+                ) : <Text style={{ color: "#221812" }}>{tr("Merci pour votre retour.", "Thanks for your feedback.")}</Text>}
               </View>
             )}
           </View>

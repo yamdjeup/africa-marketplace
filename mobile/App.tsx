@@ -12,6 +12,7 @@ import { authed } from "./api";
 import { CartScreen, type CartLine } from "./cart";
 import { ShopScreen } from "./shop";
 import { TilaButton } from "./tila";
+import { CreatorScreen } from "./creator";
 import { StripeProvider } from "@stripe/stripe-react-native";
 
 type Product = { slug: string; name: string; description: string; story: string; creatorName: string; priceCents: number; images: string[]; material: string | null; technique: string | null; origin: string | null; dimensions: string | null; categorySlug: string; url: string; stock: number };
@@ -124,6 +125,7 @@ function Main() {
   const favs = favItems.map((p) => p.slug);
   const [cart, setCart] = useState<CartLine[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
+  const [creator, setCreator] = useState<string | null>(null);
 
   useEffect(() => {
     AsyncStorage.getItem("favs").then((v) => v && setFavItems(JSON.parse(v) as Product[]));
@@ -184,7 +186,7 @@ function Main() {
               <Text style={s.h2}>Créateurs du moment</Text>
               <FlatList horizontal showsHorizontalScrollIndicator={false} data={home.creators} keyExtractor={(c) => c.slug} contentContainerStyle={{ paddingHorizontal: 16, gap: 16 }}
                 renderItem={({ item }) => (
-                  <Pressable onPress={() => { setTab("shop"); }} style={{ alignItems: "center", width: 90 }}>
+                  <Pressable onPress={() => setCreator(item.slug)} style={{ alignItems: "center", width: 90 }}>
                     <Image source={{ uri: item.image }} style={s.avatar} />
                     <Text numberOfLines={2} style={s.creator}>{item.name}</Text>
                   </Pressable>
@@ -195,7 +197,7 @@ function Main() {
           </ScrollView>
         ) : !error && <ActivityIndicator style={{ marginTop: 40 }} />)}
 
-        {tab === "shop" && <ShopScreen<Product> initialCategory="" renderItem={(item) => <Card wide p={item} fav={favs.includes(item.slug)} onFav={() => toggle(item)} onOpen={() => setOpen(item)} />} onOpenSlug={(slug) => { get<Product>(`/api/v1/products/${slug}?locale=fr`).then(setOpen).catch(() => {}); }} />}
+        {tab === "shop" && <ShopScreen<Product> initialCategory="" onOpenCreator={setCreator} renderItem={(item) => <Card wide p={item} fav={favs.includes(item.slug)} onFav={() => toggle(item)} onOpen={() => setOpen(item)} />} onOpenSlug={(slug) => { get<Product>(`/api/v1/products/${slug}?locale=fr`).then(setOpen).catch(() => {}); }} />}
 
         {tab === "favs" && (favItems.length ? grid(favItems) : <Text style={s.center}>Aucun favori pour le moment.{"\n"}Touchez ♡ sur une pièce.</Text>)}
 
@@ -215,7 +217,8 @@ function Main() {
           <Pressable key={k} onPress={() => setTab(k)} style={s.tab}><Text style={[s.tabText, tab === k && { color: "#221812", fontWeight: "700" }]}>{l}{k === "favs" && favs.length ? ` (${favs.length})` : ""}</Text></Pressable>
         ))}
       </View>
-      {!open && !cartOpen && <TilaButton onOpenSlug={(slug) => { get<Product>(`/api/v1/products/${slug}?locale=fr`).then(setOpen).catch(() => {}); }} />}
+      {creator && <CreatorScreen slug={creator} onClose={() => setCreator(null)} onOpenSlug={(slug) => { get<Product>(`/api/v1/products/${slug}?locale=fr`).then(setOpen).catch(() => {}); }} />}
+      {!open && !cartOpen && !creator && <TilaButton onOpenSlug={(slug) => { get<Product>(`/api/v1/products/${slug}?locale=fr`).then(setOpen).catch(() => {}); }} />}
       {open && <Detail token={auth.accessToken} onNeedLogin={() => { setOpen(null); setTab("me"); }} p={open} onClose={() => setOpen(null)} fav={favs.includes(open.slug)} onFav={() => toggle(open)} onAdd={() => addToCart(open)} />}
       {cartOpen && (
         <Modal animationType="slide" onRequestClose={() => setCartOpen(false)}>

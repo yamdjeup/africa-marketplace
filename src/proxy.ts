@@ -17,7 +17,7 @@ const locales = ["fr", "en"];
 const PUBLIC_PWA = /^\/(manifest\.webmanifest|icons\/[\w-]+\.png|sw\.js|debug-viewport)$/;
 
 // Liens des e-mails d'alertes (désinscription), cron et webhook Stripe et photos /api/media/[id] (images des e-mails) : publics, protégés par jeton signé / CRON_SECRET / signature Stripe ; les médias privés se protègent eux-mêmes.
-const PUBLIC_ALERTS = /^\/(api\/(v1\/(home|favorites|alerts\/(prefs|test)|addresses|orders(\/(cancel|return))?|checkout\/(create|confirm|cancel)|products(\/[\w-]+)?|search\/(suggest|extras)|support(\/[\w-]+)?|catalog\/count|auth\/(login|register|refresh|forgot|me|google))|alerts\/(run|unsubscribe)|tila|address\/(check|suggest)|push\/test|stripe\/webhook|media\/[\w-]+)|tila-avatar\.jpeg|images\/(artworks|examples)\/[\w.-]+\.(jpg|jpeg|png|webp)|(fr|en)\/alertes\/desinscription)$/;
+const PUBLIC_ALERTS = /^\/(api\/(v1\/(home|creators\/[\w-]+|favorites|alerts\/(prefs|test)|addresses|orders(\/(cancel|return))?|checkout\/(create|confirm|cancel)|products(\/[\w-]+)?|search\/(suggest|extras)|support(\/[\w-]+)?|catalog\/count|auth\/(login|register|refresh|forgot|me|google))|alerts\/(run|unsubscribe)|tila|address\/(check|suggest)|push\/test|stripe\/webhook|media\/[\w-]+)|tila-avatar\.jpeg|videos\/(posters\/)?[\w.-]+\.(mp4|jpg)|images\/(artworks|examples)\/[\w.-]+\.(jpg|jpeg|png|webp)|(fr|en)\/alertes\/desinscription)$/;
 
 const htmlHeaders = { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex, nofollow" };
 

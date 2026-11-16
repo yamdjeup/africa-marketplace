@@ -30,7 +30,7 @@ async function getJson<T>(path: string): Promise<T | null> {
 }
 
 // Reprend /catalogue (page.tsx), refine-sheet.tsx et search-box.tsx du site ; textes de i18n.ts (catalog, f11).
-export function ShopScreen<P extends Item>({ initialCategory, renderItem, onOpenSlug }: { initialCategory: string; renderItem: (p: P) => ReactNode; onOpenSlug: (slug: string) => void }) {
+export function ShopScreen<P extends Item>({ initialCategory, renderItem, onOpenSlug, onOpenCreator }: { initialCategory: string; renderItem: (p: P) => ReactNode; onOpenSlug: (slug: string) => void; onOpenCreator: (slug: string) => void }) {
   const [v, setV] = useState<Values>({ ...EMPTY, category: initialCategory });
   const [items, setItems] = useState<P[]>([]);
   const [total, setTotal] = useState(0);
@@ -74,14 +74,14 @@ export function ShopScreen<P extends Item>({ initialCategory, renderItem, onOpen
       const d = await getJson<Suggest>(`/api/v1/search/suggest?locale=fr&q=${encodeURIComponent(text)}`);
       if (!d) return;
       setSugg([
-        ...d.artists.map((a) => ({ key: `a-${a.slug}`, label: a.name, hint: "Artiste", act: () => setV({ ...EMPTY, artist: a.slug }) })),
+        ...d.artists.map((a) => ({ key: `a-${a.slug}`, label: a.name, hint: "Artiste", act: () => onOpenCreator(a.slug) })),
         ...d.categories.map((c) => ({ key: `c-${c.slug}`, label: c.label, hint: "Catégorie", act: () => setV({ ...EMPTY, category: c.slug }) })),
         ...d.products.map((p) => ({ key: `p-${p.slug}`, label: p.name, hint: `Création · ${p.creator}`, act: () => onOpenSlug(p.slug) })),
       ]);
       setOpen(true);
     }, 180);
     return () => clearTimeout(id);
-  }, [text, onOpenSlug]);
+  }, [text, onOpenSlug, onOpenCreator]);
 
   const more = useCallback(async () => {
     if (loadingMore.current || page >= pages) return;
@@ -107,7 +107,7 @@ export function ShopScreen<P extends Item>({ initialCategory, renderItem, onOpen
   const artistRow = (list: Artist[]) => (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 14, paddingHorizontal: 16, paddingBottom: 8 }}>
       {list.map((a) => (
-        <Pressable key={a.slug} onPress={() => setV({ ...EMPTY, artist: a.slug })} style={{ width: 90, alignItems: "center" }}>
+        <Pressable key={a.slug} onPress={() => onOpenCreator(a.slug)} style={{ width: 90, alignItems: "center" }}>
           <Image source={{ uri: a.image }} style={st.avatar} />
           <Text numberOfLines={2} style={st.artistName}>{a.name}</Text>
         </Pressable>

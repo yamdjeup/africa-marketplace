@@ -7,16 +7,31 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "icon": "./assets/icon-1024.png",
-    "plugins": ["expo-notifications", ["@stripe/stripe-react-native", { "merchantIdentifier": "", "enableGooglePay": false }]],
+    "plugins": [
+      "expo-notifications",
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "",
+          "enableGooglePay": false
+        }
+      ],
+      "expo-video"
+    ],
     "ios": {
       "bundleIdentifier": "com.epomta.app",
       "supportsTablet": false,
-      "infoPlist": { "ITSAppUsesNonExemptEncryption": false }
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.epomta.app",
       "googleServicesFile": "./google-services.json",
-      "adaptiveIcon": { "foregroundImage": "./assets/icon.png", "backgroundColor": "#ffffff" }
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#ffffff"
+      }
     }
   }
 }

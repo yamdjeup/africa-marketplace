@@ -1,5 +1,7 @@
 import { ruleFor, SIZE_OPTIONS } from "@/lib/category-rules";
-import { getCategories, getCreators, getFilterOptions, getProduct, searchProducts, type CatalogParams, type ProductView } from "@/lib/catalog";
+import { db } from "@/lib/db";
+import { CREATOR_VIDEOS } from "@/lib/creator-videos";
+import { getCategories, getCreatorWithProducts, getCreators, getFilterOptions, getProduct, searchProducts, type CatalogParams, type ProductView } from "@/lib/catalog";
 
 export type MobileLocale = "fr" | "en";
 
@@ -83,5 +85,28 @@ export async function homeData(locale: MobileLocale, origin: string) {
     byCategory: categories
       .map((c) => ({ ...c, items: items.filter((p) => p.categorySlug === c.slug).slice(0, 8).map(wrap) }))
       .filter((c) => c.items.length > 0),
+  };
+}
+
+// Page artiste (src/app/[locale]/partenaires/[slug]/page.tsx) : bio, vidéo, phrase citée, créations ; ancien slug => slug actuel.
+export async function oneCreator(slug: string, locale: MobileLocale, origin: string) {
+  let data = await getCreatorWithProducts(slug, locale);
+  if (!data) {
+    const alias = await db.creatorSlugAlias.findUnique({ where: { oldSlug: slug } });
+    if (alias) data = await getCreatorWithProducts(alias.creatorSlug, locale);
+  }
+  if (!data) return null;
+  const { creator: c, products } = data;
+  const v = CREATOR_VIDEOS[c.slug];
+  const sentences = c.bio.match(/[^.!?]+[.!?]/g)?.map((s) => s.trim()) ?? [c.bio];
+  return {
+    slug: c.slug,
+    name: c.name,
+    specialty: c.specialty,
+    image: absolute(c.image, origin),
+    bio: v && sentences.length > 1 ? sentences.slice(0, -1).join(" ") : c.bio,
+    sourceUrl: c.sourceUrl.includes("g3a.org") ? c.sourceUrl : null,
+    video: v ? { src: absolute(v.src, origin), poster: absolute(v.poster, origin), orientation: v.orientation, excerpt: sentences[sentences.length - 1] } : null,
+    products: products.map((p) => toMobileProduct(p, origin, locale)),
   };
 }

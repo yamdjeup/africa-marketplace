@@ -82,6 +82,9 @@ export function useAuth() {
   };
   const logout = async () => {
     await SecureStore.deleteItemAsync(KEY);
+    // Oublie le compte Google mémorisé pour que le sélecteur de compte s'affiche à la prochaine connexion.
+    try { await GoogleSignin.signOut(); } catch {}
+    try { await GoogleSignin.revokeAccess(); } catch {}
     setUser(null);
     setAccessToken(null);
   };

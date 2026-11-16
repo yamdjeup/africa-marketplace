@@ -65,13 +65,22 @@ function DetailBody({ p, onClose, fav, onFav, onAdd, token, onNeedLogin }: { tok
   const [added, setAdded] = useState(false);
   const buy = () => { onAdd(); setAdded(true); };
   const [watch, setWatch] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [watchErr, setWatchErr] = useState("");
   useEffect(() => {
     if (token && p.stock < 1) authed<{ slugs?: string[] }>(token, "GET", "/api/v1/restock-watch").then((r) => setWatch((r.data.slugs ?? []).includes(p.slug)));
   }, [token, p.slug, p.stock]);
   const toggleWatch = async () => {
     if (!token) return onNeedLogin();
-    const r = watch ? await authed(token, "DELETE", `/api/v1/restock-watch?slug=${encodeURIComponent(p.slug)}`) : await authed(token, "POST", "/api/v1/restock-watch", { slug: p.slug, locale: "fr" });
-    if (r.status < 300) setWatch(!watch);
+    setBusy(true); setWatchErr("");
+    try {
+      const r = watch ? await authed(token, "DELETE", `/api/v1/restock-watch?slug=${encodeURIComponent(p.slug)}`) : await authed(token, "POST", "/api/v1/restock-watch", { slug: p.slug, locale: "fr" });
+      if (r.status < 300) setWatch(!watch);
+      else setWatchErr(`Impossible d’enregistrer l’alerte (code ${r.status}). Réessayez.`);
+    } catch (e) {
+      setWatchErr(`Impossible d’enregistrer l’alerte : ${(e as Error).message}`);
+    }
+    setBusy(false);
   };
   return (
       <View style={{ flex: 1, backgroundColor: "#faf6ee", paddingTop: Math.max(insets.top, Platform.OS === "android" ? RNStatusBar.currentHeight ?? 24 : 0) }}>
@@ -96,7 +105,8 @@ function DetailBody({ p, onClose, fav, onFav, onAdd, token, onNeedLogin }: { tok
           {p.stock < 1 ? (
             <>
               {watch ? <Text style={{ color: "#1e7546", marginBottom: 6 }}>Vous serez prévenu(e) dès qu’elle est disponible.</Text> : null}
-              <Pressable onPress={toggleWatch} style={s.cta}><Text style={s.ctaText}>{watch ? "Annuler l’alerte" : "Me prévenir quand elle est disponible"}</Text></Pressable>
+              {watchErr ? <Text style={{ color: "#b42318", marginBottom: 6 }}>{watchErr}</Text> : null}
+              <Pressable onPress={toggleWatch} disabled={busy} hitSlop={8} android_ripple={{ color: "#ffffff55" }} style={({ pressed }) => [s.cta, { opacity: pressed || busy ? 0.6 : 1 }]}><Text style={s.ctaText}>{busy ? "…" : watch ? "Annuler l’alerte" : "Me prévenir quand elle est disponible"}</Text></Pressable>
               {watch ? <Text style={{ color: "#6b5d52", fontSize: 12, marginTop: 6 }}>Pièce unique : premier arrivé, premier servi.</Text> : null}
             </>
           ) : (

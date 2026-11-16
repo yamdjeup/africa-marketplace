@@ -7,8 +7,10 @@ import { confirmPaidOrder, stripeEnabled } from "@/lib/stripe-checkout";
 type MobileUser = { id: string; email: string };
 export type CartInput = { slug: string; size: string | null; quantity: number }[];
 export type CreateResult =
-  | { number: string; paymentIntentId: string; clientSecret: string; totalCents: number }
-  | { error: "disabled" | "empty" | "address" | "unknown" | "stock" | "reserved" | "payment"; item?: string };
+  | { number: string; paymentIntentId: string; clientSecret: string; totalCents: number; guestToken?: string }
+  | { error: "disabled" | "empty" | "address" | "postal" | "email" | "unknown" | "stock" | "reserved" | "payment"; item?: string };
+export type PayInput = { addressId?: unknown; address?: Record<string, unknown>; email?: unknown };
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function parseCart(raw: unknown): CartInput {
   if (!Array.isArray(raw)) return [];
@@ -21,16 +23,26 @@ const stripeFetch = (path: string, init: RequestInit) =>
   fetch(`https://api.stripe.com/v1/${path}`, { ...init, headers: { Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`, ...(init.headers ?? {}) } });
 
 /** Même contrôles que placeOrder du site (adresse, variantes, stock), réservation de 30 min, puis PaymentIntent pour la PaymentSheet native. */
-export async function createMobilePayment(user: MobileUser, addressId: string, cartRaw: unknown): Promise<CreateResult> {
+export async function createMobilePayment(userIn: MobileUser | null, input: PayInput, cartRaw: unknown): Promise<CreateResult> {
   if (!stripeEnabled()) return { error: "disabled" };
   const cart = parseCart(cartRaw);
   if (cart.length === 0) return { error: "empty" };
-  const a = await db.address.findFirst({ where: { id: addressId, userId: user.id } });
-  if (!a) return { error: "address" };
-  const addr = readAddress((n) => String(({ firstName: a.firstName, lastName: a.lastName, country: a.country, line1: a.line1, houseNumber: a.houseNumber, box: a.box ?? "", line2: a.line2 ?? "", postalCode: a.postalCode, city: a.city, phone: a.phone } as Record<string, string>)[n] ?? ""));
-  if (checkAddress(addr)) return { error: "address" };
+  const field = (b: Record<string, unknown>) => (n: string) => (typeof b[n] === "string" ? (b[n] as string).trim().slice(0, 200) : "");
+  const email = userIn ? userIn.email : field(input as Record<string, unknown>)("email");
+  if (!EMAIL_RE.test(email)) return { error: "email" };
+  const user = userIn;
+  let addr;
+  if (input.addressId && user) {
+    const a = await db.address.findFirst({ where: { id: String(input.addressId), userId: user.id } });
+    if (!a) return { error: "address" };
+    addr = readAddress((n) => String(({ firstName: a.firstName, lastName: a.lastName, country: a.country, line1: a.line1, houseNumber: a.houseNumber, box: a.box ?? "", line2: a.line2 ?? "", postalCode: a.postalCode, city: a.city, phone: a.phone } as Record<string, string>)[n] ?? ""));
+  } else {
+    addr = readAddress(field(input.address ?? {}));
+  }
+  const problem = checkAddress(addr);
+  if (problem) return { error: problem === "postal" ? "postal" : "address" };
 
-  const buyerKey = buyerKeyOf(user.id, user.email);
+  const buyerKey = buyerKeyOf(user?.id ?? null, email);
   await releaseBuyerHolds(db, buyerKey);
   const products = await db.product.findMany({ where: { slug: { in: cart.map((l) => l.slug) }, status: "PUBLISHED", supplierId: { not: null } }, include: { variants: true } });
   const bySlug = new Map(products.map((p) => [p.slug, p]));
@@ -53,8 +65,8 @@ export async function createMobilePayment(user: MobileUser, addressId: string, c
   const number = `AM-${randomUUID().slice(0, 8).toUpperCase()}`;
   const payload: HoldPayload = {
     locale: "fr",
-    email: user.email,
-    userId: user.id,
+    email,
+    userId: user?.id ?? null,
     fullName: `${addr.firstName} ${addr.lastName}`,
     address: formatStreet(addr, "fr"),
     postalCode: addr.postalCode,
@@ -79,7 +91,7 @@ export async function createMobilePayment(user: MobileUser, addressId: string, c
     throw e;
   }
 
-  const params = new URLSearchParams({ amount: String(totalCents), currency: "eur", "automatic_payment_methods[enabled]": "true", receipt_email: user.email, "metadata[orderNumber]": number, "metadata[source]": "mobile" });
+  const params = new URLSearchParams({ amount: String(totalCents), currency: "eur", "automatic_payment_methods[enabled]": "true", receipt_email: email, "metadata[orderNumber]": number, "metadata[source]": "mobile" });
   const res = await stripeFetch("payment_intents", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded", "Idempotency-Key": `mobile-pi-${number}` }, body: params }).catch(() => null);
   const pi = res && res.ok ? ((await res.json().catch(() => null)) as { id?: string; client_secret?: string } | null) : null;
   if (!pi?.id || !pi.client_secret) {
@@ -87,15 +99,20 @@ export async function createMobilePayment(user: MobileUser, addressId: string, c
     return { error: "payment" };
   }
   await attachSession(db, number, pi.id);
-  return { number, paymentIntentId: pi.id, clientSecret: pi.client_secret, totalCents };
+  return { number, paymentIntentId: pi.id, clientSecret: pi.client_secret, totalCents, guestToken: user ? undefined : payload.editToken };
+}
+
+/** Invité : la preuve est le jeton renvoyé à la création (editToken de la réservation) ; connecté : le jeton Bearer. */
+function owns(user: MobileUser | null, guestToken: string, p: HoldPayload) {
+  return user ? p.userId === user.id : !p.userId && !!guestToken && p.editToken === guestToken;
 }
 
 /** Vérifie auprès de Stripe que le paiement est réussi, puis crée la commande depuis la réservation (idempotent, comme le webhook). */
-export async function confirmMobilePayment(user: MobileUser, number: string): Promise<{ status: "paid" | "pending" | "failed" | "unknown" }> {
-  const order = await db.order.findUnique({ where: { number }, select: { userId: true } });
-  if (order) return order.userId === user.id ? { status: "paid" } : { status: "unknown" };
+export async function confirmMobilePayment(user: MobileUser | null, number: string, guestToken = ""): Promise<{ status: "paid" | "pending" | "failed" | "unknown" }> {
+  const order = await db.order.findUnique({ where: { number }, select: { userId: true, editToken: true } });
+  if (order) return (user ? order.userId === user.id : !order.userId && !!guestToken && order.editToken === guestToken) ? { status: "paid" } : { status: "unknown" };
   const hold = await db.checkoutHold.findUnique({ where: { number } });
-  if (!hold || (hold.payload as unknown as HoldPayload).userId !== user.id || !hold.stripeSessionId) return { status: "unknown" };
+  if (!hold || !owns(user, guestToken, hold.payload as unknown as HoldPayload) || !hold.stripeSessionId) return { status: "unknown" };
   const res = await stripeFetch(`payment_intents/${encodeURIComponent(hold.stripeSessionId)}`, { method: "GET" }).catch(() => null);
   const pi = res && res.ok ? ((await res.json().catch(() => null)) as { id?: string; status?: string; amount_received?: number; metadata?: { orderNumber?: string } } | null) : null;
   if (!pi || pi.metadata?.orderNumber !== number) return { status: "unknown" };
@@ -107,9 +124,9 @@ export async function confirmMobilePayment(user: MobileUser, number: string): Pr
   return { status: pi.status === "canceled" || pi.status === "requires_payment_method" ? "failed" : "pending" };
 }
 
-export async function cancelMobilePayment(user: MobileUser, number: string) {
+export async function cancelMobilePayment(user: MobileUser | null, number: string, guestToken = "") {
   const hold = await db.checkoutHold.findUnique({ where: { number } });
-  if (!hold || (hold.payload as unknown as HoldPayload).userId !== user.id) return false;
+  if (!hold || !owns(user, guestToken, hold.payload as unknown as HoldPayload)) return false;
   await releaseHold(db, number, "Paiement annulé dans l'application");
   return true;
 }

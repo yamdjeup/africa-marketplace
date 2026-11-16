@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { initPaymentSheet, presentPaymentSheet } from "@stripe/stripe-react-native";
 import { authed } from "./api";
+import { AddressFields, EMPTY_FORM, type AddressForm } from "./addresses";
 
 export type CartLine = { slug: string; name: string; creatorName: string; image: string; priceCents: number; quantity: number; maxQuantity: number };
 type Addr = { id: string; firstName: string; lastName: string; line1: string; houseNumber: string; postalCode: string; city: string; isDefault: boolean };
@@ -11,7 +12,9 @@ const ERRORS: Record<string, string> = {
   stock: "Une pièce n’est plus disponible en quantité suffisante.",
   reserved: "Une pièce est en cours d’achat par un autre client. Réessayez dans quelques minutes.",
   unknown: "Une pièce de votre panier n’est plus disponible.",
-  address: "Adresse de livraison invalide.",
+  address: "Veuillez remplir tous les champs obligatoires.",
+  postal: "Code postal invalide pour ce pays.",
+  email: "Adresse e-mail invalide.",
   disabled: "Le paiement est momentanément indisponible.",
   payment: "Le paiement est momentanément indisponible.",
 };
@@ -23,6 +26,12 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
+  const [step, setStep] = useState<"cart" | "form" | "review">("cart");
+  const [email, setEmail] = useState("");
+  const [manual, setManual] = useState<AddressForm>(EMPTY_FORM);
+  const [mismatch, setMismatch] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const useBook = !!token && addrs.length > 0;
 
   useEffect(() => {
     if (!token) return;
@@ -33,29 +42,49 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
     });
   }, [token]);
 
+  const verify = async () => {
+    setMsg(null);
+    if (useBook) return setStep("review");
+    if (!token && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return setMsg(ERRORS.email);
+    const m = manual;
+    if (![m.firstName, m.lastName, m.line1, m.city, m.phone].every((v) => v.trim())) return setMsg(ERRORS.address);
+    setChecking(true);
+    let mm = false;
+    try {
+      const qs = new URLSearchParams({ postalCode: m.postalCode.trim(), city: m.city.trim(), country: m.country.trim(), locale: "fr" });
+      const r = await authed<{ status?: string }>(null, "GET", `/api/address/check?${qs}`);
+      mm = r.data.status === "mismatch";
+    } catch {
+      mm = false;
+    }
+    setChecking(false);
+    setMismatch(mm);
+    setStep("review");
+  };
+
   const pay = async () => {
-    if (!token || !addrId) return;
     setBusy(true);
     setMsg(null);
     const cart = lines.map((l) => ({ slug: l.slug, size: null, quantity: l.quantity }));
-    const c = await authed<{ number?: string; clientSecret?: string; error?: string; item?: string }>(token, "POST", "/api/v1/checkout/create", { addressId: addrId, cart });
+    const c = await authed<{ number?: string; clientSecret?: string; guestToken?: string; error?: string; item?: string }>(token, "POST", "/api/v1/checkout/create", useBook ? { addressId: addrId, cart } : { address: manual, email: token ? undefined : email.trim(), cart });
     if (!c.ok || !c.data.clientSecret || !c.data.number) {
       setMsg((ERRORS[c.data.error ?? ""] ?? "Le paiement n’a pas pu démarrer.") + (c.data.item ? ` (${c.data.item})` : ""));
       setBusy(false);
       return;
     }
     const number = c.data.number;
+    const guestToken = c.data.guestToken;
     const init = await initPaymentSheet({ merchantDisplayName: "E póm ta’", paymentIntentClientSecret: c.data.clientSecret, returnURL: "epomta://stripe-redirect", allowsDelayedPaymentMethods: false });
     const shown = init.error ? init : await presentPaymentSheet();
     if (shown.error) {
-      await authed(token, "POST", "/api/v1/checkout/cancel", { number });
+      await authed(token, "POST", "/api/v1/checkout/cancel", { number, guestToken });
       if (shown.error.code !== "Canceled") setMsg("Le paiement a échoué. Aucun montant n’a été débité.");
       setBusy(false);
       return;
     }
     let status = "pending";
     for (let i = 0; i < 5 && status === "pending"; i++) {
-      status = (await authed<{ status: string }>(token, "POST", "/api/v1/checkout/confirm", { number })).data.status ?? "pending";
+      status = (await authed<{ status: string }>(token, "POST", "/api/v1/checkout/confirm", { number, guestToken })).data.status ?? "pending";
       if (status === "pending") await new Promise((r) => setTimeout(r, 1500));
     }
     setBusy(false);
@@ -74,6 +103,65 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
         <Pressable style={[s.cta, { marginTop: 24 }]} onPress={onClose}><Text style={s.ctaText}>CONTINUER MES ACHATS</Text></Pressable>
       </View>
     );
+  const addrLine = (a: { houseNumber: string; line1: string; postalCode: string; city: string }) => `${a.houseNumber} ${a.line1}`.trim() + `\n${a.postalCode} ${a.city}`;
+  if (step !== "cart") {
+    const ship = useBook ? addrs.find((a) => a.id === addrId) : undefined;
+    return (
+      <ScrollView style={{ flex: 1, backgroundColor: "#fff" }} contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
+        <Pressable onPress={() => { setMsg(null); setStep(step === "review" ? "form" : "cart"); }} hitSlop={8} style={{ marginBottom: 8 }}><Text style={s.link}>← {step === "review" ? "Modifier" : "Mon panier"}</Text></Pressable>
+        <Text style={s.h2}>COMMANDE</Text>
+        <Text style={[s.note, { fontWeight: "600" }]}>Livraison assurée, signature requise à la réception.</Text>
+        <Text style={[s.note, { marginTop: 8 }]}>Paiement sécurisé par carte bancaire.</Text>
+        {msg ? <Text style={{ color: "#b00020", marginVertical: 8 }}>{msg}</Text> : null}
+        {step === "form" ? (
+          <>
+            {!token && <Text style={[s.mut, { marginTop: 12 }]}>Vous commandez en invité. Connectez-vous pour retrouver vos commandes.{"  "}<Text style={s.link} onPress={onNeedLogin}>Se connecter</Text></Text>}
+            <Text style={s.h3}>COORDONNÉES</Text>
+            {token ? null : (
+              <>
+                <Text style={s.label}>E-mail *</Text>
+                <TextInput style={s.input} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" placeholderTextColor="#767676" selectionColor="#000" />
+              </>
+            )}
+            {useBook ? (
+              <>
+                <Text style={s.h3}>CHOISIR L’ADRESSE DE LIVRAISON</Text>
+                {addrs.map((a) => (
+                  <Pressable key={a.id} onPress={() => setAddrId(a.id)} style={{ flexDirection: "row", gap: 8, marginBottom: 10 }}>
+                    <Text>{addrId === a.id ? "◉" : "○"}</Text>
+                    <Text style={{ flex: 1 }}><Text style={s.bold}>{a.firstName} {a.lastName}</Text>{"\n"}{addrLine(a)}</Text>
+                  </Pressable>
+                ))}
+              </>
+            ) : (
+              <>
+                <Text style={s.h3}>ADRESSE DE LIVRAISON</Text>
+                <AddressFields form={manual} setForm={setManual} />
+              </>
+            )}
+            <Pressable disabled={checking} onPress={verify} style={[s.cta, { backgroundColor: "#000", marginTop: 8 }]}>
+              {checking ? <ActivityIndicator color="#fff" /> : <Text style={s.ctaText}>VÉRIFIER MON ADRESSE</Text>}
+            </Pressable>
+          </>
+        ) : (
+          <>
+            <Text style={s.h3}>VÉRIFIEZ VOTRE ADRESSE</Text>
+            <Text style={s.mut}>Une adresse exacte évite les retards et les colis perdus. Relisez-la avant de confirmer.</Text>
+            <View style={s.card}>
+              {ship ? <Text><Text style={s.bold}>{ship.firstName} {ship.lastName}</Text>{"\n"}{addrLine(ship)}</Text> : (
+                <Text><Text style={s.bold}>{manual.firstName} {manual.lastName}</Text>{"\n"}{addrLine(manual)}{"\n"}{manual.country}{"\n"}Téléphone : {manual.phone}{token ? "" : `\n${email.trim()}`}</Text>
+              )}
+            </View>
+            <Text style={s.mut}>Nous vous contacterons par téléphone en cas de doute sur l’adresse.</Text>
+            {mismatch && !ship ? <Text style={{ color: "#b00020", marginTop: 8 }}>Attention : ce code postal ne semble pas correspondre à cette ville. Vérifiez-les avant de confirmer.</Text> : null}
+            <Pressable disabled={busy} onPress={pay} style={[s.cta, { backgroundColor: "#000", marginTop: 16 }]}>
+              {busy ? <ActivityIndicator color="#fff" /> : <Text style={s.ctaText}>CONFIRMER LA COMMANDE · {eur(total)}</Text>}
+            </Pressable>
+          </>
+        )}
+      </ScrollView>
+    );
+  }
   return (
     <View style={{ flex: 1, backgroundColor: "#fff" }}>
       <ScrollView contentContainerStyle={{ padding: 16 }}>
@@ -100,20 +188,9 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
       {lines.length > 0 && (
         <View style={s.footer}>
           <Text style={s.bold}>Sous-total : {eur(total)}</Text>
-          {token && addrs.length > 0 && addrs.map((a) => (
-            <Pressable key={a.id} onPress={() => setAddrId(a.id)} style={{ flexDirection: "row", gap: 8, marginTop: 8 }}>
-              <Text>{addrId === a.id ? "◉" : "○"}</Text>
-              <Text style={{ flex: 1 }}>{a.firstName} {a.lastName}, {a.houseNumber} {a.line1}, {a.postalCode} {a.city}</Text>
-            </Pressable>
-          ))}
-          {token && addrs.length === 0 && <Text style={[s.mut, { marginTop: 8 }]}>Ajoutez une adresse de livraison dans Moi › Mes adresses pour payer.</Text>}
-          {msg ? <Text style={{ color: "#b00020", marginTop: 8 }}>{msg}</Text> : null}
-          <Pressable
-            disabled={busy || (!!token && !addrId)}
-            onPress={token ? pay : onNeedLogin}
-            style={[s.cta, { marginTop: 8, backgroundColor: token && !addrId ? "#999" : "#000" }]}
-          >
-            {busy ? <ActivityIndicator color="#fff" /> : <Text style={s.ctaText}>{token ? `PAYER ${eur(total)}` : "SE CONNECTER POUR PAYER"}</Text>}
+          <Text style={[s.mut, { marginTop: 4 }]}>Livraison par créateur.</Text>
+          <Pressable onPress={() => { setMsg(null); setStep("form"); }} style={[s.cta, { marginTop: 8, backgroundColor: "#000" }]}>
+            <Text style={s.ctaText}>PASSER COMMANDE</Text>
           </Pressable>
         </View>
       )}
@@ -124,6 +201,11 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
 const s = StyleSheet.create({
   h2: { fontSize: 18, fontWeight: "700", letterSpacing: 1, marginBottom: 16 },
   mut: { fontSize: 14, color: "#666" },
+  note: { fontSize: 14, borderWidth: 1, borderColor: "#ddd", backgroundColor: "#f7f7f7", padding: 10 },
+  h3: { fontSize: 15, fontWeight: "700", letterSpacing: 1, marginTop: 16, marginBottom: 8 },
+  label: { fontSize: 12, color: "#666", marginBottom: 4 },
+  input: { backgroundColor: "#fff", color: "#111", borderWidth: 1, borderColor: "#ccc", paddingHorizontal: 12, height: 48, fontSize: 16, marginBottom: 12 },
+  card: { borderWidth: 1, borderColor: "#ddd", padding: 12, marginVertical: 12 },
   bold: { fontWeight: "700" },
   line: { flexDirection: "row", gap: 12, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#eee" },
   img: { width: 80, height: 100, backgroundColor: "#f2f2f2" },

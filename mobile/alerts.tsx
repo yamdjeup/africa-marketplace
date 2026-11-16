@@ -16,7 +16,7 @@ export function AlertsScreen({ token, onBack }: { token: string; onBack: () => v
     setTestMsg("");
     const r = await authed<{ status?: string }>(token, "POST", "/api/v1/alerts/test");
     const st = r.data.status;
-    setTestMsg(st === "sent" ? "E-mail de test envoyé à votre adresse." : st === "rate_limited" ? "Patientez une minute avant un nouvel essai." : st === "unconfigured" ? "L'envoi d'e-mails n'est pas configuré sur ce site." : `L'envoi a échoué, réessayez plus tard. (HTTP ${r.status || "réseau/délai"} · ${st ?? "?"})`);
+    setTestMsg(st === "sent" ? tr("E-mail de test envoyé à votre adresse.", "Test email sent to your address.") : st === "rate_limited" ? "Patientez une minute avant un nouvel essai." : st === "unconfigured" ? tr("L'envoi d'e-mails n'est pas configuré sur ce site.", "Email sending is not configured on this site.") : tr(`L'envoi a échoué, réessayez plus tard. (HTTP ${r.status || "réseau/délai"} · ${st ?? "?"})`, `Sending failed, please try again later. (HTTP ${r.status || "network/timeout"} · ${st ?? "?"})`));
   };
   useEffect(() => {
     authed<{ email?: boolean; promo?: boolean }>(token, "GET", "/api/v1/alerts/prefs").then((r) => { setEmail(!!r.data.email); setPromo(!!r.data.promo); });
@@ -27,7 +27,7 @@ export function AlertsScreen({ token, onBack }: { token: string; onBack: () => v
     setMsg("");
     if (v) {
       const r = await enablePush(token);
-      if (r.token) { setPushTok(r.token); AsyncStorage.setItem("expoPushToken", r.token); } else setMsg(`Impossible d'activer les notifications, réessayez plus tard. (${r.error ?? "?"}${r.detail ? " · " + r.detail : ""})`);
+      if (r.token) { setPushTok(r.token); AsyncStorage.setItem("expoPushToken", r.token); } else setMsg(tr(`Impossible d'activer les notifications, réessayez plus tard. (${r.error ?? "?"}${r.detail ? " · " + r.detail : ""})`, `Unable to enable notifications, please try again later. (${r.error ?? "?"}${r.detail ? " · " + r.detail : ""})`));
     } else if (pushTok) {
       await disablePush(token, pushTok);
       AsyncStorage.removeItem("expoPushToken");
@@ -46,7 +46,7 @@ export function AlertsScreen({ token, onBack }: { token: string; onBack: () => v
       {msg ? <Text style={s.mut}>{msg}</Text> : null}
       {row("E-mail", email, (v) => { setEmail(v); save({ email: v }); })}
       <Text style={[s.h3]}>{tr("Envie de plus ?", "Want more?")}</Text>
-      {row("Recevoir des notifications sur les promotions, nouveautés et stocks", promo, (v) => { setPromo(v); save({ promo: v }); })}
+      {row(tr("Recevoir des notifications sur les promotions, nouveautés et stocks", "Get notifications about offers, new arrivals and stock"), promo, (v) => { setPromo(v); save({ promo: v }); })}
       <Pressable onPress={sendTest} style={{ minHeight: 44, justifyContent: "center", paddingHorizontal: 20, borderWidth: 1, borderColor: "#221812", alignSelf: "flex-start", marginTop: 8 }}><Text style={{ color: "#221812" }}>{tr("Envoyer un e-mail de test", "Send a test email")}</Text></Pressable>
       {testMsg ? <Text style={{ color: "#221812", marginTop: 8 }}>{testMsg}</Text> : null}
     </ScrollView>

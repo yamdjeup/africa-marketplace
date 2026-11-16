@@ -19,7 +19,7 @@ export async function enablePush(accessToken: string): Promise<{ token?: string;
     const projectId = (Constants.expoConfig?.extra as { eas?: { projectId?: string } } | undefined)?.eas?.projectId ?? Constants.easConfig?.projectId;
     const { data } = await Notifications.getExpoPushTokenAsync(projectId ? { projectId } : undefined);
     const r = await authed(accessToken, "POST", "/api/v1/push/token", { token: data, locale: "fr" });
-    return r.ok ? { token: data } : { error: "unavailable", detail: `API /api/v1/push/token HTTP ${r.status || "réseau/délai"}` };
+    return r.ok ? { token: data } : { error: "unavailable", detail: `API /api/v1/push/token HTTP ${r.status || "network/timeout"}` };
   } catch (e) {
     return { error: "unavailable", detail: String((e as Error)?.message ?? e) };
   }

@@ -80,8 +80,8 @@ export function ShopScreen<P extends Item>({ initialCategory, renderItem, onOpen
       if (!d) return;
       setSugg([
         ...d.artists.map((a) => ({ key: `a-${a.slug}`, label: a.name, hint: "Artiste", act: () => onOpenCreator(a.slug) })),
-        ...d.categories.map((c) => ({ key: `c-${c.slug}`, label: c.label, hint: "Catégorie", act: () => setV({ ...EMPTY, category: c.slug }) })),
-        ...d.products.map((p) => ({ key: `p-${p.slug}`, label: p.name, hint: `Création · ${p.creator}`, act: () => onOpenSlug(p.slug) })),
+        ...d.categories.map((c) => ({ key: `c-${c.slug}`, label: c.label, hint: tr("Catégorie", "Category"), act: () => setV({ ...EMPTY, category: c.slug }) })),
+        ...d.products.map((p) => ({ key: `p-${p.slug}`, label: p.name, hint: tr(`Création · ${p.creator}`, `Piece · ${p.creator}`), act: () => onOpenSlug(p.slug) })),
       ]);
       setOpen(true);
     }, 180);
@@ -127,7 +127,7 @@ export function ShopScreen<P extends Item>({ initialCategory, renderItem, onOpen
       {catsOpen && <CategoriesScreen onClose={() => setCatsOpen(false)} onApply={(a) => setV({ ...EMPTY, ...a })} />}
       {artistsOpen && <ArtistsScreen onClose={() => setArtistsOpen(false)} onOpenCreator={(s) => { setArtistsOpen(false); onOpenCreator(s); }} />}
       <View style={{ padding: 16, paddingBottom: 8 }}>
-        <TextInput value={text} onChangeText={setText} onFocus={() => setOpen(true)} placeholder="Un titre, un artiste, une technique…" placeholderTextColor="#8a7d70" accessibilityLabel="Recherche" returnKeyType="search" autoCorrect={false}
+        <TextInput value={text} onChangeText={setText} onFocus={() => setOpen(true)} placeholder={tr("Un titre, un artiste, une technique…", "A title, an artist, a technique…")} placeholderTextColor="#8a7d70" accessibilityLabel={tr("Recherche", "Search")} returnKeyType="search" autoCorrect={false}
           onSubmitEditing={() => { setOpen(false); setV({ ...EMPTY, q: text.trim() }); }} style={st.input} />
         {open && text.trim().length >= 2 && sugg.length > 0 && (
           <View style={st.suggBox}>
@@ -160,14 +160,14 @@ export function ShopScreen<P extends Item>({ initialCategory, renderItem, onOpen
         </View>
       )}
       <View style={st.bar}>
-        <Text style={{ color: "#6b5d52", fontSize: 13 }}>{total} pièce{total > 1 ? "s" : ""}</Text>
-        <Pressable onPress={() => setSheet(true)} style={st.refine}><Text style={{ color: "#1c3060", fontWeight: "600" }}>Affiner{activeCount > 0 ? ` (${activeCount})` : ""}</Text></Pressable>
+        <Text style={{ color: "#6b5d52", fontSize: 13 }}>{tr(`${total} pièce${total > 1 ? "s" : ""}`, `${total} piece${total > 1 ? "s" : ""}`)}</Text>
+        <Pressable onPress={() => setSheet(true)} style={st.refine}><Text style={{ color: "#1c3060", fontWeight: "600" }}>{tr("Affiner", "Refine")}{activeCount > 0 ? ` (${activeCount})` : ""}</Text></Pressable>
       </View>
       {extras && extras.artists.length > 0 && (
         <View>
           <Text style={st.h2}>{tr("Artistes", "Artists")}</Text>
           {artistRow(extras.artists)}
-          {items.length > 0 && <Text style={st.h2}>Créations</Text>}
+          {items.length > 0 && <Text style={st.h2}>{tr("Créations", "Pieces")}</Text>}
         </View>
       )}
     </View>
@@ -175,17 +175,17 @@ export function ShopScreen<P extends Item>({ initialCategory, renderItem, onOpen
 
   const empty = loading ? <ActivityIndicator style={{ marginTop: 40 }} /> : (
     <View style={st.empty}>
-      <Text style={st.emptyTitle}>{onlyCategory ? "Cette catégorie accueillera bientôt de nouvelles pièces." : "Aucune création ne correspond à votre recherche."}</Text>
-      {!onlyCategory && <Text style={{ color: "#6b5d52", marginTop: 4 }}>Essayez d'élargir vos filtres.</Text>}
+      <Text style={st.emptyTitle}>{onlyCategory ? tr("Cette catégorie accueillera bientôt de nouvelles pièces.", "This category will soon welcome new pieces.") : tr("Aucune création ne correspond à votre recherche.", "No piece matches your search.")}</Text>
+      {!onlyCategory && <Text style={{ color: "#6b5d52", marginTop: 4 }}>{tr("Essayez d'élargir vos filtres.", "Try widening your filters.")}</Text>}
       {extras?.didYouMean && (
         <Pressable onPress={() => setV({ ...EMPTY, ...(extras.didYouMean!.kind === "artist" ? { artist: extras.didYouMean!.slug } : { category: extras.didYouMean!.slug }) })}>
           <Text style={{ marginTop: 12 }}>Vouliez-vous dire : <Text style={{ fontWeight: "700", textDecorationLine: "underline" }}>{extras.didYouMean.label} ?</Text></Text>
         </Pressable>
       )}
-      <Pressable onPress={() => { setText(""); setV(EMPTY); }} style={st.reset}><Text style={{ color: "#1c3060", fontWeight: "600" }}>Réinitialiser</Text></Pressable>
+      <Pressable onPress={() => { setText(""); setV(EMPTY); }} style={st.reset}><Text style={{ color: "#1c3060", fontWeight: "600" }}>{tr("Réinitialiser", "Reset")}</Text></Pressable>
       {extras && extras.artists.length === 0 && (
         <View style={{ marginTop: 20, alignSelf: "stretch" }}>
-          <Text style={st.h2}>Quelques artistes à découvrir</Text>
+          <Text style={st.h2}>{tr("Quelques artistes à découvrir", "A few artists to discover")}</Text>
           {artistRow(extras.suggested)}
         </View>
       )}
@@ -251,20 +251,20 @@ function RefineSheet({ initial, baseOptions, total, onClose, onApply }: { initia
         <Pressable onPress={() => { setCount(null); setV(EMPTY); }}><Text style={{ textDecorationLine: "underline", color: "#221812" }}>{tr("Tout effacer", "Clear all")}</Text></Pressable>
       </View>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
-        <TextInput value={v.q} onChangeText={(t) => set("q", t)} placeholder="Rechercher une création" placeholderTextColor="#8a7d70" style={st.input} />
+        <TextInput value={v.q} onChangeText={(t) => set("q", t)} placeholder={tr("Rechercher une création", "Search for a piece")} placeholderTextColor="#8a7d70" style={st.input} />
         <Text style={st.sheetH}>{tr("Trier par", "Sort by")}</Text>
-        {([["pick", "Notre sélection"], ["new", "Nouveautés"], ["price-desc", "Prix décroissant"], ["price-asc", "Prix croissant"]] as const).map(([k, l]) => (
+        {([["pick", tr("Notre sélection", "Our selection")], ["new", tr("Nouveautés", "New in")], ["price-desc", tr("Prix décroissant", "Price: high to low")], ["price-asc", "Prix croissant"]] as const).map(([k, l]) => (
           <Pressable key={k} onPress={() => set("sort", k)} style={st.radioRow}>
             <Text style={{ color: "#221812" }}>{l}</Text>
             <View style={[st.radio, v.sort === k && st.radioOn]} />
           </Pressable>
         ))}
         <Text style={st.sheetH}>{tr("Filtrer par", "Filter by")}</Text>
-        {group("category", "Catégorie", opts.categories, "Toutes")}
+        {group("category", tr("Catégorie", "Category"), opts.categories, "Toutes")}
         {group("artist", "Artistes", opts.artists, "Tous")}
-        {group("material", "Matière", opts.materials, "Toutes")}
+        {group("material", tr("Matière", "Material"), opts.materials, "Toutes")}
         {group("technique", "Techniques", opts.techniques, "Toutes")}
-        {group("country", "Pays / région", opts.countries, "Tous")}
+        {group("country", tr("Pays / région", "Country / region"), opts.countries, "Tous")}
         {sizes.options.length > 0 && group("size", sizes.kind === "ring" ? "Tour de doigt" : "Tailles", sizes.options.map((o) => ({ value: o, label: o })), "Tous")}
         <Text style={[st.groupHead, { marginTop: 8 }]}>{tr("Fourchette de prix (EUR)", "Price range (EUR)")}</Text>
         <View style={{ flexDirection: "row", gap: 8 }}>
@@ -273,7 +273,7 @@ function RefineSheet({ initial, baseOptions, total, onClose, onApply }: { initia
         </View>
       </ScrollView>
       <View style={{ padding: 16, borderTopWidth: StyleSheet.hairlineWidth, borderColor: "#ded6c9" }}>
-        <Pressable onPress={() => onApply(v)} style={st.cta}><Text style={st.ctaText}>{count === null ? "Calcul…" : `Afficher ${count} résultat${count > 1 ? "s" : ""}`}</Text></Pressable>
+        <Pressable onPress={() => onApply(v)} style={st.cta}><Text style={st.ctaText}>{count === null ? "Calcul…" : tr(`Afficher ${count} résultat${count > 1 ? "s" : ""}`, `Show ${count} result${count > 1 ? "s" : ""}`)}</Text></Pressable>
       </View>
     </View>
   );

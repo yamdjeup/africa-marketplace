@@ -120,7 +120,7 @@ export function WorkForm({ token, slug, onClose }: { token: string; slug?: strin
       <Pressable onPress={() => onClose(false)}><Text style={{ color: "#1c3060" }}>← {tr("Retour", "Back")}</Text></Pressable>
       <Text style={s.h}>{slug ? tr("Modifier la fiche", "Edit listing") : tr("Nouvelle œuvre", "New work")}</Text>
       <Text style={s.mut}>{tr("Langue de saisie", "Writing language")}</Text>
-      <View style={{ flexDirection: "row", gap: 8, marginTop: 6 }}>{chip("Français", f.sourceLang === "fr", () => set("sourceLang", "fr"))}{chip("English", f.sourceLang === "en", () => set("sourceLang", "en"))}</View>
+      <View style={{ flexDirection: "row", gap: 8, marginTop: 6 }}>{chip(tr("Français", "French"), f.sourceLang === "fr", () => set("sourceLang", "fr"))}{chip("English", f.sourceLang === "en", () => set("sourceLang", "en"))}</View>
       <Text style={[s.mut, { marginTop: 6 }]}>{tr("L'autre langue est traduite automatiquement.", "The other language is translated automatically.")}</Text>
       {inp(tr("Titre", "Title"), "title", { maxLength: 140 })}
       {inp(tr("Description (20 caractères minimum pour soumettre)", "Description (20 characters minimum to submit)"), "description", { multiline: true, style: [s.input, { minHeight: 110 }] })}

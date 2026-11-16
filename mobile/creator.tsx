@@ -18,7 +18,7 @@ function Meet({ c }: { c: Creator }) {
     <View style={st.meet}>
       <VideoView player={player} nativeControls contentFit="contain" style={[st.video, v.orientation === "portrait" ? { aspectRatio: 9 / 16, width: 240 } : { aspectRatio: 16 / 9, width: "100%" }]} />
       <Text style={st.h2}>Rencontre avec {c.name}</Text>
-      <Text style={st.p}>Découvrez l'artiste en quelques mots, lors de l'exposition G3A.</Text>
+      <Text style={st.p}>{tr("Découvrez l'artiste en quelques mots, lors de l'exposition G3A.", "Meet the artist in a few words, at the G3A exhibition.")}</Text>
       <Text style={st.quote}>“{v.excerpt}”</Text>
     </View>
   );
@@ -46,7 +46,7 @@ export function CreatorScreen({ slug, onClose, onOpenSlug }: { slug: string; onC
               {c.sourceUrl && <Pressable onPress={() => Linking.openURL(c.sourceUrl!)}><Text style={st.link}>Lire l'article source sur g3a.org</Text></Pressable>}
             </View>
             {c.video && <Meet c={c} />}
-            <Text style={st.h2}>Ses créations</Text>
+            <Text style={st.h2}>{tr("Ses créations", "Their pieces")}</Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
               {c.products.map((p) => (
                 <Pressable key={p.slug} onPress={() => { onClose(); onOpenSlug(p.slug); }} style={{ width: "47%" }}>

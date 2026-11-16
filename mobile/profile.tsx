@@ -25,7 +25,7 @@ export function ProfileScreen({ token, onBack, onSaved }: { token: string; onBac
     setLoadErr("");
     authed<Info>(token, "GET", "/api/v1/auth/profile").then((r) => {
       if (r.ok && r.data.email) { setInfo(r.data); setName(r.data.name); }
-      else setLoadErr(`${API_URL}/api/v1/auth/profile · HTTP ${r.status || "réseau/délai"}`);
+      else setLoadErr(`${API_URL}/api/v1/auth/profile · HTTP ${r.status || tr("réseau/délai", "network/timeout")}`);
     });
   }, [token, tick]);
   const save = async () => {

@@ -1,4 +1,4 @@
-import { tr } from "./region";
+import { tr, lazy } from "./region";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { authed } from "./api";
@@ -26,15 +26,15 @@ function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: numbe
   const date = (d: string) => new Date(d).toLocaleDateString("fr-FR");
   const refunded = ["DONE", "AWAITING", "REQUESTED"].includes(p.refundStatus);
   const cancel = () =>
-    Alert.alert(tr("Annuler ce colis ?", "Cancel this parcel?"), "Cette action est irréversible. Vous serez remboursé intégralement.", [
+    Alert.alert(tr("Annuler ce colis ?", "Cancel this parcel?"), tr("Cette action est irréversible. Vous serez remboursé intégralement.", "This cannot be undone. You will be refunded in full."), [
       { text: "Garder ma commande", style: "cancel" },
-      { text: tr("Annuler le colis", "Cancel the parcel"), style: "destructive", onPress: async () => { setBusy(true); const r = await authed(token, "POST", "/api/v1/orders/cancel", { id: p.id }); setBusy(false); if (r.ok) reload(); else setMsg("Annulation impossible : le colis a déjà été pris en charge."); } },
+      { text: tr("Annuler le colis", "Cancel the parcel"), style: "destructive", onPress: async () => { setBusy(true); const r = await authed(token, "POST", "/api/v1/orders/cancel", { id: p.id }); setBusy(false); if (r.ok) reload(); else setMsg(tr("Annulation impossible : le colis a déjà été pris en charge.", "Cancellation is not possible: the parcel has already been picked up.")); } },
     ]);
   const ask = async () => {
     setBusy(true);
     const r = await authed<{ error?: string }>(token, "POST", "/api/v1/orders/return", { id: p.id, reason });
     setBusy(false);
-    if (r.ok) reload(); else setMsg(r.data?.error === "reason" ? "Merci d’indiquer le motif du retour (3 caractères minimum)." : "Retour impossible pour ce colis.");
+    if (r.ok) reload(); else setMsg(r.data?.error === "reason" ? tr("Merci d’indiquer le motif du retour (3 caractères minimum).", "Please give the reason for the return (3 characters minimum).") : tr("Retour impossible pour ce colis.", "A return is not possible for this parcel."));
   };
   return (
     <View style={{ marginTop: 10, gap: 3 }}>
@@ -42,14 +42,14 @@ function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: numbe
       {p.shop && <Text style={s.mut}>Vendu et expédié par {p.shop.name} ({p.shop.country})</Text>}
       <Text style={s.bold}>{p.statusLabel}</Text>
       {p.items.map((it, k) => <Text key={k}>{it.quantity} × {it.name}{it.size ? ` (${it.size})` : ""}</Text>)}
-      {p.status === "PENDING" && <Text style={s.mut}>En attente de la réponse de la boutique (48 h maximum).</Text>}
+      {p.status === "PENDING" && <Text style={s.mut}>{tr("En attente de la réponse de la boutique (48 h maximum).", "Waiting for the shop's reply (48 h maximum).")}</Text>}
       {p.shippedAt && <Text style={s.mut}>Expédiée le {date(p.shippedAt)}{p.carrier ? ` · ${p.carrier}` : ""}{p.trackingNumber ? ` · ${p.trackingNumber}` : ""}</Text>}
       {p.trackingUrl && <Pressable onPress={() => Linking.openURL(p.trackingUrl!)}><Text style={s.link}>{tr("Suivre mon colis", "Track my parcel")}</Text></Pressable>}
       {p.deliveredAt && <Text style={s.mut}>Livrée le {date(p.deliveredAt)}</Text>}
       {p.reason && <Text style={s.mut}>Motif : {p.reason}</Text>}
       {["REFUSED", "EXPIRED", "CANCELLED"].includes(p.status) && (
         <Text style={s.mut}>
-          {refunded ? `Vous serez remboursé de ${eur(p.subtotalCents)} sur votre moyen de paiement sous 5 à 10 jours ouvrés.` : p.refundStatus === "FAILED" ? "Nous revenons vers vous au sujet de votre remboursement." : "Commande annulée."}
+          {refunded ? tr(`Vous serez remboursé de ${eur(p.subtotalCents)} sur votre moyen de paiement sous 5 à 10 jours ouvrés.`, `You will be refunded ${eur(p.subtotalCents)} to your payment method within 5 to 10 working days.`) : p.refundStatus === "FAILED" ? "Nous revenons vers vous au sujet de votre remboursement." : tr("Commande annulée.", "Order cancelled.")}
         </Text>
       )}
       {p.canCancel && <Pressable disabled={busy} onPress={cancel}><Text style={s.link}>{tr("Annuler ma commande", "Cancel my order")}</Text></Pressable>}
@@ -62,15 +62,15 @@ function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: numbe
         </View>
       )}
       {!!msg && <Text style={{ color: "#a33" }}>{msg}</Text>}
-      <Text style={[s.mut, { fontSize: 12 }]}>E póm ta’ est l’intermédiaire ; la boutique est le vendeur.</Text>
+      <Text style={[s.mut, { fontSize: 12 }]}>{tr("E póm ta’ est l’intermédiaire ; la boutique est le vendeur.", "E póm ta’ is the intermediary; the shop is the seller.")}</Text>
     </View>
   );
 }
 
 const eur = (c: number) => `${(c / 100).toFixed(2).replace(".", ",")} €`;
-const STATUS: Record<string, string> = { PENDING: "En attente de confirmation", ACCEPTED: "Confirmée", SHIPPED: "Expédiée", DELIVERED: "Livrée", CANCELLED: "Annulée", REFUSED: "Annulée", EXPIRED: "Annulée" };
+const STATUS: Record<string, string> = lazy(() => ({ PENDING: tr("En attente de confirmation", "Awaiting confirmation"), ACCEPTED: tr("Confirmée", "Confirmed"), SHIPPED: tr("Expédiée", "Shipped"), DELIVERED: tr("Livrée", "Delivered"), CANCELLED: tr("Annulée", "Cancelled"), REFUSED: tr("Annulée", "Cancelled"), EXPIRED: tr("Annulée", "Cancelled") }));
 
-const ADDR_ERR: Record<string, string> = { required: "Veuillez renseigner les champs obligatoires.", postal: "Ce code postal ne semble pas valide pour ce pays.", locked: "L'adresse ne peut plus être modifiée : la commande est déjà en cours d'expédition.", not_found: "Commande introuvable." };
+const ADDR_ERR: Record<string, string> = lazy(() => ({ required: tr("Veuillez renseigner les champs obligatoires.", "Please fill in the required fields."), postal: tr("Ce code postal ne semble pas valide pour ce pays.", "This postcode does not seem valid for this country."), locked: tr("L'adresse ne peut plus être modifiée : la commande est déjà en cours d'expédition.", "The address can no longer be changed: the order is already being shipped."), not_found: tr("Commande introuvable.", "Order not found.") }));
 
 // Reprend order-address-form.tsx / updateOrderAddress du site : modification possible tant qu'aucun colis n'est expédié.
 function EditAddress({ o, token, reload }: { o: Order; token: string; reload: () => void }) {
@@ -102,10 +102,10 @@ export function OrdersScreen({ token, onBack }: { token: string; onBack: () => v
   useEffect(() => { load(); }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
-      <Pressable onPress={onBack} hitSlop={8} style={{ marginBottom: 8 }}><Text style={s.link}>← Mon compte</Text></Pressable>
+      <Pressable onPress={onBack} hitSlop={8} style={{ marginBottom: 8 }}><Text style={s.link}>← {tr("Mon compte", "My account")}</Text></Pressable>
       <Text style={s.h2}>{tr("Mes commandes", "My orders")}</Text>
       {orders === null && <ActivityIndicator />}
-      {orders?.length === 0 && <Text style={s.mut}>Vous n’avez pas encore de commande.</Text>}
+      {orders?.length === 0 && <Text style={s.mut}>{tr("Vous n’avez pas encore de commande.", "You have no orders yet.")}</Text>}
       {orders?.map((o) => (
         <View key={o.number} style={s.card}>
           <Text style={s.bold}>Commande {o.number}</Text>

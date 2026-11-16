@@ -29,7 +29,7 @@ export function SupportScreen({ onBack, initialSlug }: { onBack: () => void; ini
   if (slug) {
     return (
       <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
-        <Pressable onPress={() => setSlug(null)} hitSlop={10}><Text style={st.back}>‹ Retour</Text></Pressable>
+        <Pressable onPress={() => setSlug(null)} hitSlop={10}><Text style={st.back}>‹ {tr("Retour", "Back")}</Text></Pressable>
         {!doc ? <ActivityIndicator style={{ marginTop: 30 }} /> : (
           <View>
             <Text style={st.title}>{doc.title}</Text>
@@ -67,11 +67,11 @@ export function SupportScreen({ onBack, initialSlug }: { onBack: () => void; ini
 
   return (
     <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
-      <Pressable onPress={onBack} hitSlop={10}><Text style={st.back}>‹ Retour</Text></Pressable>
-      <Text style={st.title}>Besoin d’aide ?</Text>
-      {failed && !index ? <Text style={st.p}>Connexion impossible. Vérifiez votre réseau.</Text> : !index ? <ActivityIndicator style={{ marginTop: 30 }} /> : (
+      <Pressable onPress={onBack} hitSlop={10}><Text style={st.back}>‹ {tr("Retour", "Back")}</Text></Pressable>
+      <Text style={st.title}>{tr("Besoin d’aide ?", "Need help?")}</Text>
+      {failed && !index ? <Text style={st.p}>{tr("Connexion impossible. Vérifiez votre réseau.", "Unable to connect. Check your network.")}</Text> : !index ? <ActivityIndicator style={{ marginTop: 30 }} /> : (
         <View>
-          {section("Aide", index.help)}
+          {section(tr("Aide", "Help"), index.help)}
           {section("Support", index.support)}
           <Pressable onPress={() => Linking.openURL("mailto:contact@epomta.com")} style={[st.btn, { alignSelf: "stretch", alignItems: "center", backgroundColor: "#1c3060" }]}>
             <Text style={[st.btnText, { color: "#fff" }]}>{index.contactLabel} : contact@epomta.com</Text>

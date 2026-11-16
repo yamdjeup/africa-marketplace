@@ -37,7 +37,7 @@ function Card({ p, fav, onFav, onOpen, wide }: { p: Product; fav: boolean; onFav
     <Pressable onPress={onOpen} style={[s.card, wide && { width: "48%" }]}>
       <Image source={{ uri: p.images[0] }} style={s.cardImg} />
       <Badges stock={p.stock} isNew={p.isNew} isExample={p.isExample} />
-      <Pressable onPress={onFav} hitSlop={6} style={s.heart} accessibilityLabel={fav ? "Retirer des favoris" : "Ajouter aux favoris"}><Text style={[s.heartIcon, fav && { color: "#d4183d" }]}>{fav ? "♥" : "♡"}</Text></Pressable>
+      <Pressable onPress={onFav} hitSlop={6} style={s.heart} accessibilityLabel={fav ? "Retirer des favoris" : tr("Ajouter aux favoris", "Add to wish list")}><Text style={[s.heartIcon, fav && { color: "#d4183d" }]}>{fav ? "♥" : "♡"}</Text></Pressable>
       <Text style={s.brand} numberOfLines={1}>{p.creatorName}</Text>
       <Text numberOfLines={1} style={s.name}>{p.name}</Text>
       <Text style={s.price}>{eur(p.priceCents)}</Text>
@@ -101,9 +101,9 @@ function DetailBody({ p, onClose, fav, onFav, onAdd, token, onNeedLogin, onOpenR
     try {
       const r = watch ? await authed(token, "DELETE", `/api/v1/restock-watch?slug=${encodeURIComponent(p.slug)}`) : await authed(token, "POST", "/api/v1/restock-watch", { slug: p.slug, locale: "fr" });
       if (r.status < 300) setWatch(!watch);
-      else setWatchErr(`Impossible d’enregistrer l’alerte (code ${r.status}). Réessayez.`);
+      else setWatchErr(tr(`Impossible d’enregistrer l’alerte (code ${r.status}). Réessayez.`, `Unable to save the alert (code ${r.status}). Please try again.`));
     } catch (e) {
-      setWatchErr(`Impossible d’enregistrer l’alerte : ${(e as Error).message}`);
+      setWatchErr(tr(`Impossible d’enregistrer l’alerte : ${(e as Error).message}`, `Unable to save the alert: ${(e as Error).message}`));
     }
     setBusy(false);
   };
@@ -111,7 +111,7 @@ function DetailBody({ p, onClose, fav, onFav, onAdd, token, onNeedLogin, onOpenR
       <View style={{ flex: 1, backgroundColor: "#faf6ee", paddingTop: Math.max(insets.top, Platform.OS === "android" ? RNStatusBar.currentHeight ?? 24 : 0) }}>
         <View style={s.bar}>
           <Pressable onPress={onClose} hitSlop={12} style={{ width: 44, height: 44, justifyContent: "center" }} accessibilityLabel={tr("Retour", "Back")}><Text style={{ fontSize: 28 }}>←</Text></Pressable>
-          <Pressable onPress={onFav} hitSlop={12} style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }} accessibilityLabel={fav ? "Retirer des favoris" : "Ajouter aux favoris"}><Text style={{ fontSize: 28, color: fav ? "#d4183d" : "#111" }}>{fav ? "♥" : "♡"}</Text></Pressable>
+          <Pressable onPress={onFav} hitSlop={12} style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }} accessibilityLabel={fav ? "Retirer des favoris" : tr("Ajouter aux favoris", "Add to wish list")}><Text style={{ fontSize: 28, color: fav ? "#d4183d" : "#111" }}>{fav ? "♥" : "♡"}</Text></Pressable>
         </View>
         <ScrollView>
           <View><ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false}>
@@ -123,27 +123,27 @@ function DetailBody({ p, onClose, fav, onFav, onAdd, token, onNeedLogin, onOpenR
             <Text style={[s.h2, { paddingHorizontal: 0 }]}>{p.name}</Text>
             <Text style={[s.price, { fontSize: 18 }]}>{eur(p.priceCents)}</Text>
             <ApproxPrice cents={p.priceCents} />
-            <Text style={[s.meta, { color: p.stock === 0 ? "#b42318" : "#1e7546" }]}>{p.stock === 0 ? "Épuisée" : p.stock <= 1 ? "Pièce unique" : p.stock <= 3 ? `Plus que ${p.stock}` : "En stock"}</Text>
+            <Text style={[s.meta, { color: p.stock === 0 ? "#b42318" : "#1e7546" }]}>{p.stock === 0 ? tr("Épuisée", "Sold out") : p.stock <= 1 ? tr("Pièce unique", "Unique piece") : p.stock <= 3 ? tr(`Plus que ${p.stock}`, `Only ${p.stock} left`) : tr("En stock", "In stock")}</Text>
             <Text style={s.body}>{p.description}</Text>
-            {[p.edition && !(p.stock > 0 && p.stock <= 1 && unique) && `Édition : ${p.edition}`, p.material && `Matière : ${p.material}`, p.technique && `Technique : ${p.technique}`, !p.material && !p.technique && x?.materials?.length ? `Matières : ${x.materials.join(", ")}` : null, p.origin && `Origine : ${p.origin}`, (x ? x.dimensionsText : p.dimensions) && `Dimensions : ${x ? x.dimensionsText : p.dimensions}`].filter(Boolean).map((l) => <Text key={l as string} style={s.meta}>{l}</Text>)}
+            {[p.edition && !(p.stock > 0 && p.stock <= 1 && unique) && tr(`Édition : ${p.edition}`, `Edition: ${p.edition}`), p.material && tr(`Matière : ${p.material}`, `Material: ${p.material}`), p.technique && `Technique : ${p.technique}`, !p.material && !p.technique && x?.materials?.length ? tr(`Matières : ${x.materials.join(", ")}`, `Materials: ${x.materials.join(", ")}`) : null, p.origin && `Origine : ${p.origin}`, (x ? x.dimensionsText : p.dimensions) && `Dimensions : ${x ? x.dimensionsText : p.dimensions}`].filter(Boolean).map((l) => <Text key={l as string} style={s.meta}>{l}</Text>)}
             {x?.attestedAt ? (
               <View style={{ marginTop: 12, padding: 12, borderWidth: 1, borderColor: "#ded6c9", borderRadius: 6, backgroundColor: "#f2eadd" }}>
-                <Text style={{ fontWeight: "600", color: "#221812" }}>Authenticité</Text>
-                <Text style={{ color: "#221812" }}>{`Œuvre d'art originale, certifiée par l'artiste le ${new Date(x.attestedAt).toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" })}`}{p.edition ? ` · Édition ${p.edition}` : ""}</Text>
+                <Text style={{ fontWeight: "600", color: "#221812" }}>{tr("Authenticité", "Authenticity")}</Text>
+                <Text style={{ color: "#221812" }}>{tr(`Œuvre d'art originale, certifiée par l'artiste le ${new Date(x.attestedAt).toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" })}`, `Original artwork, certified by the artist on ${new Date(x.attestedAt).toLocaleDateString("en-GB", { timeZone: "Europe/Paris" })}`)}{p.edition ? tr(` · Édition ${p.edition}`, ` · Edition ${p.edition}`) : ""}</Text>
                 {x.signatureUrl ? <Image source={{ uri: x.signatureUrl }} style={{ height: 80, width: 160, marginTop: 8 }} resizeMode="contain" accessibilityLabel={tr("Signature de l'artiste", "Artist's signature")} /> : null}
               </View>
             ) : null}
             {x?.roomPreview || x?.mirrorTryOn ? (
-              <Pressable style={[s.cta, { marginTop: 12 }]} onPress={async () => { try { await WebBrowser.openBrowserAsync(`${API_URL}/fr/produits/${p.slug}/essayage`); } catch { Alert.alert(tr("Indisponible", "Unavailable"), "Impossible d’ouvrir cet aperçu : aucun navigateur compatible n’est disponible sur cet appareil. Vérifiez que Chrome est installé et à jour, ainsi que la réalité augmentée (Services Google Play pour la RA)."); } }}>
-                <Text style={s.ctaText}>{x?.roomPreview ? "Aperçu dans une pièce · réalité augmentée" : "Essayage au miroir"}</Text>
+              <Pressable style={[s.cta, { marginTop: 12 }]} onPress={async () => { try { await WebBrowser.openBrowserAsync(`${API_URL}/fr/produits/${p.slug}/essayage`); } catch { Alert.alert(tr("Indisponible", "Unavailable"), tr("Impossible d’ouvrir cet aperçu : aucun navigateur compatible n’est disponible sur cet appareil. Vérifiez que Chrome est installé et à jour, ainsi que la réalité augmentée (Services Google Play pour la RA).", "Unable to open this preview: no compatible browser is available on this device. Check that Chrome is installed and up to date, as well as augmented reality (Google Play Services for AR).")); } }}>
+                <Text style={s.ctaText}>{x?.roomPreview ? tr("Aperçu dans une pièce · réalité augmentée", "Preview in a room · augmented reality") : tr("Essayage au miroir", "Mirror try-on")}</Text>
               </Pressable>
             ) : null}
-            {x?.hasCertificate ? <Text style={{ marginTop: 10, color: "#221812" }}>✓ Certificat d’authenticité fourni</Text> : null}
+            {x?.hasCertificate ? <Text style={{ marginTop: 10, color: "#221812" }}>{tr("✓ Certificat d’authenticité fourni", "✓ Certificate of authenticity provided")}</Text> : null}
             {x?.careInstructions ? <View style={{ marginTop: 12 }}><Text style={{ fontWeight: "600", color: "#221812" }}>{tr("Entretien", "Care")}</Text><Text style={s.meta}>{x.careInstructions}</Text></View> : null}
             {p.story ? <Text style={[s.body, { marginTop: 12 }]}>{p.story}</Text> : null}
             {x?.related?.length ? (
               <View style={{ marginTop: 20 }}>
-                <Text style={[s.h2, { paddingHorizontal: 0 }]}>Dans le même univers</Text>
+                <Text style={[s.h2, { paddingHorizontal: 0 }]}>{tr("Dans le même univers", "In the same universe")}</Text>
                 <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
                   {x.related.map((m) => (
                     <Pressable key={m.slug} onPress={() => onOpenRelated(m)} style={{ width: "47%" }}>
@@ -177,16 +177,16 @@ function DetailBody({ p, onClose, fav, onFav, onAdd, token, onNeedLogin, onOpenR
         <View style={[s.buyBar, { paddingBottom: 12 + Math.max(insets.bottom, Platform.OS === "android" ? 32 : 0) }]}>
           {p.stock < 1 ? (
             <>
-              {watch ? <Text style={{ color: "#1e7546", marginBottom: 6 }}>Vous serez prévenu(e) dès qu’elle est disponible.</Text> : null}
+              {watch ? <Text style={{ color: "#1e7546", marginBottom: 6 }}>{tr("Vous serez prévenu(e) dès qu’elle est disponible.", "You will be notified as soon as it is available.")}</Text> : null}
               {watchErr ? <Text style={{ color: "#b42318", marginBottom: 6 }}>{watchErr}</Text> : null}
-              <Pressable onPress={toggleWatch} disabled={busy} hitSlop={8} android_ripple={{ color: "#ffffff55" }} style={({ pressed }) => [s.cta, { opacity: pressed || busy ? 0.6 : 1 }]}><Text style={s.ctaText}>{busy ? "…" : watch ? "Annuler l’alerte" : "Me prévenir quand elle est disponible"}</Text></Pressable>
-              {watch ? <Text style={{ color: "#6b5d52", fontSize: 12, marginTop: 6 }}>Pièce unique : premier arrivé, premier servi.</Text> : null}
+              <Pressable onPress={toggleWatch} disabled={busy} hitSlop={8} android_ripple={{ color: "#ffffff55" }} style={({ pressed }) => [s.cta, { opacity: pressed || busy ? 0.6 : 1 }]}><Text style={s.ctaText}>{busy ? "…" : watch ? tr("Annuler l’alerte", "Cancel the alert") : tr("Me prévenir quand elle est disponible", "Notify me when it is available")}</Text></Pressable>
+              {watch ? <Text style={{ color: "#6b5d52", fontSize: 12, marginTop: 6 }}>{tr("Pièce unique : premier arrivé, premier servi.", "Unique piece: first come, first served.")}</Text> : null}
             </>
           ) : (
           <>
           {showQty ? (
             <View style={{ flexDirection: "row", alignItems: "center", gap: 16, marginBottom: 10 }}>
-              <Text style={{ color: "#221812", fontWeight: "600" }}>Quantité</Text>
+              <Text style={{ color: "#221812", fontWeight: "600" }}>{tr("Quantité", "Quantity")}</Text>
               <Pressable disabled={q <= 1} hitSlop={6} onPress={() => { setAdded(false); setQty(q - 1); }} accessibilityLabel={tr("Diminuer", "Decrease")} style={{ width: 44, height: 44, borderWidth: 1, borderColor: "#ded6c9", borderRadius: 6, alignItems: "center", justifyContent: "center", opacity: q <= 1 ? 0.4 : 1 }}><Text style={{ fontSize: 20 }}>−</Text></Pressable>
               <Text>{q}</Text>
               <Pressable disabled={q >= Math.max(1, cap)} hitSlop={6} onPress={() => { setAdded(false); setQty(q + 1); }} accessibilityLabel={tr("Augmenter", "Increase")} style={{ width: 44, height: 44, borderWidth: 1, borderColor: "#ded6c9", borderRadius: 6, alignItems: "center", justifyContent: "center", opacity: q >= Math.max(1, cap) ? 0.4 : 1 }}><Text style={{ fontSize: 20 }}>+</Text></Pressable>
@@ -210,7 +210,7 @@ function DetailBody({ p, onClose, fav, onFav, onAdd, token, onNeedLogin, onOpenR
             </View>
           ) : null}
           <Pressable onPress={buy} style={({ pressed }) => [s.cta, { opacity: pressed ? 0.6 : 1 }]}>
-            <Text style={s.ctaText}>{added ? "Ajouté au panier ✓" : "Ajouter au panier"}</Text>
+            <Text style={s.ctaText}>{added ? tr("Ajouté au panier ✓", "Added to cart ✓") : tr("Ajouter au panier", "Add to cart")}</Text>
           </Pressable>
           </>
           )}
@@ -224,7 +224,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | 
   static getDerivedStateFromError(error: Error) { return { error }; }
   render() {
     if (!this.state.error) return this.props.children;
-    return <ScrollView contentContainerStyle={{ padding: 24, paddingTop: 64 }}><Text style={{ fontSize: 18, fontWeight: "700" }}>Une erreur est survenue</Text><Text selectable style={{ marginTop: 12 }}>{String(this.state.error.stack ?? this.state.error.message)}</Text></ScrollView>;
+    return <ScrollView contentContainerStyle={{ padding: 24, paddingTop: 64 }}><Text style={{ fontSize: 18, fontWeight: "700" }}>{tr("Une erreur est survenue", "Something went wrong")}</Text><Text selectable style={{ marginTop: 12 }}>{String(this.state.error.stack ?? this.state.error.message)}</Text></ScrollView>;
   }
 }
 
@@ -251,8 +251,20 @@ function Main() {
   const [supportSlug, setSupportSlug] = useState<string | null>(null);
 
   useEffect(() => {
-    AsyncStorage.getItem("favs").then((v) => v && setFavItems(JSON.parse(v) as Product[]));
-    AsyncStorage.getItem("cart").then((v) => v && setCart(JSON.parse(v) as CartLine[]));
+    AsyncStorage.getItem("favs").then(async (v) => {
+      if (!v) return;
+      const saved = JSON.parse(v) as Product[];
+      setFavItems(saved);
+      const fresh = await Promise.all(saved.map((x) => get<Product>(`/api/v1/products/${x.slug}?locale=fr`).catch(() => x)));
+      setFavItems(fresh);
+    });
+    AsyncStorage.getItem("cart").then(async (v) => {
+      if (!v) return;
+      const lines = JSON.parse(v) as CartLine[];
+      setCart(lines);
+      const fresh = await Promise.all(lines.map(async (l) => { const p = await get<Product>(`/api/v1/products/${l.slug}?locale=fr`).catch(() => null); return p ? { ...l, name: p.name, creatorName: p.creatorName } : l; }));
+      setCart(fresh);
+    });
     get<Home>("/api/v1/home?locale=fr").then(setHome).catch(() => setError(true));
   }, []);
 
@@ -300,26 +312,26 @@ function Main() {
     <SafeAreaView style={{ flex: 1, backgroundColor: "#faf6ee" }}>
       <StatusBar style="dark" />
       <View style={{ flexDirection: "row", height: 4 }}>{["#e9a93a", "#1c3060", "#1e7546", "#bd5833"].map((c) => <View key={c} style={{ flex: 1, backgroundColor: c }} />)}</View>
-      <View style={s.header}><Text style={s.logo}>E póm ta’</Text><Pressable onPress={() => setCartOpen(true)} hitSlop={10} style={s.cartBtn} accessibilityLabel={tr("Panier", "Cart")}><Text style={s.cartText}>Panier{cartCount ? ` (${cartCount})` : ""}</Text></Pressable></View>
+      <View style={s.header}><Text style={s.logo}>E póm ta’</Text><Pressable onPress={() => setCartOpen(true)} hitSlop={10} style={s.cartBtn} accessibilityLabel={tr("Panier", "Cart")}><Text style={s.cartText}>{tr("Panier", "Cart")}{cartCount ? ` (${cartCount})` : ""}</Text></Pressable></View>
       <View style={{ flex: 1 }}>
       <View style={{ flex: 1 }}>
-        {error && !home ? <Text style={s.center}>Connexion impossible. Vérifiez votre réseau.</Text> : null}
+        {error && !home ? <Text style={s.center}>{tr("Connexion impossible. Vérifiez votre réseau.", "Unable to connect. Check your network.")}</Text> : null}
         {tab === "home" && (home ? (
           home.site ? <HomeBlocks site={home.site} renderCard={(p: Product) => <Card p={p} fav={favs.includes(p.slug)} onFav={() => toggle(p)} onOpen={() => setOpen(p)} />} onShop={(cat) => { setShopCat(cat); setTab("shop"); }} onProduct={(slug) => { get<Product>(`/api/v1/products/${slug}?locale=fr`).then(setOpen).catch(() => {}); }} onCreator={setCreator} onSupport={setSupportSlug} /> : null
         ) : !error && <ActivityIndicator style={{ marginTop: 40 }} />)}
 
         {tab === "shop" && <ShopScreen<Product> key={shopCat} initialCategory={shopCat} onOpenCreator={setCreator} renderItem={(item) => <Card wide p={item} fav={favs.includes(item.slug)} onFav={() => toggle(item)} onOpen={() => setOpen(item)} />} onOpenSlug={(slug) => { get<Product>(`/api/v1/products/${slug}?locale=fr`).then(setOpen).catch(() => {}); }} />}
 
-        {tab === "favs" && (favItems.length ? grid(favItems) : <Text style={s.center}>Aucun favori pour le moment.{"\n"}Touchez ♡ sur une pièce.</Text>)}
+        {tab === "favs" && (favItems.length ? grid(favItems) : <Text style={s.center}>{tr("Aucun favori pour le moment.", "No favourites yet.")}{"\n"}{tr("Touchez ♡ sur une pièce.", "Tap ♡ on a piece.")}</Text>)}
 
         {tab === "me" && <AccountScreen more={home?.site ? <MoreBlocks site={home.site} onSupport={setSupportSlug} /> : null} auth={auth} onOpenSite={(p) => WebBrowser.openBrowserAsync(`${API_URL}${p}`)} />}
         {false && (
           <ScrollView contentContainerStyle={{ padding: 16 }}>
-            <Text style={s.h2}>Mon compte</Text>
-            <Text style={s.body}>Langue : Français</Text>
-            <Text style={s.body}>Le suivi des commandes se fait par e-mail et sur le site.</Text>
+            <Text style={s.h2}>{tr("Mon compte", "My account")}</Text>
+            <Text style={s.body}>{tr("Langue : Français", "Language: English")}</Text>
+            <Text style={s.body}>{tr("Le suivi des commandes se fait par e-mail et sur le site.", "Order tracking is done by email and on the website.")}</Text>
             <Pressable style={[s.cta, { marginTop: 16 }]} onPress={() => WebBrowser.openBrowserAsync(`${API_URL}/fr/login`)}><Text style={s.ctaText}>{tr("Mon compte sur le site", "My account on the website")}</Text></Pressable>
-            <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => WebBrowser.openBrowserAsync(`${API_URL}/fr/support`)}><Text style={s.ctaText}>Besoin d’aide ?</Text></Pressable>
+            <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => WebBrowser.openBrowserAsync(`${API_URL}/fr/support`)}><Text style={s.ctaText}>{tr("Besoin d’aide ?", "Need help?")}</Text></Pressable>
           </ScrollView>
         )}
       </View>

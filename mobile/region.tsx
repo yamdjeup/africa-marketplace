@@ -55,7 +55,11 @@ export function useLang(): Lang {
 // Les écrans appellent l'API avec « locale=fr » : on le remplace par la langue choisie.
 const baseFetch = globalThis.fetch;
 globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) =>
-  baseFetch(typeof input === "string" ? input.replace("locale=fr", `locale=${lang}`) : input, init)) as typeof fetch;
+  baseFetch(typeof input === "string" ? withLocale(input) : input, init)) as typeof fetch;
+function withLocale(u: string) {
+  if (u.includes("locale=")) return u.replace("locale=fr", `locale=${lang}`);
+  return u.includes("/api/v1/") && !u.includes("/api/v1/auth/") ? u + (u.includes("?") ? "&" : "?") + `locale=${lang}` : u;
+}
 /** Texte FR/EN (textes du site, lib/i18n). */
 export const tr = (fr: string, en: string) => (lang === "en" ? en : fr);
 
@@ -86,27 +90,27 @@ export function RegionRow() {
   const list = REGIONS.filter((r) => !q || r.fr.toLowerCase().includes(q) || r.currency.toLowerCase().includes(q));
   return (
     <View>
-      <Pressable onPress={() => setOpen(true)} style={st.row} accessibilityRole="button" accessibilityLabel="Langue et région">
+      <Pressable onPress={() => setOpen(true)} style={st.row} accessibilityRole="button" accessibilityLabel={tr("Langue et région", "Language and region")}>
         <Flag code={region.code} />
-        <Text style={st.rowText}>{curLang === "en" ? "English" : "Français"} · {region.fr} · {region.currency}</Text>
+        <Text style={st.rowText}>{curLang === "en" ? "English" : tr("Français", "French")} · {region.fr} · {region.currency}</Text>
         <Text style={st.chev}>›</Text>
       </Pressable>
       <Modal visible={open} animationType="slide" onRequestClose={() => setOpen(false)}>
         <View style={st.modal}>
           <View style={st.top}>
-            <Text style={st.title}>Langue et région</Text>
+            <Text style={st.title}>{tr("Langue et région", "Language and region")}</Text>
             <Pressable onPress={() => setOpen(false)} hitSlop={10} accessibilityLabel={tr("Fermer", "Close")}><Text style={{ fontSize: 24, color: "#221812" }}>✕</Text></Pressable>
           </View>
           <View style={{ flexDirection: "row", gap: 8, marginBottom: 8 }}>
             {(["fr", "en"] as Lang[]).map((l) => (
               <Pressable key={l} onPress={() => setLang(l)} accessibilityState={{ selected: l === curLang }} style={[st.langBtn, l === curLang && { backgroundColor: "#1c3060" }]}>
-                <Text style={{ color: l === curLang ? "#fff" : "#221812" }}>{l === "fr" ? "Français" : "English"}</Text>
+                <Text style={{ color: l === curLang ? "#fff" : "#221812" }}>{l === "fr" ? tr("Français", "French") : "English"}</Text>
               </Pressable>
             ))}
           </View>
           <TextInput value={query} onChangeText={setQuery} placeholder={tr("Rechercher un pays", "Search a country")} placeholderTextColor="#8a7d70" style={st.input} />
           <FlatList data={list} keyExtractor={(r) => r.code} keyboardShouldPersistTaps="handled"
-            ListEmptyComponent={<Text style={{ color: "#6b5d52", padding: 12 }}>Aucun pays trouvé.</Text>}
+            ListEmptyComponent={<Text style={{ color: "#6b5d52", padding: 12 }}>{tr("Aucun pays trouvé.", "No country found.")}</Text>}
             renderItem={({ item }) => (
               <Pressable onPress={() => { setRegion(item.code); setOpen(false); }} style={st.item} accessibilityState={{ selected: item.code === region.code }}>
                 <Flag code={item.code} />
@@ -135,3 +139,5 @@ const st = StyleSheet.create({
   itemText: { flex: 1, color: "#221812", fontSize: 15 },
   note: { color: "#6b5d52", fontSize: 12, paddingTop: 8 },
 });
+
+export const lazy = <T extends object>(f: () => T): T => new Proxy({} as T, { get: (_, k) => { const v = (f() as any)[k]; return typeof v === "function" ? v.bind(f()) : v; }, has: (_, k) => k in f(), ownKeys: () => Reflect.ownKeys(f()), getOwnPropertyDescriptor: (_, k) => ({ enumerable: true, configurable: true, value: (f() as any)[k] }) });

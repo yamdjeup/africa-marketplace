@@ -1,4 +1,4 @@
-import { ApproxPrice, tr } from "./region";
+import { ApproxPrice, tr, lazy } from "./region";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { initPaymentSheet, presentPaymentSheet } from "@stripe/stripe-react-native";
@@ -9,16 +9,16 @@ export type CartLine = { slug: string; name: string; creatorName: string; image:
 type Addr = { id: string; firstName: string; lastName: string; line1: string; houseNumber: string; postalCode: string; city: string; isDefault: boolean };
 
 const eur = (c: number) => `${(c / 100).toFixed(2).replace(".", ",")} €`;
-const ERRORS: Record<string, string> = {
-  stock: "Une pièce n’est plus disponible en quantité suffisante.",
-  reserved: "Une pièce est en cours d’achat par un autre client. Réessayez dans quelques minutes.",
-  unknown: "Une pièce de votre panier n’est plus disponible.",
-  address: "Veuillez remplir tous les champs obligatoires.",
-  postal: "Code postal invalide pour ce pays.",
-  email: "Adresse e-mail invalide.",
-  disabled: "Le paiement est momentanément indisponible.",
-  payment: "Le paiement est momentanément indisponible.",
-};
+const ERRORS: Record<string, string> = lazy(() => ({
+  stock: tr("Une pièce n’est plus disponible en quantité suffisante.", "A piece is no longer available in sufficient quantity."),
+  reserved: tr("Une pièce est en cours d’achat par un autre client. Réessayez dans quelques minutes.", "A piece is being purchased by another customer. Try again in a few minutes."),
+  unknown: tr("Une pièce de votre panier n’est plus disponible.", "A piece in your cart is no longer available."),
+  address: tr("Veuillez remplir tous les champs obligatoires.", "Please fill in all required fields."),
+  postal: tr("Code postal invalide pour ce pays.", "Invalid postcode for this country."),
+  email: tr("Adresse e-mail invalide.", "Invalid email address."),
+  disabled: tr("Le paiement est momentanément indisponible.", "Payment is temporarily unavailable."),
+  payment: tr("Le paiement est momentanément indisponible.", "Payment is temporarily unavailable."),
+}));
 
 export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove, onClose }: { lines: CartLine[]; token: string | null; onNeedLogin: () => void; onPaid: () => void; onQty: (slug: string, size: string | null, q: number) => void; onRemove: (slug: string, size: string | null) => void; onClose: () => void }) {
   const total = lines.reduce((n, l) => n + l.priceCents * l.quantity, 0);
@@ -71,7 +71,7 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
     const cart = lines.map((l) => ({ slug: l.slug, size: l.size ?? null, quantity: l.quantity }));
     const c = await authed<{ number?: string; clientSecret?: string; guestToken?: string; error?: string; item?: string }>(token, "POST", "/api/v1/checkout/create", useBook ? { addressId: addrId, cart } : { address: manual, email: token ? undefined : email.trim(), save: !!token && save, cart });
     if (!c.ok || !c.data.clientSecret || !c.data.number) {
-      setMsg((ERRORS[c.data.error ?? ""] ?? "Le paiement n’a pas pu démarrer.") + (c.data.item ? ` (${c.data.item})` : ""));
+      setMsg((ERRORS[c.data.error ?? ""] ?? tr("Le paiement n’a pas pu démarrer.", "Payment could not start.")) + (c.data.item ? ` (${c.data.item})` : ""));
       setBusy(false);
       return;
     }
@@ -81,7 +81,7 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
     const shown = init.error ? init : await presentPaymentSheet();
     if (shown.error) {
       await authed(token, "POST", "/api/v1/checkout/cancel", { number, guestToken });
-      if (shown.error.code !== "Canceled") setMsg("Le paiement a échoué. Aucun montant n’a été débité.");
+      if (shown.error.code !== "Canceled") setMsg(tr("Le paiement a échoué. Aucun montant n’a été débité.", "Payment failed. You have not been charged."));
       setBusy(false);
       return;
     }
@@ -97,8 +97,8 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
       setSnap({ lines, total, name: ` ${dest.lastName}`.trim(), addr: ` ${dest.line1}`.trim() + `, ${dest.postalCode} ${dest.city}` });
       setDone(number);
       onPaid();
-    } else if (status === "failed") setMsg("Votre commande n’a pas pu être finalisée ; vous serez remboursé(e) si un montant a été débité.");
-    else Alert.alert(tr("Paiement en cours de validation", "Payment being confirmed"), "Votre commande apparaîtra dans « Mes commandes » dans un instant.");
+    } else if (status === "failed") setMsg(tr("Votre commande n’a pas pu être finalisée ; vous serez remboursé(e) si un montant a été débité.", "Your order could not be completed; you will be refunded if any amount was charged."));
+    else Alert.alert(tr("Paiement en cours de validation", "Payment being confirmed"), tr("Votre commande apparaîtra dans « Mes commandes » dans un instant.", "Your order will appear in “My orders” in a moment."));
   };
 
   if (done)
@@ -124,15 +124,15 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
     const ship = useBook ? addrs.find((a) => a.id === addrId) : undefined;
     return (
       <ScrollView style={{ flex: 1, backgroundColor: "#faf6ee" }} contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
-        <Pressable onPress={() => { setMsg(null); setStep(step === "review" ? "form" : "cart"); }} hitSlop={8} style={{ marginBottom: 8 }}><Text style={s.link}>← {step === "review" ? "Modifier" : "Mon panier"}</Text></Pressable>
+        <Pressable onPress={() => { setMsg(null); setStep(step === "review" ? "form" : "cart"); }} hitSlop={8} style={{ marginBottom: 8 }}><Text style={s.link}>← {step === "review" ? tr("Modifier", "Edit") : tr("Mon panier", "My cart")}</Text></Pressable>
         <Text style={s.h2}>{tr("Commande", "Order")}</Text>
-        <Text style={[s.note, { fontWeight: "600" }]}>Livraison assurée, signature requise à la réception.</Text>
-        <Text style={[s.note, { marginTop: 8 }]}>Paiement sécurisé par carte bancaire.</Text>
+        <Text style={[s.note, { fontWeight: "600" }]}>{tr("Livraison assurée, signature requise à la réception.", "Insured delivery, signature required on receipt.")}</Text>
+        <Text style={[s.note, { marginTop: 8 }]}>{tr("Paiement sécurisé par carte bancaire.", "Secure payment by bank card.")}</Text>
         {msg ? <Text style={{ color: "#b00020", marginVertical: 8 }}>{msg}</Text> : null}
         {step === "form" ? (
           <>
-            {!token && <Text style={[s.mut, { marginTop: 12 }]}>Vous commandez en invité. Connectez-vous pour retrouver vos commandes.{"  "}<Text style={s.link} onPress={onNeedLogin}>Se connecter</Text></Text>}
-            <Text style={s.h3}>Coordonnées</Text>
+            {!token && <Text style={[s.mut, { marginTop: 12 }]}>Vous commandez en invité. Connectez-vous pour retrouver vos commandes.{"  "}<Text style={s.link} onPress={onNeedLogin}>{tr("Se connecter", "Sign in")}</Text></Text>}
+            <Text style={s.h3}>{tr("Coordonnées", "Contact details")}</Text>
             {token ? null : (
               <>
                 <Text style={s.label}>{tr("E-mail *", "Email *")}</Text>
@@ -141,7 +141,7 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
             )}
             {useBook ? (
               <>
-                <Text style={s.h3}>Choisir l’adresse de livraison</Text>
+                <Text style={s.h3}>{tr("Choisir l’adresse de livraison", "Choose the delivery address")}</Text>
                 {addrs.map((a) => (
                   <Pressable key={a.id} onPress={() => setAddrId(a.id)} style={{ flexDirection: "row", gap: 8, marginBottom: 10 }}>
                     <Text>{addrId === a.id ? "◉" : "○"}</Text>
@@ -162,20 +162,20 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
               </>
             )}
             <Pressable disabled={checking} onPress={verify} style={[s.cta, { backgroundColor: "#1c3060", marginTop: 8 }]}>
-              {checking ? <ActivityIndicator color="#fff" /> : <Text style={s.ctaText}>Vérifier mon adresse</Text>}
+              {checking ? <ActivityIndicator color="#fff" /> : <Text style={s.ctaText}>{tr("Vérifier mon adresse", "Check my address")}</Text>}
             </Pressable>
           </>
         ) : (
           <>
-            <Text style={s.h3}>Vérifiez votre adresse</Text>
-            <Text style={s.mut}>Une adresse exacte évite les retards et les colis perdus. Relisez-la avant de confirmer.</Text>
+            <Text style={s.h3}>{tr("Vérifiez votre adresse", "Check your address")}</Text>
+            <Text style={s.mut}>{tr("Une adresse exacte évite les retards et les colis perdus. Relisez-la avant de confirmer.", "An exact address avoids delays and lost parcels. Please re-read it before confirming.")}</Text>
             <View style={s.card}>
               {ship ? <Text><Text style={s.bold}>{ship.firstName} {ship.lastName}</Text>{"\n"}{addrLine(ship)}</Text> : (
                 <Text><Text style={s.bold}>{manual.firstName} {manual.lastName}</Text>{"\n"}{addrLine(manual)}{"\n"}{manual.country}{"\n"}Téléphone : {manual.phone}{token ? "" : `\n${email.trim()}`}</Text>
               )}
             </View>
-            <Text style={s.mut}>Nous vous contacterons par téléphone en cas de doute sur l’adresse.</Text>
-            {mismatch && !ship ? <Text style={{ color: "#b00020", marginTop: 8 }}>Attention : ce code postal ne semble pas correspondre à cette ville. Vérifiez-les avant de confirmer.</Text> : null}
+            <Text style={s.mut}>{tr("Nous vous contacterons par téléphone en cas de doute sur l’adresse.", "We will call you if there is any doubt about the address.")}</Text>
+            {mismatch && !ship ? <Text style={{ color: "#b00020", marginTop: 8 }}>{tr("Attention : ce code postal ne semble pas correspondre à cette ville. Vérifiez-les avant de confirmer.", "Warning: this postcode does not seem to match this city. Please check them before confirming.")}</Text> : null}
             <Pressable disabled={busy} onPress={pay} style={[s.cta, { backgroundColor: "#1c3060", marginTop: 16 }]}>
               {busy ? <ActivityIndicator color="#fff" /> : <Text style={s.ctaText}>Confirmer la commande · {eur(total)}</Text>}
             </Pressable>

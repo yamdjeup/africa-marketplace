@@ -16,7 +16,7 @@ export function AlertsScreen({ token, onBack }: { token: string; onBack: () => v
     setTestMsg("");
     const r = await authed<{ status?: string }>(token, "POST", "/api/v1/alerts/test");
     const st = r.data.status;
-    setTestMsg(st === "sent" ? "E-mail de test envoyé à votre adresse." : st === "rate_limited" ? "Patientez une minute avant un nouvel essai." : st === "unconfigured" ? "L'envoi d'e-mails n'est pas configuré sur ce site." : "L'envoi a échoué, réessayez plus tard.");
+    setTestMsg(st === "sent" ? "E-mail de test envoyé à votre adresse." : st === "rate_limited" ? "Patientez une minute avant un nouvel essai." : st === "unconfigured" ? "L'envoi d'e-mails n'est pas configuré sur ce site." : `L'envoi a échoué, réessayez plus tard. (HTTP ${r.status || "réseau/délai"} · ${st ?? "?"})`);
   };
   useEffect(() => {
     authed<{ email?: boolean; promo?: boolean }>(token, "GET", "/api/v1/alerts/prefs").then((r) => { setEmail(!!r.data.email); setPromo(!!r.data.promo); });
@@ -27,7 +27,7 @@ export function AlertsScreen({ token, onBack }: { token: string; onBack: () => v
     setMsg("");
     if (v) {
       const r = await enablePush(token);
-      if (r.token) { setPushTok(r.token); AsyncStorage.setItem("expoPushToken", r.token); } else setMsg("Impossible d'activer les notifications, réessayez plus tard.");
+      if (r.token) { setPushTok(r.token); AsyncStorage.setItem("expoPushToken", r.token); } else setMsg(`Impossible d'activer les notifications, réessayez plus tard. (${r.error ?? "?"}${r.detail ? " · " + r.detail : ""})`);
     } else if (pushTok) {
       await disablePush(token, pushTok);
       AsyncStorage.removeItem("expoPushToken");

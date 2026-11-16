@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Dimensions, Image, Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, Dimensions, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import * as WebBrowser from "expo-web-browser";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -43,7 +44,8 @@ function Row({ title, items, favs, toggle, open }: { title: string; items: Produ
 function Detail({ p, onClose, fav, onFav }: { p: Product; onClose: () => void; fav: boolean; onFav: () => void }) {
   const buy = () => WebBrowser.openBrowserAsync(p.url);
   return (
-    <Modal animationType="slide" onRequestClose={onClose}>
+    <Modal animationType="slide" onRequestClose={onClose} statusBarTranslucent navigationBarTranslucent>
+      <SafeAreaProvider>
       <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
         <View style={s.bar}>
           <Pressable onPress={onClose} hitSlop={12}><Text style={{ fontSize: 24 }}>←</Text></Pressable>
@@ -68,11 +70,16 @@ function Detail({ p, onClose, fav, onFav }: { p: Product; onClose: () => void; f
           </Pressable>
         </View>
       </SafeAreaView>
+      </SafeAreaProvider>
     </Modal>
   );
 }
 
 export default function App() {
+  return <SafeAreaProvider><Main /></SafeAreaProvider>;
+}
+
+function Main() {
   const [tab, setTab] = useState<Tab>("home");
   const [home, setHome] = useState<Home | null>(null);
   const [error, setError] = useState(false);

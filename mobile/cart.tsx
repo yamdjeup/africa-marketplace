@@ -1,4 +1,4 @@
-import { tr } from "./region";
+import { ApproxPrice, tr } from "./region";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { initPaymentSheet, presentPaymentSheet } from "@stripe/stripe-react-native";
@@ -183,7 +183,7 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
               <Text style={s.bold} numberOfLines={1}>{l.creatorName}</Text>
               <Text numberOfLines={2}>{l.name}</Text>
               {l.size ? <Text style={s.bold}>Taille / variante : {l.size}</Text> : null}
-              <Text style={s.bold}>{eur(l.priceCents)}</Text>
+              <Text style={s.bold}>{eur(l.priceCents)}</Text><ApproxPrice cents={l.priceCents} />
               <View style={{ flexDirection: "row", alignItems: "center", gap: 16, marginTop: 6 }}>
                 <Pressable style={s.qty} hitSlop={6} onPress={() => onQty(l.slug, l.size ?? null, l.quantity - 1)}><Text style={s.qtyText}>−</Text></Pressable>
                 <Text>{l.quantity}</Text>
@@ -196,7 +196,7 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
       </ScrollView>
       {lines.length > 0 && (
         <View style={s.footer}>
-          <Text style={s.bold}>Sous-total : {eur(total)}</Text>
+          <Text style={s.bold}>Sous-total : {eur(total)}</Text><ApproxPrice cents={total} />
           <Text style={[s.mut, { marginTop: 4 }]}>Livraison par créateur.</Text>
           <Pressable onPress={() => { setMsg(null); setStep("form"); }} style={[s.cta, { marginTop: 8, backgroundColor: "#1c3060" }]}>
             <Text style={s.ctaText}>{tr("Passer commande", "Checkout")}</Text>

@@ -75,6 +75,14 @@ function DetailBody({ p, onClose, fav, onFav, onAdd, token, onNeedLogin, onOpenR
   const sizes = p.sizes ?? [];
   const [x, setX] = useState<Extra | null>(null);
   const [qty, setQty] = useState(1);
+  const [recent, setRecent] = useState<Product[]>([]);
+  useEffect(() => {
+    AsyncStorage.getItem("recent").then((v) => {
+      const list = v ? (JSON.parse(v) as Product[]) : [];
+      setRecent(list.filter((x) => x.slug !== p.slug));
+      AsyncStorage.setItem("recent", JSON.stringify([p, ...list.filter((x) => x.slug !== p.slug)].slice(0, 8)));
+    });
+  }, [p.slug]);
   useEffect(() => { get<Extra>(`/api/v1/products/${encodeURIComponent(p.slug)}`).then(setX).catch(() => {}); }, [p.slug]);
   const unique = !!p.edition && /pi[eè]ce unique/i.test(p.edition);
   const cap = size && p.sizeStock ? p.sizeStock[size] ?? p.stock : p.stock;
@@ -143,9 +151,25 @@ function DetailBody({ p, onClose, fav, onFav, onAdd, token, onNeedLogin, onOpenR
                       <Text numberOfLines={1} style={s.brand}>{m.creatorName}</Text>
                       <Text numberOfLines={2} style={{ color: "#221812" }}>{m.name}</Text>
                       <Text style={{ color: "#221812", fontWeight: "700" }}>{eur(m.priceCents)}</Text>
+                      <ApproxPrice cents={m.priceCents} />
                     </Pressable>
                   ))}
                 </View>
+              </View>
+            ) : null}
+            {recent.length ? (
+              <View style={{ marginTop: 20 }}>
+                <Text style={[s.h2, { paddingHorizontal: 0 }]}>{tr("Récemment consultés", "Recently viewed")}</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
+                  {recent.map((m) => (
+                    <Pressable key={m.slug} onPress={() => onOpenRelated(m)} style={{ width: 140 }}>
+                      <Image source={{ uri: m.images[0] }} style={{ width: 140, aspectRatio: 1, backgroundColor: "#f2eadd" }} />
+                      <Text numberOfLines={1} style={s.brand}>{m.creatorName}</Text>
+                      <Text numberOfLines={2} style={{ color: "#221812" }}>{m.name}</Text>
+                      <Text style={{ color: "#221812", fontWeight: "700" }}>{eur(m.priceCents)}</Text>
+                    </Pressable>
+                  ))}
+                </ScrollView>
               </View>
             ) : null}
           </View>

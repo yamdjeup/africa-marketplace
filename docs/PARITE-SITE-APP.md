@@ -93,3 +93,11 @@ Source de la 1re passe : routes `src/app/[locale]/**` et composants `src/compone
 ## Impossibles / sans objet sur mobile (à valider)
 - Installer l'app (PWA), fil d'Ariane, survol (hover).
 - Réalité augmentée (`ar-viewer.tsx`) : possible mais coûteuse ; à décider.
+
+## Drapeaux et indicatif (ajout)
+| Page | Élément | Dans l'app |
+|---|---|---|
+| Adresses / checkout | Champ Pays avec drapeau (CountryField, flagcdn) | Oui (mobile/flags.tsx) |
+| Adresses / checkout | Téléphone : sélecteur d'indicatif + drapeau, E.164 (PhoneField) | Oui |
+| Inscription / profil | Téléphone | Non : pas de champ téléphone dans l'app, à vérifier sur le site |
+| Région / devise | Panneau région avec drapeaux (region-panel.tsx) | Non (voir À valider) |

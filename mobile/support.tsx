@@ -6,7 +6,7 @@ type Row = { slug: string; title: string };
 type Index = { support: Row[]; help: Row[]; helpTitle: string; contactLabel: string };
 type Doc = { slug: string; title: string; body: string[]; isHelp: boolean };
 
-// Reprend src/app/[locale]/support/[slug]/page.tsx (contenu, rubriques d'aide, Â« Ce contenu vous semble-t-il pertinent ? ")
+// Reprend src/app/[locale]/support/[slug]/page.tsx (contenu, rubriques d'aide, « Ce contenu vous semble-t-il pertinent ? ")
 // et la rubrique Support de src/app/[locale]/account/page.tsx.
 export function SupportScreen({ onBack }: { onBack: () => void }) {
   const [index, setIndex] = useState<Index | null>(null);
@@ -28,7 +28,7 @@ export function SupportScreen({ onBack }: { onBack: () => void }) {
   if (slug) {
     return (
       <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
-        <Pressable onPress={() => setSlug(null)} hitSlop={10}><Text style={st.back}>â€¹ Retour</Text></Pressable>
+        <Pressable onPress={() => setSlug(null)} hitSlop={10}><Text style={st.back}>‹ Retour</Text></Pressable>
         {!doc ? <ActivityIndicator style={{ marginTop: 30 }} /> : (
           <View>
             <Text style={st.title}>{doc.title}</Text>
@@ -58,7 +58,7 @@ export function SupportScreen({ onBack }: { onBack: () => void }) {
       {rows.map((r) => (
         <Pressable key={r.slug} onPress={() => setSlug(r.slug)} style={st.row}>
           <Text style={{ color: "#221812" }}>{r.title}</Text>
-          <Text style={{ color: "#6b5d52" }}>â€º</Text>
+          <Text style={{ color: "#6b5d52" }}>›</Text>
         </Pressable>
       ))}
     </View>
@@ -66,9 +66,9 @@ export function SupportScreen({ onBack }: { onBack: () => void }) {
 
   return (
     <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
-      <Pressable onPress={onBack} hitSlop={10}><Text style={st.back}>â€¹ Retour</Text></Pressable>
-      <Text style={st.title}>Besoin dâ€™aide ?</Text>
-      {failed && !index ? <Text style={st.p}>Connexion impossible. VÃ©rifiez votre rÃ©seau.</Text> : !index ? <ActivityIndicator style={{ marginTop: 30 }} /> : (
+      <Pressable onPress={onBack} hitSlop={10}><Text style={st.back}>‹ Retour</Text></Pressable>
+      <Text style={st.title}>Besoin d’aide ?</Text>
+      {failed && !index ? <Text style={st.p}>Connexion impossible. Vérifiez votre réseau.</Text> : !index ? <ActivityIndicator style={{ marginTop: 30 }} /> : (
         <View>
           {section("Aide", index.help)}
           {section("Support", index.support)}

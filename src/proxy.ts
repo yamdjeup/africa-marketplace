@@ -13,10 +13,10 @@ import {
 
 const locales = ["fr", "en"];
 
-// Manifeste et icÃ´nes d'installation : le navigateur les rÃ©cupÃ¨re sans cookie, ils doivent rester publics (aucune Å“uvre).
+// Manifeste et icônes d'installation : le navigateur les récupère sans cookie, ils doivent rester publics (aucune œuvre).
 const PUBLIC_PWA = /^\/(manifest\.webmanifest|icons\/[\w-]+\.png|sw\.js|debug-viewport)$/;
 
-// Liens des e-mails d'alertes (dÃ©sinscription), cron et webhook Stripe et photos /api/media/[id] (images des e-mails) : publics, protÃ©gÃ©s par jeton signÃ© / CRON_SECRET / signature Stripe ; les mÃ©dias privÃ©s se protÃ¨gent eux-mÃªmes.
+// Liens des e-mails d'alertes (désinscription), cron et webhook Stripe et photos /api/media/[id] (images des e-mails) : publics, protégés par jeton signé / CRON_SECRET / signature Stripe ; les médias privés se protègent eux-mêmes.
 const PUBLIC_ALERTS = /^\/(api\/(v1\/(home|creators\/[\w-]+|favorites|alerts\/(prefs|test)|addresses|orders(\/(cancel|return))?|checkout\/(create|confirm|cancel)|products(\/[\w-]+)?|search\/(suggest|extras)|support(\/[\w-]+)?|catalog\/count|auth\/(login|register|refresh|forgot|me|google))|alerts\/(run|unsubscribe)|tila|address\/(check|suggest)|push\/test|stripe\/webhook|media\/[\w-]+)|tila-avatar\.jpeg|videos\/(posters\/)?[\w.-]+\.(mp4|jpg)|images\/(artworks|examples)\/[\w.-]+\.(jpg|jpeg|png|webp)|mediapipe\/(wasm|models)\/[\w.-]+|(fr|en)\/produits\/[\w-]+\/essayage|(fr|en)\/alertes\/desinscription)$/;
 
 const htmlHeaders = { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex, nofollow" };
@@ -53,7 +53,7 @@ async function handleAccess(request: NextRequest) {
   return new NextResponse(accessPageHtml(pickLocale(request, next), next, false), { headers: htmlHeaders });
 }
 
-// Retourne une rÃ©ponse si l'accÃ¨s est refusÃ© ; null si le visiteur peut passer.
+// Retourne une réponse si l'accès est refusé ; null si le visiteur peut passer.
 async function guard(request: NextRequest): Promise<NextResponse | null> {
   if (!accessPassword()) return null;
   const { pathname, search } = request.nextUrl;
@@ -68,7 +68,7 @@ async function guard(request: NextRequest): Promise<NextResponse | null> {
   return NextResponse.redirect(url);
 }
 
-// Toute URL sans prÃ©fixe de langue valide est redirigÃ©e vers /fr (langue par dÃ©faut).
+// Toute URL sans préfixe de langue valide est redirigée vers /fr (langue par défaut).
 export async function proxy(request: NextRequest) {
   const denied = await guard(request);
   if (denied) return denied;

@@ -98,35 +98,35 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
 
   if (done)
     return (
-      <View style={{ flex: 1, backgroundColor: "#fff", padding: 24, justifyContent: "center" }}>
-        <Text style={s.h2}>MERCI POUR VOTRE COMMANDE</Text>
+      <View style={{ flex: 1, backgroundColor: "#faf6ee", padding: 24, justifyContent: "center" }}>
+        <Text style={s.h2}>Merci pour votre commande</Text>
         <Text style={s.mut}>Commande {done}. Vous pouvez la suivre dans Moi › Mes commandes.</Text>
-        <Pressable style={[s.cta, { marginTop: 24 }]} onPress={onClose}><Text style={s.ctaText}>CONTINUER MES ACHATS</Text></Pressable>
+        <Pressable style={[s.cta, { marginTop: 24 }]} onPress={onClose}><Text style={s.ctaText}>Continuer mes achats</Text></Pressable>
       </View>
     );
   const addrLine = (a: { houseNumber: string; line1: string; postalCode: string; city: string }) => `${a.houseNumber} ${a.line1}`.trim() + `\n${a.postalCode} ${a.city}`;
   if (step !== "cart") {
     const ship = useBook ? addrs.find((a) => a.id === addrId) : undefined;
     return (
-      <ScrollView style={{ flex: 1, backgroundColor: "#fff" }} contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
+      <ScrollView style={{ flex: 1, backgroundColor: "#faf6ee" }} contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
         <Pressable onPress={() => { setMsg(null); setStep(step === "review" ? "form" : "cart"); }} hitSlop={8} style={{ marginBottom: 8 }}><Text style={s.link}>← {step === "review" ? "Modifier" : "Mon panier"}</Text></Pressable>
-        <Text style={s.h2}>COMMANDE</Text>
+        <Text style={s.h2}>Commande</Text>
         <Text style={[s.note, { fontWeight: "600" }]}>Livraison assurée, signature requise à la réception.</Text>
         <Text style={[s.note, { marginTop: 8 }]}>Paiement sécurisé par carte bancaire.</Text>
         {msg ? <Text style={{ color: "#b00020", marginVertical: 8 }}>{msg}</Text> : null}
         {step === "form" ? (
           <>
             {!token && <Text style={[s.mut, { marginTop: 12 }]}>Vous commandez en invité. Connectez-vous pour retrouver vos commandes.{"  "}<Text style={s.link} onPress={onNeedLogin}>Se connecter</Text></Text>}
-            <Text style={s.h3}>COORDONNÉES</Text>
+            <Text style={s.h3}>Coordonnées</Text>
             {token ? null : (
               <>
                 <Text style={s.label}>E-mail *</Text>
-                <TextInput style={s.input} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" placeholderTextColor="#767676" selectionColor="#000" />
+                <TextInput style={s.input} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" placeholderTextColor="#6b5d52" selectionColor="#1c3060" />
               </>
             )}
             {useBook ? (
               <>
-                <Text style={s.h3}>CHOISIR L’ADRESSE DE LIVRAISON</Text>
+                <Text style={s.h3}>Choisir l’adresse de livraison</Text>
                 {addrs.map((a) => (
                   <Pressable key={a.id} onPress={() => setAddrId(a.id)} style={{ flexDirection: "row", gap: 8, marginBottom: 10 }}>
                     <Text>{addrId === a.id ? "◉" : "○"}</Text>
@@ -136,7 +136,7 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
               </>
             ) : (
               <>
-                <Text style={s.h3}>ADRESSE DE LIVRAISON</Text>
+                <Text style={s.h3}>Adresse de livraison</Text>
                 <AddressFields form={manual} setForm={setManual} />
                 {token ? (
                   <Pressable onPress={() => setSave(!save)} style={{ flexDirection: "row", gap: 8, minHeight: 44, alignItems: "center" }}>
@@ -146,13 +146,13 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
                 ) : null}
               </>
             )}
-            <Pressable disabled={checking} onPress={verify} style={[s.cta, { backgroundColor: "#000", marginTop: 8 }]}>
-              {checking ? <ActivityIndicator color="#fff" /> : <Text style={s.ctaText}>VÉRIFIER MON ADRESSE</Text>}
+            <Pressable disabled={checking} onPress={verify} style={[s.cta, { backgroundColor: "#1c3060", marginTop: 8 }]}>
+              {checking ? <ActivityIndicator color="#fff" /> : <Text style={s.ctaText}>Vérifier mon adresse</Text>}
             </Pressable>
           </>
         ) : (
           <>
-            <Text style={s.h3}>VÉRIFIEZ VOTRE ADRESSE</Text>
+            <Text style={s.h3}>Vérifiez votre adresse</Text>
             <Text style={s.mut}>Une adresse exacte évite les retards et les colis perdus. Relisez-la avant de confirmer.</Text>
             <View style={s.card}>
               {ship ? <Text><Text style={s.bold}>{ship.firstName} {ship.lastName}</Text>{"\n"}{addrLine(ship)}</Text> : (
@@ -161,8 +161,8 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
             </View>
             <Text style={s.mut}>Nous vous contacterons par téléphone en cas de doute sur l’adresse.</Text>
             {mismatch && !ship ? <Text style={{ color: "#b00020", marginTop: 8 }}>Attention : ce code postal ne semble pas correspondre à cette ville. Vérifiez-les avant de confirmer.</Text> : null}
-            <Pressable disabled={busy} onPress={pay} style={[s.cta, { backgroundColor: "#000", marginTop: 16 }]}>
-              {busy ? <ActivityIndicator color="#fff" /> : <Text style={s.ctaText}>CONFIRMER LA COMMANDE · {eur(total)}</Text>}
+            <Pressable disabled={busy} onPress={pay} style={[s.cta, { backgroundColor: "#1c3060", marginTop: 16 }]}>
+              {busy ? <ActivityIndicator color="#fff" /> : <Text style={s.ctaText}>Confirmer la commande · {eur(total)}</Text>}
             </Pressable>
           </>
         )}
@@ -170,16 +170,16 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
     );
   }
   return (
-    <View style={{ flex: 1, backgroundColor: "#fff" }}>
+    <View style={{ flex: 1, backgroundColor: "#faf6ee" }}>
       <ScrollView contentContainerStyle={{ padding: 16 }}>
         <Pressable onPress={onClose} hitSlop={8} style={{ marginBottom: 8 }}><Text style={s.link}>← Continuer mes achats</Text></Pressable>
-        <Text style={s.h2}>MON PANIER</Text>
+        <Text style={s.h2}>Mon panier</Text>
         {lines.length === 0 && <Text style={s.mut}>Votre panier est vide.</Text>}
         {lines.map((l) => (
           <View key={l.slug} style={s.line}>
             <Image source={{ uri: l.image }} style={s.img} />
             <View style={{ flex: 1 }}>
-              <Text style={s.bold} numberOfLines={1}>{l.creatorName.toUpperCase()}</Text>
+              <Text style={s.bold} numberOfLines={1}>{l.creatorName}</Text>
               <Text numberOfLines={2}>{l.name}</Text>
               <Text style={s.bold}>{eur(l.priceCents)}</Text>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 16, marginTop: 6 }}>
@@ -196,8 +196,8 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
         <View style={s.footer}>
           <Text style={s.bold}>Sous-total : {eur(total)}</Text>
           <Text style={[s.mut, { marginTop: 4 }]}>Livraison par créateur.</Text>
-          <Pressable onPress={() => { setMsg(null); setStep("form"); }} style={[s.cta, { marginTop: 8, backgroundColor: "#000" }]}>
-            <Text style={s.ctaText}>PASSER COMMANDE</Text>
+          <Pressable onPress={() => { setMsg(null); setStep("form"); }} style={[s.cta, { marginTop: 8, backgroundColor: "#1c3060" }]}>
+            <Text style={s.ctaText}>Passer commande</Text>
           </Pressable>
         </View>
       )}
@@ -206,20 +206,20 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
 }
 
 const s = StyleSheet.create({
-  h2: { fontSize: 18, fontWeight: "700", letterSpacing: 1, marginBottom: 16 },
+  h2: { fontFamily: "PlayfairDisplay_600SemiBold", fontSize: 18, fontWeight: "700", marginBottom: 16 },
   mut: { fontSize: 14, color: "#666" },
-  note: { fontSize: 14, borderWidth: 1, borderColor: "#ddd", backgroundColor: "#f7f7f7", padding: 10 },
-  h3: { fontSize: 15, fontWeight: "700", letterSpacing: 1, marginTop: 16, marginBottom: 8 },
+  note: { fontSize: 14, borderWidth: 1, borderColor: "#ded6c9", backgroundColor: "#f2eadd", padding: 10 },
+  h3: { fontFamily: "PlayfairDisplay_600SemiBold", fontSize: 15, fontWeight: "700", marginTop: 16, marginBottom: 8 },
   label: { fontSize: 12, color: "#666", marginBottom: 4 },
-  input: { backgroundColor: "#fff", color: "#111", borderWidth: 1, borderColor: "#ccc", paddingHorizontal: 12, height: 48, fontSize: 16, marginBottom: 12 },
-  card: { borderWidth: 1, borderColor: "#ddd", padding: 12, marginVertical: 12 },
+  input: { backgroundColor: "#faf6ee", color: "#221812", borderWidth: 1, borderColor: "#ded6c9", paddingHorizontal: 12, height: 48, fontSize: 16, marginBottom: 12 },
+  card: { borderWidth: 1, borderColor: "#ded6c9", padding: 12, marginVertical: 12 },
   bold: { fontWeight: "700" },
-  line: { flexDirection: "row", gap: 12, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#eee" },
-  img: { width: 80, height: 100, backgroundColor: "#f2f2f2" },
-  qty: { width: 32, height: 32, borderWidth: 1, borderColor: "#ccc", alignItems: "center", justifyContent: "center" },
+  line: { flexDirection: "row", gap: 12, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#f2eadd" },
+  img: { width: 80, height: 100, backgroundColor: "#f2eadd" },
+  qty: { width: 32, height: 32, borderWidth: 1, borderColor: "#ded6c9", alignItems: "center", justifyContent: "center" },
   qtyText: { fontSize: 18 },
-  footer: { padding: 16, borderTopWidth: 1, borderTopColor: "#eee" },
-  cta: { height: 48, alignItems: "center", justifyContent: "center" },
-  ctaText: { color: "#fff", fontWeight: "700", letterSpacing: 1 },
-  link: { textDecorationLine: "underline", fontSize: 15, color: "#111" },
+  footer: { padding: 16, borderTopWidth: 1, borderTopColor: "#f2eadd" },
+  cta: { borderRadius: 8, height: 48, alignItems: "center", justifyContent: "center" },
+  ctaText: { color: "#fff",  },
+  link: { textDecorationLine: "underline", fontSize: 15, color: "#221812" },
 });

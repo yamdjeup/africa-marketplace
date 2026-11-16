@@ -22,7 +22,7 @@ export function OrdersScreen({ token, onBack }: { token: string; onBack: () => v
   return (
     <ScrollView contentContainerStyle={{ padding: 16 }}>
       <Pressable onPress={onBack} hitSlop={8} style={{ marginBottom: 8 }}><Text style={s.link}>← Mon compte</Text></Pressable>
-      <Text style={s.h2}>MES COMMANDES</Text>
+      <Text style={s.h2}>Mes commandes</Text>
       {orders === null && <ActivityIndicator />}
       {orders?.length === 0 && <Text style={s.mut}>Vous n’avez pas encore de commande.</Text>}
       {orders?.map((o) => (
@@ -44,9 +44,9 @@ export function OrdersScreen({ token, onBack }: { token: string; onBack: () => v
 }
 
 const s = StyleSheet.create({
-  h2: { fontSize: 18, fontWeight: "700", letterSpacing: 1, marginBottom: 16 },
+  h2: { fontFamily: "PlayfairDisplay_600SemiBold", fontSize: 18, fontWeight: "700", marginBottom: 16 },
   mut: { fontSize: 14, color: "#666" },
   bold: { fontWeight: "700" },
-  card: { borderTopWidth: 1, borderTopColor: "#eee", paddingVertical: 12, gap: 2 },
-  link: { textDecorationLine: "underline", fontSize: 15, color: "#111" },
+  card: { borderTopWidth: 1, borderTopColor: "#f2eadd", paddingVertical: 12, gap: 2 },
+  link: { textDecorationLine: "underline", fontSize: 15, color: "#221812" },
 });

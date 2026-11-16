@@ -108,7 +108,7 @@ function GoogleButton({ auth, onError }: { auth: Auth; onError: (m: string | nul
   };
   return (
     <Pressable style={[s.cta, s.ghost, { marginTop: 12, opacity: busy ? 0.6 : 1 }]} disabled={busy} onPress={signIn}>
-      <Text style={[s.ctaText, { color: "#000" }]}>CONTINUER AVEC GOOGLE</Text>
+      <Text style={[s.ctaText, { color: "#221812" }]}>Continuer avec google</Text>
     </Pressable>
   );
 }
@@ -130,14 +130,14 @@ export function AccountScreen({ auth, onOpenSite }: { auth: Auth; onOpenSite: (p
   if (auth.user) {
     return (
       <ScrollView contentContainerStyle={{ padding: 16 }}>
-        <Text style={s.h2}>MON COMPTE</Text>
+        <Text style={s.h2}>Mon compte</Text>
         <Text style={s.body}>Bonjour {auth.user.name}</Text>
         <Text style={s.mut}>{auth.user.email}</Text>
         <Text style={[s.body, { marginTop: 12 }]}>Langue : Français</Text>
-        <Pressable style={[s.cta, { marginTop: 16 }]} onPress={() => setOrders(true)}><Text style={s.ctaText}>MES COMMANDES</Text></Pressable>
-        <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => setAddresses(true)}><Text style={s.ctaText}>MES ADRESSES</Text></Pressable>
-        <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => onOpenSite("/fr/support")}><Text style={s.ctaText}>BESOIN D’AIDE ?</Text></Pressable>
-        <Pressable style={[s.cta, s.ghost, { marginTop: 12 }]} onPress={auth.logout}><Text style={[s.ctaText, { color: "#000" }]}>SE DÉCONNECTER</Text></Pressable>
+        <Pressable style={[s.cta, { marginTop: 16 }]} onPress={() => setOrders(true)}><Text style={s.ctaText}>Mes commandes</Text></Pressable>
+        <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => setAddresses(true)}><Text style={s.ctaText}>Mes adresses</Text></Pressable>
+        <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => onOpenSite("/fr/support")}><Text style={s.ctaText}>Besoin d’aide ?</Text></Pressable>
+        <Pressable style={[s.cta, s.ghost, { marginTop: 12 }]} onPress={auth.logout}><Text style={[s.ctaText, { color: "#221812" }]}>Se déconnecter</Text></Pressable>
       </ScrollView>
     );
   }
@@ -150,17 +150,17 @@ export function AccountScreen({ auth, onOpenSite }: { auth: Auth; onOpenSite: (p
     else setMsg(err);
     setBusy(false);
   };
-  const titles = { login: "CONNEXION", register: "CRÉER UN COMPTE", forgot: "MOT DE PASSE OUBLIÉ" };
+  const titles = { login: "Connexion", register: "Créer un compte", forgot: "Mot de passe oublié" };
 
   return (
     <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
       <Text style={s.h2}>{titles[mode]}</Text>
-      {mode === "register" && <TextInput placeholderTextColor="#767676" selectionColor="#000" style={s.input} placeholder="Nom" value={name} onChangeText={setName} autoComplete="name" />}
-      <TextInput placeholderTextColor="#767676" selectionColor="#000" style={s.input} placeholder="Adresse e-mail" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" />
-      {mode !== "forgot" && <TextInput placeholderTextColor="#767676" selectionColor="#000" style={s.input} placeholder="Mot de passe" value={password} onChangeText={setPassword} secureTextEntry autoCapitalize="none" />}
+      {mode === "register" && <TextInput placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={s.input} placeholder="Nom" value={name} onChangeText={setName} autoComplete="name" />}
+      <TextInput placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={s.input} placeholder="Adresse e-mail" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" />
+      {mode !== "forgot" && <TextInput placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={s.input} placeholder="Mot de passe" value={password} onChangeText={setPassword} secureTextEntry autoCapitalize="none" />}
       {msg ? <Text style={s.msg}>{msg}</Text> : null}
       <Pressable style={[s.cta, { marginTop: 12, opacity: busy ? 0.6 : 1 }]} disabled={busy} onPress={submit}>
-        <Text style={s.ctaText}>{mode === "login" ? "SE CONNECTER" : mode === "register" ? "CRÉER MON COMPTE" : "ENVOYER LE LIEN"}</Text>
+        <Text style={s.ctaText}>{mode === "login" ? "Se connecter" : mode === "register" ? "Créer mon compte" : "Envoyer le lien"}</Text>
       </Pressable>
       {mode !== "forgot" && GOOGLE_ANDROID && GOOGLE_WEB ? <GoogleButton auth={auth} onError={setMsg} /> : null}
       <View style={{ marginTop: 16, gap: 12 }}>
@@ -173,13 +173,13 @@ export function AccountScreen({ auth, onOpenSite }: { auth: Auth; onOpenSite: (p
 }
 
 const s = StyleSheet.create({
-  h2: { fontSize: 18, fontWeight: "700", letterSpacing: 1, marginBottom: 16 },
-  body: { fontSize: 15, color: "#111", marginBottom: 4 },
+  h2: { fontFamily: "PlayfairDisplay_600SemiBold", fontSize: 18, fontWeight: "700", marginBottom: 16 },
+  body: { fontSize: 15, color: "#221812", marginBottom: 4 },
   mut: { fontSize: 14, color: "#666" },
-  input: { backgroundColor: "#fff", color: "#111", borderWidth: 1, borderColor: "#ccc", paddingHorizontal: 12, height: 48, fontSize: 16, marginBottom: 12 },
+  input: { backgroundColor: "#faf6ee", color: "#221812", borderWidth: 1, borderColor: "#ded6c9", paddingHorizontal: 12, height: 48, fontSize: 16, marginBottom: 12 },
   msg: { color: "#b00020", fontSize: 14, marginBottom: 4 },
-  cta: { backgroundColor: "#000", height: 48, alignItems: "center", justifyContent: "center" },
-  ghost: { backgroundColor: "#fff", borderWidth: 1, borderColor: "#000" },
-  ctaText: { color: "#fff", fontWeight: "700", letterSpacing: 1 },
-  link: { textDecorationLine: "underline", fontSize: 15, color: "#111" },
+  cta: { borderRadius: 8, backgroundColor: "#1c3060", height: 48, alignItems: "center", justifyContent: "center" },
+  ghost: { backgroundColor: "#faf6ee", borderWidth: 1, borderColor: "#1c3060" },
+  ctaText: { color: "#fff",  },
+  link: { textDecorationLine: "underline", fontSize: 15, color: "#221812" },
 });

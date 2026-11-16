@@ -39,7 +39,7 @@ export function AddressFields({ form, setForm }: { form: Form; setForm: (f: Form
   const field = (k: keyof Form, l: string) => (
     <View key={k}>
       <Text style={s.label}>{l}</Text>
-      <TextInput placeholderTextColor="#767676" selectionColor="#000" style={s.input} value={form[k]} onChangeText={(v) => setForm({ ...form, [k]: v })} keyboardType={k === "phone" ? "phone-pad" : "default"} autoCapitalize={k === "line1" || k === "city" || k === "firstName" || k === "lastName" ? "words" : "none"} />
+      <TextInput placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={s.input} value={form[k]} onChangeText={(v) => setForm({ ...form, [k]: v })} keyboardType={k === "phone" ? "phone-pad" : "default"} autoCapitalize={k === "line1" || k === "city" || k === "firstName" || k === "lastName" ? "words" : "none"} />
     </View>
   );
   const [first, second, country, ...rest] = LABELS;
@@ -49,9 +49,9 @@ export function AddressFields({ form, setForm }: { form: Form; setForm: (f: Form
       {field(...second)}
       {field(...country)}
       <Text style={s.label}>Rechercher votre adresse</Text>
-      <TextInput placeholderTextColor="#767676" selectionColor="#000" style={s.input} placeholder="Commencez à saisir : rue, numéro, ville…" value={query} onChangeText={search} autoCorrect={false} />
+      <TextInput placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={s.input} placeholder="Commencez à saisir : rue, numéro, ville…" value={query} onChangeText={search} autoCorrect={false} />
       {items.map((sg, i) => (
-        <Pressable key={`${sg.label}-${i}`} onPress={() => choose(sg)} style={{ paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#eee" }}>
+        <Pressable key={`${sg.label}-${i}`} onPress={() => choose(sg)} style={{ paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#f2eadd" }}>
           <Text>{sg.label}</Text>
         </Pressable>
       ))}
@@ -85,10 +85,10 @@ export function AddressesScreen({ token, onBack }: { token: string; onBack: () =
   if (form) {
     return (
       <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
-        <Text style={s.h2}>{editId ? "MODIFIER L’ADRESSE" : "NOUVELLE ADRESSE"}</Text>
+        <Text style={s.h2}>{editId ? "Modifier l’adresse" : "Nouvelle adresse"}</Text>
         <AddressFields form={form} setForm={setForm} />
         {msg ? <Text style={s.msg}>{msg}</Text> : null}
-        <Pressable style={s.cta} onPress={save}><Text style={s.ctaText}>ENREGISTRER</Text></Pressable>
+        <Pressable style={s.cta} onPress={save}><Text style={s.ctaText}>Enregistrer</Text></Pressable>
         <Pressable style={{ marginTop: 12 }} onPress={() => { setForm(null); setEditId(null); setMsg(null); }}><Text style={s.link}>Annuler</Text></Pressable>
       </ScrollView>
     );
@@ -97,7 +97,7 @@ export function AddressesScreen({ token, onBack }: { token: string; onBack: () =
   return (
     <ScrollView contentContainerStyle={{ padding: 16 }}>
       <Pressable onPress={onBack} style={{ marginBottom: 8 }}><Text style={s.link}>← Mon compte</Text></Pressable>
-      <Text style={s.h2}>MES ADRESSES</Text>
+      <Text style={s.h2}>Mes adresses</Text>
       {items.length === 0 && <Text style={s.mut}>Aucune adresse enregistrée.</Text>}
       {items.map((a) => (
         <View key={a.id} style={s.card}>
@@ -108,24 +108,24 @@ export function AddressesScreen({ token, onBack }: { token: string; onBack: () =
           <View style={{ flexDirection: "row", gap: 16, marginTop: 8, flexWrap: "wrap" }}>
             <Pressable hitSlop={8} onPress={() => { setEditId(a.id); setForm({ firstName: a.firstName, lastName: a.lastName, country: a.country, houseNumber: a.houseNumber, box: a.box ?? "", line2: a.line2 ?? "", line1: a.line1, postalCode: a.postalCode, city: a.city, phone: a.phone }); }}><Text style={s.link}>Modifier</Text></Pressable>
             {!a.isDefault && <Pressable hitSlop={8} onPress={() => act("PATCH", "/api/v1/addresses", { id: a.id })}><Text style={s.link}>Par défaut</Text></Pressable>}
-            <Pressable hitSlop={8} onPress={() => Alert.alert("Supprimer cette adresse ?", "", [{ text: "Annuler" }, { text: "Supprimer", style: "destructive", onPress: () => act("DELETE", `/api/v1/addresses?id=${encodeURIComponent(a.id)}`) }])}><Text style={s.link}>Supprimer</Text></Pressable>
+            <Pressable hitSlop={8} onPress={() => Alert.alert("Supprimer cette adresse ?", "", [{ text: "Annuler" }, { text: "Supprimer", style: "destructive", onPress: () => act("Delete", `/api/v1/addresses?id=${encodeURIComponent(a.id)}`) }])}><Text style={s.link}>Supprimer</Text></Pressable>
           </View>
         </View>
       ))}
-      <Pressable style={[s.cta, { marginTop: 16 }]} onPress={() => setForm(EMPTY)}><Text style={s.ctaText}>AJOUTER UNE ADRESSE</Text></Pressable>
+      <Pressable style={[s.cta, { marginTop: 16 }]} onPress={() => setForm(EMPTY)}><Text style={s.ctaText}>Ajouter une adresse</Text></Pressable>
     </ScrollView>
   );
 }
 
 const s = StyleSheet.create({
-  h2: { fontSize: 18, fontWeight: "700", letterSpacing: 1, marginBottom: 16 },
+  h2: { fontFamily: "PlayfairDisplay_600SemiBold", fontSize: 18, fontWeight: "700", marginBottom: 16 },
   mut: { fontSize: 14, color: "#666" },
   bold: { fontWeight: "700", marginBottom: 2 },
-  input: { backgroundColor: "#fff", color: "#111", borderWidth: 1, borderColor: "#ccc", paddingHorizontal: 12, height: 48, fontSize: 16, marginBottom: 12 },
+  input: { backgroundColor: "#faf6ee", color: "#221812", borderWidth: 1, borderColor: "#ded6c9", paddingHorizontal: 12, height: 48, fontSize: 16, marginBottom: 12 },
   label: { fontSize: 12, color: "#666", marginBottom: 4 },
   msg: { color: "#b00020", fontSize: 14, marginBottom: 8 },
-  card: { borderWidth: 1, borderColor: "#ddd", padding: 12, marginBottom: 12 },
-  cta: { backgroundColor: "#000", height: 48, alignItems: "center", justifyContent: "center" },
-  ctaText: { color: "#fff", fontWeight: "700", letterSpacing: 1 },
-  link: { textDecorationLine: "underline", fontSize: 15, color: "#111" },
+  card: { borderWidth: 1, borderColor: "#ded6c9", padding: 12, marginBottom: 12 },
+  cta: { borderRadius: 8, backgroundColor: "#1c3060", height: 48, alignItems: "center", justifyContent: "center" },
+  ctaText: { color: "#fff", fontWeight: "700", },
+  link: { textDecorationLine: "underline", fontSize: 15, color: "#221812" },
 });

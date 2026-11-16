@@ -205,6 +205,7 @@ Vidage commit prod : mode `commit`, confirmation exacte `OUI-VIDER-LA-PROD-epomt
 
 - **Passer au flux protégé avant l'ouverture au public** : `emails-farfetch` → simu → test → preprod → test → `main` (prod). Aujourd'hui `main` (prod) reçoit le code en premier et simu/preprod suivent ; rien ne doit arriver en prod sans validation préalable en simu puis preprod.
 - **Stripe sandbox actif sur simu et preprod** (validé sur simu) ; clé live uniquement en prod au lancement.
+- **Jeton Expo EAS (`epomta-build`) exposé en clair dans une capture partagée le 16/11/2026** : à révoquer sur expo.dev > Access tokens (Revoke) après la démo du 3 décembre 2026 au plus tard, puis en recréer un si besoin.
 
 Séquence cmd (flux protégé) :
 

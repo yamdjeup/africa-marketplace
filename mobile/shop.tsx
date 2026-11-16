@@ -239,7 +239,7 @@ function RefineSheet({ initial, baseOptions, total, onClose, onApply }: { initia
   return (
     <View style={st.sheet}>
       <View style={st.sheetTop}>
-        <Pressable onPress={onClose} accessibilityLabel="Fermer" hitSlop={10}><Text style={{ fontSize: 24, color: "#221812" }}>✕</Text></Pressable>
+        <Pressable onPress={onClose} accessibilityLabel={tr("Fermer", "Close")} hitSlop={10}><Text style={{ fontSize: 24, color: "#221812" }}>✕</Text></Pressable>
         <Pressable onPress={() => { setCount(null); setV(EMPTY); }}><Text style={{ textDecorationLine: "underline", color: "#221812" }}>{tr("Tout effacer", "Clear all")}</Text></Pressable>
       </View>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">

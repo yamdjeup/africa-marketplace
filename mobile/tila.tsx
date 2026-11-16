@@ -1,3 +1,4 @@
+import { tr } from "./region";
 import { useRef, useState } from "react";
 import { ActivityIndicator, Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
@@ -58,7 +59,7 @@ export function TilaButton({ onOpenSlug }: { onOpenSlug: (slug: string) => void 
               <View style={st.head}>
                 <Image source={{ uri: AVATAR }} style={st.headImg} />
                 <View style={{ flex: 1 }}><Text style={st.name}>{T.name}</Text><Text style={st.badge}>{T.badge}</Text></View>
-                <Pressable onPress={() => setOpen(false)} hitSlop={10} accessibilityLabel="Fermer"><Text style={{ fontSize: 28, color: "#221812" }}>×</Text></Pressable>
+                <Pressable onPress={() => setOpen(false)} hitSlop={10} accessibilityLabel={tr("Fermer", "Close")}><Text style={{ fontSize: 28, color: "#221812" }}>×</Text></Pressable>
               </View>
               <ScrollView ref={scroller} onContentSizeChange={() => scroller.current?.scrollToEnd()} contentContainerStyle={{ padding: 12, gap: 10 }} keyboardShouldPersistTaps="handled">
                 <Text style={[st.bubble, { backgroundColor: "#f2eadd" }]}>{T.hello}</Text>

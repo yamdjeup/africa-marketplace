@@ -95,7 +95,7 @@ export function RegionRow() {
         <View style={st.modal}>
           <View style={st.top}>
             <Text style={st.title}>Langue et région</Text>
-            <Pressable onPress={() => setOpen(false)} hitSlop={10} accessibilityLabel="Fermer"><Text style={{ fontSize: 24, color: "#221812" }}>✕</Text></Pressable>
+            <Pressable onPress={() => setOpen(false)} hitSlop={10} accessibilityLabel={tr("Fermer", "Close")}><Text style={{ fontSize: 24, color: "#221812" }}>✕</Text></Pressable>
           </View>
           <View style={{ flexDirection: "row", gap: 8, marginBottom: 8 }}>
             {(["fr", "en"] as Lang[]).map((l) => (
@@ -104,7 +104,7 @@ export function RegionRow() {
               </Pressable>
             ))}
           </View>
-          <TextInput value={query} onChangeText={setQuery} placeholder="Rechercher un pays" placeholderTextColor="#8a7d70" style={st.input} />
+          <TextInput value={query} onChangeText={setQuery} placeholder={tr("Rechercher un pays", "Search a country")} placeholderTextColor="#8a7d70" style={st.input} />
           <FlatList data={list} keyExtractor={(r) => r.code} keyboardShouldPersistTaps="handled"
             ListEmptyComponent={<Text style={{ color: "#6b5d52", padding: 12 }}>Aucun pays trouvé.</Text>}
             renderItem={({ item }) => (

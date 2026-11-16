@@ -39,7 +39,7 @@ export function AlertsScreen({ token, onBack }: { token: string; onBack: () => v
   );
   return (
     <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
-      <Pressable onPress={onBack} hitSlop={12} style={{ height: 44, justifyContent: "center" }} accessibilityLabel="Retour"><Text style={{ fontSize: 28 }}>←</Text></Pressable>
+      <Pressable onPress={onBack} hitSlop={12} style={{ height: 44, justifyContent: "center" }} accessibilityLabel={tr("Retour", "Back")}><Text style={{ fontSize: 28 }}>←</Text></Pressable>
       <Text style={s.h2}>{tr("Recevoir des alertes", "Get alerts")}</Text>
       <Text style={s.mut}>{tr("Recevoir des alertes sur vos favoris et votre panier via", "Get alerts about your favourites and your cart via")}</Text>
       {row("Notification push", !!pushTok, togglePush)}

@@ -102,7 +102,7 @@ function DetailBody({ p, onClose, fav, onFav, onAdd, token, onNeedLogin, onOpenR
   return (
       <View style={{ flex: 1, backgroundColor: "#faf6ee", paddingTop: Math.max(insets.top, Platform.OS === "android" ? RNStatusBar.currentHeight ?? 24 : 0) }}>
         <View style={s.bar}>
-          <Pressable onPress={onClose} hitSlop={12} style={{ width: 44, height: 44, justifyContent: "center" }} accessibilityLabel="Retour"><Text style={{ fontSize: 28 }}>←</Text></Pressable>
+          <Pressable onPress={onClose} hitSlop={12} style={{ width: 44, height: 44, justifyContent: "center" }} accessibilityLabel={tr("Retour", "Back")}><Text style={{ fontSize: 28 }}>←</Text></Pressable>
           <Pressable onPress={onFav} hitSlop={12} style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }} accessibilityLabel={fav ? "Retirer des favoris" : "Ajouter aux favoris"}><Text style={{ fontSize: 28, color: fav ? "#d4183d" : "#111" }}>{fav ? "♥" : "♡"}</Text></Pressable>
         </View>
         <ScrollView>
@@ -122,11 +122,11 @@ function DetailBody({ p, onClose, fav, onFav, onAdd, token, onNeedLogin, onOpenR
               <View style={{ marginTop: 12, padding: 12, borderWidth: 1, borderColor: "#ded6c9", borderRadius: 6, backgroundColor: "#f2eadd" }}>
                 <Text style={{ fontWeight: "600", color: "#221812" }}>Authenticité</Text>
                 <Text style={{ color: "#221812" }}>{`Œuvre d'art originale, certifiée par l'artiste le ${new Date(x.attestedAt).toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" })}`}{p.edition ? ` · Édition ${p.edition}` : ""}</Text>
-                {x.signatureUrl ? <Image source={{ uri: x.signatureUrl }} style={{ height: 80, width: 160, marginTop: 8 }} resizeMode="contain" accessibilityLabel="Signature de l'artiste" /> : null}
+                {x.signatureUrl ? <Image source={{ uri: x.signatureUrl }} style={{ height: 80, width: 160, marginTop: 8 }} resizeMode="contain" accessibilityLabel={tr("Signature de l'artiste", "Artist's signature")} /> : null}
               </View>
             ) : null}
             {x?.roomPreview || x?.mirrorTryOn ? (
-              <Pressable style={[s.cta, { marginTop: 12 }]} onPress={async () => { try { await WebBrowser.openBrowserAsync(`${API_URL}/fr/produits/${p.slug}/essayage`); } catch { Alert.alert("Indisponible", "Impossible d’ouvrir cet aperçu : aucun navigateur compatible n’est disponible sur cet appareil. Vérifiez que Chrome est installé et à jour, ainsi que la réalité augmentée (Services Google Play pour la RA)."); } }}>
+              <Pressable style={[s.cta, { marginTop: 12 }]} onPress={async () => { try { await WebBrowser.openBrowserAsync(`${API_URL}/fr/produits/${p.slug}/essayage`); } catch { Alert.alert(tr("Indisponible", "Unavailable"), "Impossible d’ouvrir cet aperçu : aucun navigateur compatible n’est disponible sur cet appareil. Vérifiez que Chrome est installé et à jour, ainsi que la réalité augmentée (Services Google Play pour la RA)."); } }}>
                 <Text style={s.ctaText}>{x?.roomPreview ? "Aperçu dans une pièce · réalité augmentée" : "Essayage au miroir"}</Text>
               </Pressable>
             ) : null}
@@ -163,9 +163,9 @@ function DetailBody({ p, onClose, fav, onFav, onAdd, token, onNeedLogin, onOpenR
           {showQty ? (
             <View style={{ flexDirection: "row", alignItems: "center", gap: 16, marginBottom: 10 }}>
               <Text style={{ color: "#221812", fontWeight: "600" }}>Quantité</Text>
-              <Pressable disabled={q <= 1} hitSlop={6} onPress={() => { setAdded(false); setQty(q - 1); }} accessibilityLabel="Diminuer" style={{ width: 44, height: 44, borderWidth: 1, borderColor: "#ded6c9", borderRadius: 6, alignItems: "center", justifyContent: "center", opacity: q <= 1 ? 0.4 : 1 }}><Text style={{ fontSize: 20 }}>−</Text></Pressable>
+              <Pressable disabled={q <= 1} hitSlop={6} onPress={() => { setAdded(false); setQty(q - 1); }} accessibilityLabel={tr("Diminuer", "Decrease")} style={{ width: 44, height: 44, borderWidth: 1, borderColor: "#ded6c9", borderRadius: 6, alignItems: "center", justifyContent: "center", opacity: q <= 1 ? 0.4 : 1 }}><Text style={{ fontSize: 20 }}>−</Text></Pressable>
               <Text>{q}</Text>
-              <Pressable disabled={q >= Math.max(1, cap)} hitSlop={6} onPress={() => { setAdded(false); setQty(q + 1); }} accessibilityLabel="Augmenter" style={{ width: 44, height: 44, borderWidth: 1, borderColor: "#ded6c9", borderRadius: 6, alignItems: "center", justifyContent: "center", opacity: q >= Math.max(1, cap) ? 0.4 : 1 }}><Text style={{ fontSize: 20 }}>+</Text></Pressable>
+              <Pressable disabled={q >= Math.max(1, cap)} hitSlop={6} onPress={() => { setAdded(false); setQty(q + 1); }} accessibilityLabel={tr("Augmenter", "Increase")} style={{ width: 44, height: 44, borderWidth: 1, borderColor: "#ded6c9", borderRadius: 6, alignItems: "center", justifyContent: "center", opacity: q >= Math.max(1, cap) ? 0.4 : 1 }}><Text style={{ fontSize: 20 }}>+</Text></Pressable>
             </View>
           ) : null}
           {sizes.length > 0 ? (
@@ -266,7 +266,7 @@ function Main() {
     <SafeAreaView style={{ flex: 1, backgroundColor: "#faf6ee" }}>
       <StatusBar style="dark" />
       <View style={{ flexDirection: "row", height: 4 }}>{["#e9a93a", "#1c3060", "#1e7546", "#bd5833"].map((c) => <View key={c} style={{ flex: 1, backgroundColor: c }} />)}</View>
-      <View style={s.header}><Text style={s.logo}>E póm ta’</Text><Pressable onPress={() => setCartOpen(true)} hitSlop={10} style={s.cartBtn} accessibilityLabel="Panier"><Text style={s.cartText}>Panier{cartCount ? ` (${cartCount})` : ""}</Text></Pressable></View>
+      <View style={s.header}><Text style={s.logo}>E póm ta’</Text><Pressable onPress={() => setCartOpen(true)} hitSlop={10} style={s.cartBtn} accessibilityLabel={tr("Panier", "Cart")}><Text style={s.cartText}>Panier{cartCount ? ` (${cartCount})` : ""}</Text></Pressable></View>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <View style={{ flex: 1 }}>
         {error && !home ? <Text style={s.center}>Connexion impossible. Vérifiez votre réseau.</Text> : null}

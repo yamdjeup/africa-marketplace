@@ -25,9 +25,9 @@ function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: numbe
   const date = (d: string) => new Date(d).toLocaleDateString("fr-FR");
   const refunded = ["DONE", "AWAITING", "REQUESTED"].includes(p.refundStatus);
   const cancel = () =>
-    Alert.alert("Annuler ce colis ?", "Cette action est irréversible. Vous serez remboursé intégralement.", [
+    Alert.alert(tr("Annuler ce colis ?", "Cancel this parcel?"), "Cette action est irréversible. Vous serez remboursé intégralement.", [
       { text: "Garder ma commande", style: "cancel" },
-      { text: "Annuler le colis", style: "destructive", onPress: async () => { setBusy(true); const r = await authed(token, "POST", "/api/v1/orders/cancel", { id: p.id }); setBusy(false); if (r.ok) reload(); else setMsg("Annulation impossible : le colis a déjà été pris en charge."); } },
+      { text: tr("Annuler le colis", "Cancel the parcel"), style: "destructive", onPress: async () => { setBusy(true); const r = await authed(token, "POST", "/api/v1/orders/cancel", { id: p.id }); setBusy(false); if (r.ok) reload(); else setMsg("Annulation impossible : le colis a déjà été pris en charge."); } },
     ]);
   const ask = async () => {
     setBusy(true);

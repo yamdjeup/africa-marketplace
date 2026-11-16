@@ -168,8 +168,8 @@ export function AccountScreen({ auth, onOpenSite, more }: { auth: Auth; onOpenSi
       <Text style={s.h2}>{titles[mode]}</Text>
       <View style={{ marginBottom: 16 }}><RegionRow /></View>
       {mode === "register" && <TextInput placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={s.input} placeholder="Nom" value={name} onChangeText={setName} autoComplete="name" />}
-      <TextInput placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={s.input} placeholder="Adresse e-mail" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" />
-      {mode !== "forgot" && <TextInput placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={s.input} placeholder="Mot de passe" value={password} onChangeText={setPassword} secureTextEntry autoCapitalize="none" />}
+      <TextInput placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={s.input} placeholder={tr("Adresse e-mail", "Email address")} value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" />
+      {mode !== "forgot" && <TextInput placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={s.input} placeholder={tr("Mot de passe", "Password")} value={password} onChangeText={setPassword} secureTextEntry autoCapitalize="none" />}
       {msg ? <Text style={s.msg}>{msg}</Text> : null}
       <Pressable style={[s.cta, { marginTop: 12, opacity: busy ? 0.6 : 1 }]} disabled={busy} onPress={submit}>
         <Text style={s.ctaText}>{mode === "login" ? "Se connecter" : mode === "register" ? "Créer mon compte" : "Envoyer le lien"}</Text>

@@ -94,7 +94,7 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
       setDone(number);
       onPaid();
     } else if (status === "failed") setMsg("Votre commande n’a pas pu être finalisée ; vous serez remboursé(e) si un montant a été débité.");
-    else Alert.alert("Paiement en cours de validation", "Votre commande apparaîtra dans « Mes commandes » dans un instant.");
+    else Alert.alert(tr("Paiement en cours de validation", "Payment being confirmed"), "Votre commande apparaîtra dans « Mes commandes » dans un instant.");
   };
 
   if (done)

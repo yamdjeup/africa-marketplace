@@ -125,7 +125,7 @@ export function AddressesScreen({ token, onBack }: { token: string; onBack: () =
           <View style={{ flexDirection: "row", gap: 16, marginTop: 8, flexWrap: "wrap" }}>
             <Pressable hitSlop={8} onPress={() => { setEditId(a.id); setForm({ firstName: a.firstName, lastName: a.lastName, country: a.country, houseNumber: a.houseNumber, box: a.box ?? "", line2: a.line2 ?? "", line1: a.line1, postalCode: a.postalCode, city: a.city, phone: a.phone }); }}><Text style={s.link}>{tr("Modifier", "Edit")}</Text></Pressable>
             {!a.isDefault && <Pressable hitSlop={8} onPress={() => act("PATCH", "/api/v1/addresses", { id: a.id })}><Text style={s.link}>Par défaut</Text></Pressable>}
-            <Pressable hitSlop={8} onPress={() => Alert.alert("Supprimer cette adresse ?", "", [{ text: "Annuler" }, { text: "Supprimer", style: "destructive", onPress: () => act("Delete", `/api/v1/addresses?id=${encodeURIComponent(a.id)}`) }])}><Text style={s.link}>{tr("Supprimer", "Delete")}</Text></Pressable>
+            <Pressable hitSlop={8} onPress={() => Alert.alert(tr("Supprimer cette adresse ?", "Delete this address?"), "", [{ text: "Annuler" }, { text: "Supprimer", style: "destructive", onPress: () => act("Delete", `/api/v1/addresses?id=${encodeURIComponent(a.id)}`) }])}><Text style={s.link}>{tr("Supprimer", "Delete")}</Text></Pressable>
           </View>
         </View>
       ))}

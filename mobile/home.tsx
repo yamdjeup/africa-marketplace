@@ -61,7 +61,7 @@ export function HomeBlocks({ site: x, renderCard, onShop, onProduct, onCreator }
   return (
     <ScrollView keyboardShouldPersistTaps="handled">
       <View style={st.top}><Text style={st.wordmark}>E PÓM TA’</Text></View>
-      <Pressable onPress={() => onShop("")} accessibilityRole="search" accessibilityLabel="Rechercher" style={st.search}><Text style={{ color: "#6b5d52" }}>Rechercher</Text></Pressable>
+      <Pressable onPress={() => onShop("")} accessibilityRole="search" accessibilityLabel={tr("Rechercher", "Search")} style={st.search}><Text style={{ color: "#6b5d52" }}>Rechercher</Text></Pressable>
       <View style={st.promo}><Text style={st.promoText}>{x.promoBar}</Text></View>
       <View style={{ padding: 16, alignItems: "center" }}>
         {x.hero.product ? (

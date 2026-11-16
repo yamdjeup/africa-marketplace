@@ -22,7 +22,7 @@ function Card({ p, fav, onFav, onOpen, wide }: { p: Product; fav: boolean; onFav
   return (
     <Pressable onPress={onOpen} style={[s.card, wide && { width: "48%" }]}>
       <Image source={{ uri: p.images[0] }} style={s.cardImg} />
-      <Pressable onPress={onFav} hitSlop={4} style={s.heart} accessibilityLabel={fav ? "Retirer des favoris" : "Ajouter aux favoris"}><Text style={[s.heartIcon, fav && { color: "#d4183d" }]}>{fav ? "♥" : "♡"}</Text></Pressable>
+      <Pressable onPress={onFav} hitSlop={6} style={s.heart} accessibilityLabel={fav ? "Retirer des favoris" : "Ajouter aux favoris"}><Text style={[s.heartIcon, fav && { color: "#d4183d" }]}>{fav ? "♥" : "♡"}</Text></Pressable>
       <Text style={s.brand} numberOfLines={1}>{p.creatorName.toUpperCase()}</Text>
       <Text numberOfLines={1} style={s.name}>{p.name}</Text>
       <Text style={s.price}>{eur(p.priceCents)}</Text>
@@ -195,8 +195,8 @@ const s = StyleSheet.create({
   h2: { fontSize: 14, fontWeight: "800", letterSpacing: 1, paddingHorizontal: 16, marginBottom: 10 },
   card: { width: 160, marginBottom: 16 },
   cardImg: { width: "100%", aspectRatio: 0.8, backgroundColor: "#f2f2f2" },
-  heart: { position: "absolute", top: 6, right: 6, width: 44, height: 44, borderRadius: 22, backgroundColor: "rgba(255,255,255,0.85)", alignItems: "center", justifyContent: "center" },
-  heartIcon: { fontSize: 24, color: "#111", lineHeight: 28 },
+  heart: { position: "absolute", top: 8, right: 8, width: 32, height: 32, borderRadius: 16, backgroundColor: "rgba(255,255,255,0.85)", alignItems: "center", justifyContent: "center" },
+  heartIcon: { fontSize: 18, color: "#111", lineHeight: 22 },
   brand: { fontSize: 11, fontWeight: "800", marginTop: 6, letterSpacing: 0.5 },
   name: { fontSize: 13, color: "#333" },
   price: { fontSize: 13, fontWeight: "700", marginTop: 2 },

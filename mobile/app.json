@@ -2,10 +2,17 @@
   "expo": {
     "name": "Epomta",
     "slug": "epomta",
+    "scheme": "epomta",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/icon-1024.png",
+    "plugins": [["@stripe/stripe-react-native", { "merchantIdentifier": "", "enableGooglePay": false }]],
+    "ios": {
+      "bundleIdentifier": "com.epomta.app",
+      "supportsTablet": false,
+      "infoPlist": { "ITSAppUsesNonExemptEncryption": false }
+    },
     "android": {
       "package": "com.epomta.app",
       "adaptiveIcon": { "foregroundImage": "./assets/icon.png", "backgroundColor": "#ffffff" }

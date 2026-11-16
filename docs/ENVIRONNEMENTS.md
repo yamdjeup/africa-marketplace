@@ -39,6 +39,7 @@ Définies dans Vercel > Settings > Environment Variables (Production : prod ; Pr
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | clé live (quand le mode réel est décidé) ; mode test tant que non | clé **sandbox** + webhook simu | clé **sandbox** + webhook preprod |
 | `OPENAI_API_KEY`, `TILA_PROVIDER`, `TILA_MODEL` | clé de prod | même clé ou clé dédiée avec plafond bas | idem |
 | **Permissions clé OpenAI** (`OPENAI_API_KEY`) | clé **Restricted** ; Chat completions (`/v1/chat/completions`) = **Request** (seul endpoint appelé par Tílá, `provider.ts` l.49) ; Responses = **Write** ; Audio = **Request** (lot 2) ; tout le reste = **None** | clé dédiée simu/preprod, limite mensuelle (€) sur le projet OpenAI ; variable (Secret) dans Vercel Preview·simu et Preview·preprod, redéploiement requis ; Tílá validé sur simu et preprod le 16/11/2026 | idem |
+| `GOOGLE_MOBILE_CLIENT_IDS` (app mobile, serveur) | non défini : connexion Google mobile désactivée (503) | IDs clients OAuth Google (Android + Web) séparés par des virgules, non secrets | idem ; `AUTH_SECRET` signe aussi les jetons mobile |
 | `RESEND_API_KEY`, `MAIL_FROM` (ou `GMAIL_*`) | prod (domaine vérifié) | **vide** (aucun envoi) ou domaine de test | domaine de test, destinataires = adresses de test |
 | `ADMIN_EMAILS` | adresse(s) admin | adresses de test | adresses de test |
 | `CRON_SECRET` | propre | distinct | distinct |
@@ -205,6 +206,7 @@ Vidage commit prod : mode `commit`, confirmation exacte `OUI-VIDER-LA-PROD-epomt
 
 - **Passer au flux protégé avant l'ouverture au public** : `emails-farfetch` → simu → test → preprod → test → `main` (prod). Aujourd'hui `main` (prod) reçoit le code en premier et simu/preprod suivent ; rien ne doit arriver en prod sans validation préalable en simu puis preprod.
 - **Stripe sandbox actif sur simu et preprod** (validé sur simu) ; clé live uniquement en prod au lancement.
+- **Jeton Expo EAS (`epomta-build`) exposé en clair dans une capture partagée le 16/11/2026** : à révoquer sur expo.dev > Access tokens (Revoke) après la démo du 3 décembre 2026 au plus tard, puis en recréer un si besoin.
 
 Séquence cmd (flux protégé) :
 

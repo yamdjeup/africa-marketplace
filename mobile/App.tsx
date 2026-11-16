@@ -5,6 +5,10 @@ import { StatusBar } from "expo-status-bar";
 import * as WebBrowser from "expo-web-browser";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { API_URL } from "./config";
+import { AccountScreen, useAuth } from "./auth";
+import { authed } from "./api";
+import { CartScreen, type CartLine } from "./cart";
+import { StripeProvider } from "@stripe/stripe-react-native";
 
 type Product = { slug: string; name: string; description: string; story: string; creatorName: string; priceCents: number; images: string[]; material: string | null; technique: string | null; origin: string | null; dimensions: string | null; categorySlug: string; url: string; stock: number };
 type Home = { categories: { slug: string; label: string }[]; news: Product[]; latest: Product[]; creators: { slug: string; name: string; specialty: string; image: string }[]; byCategory: { slug: string; label: string; items: Product[] }[] };
@@ -22,7 +26,7 @@ function Card({ p, fav, onFav, onOpen, wide }: { p: Product; fav: boolean; onFav
   return (
     <Pressable onPress={onOpen} style={[s.card, wide && { width: "48%" }]}>
       <Image source={{ uri: p.images[0] }} style={s.cardImg} />
-      <Pressable onPress={onFav} hitSlop={4} style={s.heart} accessibilityLabel={fav ? "Retirer des favoris" : "Ajouter aux favoris"}><Text style={[s.heartIcon, fav && { color: "#d4183d" }]}>{fav ? "♥" : "♡"}</Text></Pressable>
+      <Pressable onPress={onFav} hitSlop={6} style={s.heart} accessibilityLabel={fav ? "Retirer des favoris" : "Ajouter aux favoris"}><Text style={[s.heartIcon, fav && { color: "#d4183d" }]}>{fav ? "♥" : "♡"}</Text></Pressable>
       <Text style={s.brand} numberOfLines={1}>{p.creatorName.toUpperCase()}</Text>
       <Text numberOfLines={1} style={s.name}>{p.name}</Text>
       <Text style={s.price}>{eur(p.priceCents)}</Text>
@@ -41,19 +45,20 @@ function Row({ title, items, favs, toggle, open }: { title: string; items: Produ
   );
 }
 
-function Detail({ p, onClose, fav, onFav }: { p: Product; onClose: () => void; fav: boolean; onFav: () => void }) {
+function Detail({ p, onClose, fav, onFav, onAdd }: { p: Product; onClose: () => void; fav: boolean; onFav: () => void; onAdd: () => void }) {
   return (
     <Modal animationType="slide" onRequestClose={onClose} statusBarTranslucent navigationBarTranslucent>
       <SafeAreaProvider>
-        <DetailBody p={p} onClose={onClose} fav={fav} onFav={onFav} />
+        <DetailBody p={p} onClose={onClose} fav={fav} onFav={onFav} onAdd={onAdd} />
       </SafeAreaProvider>
     </Modal>
   );
 }
 
-function DetailBody({ p, onClose, fav, onFav }: { p: Product; onClose: () => void; fav: boolean; onFav: () => void }) {
+function DetailBody({ p, onClose, fav, onFav, onAdd }: { p: Product; onClose: () => void; fav: boolean; onFav: () => void; onAdd: () => void }) {
   const insets = useSafeAreaInsets();
-  const buy = () => WebBrowser.openBrowserAsync(p.url);
+  const [added, setAdded] = useState(false);
+  const buy = () => { onAdd(); setAdded(true); };
   return (
       <View style={{ flex: 1, backgroundColor: "#fff", paddingTop: Math.max(insets.top, Platform.OS === "android" ? RNStatusBar.currentHeight ?? 24 : 0) }}>
         <View style={s.bar}>
@@ -75,7 +80,7 @@ function DetailBody({ p, onClose, fav, onFav }: { p: Product; onClose: () => voi
         </ScrollView>
         <View style={[s.buyBar, { paddingBottom: 12 + Math.max(insets.bottom, 0) }]}>
           <Pressable onPress={buy} disabled={p.stock < 1} style={[s.cta, p.stock < 1 && { backgroundColor: "#999" }]}>
-            <Text style={s.ctaText}>{p.stock < 1 ? "ÉPUISÉ" : "ACHETER"}</Text>
+            <Text style={s.ctaText}>{p.stock < 1 ? "ÉPUISÉ" : added ? "AJOUTÉ AU PANIER ✓" : "AJOUTER AU PANIER"}</Text>
           </Pressable>
         </View>
       </View>
@@ -88,6 +93,7 @@ export default function App() {
 
 function Main() {
   const [tab, setTab] = useState<Tab>("home");
+  const auth = useAuth();
   const [home, setHome] = useState<Home | null>(null);
   const [error, setError] = useState(false);
   const [list, setList] = useState<List | null>(null);
@@ -97,9 +103,12 @@ function Main() {
   const [favItems, setFavItems] = useState<Product[]>([]);
   const [open, setOpen] = useState<Product | null>(null);
   const favs = favItems.map((p) => p.slug);
+  const [cart, setCart] = useState<CartLine[]>([]);
+  const [cartOpen, setCartOpen] = useState(false);
 
   useEffect(() => {
     AsyncStorage.getItem("favs").then((v) => v && setFavItems(JSON.parse(v) as Product[]));
+    AsyncStorage.getItem("cart").then((v) => v && setCart(JSON.parse(v) as CartLine[]));
     get<Home>("/api/v1/home?locale=fr").then(setHome).catch(() => setError(true));
   }, []);
   useEffect(() => {
@@ -108,13 +117,38 @@ function Main() {
     get<List>(`/api/v1/products?${q}`).then(setList).catch(() => setError(true));
   }, [category, sort]);
 
+  const token = auth.accessToken;
   const toggle = useCallback((p: Product) => {
-    setFavItems((cur) => {
-      const next = cur.some((x) => x.slug === p.slug) ? cur.filter((x) => x.slug !== p.slug) : [...cur, p];
-      AsyncStorage.setItem("favs", JSON.stringify(next));
-      return next;
-    });
-  }, []);
+    const next = favItems.some((x) => x.slug === p.slug) ? favItems.filter((x) => x.slug !== p.slug) : [...favItems, p];
+    setFavItems(next);
+    AsyncStorage.setItem("favs", JSON.stringify(next));
+    if (token) authed(token, "PUT", "/api/v1/favorites", { slugs: next.map((x) => x.slug) });
+  }, [favItems, token]);
+
+  // À la connexion : fusion des favoris locaux et de ceux du compte, puis enregistrement sur le compte.
+  useEffect(() => {
+    if (!token) return;
+    (async () => {
+      const r = await authed<{ slugs?: string[] }>(token, "GET", "/api/v1/favorites");
+      if (!r.ok) return;
+      const local = JSON.parse((await AsyncStorage.getItem("favs")) ?? "[]") as Product[];
+      const have = new Set(local.map((x) => x.slug));
+      const extra = (await Promise.all((r.data.slugs ?? []).filter((s) => !have.has(s)).map((s) => get<Product>(`/api/v1/products/${s}?locale=fr`).catch(() => null)))).filter((x): x is Product => !!x);
+      const merged = [...local, ...extra];
+      setFavItems(merged);
+      AsyncStorage.setItem("favs", JSON.stringify(merged));
+      authed(token, "PUT", "/api/v1/favorites", { slugs: merged.map((x) => x.slug) });
+    })();
+  }, [token]);
+
+  const saveCart = (next: CartLine[]) => { setCart(next); AsyncStorage.setItem("cart", JSON.stringify(next)); };
+  const addToCart = (p: Product) => {
+    const max = Math.max(1, p.stock);
+    saveCart(cart.some((l) => l.slug === p.slug)
+      ? cart.map((l) => (l.slug === p.slug ? { ...l, quantity: Math.min(max, l.quantity + 1) } : l))
+      : [...cart, { slug: p.slug, name: p.name, creatorName: p.creatorName, image: p.images[0], priceCents: p.priceCents, quantity: 1, maxQuantity: max }]);
+  };
+  const cartCount = cart.reduce((n, l) => n + l.quantity, 0);
 
   const grid = (items: Product[]) => (
     <FlatList numColumns={2} data={items} keyExtractor={(p) => p.slug} columnWrapperStyle={{ justifyContent: "space-between", paddingHorizontal: 16 }}
@@ -122,9 +156,10 @@ function Main() {
   );
 
   return (
+    <StripeProvider publishableKey={process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""} urlScheme="epomta">
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
       <StatusBar style="dark" />
-      <View style={s.header}><Text style={s.logo}>E PÓM TA’</Text></View>
+      <View style={s.header}><Text style={s.logo}>E PÓM TA’      </Text><Pressable onPress={() => setCartOpen(true)} hitSlop={10} style={s.cartBtn} accessibilityLabel="Panier"><Text style={s.cartText}>PANIER{cartCount ? ` (${cartCount})` : ""}</Text></Pressable></View>
       <View style={{ flex: 1 }}>
         {error && !home ? <Text style={s.center}>Connexion impossible. Vérifiez votre réseau.</Text> : null}
         {tab === "home" && (home ? (
@@ -169,7 +204,8 @@ function Main() {
 
         {tab === "favs" && (favItems.length ? grid(favItems) : <Text style={s.center}>Aucun favori pour le moment.{"\n"}Touchez ♡ sur une pièce.</Text>)}
 
-        {tab === "me" && (
+        {tab === "me" && <AccountScreen auth={auth} onOpenSite={(p) => WebBrowser.openBrowserAsync(`${API_URL}${p}`)} />}
+        {false && (
           <ScrollView contentContainerStyle={{ padding: 16 }}>
             <Text style={s.h2}>MON COMPTE</Text>
             <Text style={s.body}>Langue : Français</Text>
@@ -184,19 +220,29 @@ function Main() {
           <Pressable key={k} onPress={() => setTab(k)} style={s.tab}><Text style={[s.tabText, tab === k && { color: "#000", fontWeight: "700" }]}>{l}{k === "favs" && favs.length ? ` (${favs.length})` : ""}</Text></Pressable>
         ))}
       </View>
-      {open && <Detail p={open} onClose={() => setOpen(null)} fav={favs.includes(open.slug)} onFav={() => toggle(open)} />}
+      {open && <Detail p={open} onClose={() => setOpen(null)} fav={favs.includes(open.slug)} onFav={() => toggle(open)} onAdd={() => addToCart(open)} />}
+      {cartOpen && (
+        <Modal animationType="slide" onRequestClose={() => setCartOpen(false)}>
+          <SafeAreaProvider><SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+            <CartScreen lines={cart} token={auth.accessToken} onNeedLogin={() => { setCartOpen(false); setTab("me"); }} onPaid={() => saveCart([])} onClose={() => setCartOpen(false)} onQty={(slug, q) => saveCart(q < 1 ? cart.filter((l) => l.slug !== slug) : cart.map((l) => (l.slug === slug ? { ...l, quantity: q } : l)))} onRemove={(slug) => saveCart(cart.filter((l) => l.slug !== slug))} />
+          </SafeAreaView></SafeAreaProvider>
+        </Modal>
+      )}
     </SafeAreaView>
+    </StripeProvider>
   );
 }
 
 const s = StyleSheet.create({
   header: { alignItems: "center", paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderColor: "#ddd" },
   logo: { fontSize: 20, fontWeight: "800", letterSpacing: 4 },
+  cartBtn: { position: "absolute", right: 16, top: 0, bottom: 0, justifyContent: "center" },
+  cartText: { fontSize: 12, fontWeight: "700", letterSpacing: 1 },
   h2: { fontSize: 14, fontWeight: "800", letterSpacing: 1, paddingHorizontal: 16, marginBottom: 10 },
   card: { width: 160, marginBottom: 16 },
   cardImg: { width: "100%", aspectRatio: 0.8, backgroundColor: "#f2f2f2" },
-  heart: { position: "absolute", top: 6, right: 6, width: 44, height: 44, borderRadius: 22, backgroundColor: "rgba(255,255,255,0.85)", alignItems: "center", justifyContent: "center" },
-  heartIcon: { fontSize: 24, color: "#111", lineHeight: 28 },
+  heart: { position: "absolute", top: 8, right: 8, width: 32, height: 32, borderRadius: 16, backgroundColor: "rgba(255,255,255,0.85)", alignItems: "center", justifyContent: "center" },
+  heartIcon: { fontSize: 18, color: "#111", lineHeight: 22 },
   brand: { fontSize: 11, fontWeight: "800", marginTop: 6, letterSpacing: 0.5 },
   name: { fontSize: 13, color: "#333" },
   price: { fontSize: 13, fontWeight: "700", marginTop: 2 },

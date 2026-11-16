@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useFonts, PlayfairDisplay_600SemiBold } from "@expo-google-fonts/playfair-display";
 import { Inter_400Regular } from "@expo-google-fonts/inter";
-import { ActivityIndicator, FlatList, Dimensions, Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StatusBar as RNStatusBar, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Alert, FlatList, Dimensions, Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StatusBar as RNStatusBar, StyleSheet, Text, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Badges } from "./badges";
 import { StatusBar } from "expo-status-bar";
@@ -121,7 +121,7 @@ function DetailBody({ p, onClose, fav, onFav, onAdd, token, onNeedLogin, onOpenR
               </View>
             ) : null}
             {x?.roomPreview || x?.mirrorTryOn ? (
-              <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => WebBrowser.openBrowserAsync(`${API_URL}/fr/produits/${p.slug}/essayage`)}>
+              <Pressable style={[s.cta, { marginTop: 12 }]} onPress={async () => { try { await WebBrowser.openBrowserAsync(`${API_URL}/fr/produits/${p.slug}/essayage`); } catch { Alert.alert("Indisponible", "Impossible d’ouvrir cet aperçu : aucun navigateur compatible n’est disponible sur cet appareil. Vérifiez que Chrome est installé et à jour, ainsi que la réalité augmentée (Services Google Play pour la RA)."); } }}>
                 <Text style={s.ctaText}>{x?.roomPreview ? "Aperçu dans une pièce · réalité augmentée" : "Essayage au miroir"}</Text>
               </Pressable>
             ) : null}

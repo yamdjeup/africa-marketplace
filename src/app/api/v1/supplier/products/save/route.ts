@@ -1,4 +1,4 @@
-﻿import { randomBytes } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { slugify } from "@/lib/category-rules";
 import { isCurrency, toEurCents, toMinor, type Currency } from "@/lib/currency";
@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 const ART = ["peinture", "sculpture", "photographie"];
 
-// CatÃ©gories + (si ?slug=) fiche de l'Å“uvre Ã  modifier, limitÃ©e au fournisseur du jeton.
+// Catégories + (si ?slug=) fiche de l'œuvre à modifier, limitée au fournisseur du jeton.
 export async function GET(req: Request) {
   const sup = await supplierFromRequest(req);
   if (!sup) return NextResponse.json({ error: "forbidden" }, { status: 403 });
@@ -26,7 +26,7 @@ export async function GET(req: Request) {
     product = {
       slug: p.slug, status: p.status, sourceLang: p.sourceLang, name: p.name, nameEn: p.nameEn, description: p.description, descriptionEn: p.descriptionEn,
       categorySlug: p.categorySlug, price: (p.priceLocal ?? p.priceCents) / 100, currency: p.currency, material: p.material ?? "", widthCm: p.widthCm, heightCm: p.heightCm, depthCm: p.depthCm, weightG: p.weightG,
-      edition: p.edition ?? "", images: Array.isArray(p.images) ? p.images : [], attested: !!p.authorAttestedAt,
+      edition: p.edition ?? "", story: p.story, storyEn: p.storyEn, signature: p.signatureFileId ? `/api/media/${p.signatureFileId}` : "", images: Array.isArray(p.images) ? p.images : [], attested: !!p.authorAttestedAt,
     };
   }
   return NextResponse.json({ categories, product });
@@ -38,7 +38,7 @@ const numOrNull = (v: unknown) => {
   return Number.isFinite(n) && n >= 0 ? n : null;
 };
 
-// MÃªmes validations que saveProduct (fournisseur/oeuvres-actions.ts) : texte, catÃ©gorie, prix, photos du compte, attestation pour l'art.
+// Mêmes validations que saveProduct (fournisseur/oeuvres-actions.ts) : texte, catégorie, prix, photos du compte, attestation pour l'art.
 export async function POST(req: Request) {
   const sup = await supplierFromRequest(req);
   const user = await userFromRequest(req);
@@ -92,6 +92,9 @@ export async function POST(req: Request) {
 
   const isArt = ART.includes(categorySlug);
   const attest = isArt && b.attest === true;
+  const sigRaw = /^\/api\/media\/([\w-]+)$/.exec(str("signature", 400))?.[1] ?? null;
+  const sigRow = isArt && sigRaw ? await db.mediaFile.findUnique({ where: { id: sigRaw }, select: { ownerUserId: true } }) : null;
+  const signatureId = sigRow?.ownerUserId === sup.userId ? sigRaw : null;
   const edition = isArt ? str("edition", 40) || null : null;
   const weight = numOrNull(b.weightG);
   const data = {
@@ -102,6 +105,7 @@ export async function POST(req: Request) {
     sourceLang, translationState, categorySlug, priceCents, priceLocal, currency,
     material: str("material", 80) || null, materialEn: str("material", 80) || null,
     widthCm: numOrNull(b.widthCm), heightCm: numOrNull(b.heightCm), depthCm: numOrNull(b.depthCm), weightG: weight === null ? null : Math.round(weight),
+    story: str("story", 4000), storyEn: str("storyEn", 4000) || str("story", 4000), signatureFileId: signatureId,
     images: photos, country: sup.country, countryEn: sup.country, edition,
   };
   const attestData = attest && !existing?.authorAttestedAt ? { authorAttestedAt: new Date(), authorAttestedBy: `${sup.displayName} <${user.email ?? ""}>` } : !attest && isArt && !existing?.authorAttestedAt ? { authorAttestedAt: null, authorAttestedBy: null } : {};
@@ -119,14 +123,21 @@ export async function POST(req: Request) {
   const creatorSlug = await ensureCreator(sup);
   const slug = `${slugify(name).slice(0, 40) || "oeuvre"}-${randomBytes(2).toString("hex")}`;
   const unique = b.unique === true;
-  const stock = unique ? 1 : Math.trunc(Number(b.stock ?? 0));
-  if (!Number.isFinite(stock) || stock < 0 || stock > 100000) return bad("stock");
+  const variants = (Array.isArray(b.variants) ? b.variants : []).slice(0, 40).map((v) => ({ label: String((v as { label?: unknown }).label ?? "").trim().slice(0, 60), qty: Math.trunc(Number((v as { qty?: unknown }).qty)) }));
+  if (variants.some((v) => !v.label || !Number.isFinite(v.qty) || v.qty < 0 || v.qty > 100000) || new Set(variants.map((v) => v.label)).size !== variants.length) return bad("variants");
+  const single = unique ? 1 : Math.trunc(Number(b.stock ?? 0));
+  if (variants.length === 0 && (!Number.isFinite(single) || single < 0 || single > 100000)) return bad("stock");
+  const stock = variants.length > 0 ? variants.reduce((n, v) => n + v.qty, 0) : single;
   const actor = user.email ?? sup.displayName;
   await db.$transaction(async (tx) => {
     await tx.product.create({
-      data: { ...data, ...attestData, story: "", storyEn: "", slug, creatorSlug, supplierId: sup.id, status: intent === "submit" ? "SUBMITTED" : "DRAFT", submittedAt: intent === "submit" ? new Date() : null, materials: [], sizes: [], stock, hasCertificate: false, lowStockThreshold: 1, edition: edition ?? (unique && isArt ? "PiÃ¨ce unique" : null) },
+      data: { ...data, ...attestData, slug, creatorSlug, supplierId: sup.id, status: intent === "submit" ? "SUBMITTED" : "DRAFT", submittedAt: intent === "submit" ? new Date() : null, materials: [], sizes: variants.map((v) => v.label), stock, hasCertificate: false, lowStockThreshold: 1, edition: edition ?? (unique && isArt ? "Pièce unique" : null) },
     });
-    if (stock > 0) await tx.stockMovement.create({ data: { productSlug: slug, type: "ENTRY", quantity: stock, reason: "Stock initial", authorId: sup.userId!, authorLabel: actor } });
+    for (const v of variants) {
+      const row = await tx.productVariant.create({ data: { productSlug: slug, label: v.label, stock: v.qty } });
+      if (v.qty > 0) await tx.stockMovement.create({ data: { productSlug: slug, variantId: row.id, type: "ENTRY", quantity: v.qty, reason: "Stock initial", authorId: sup.userId!, authorLabel: actor } });
+    }
+    if (variants.length === 0 && stock > 0) await tx.stockMovement.create({ data: { productSlug: slug, type: "ENTRY", quantity: stock, reason: "Stock initial", authorId: sup.userId!, authorLabel: actor } });
   });
   if (intent === "submit") await emailAdminProductSubmitted(sup.displayName, name);
   return NextResponse.json({ ok: true, slug, status: intent === "submit" ? "SUBMITTED" : "DRAFT" });

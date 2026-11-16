@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { authed } from "./api";
 import { tr, useLang } from "./region";
-import { WorkForm } from "./work-form";
+import * as ImagePicker from "expo-image-picker";
+import { WorkForm, uploadPhoto } from "./work-form";
+import { API_URL } from "./config";
 
 type Lbl = { fr: string; en: string };
 type Sub = { id: string; number: string; status: string; statusLabel: Lbl; createdAt: string; customer: string; subtotalCents: number; acceptBy: string | null };
@@ -220,7 +222,7 @@ function DashboardPane({ token }: { token: string }) {
   );
 }
 
-type Prof = { displayName: string; country: string; contactEmail: string; phone: string; address: string; bio: string; bioEn: string; videoUrl: string; avatar: string };
+type Prof = { displayName: string; country: string; contactEmail: string; phone: string; address: string; bio: string; bioEn: string; videoUrl: string; avatar: string; signature: string };
 const PROF_ERR: Record<string, [string, string]> = { name: ["Ce nom est déjà utilisé par un partenaire.", "This name is already used by a partner."], invalid: ["Données invalides.", "Invalid data."] };
 
 function ProfilePane({ token }: { token: string }) {
@@ -234,6 +236,16 @@ function ProfilePane({ token }: { token: string }) {
   const field = (label: string, k: keyof Prof, extra: object = {}) => (
     <View style={{ marginTop: 10 }}><Text style={st.mut}>{label}</Text><TextInput value={p[k]} onChangeText={set(k)} style={st.input} accessibilityLabel={label} {...extra} /></View>
   );
+  const pickImg = async (k: "avatar" | "signature") => {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) { setMsg(tr("Autorisez l'accès aux photos.", "Allow photo access.")); return; }
+    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], quality: 1 });
+    if (res.canceled) return;
+    setMsg(tr("Envoi…", "Uploading…"));
+    const r = await uploadPhoto(token, res.assets[0].uri, k === "signature" ? "signature" : "photo");
+    if (r.url) { setP((o) => (o ? { ...o, [k]: r.url as string } : o)); setMsg(tr("Photo ajoutée : pensez à enregistrer.", "Photo added: remember to save.")); }
+    else setMsg(tr("Envoi impossible (JPEG/PNG/WebP, 300 Ko max).", "Upload failed (JPEG/PNG/WebP, 300 KB max)."));
+  };
   const save = async () => {
     setMsg("");
     const r = await authed<{ ok?: boolean; error?: string }>(token, "POST", "/api/v1/supplier/profile", { ...p, bio, lang });
@@ -243,6 +255,11 @@ function ProfilePane({ token }: { token: string }) {
   return (
     <View>
       <Text style={st.h3}>{tr("Profil", "Profile")}</Text>
+      <View style={{ flexDirection: "row", gap: 12, alignItems: "center", marginTop: 8 }}>
+        {p.avatar ? <Image source={{ uri: p.avatar.startsWith("http") ? p.avatar : `${API_URL}${p.avatar}` }} style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: "#f2eadd" }} /> : null}
+        <Pressable onPress={() => pickImg("avatar")} style={st.chip}><Text style={{ color: "#1c3060" }}>{tr("Photo de profil", "Profile photo")}</Text></Pressable>
+        <Pressable onPress={() => pickImg("signature")} style={st.chip}><Text style={{ color: "#1c3060" }}>{p.signature ? tr("Signature ✓", "Signature ✓") : tr("Signature", "Signature")}</Text></Pressable>
+      </View>
       {field(tr("Nom d'artiste / d'atelier", "Artist / studio name"), "displayName")}
       {field(tr("Pays", "Country"), "country")}
       {field(tr("E-mail de contact", "Contact email"), "contactEmail", { keyboardType: "email-address", autoCapitalize: "none" })}

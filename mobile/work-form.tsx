@@ -7,7 +7,7 @@ import { API_URL } from "./config";
 import { tr, useLang } from "./region";
 
 type Cat = { slug: string; name: string; nameEn: string };
-type Loaded = { categories: Cat[]; product: null | { slug: string; status: string; sourceLang: string; name: string; nameEn: string; description: string; descriptionEn: string; categorySlug: string; price: number; currency: string; material: string; widthCm: number | null; heightCm: number | null; depthCm: number | null; weightG: number | null; edition: string; images: string[]; attested: boolean } };
+type Loaded = { categories: Cat[]; product: null | { slug: string; status: string; sourceLang: string; name: string; nameEn: string; description: string; descriptionEn: string; categorySlug: string; price: number; currency: string; material: string; widthCm: number | null; heightCm: number | null; depthCm: number | null; weightG: number | null; edition: string; story: string; storyEn: string; signature: string; images: string[]; attested: boolean } };
 
 const ERR: Record<string, [string, string]> = {
   invalid: ["Titre et catégorie obligatoires.", "Title and category are required."],
@@ -15,6 +15,7 @@ const ERR: Record<string, [string, string]> = {
   photo: ["Ajoutez au moins une photo pour soumettre.", "Add at least one photo to submit."],
   desc: ["Description trop courte (20 caractères minimum).", "Description too short (20 characters minimum)."],
   stock: ["Stock invalide.", "Invalid stock."],
+  variants: ["Variantes invalides (une par ligne « libellé : quantité », sans doublon).", "Invalid variants (one per line “label: quantity”, no duplicates)."],
   size: ["Photo trop lourde (300 Ko maximum).", "Photo too large (300 KB max)."],
   type: ["Format de photo non accepté (JPEG, PNG ou WebP).", "Unsupported photo format (JPEG, PNG or WebP)."],
   rate: ["Trop d'envois, réessayez plus tard.", "Too many uploads, try again later."],
@@ -24,7 +25,7 @@ const CURRENCIES = ["EUR", "USD", "GBP", "XOF", "XAF", "MAD", "NGN", "GHS"];
 const MAX_BYTES = 300 * 1024;
 
 // Réduit la photo jusqu'à passer sous 300 Ko (limite du site), puis l'envoie au compte du créateur.
-async function uploadPhoto(token: string, uri: string, kind: "photo" | "signature"): Promise<{ url?: string; error?: string }> {
+export async function uploadPhoto(token: string, uri: string, kind: "photo" | "signature"): Promise<{ url?: string; error?: string }> {
   for (const [width, quality] of [[1400, 0.7], [1200, 0.55], [1000, 0.45], [800, 0.35], [640, 0.3]] as const) {
     const out = await ImageManipulator.manipulateAsync(uri, [{ resize: { width } }], { compress: quality, format: ImageManipulator.SaveFormat.JPEG });
     const blob = await (await fetch(out.uri)).blob();
@@ -49,8 +50,9 @@ export function WorkForm({ token, slug, onClose }: { token: string; slug?: strin
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
-  const [f, setF] = useState({ sourceLang: lang as string, title: "", description: "", category: "", price: "", currency: "EUR", material: "", widthCm: "", heightCm: "", depthCm: "", weightG: "", edition: "", stock: "1", unique: false, attest: false });
+  const [f, setF] = useState({ sourceLang: lang as string, title: "", description: "", category: "", price: "", currency: "EUR", material: "", widthCm: "", heightCm: "", depthCm: "", weightG: "", edition: "", story: "", variants: "", stock: "1", unique: false, attest: false });
   const [photos, setPhotos] = useState<string[]>([]);
+  const [signature, setSignature] = useState("");
   const set = (k: keyof typeof f, v: string | boolean) => setF((o) => ({ ...o, [k]: v }));
 
   useEffect(() => {
@@ -60,7 +62,8 @@ export function WorkForm({ token, slug, onClose }: { token: string; slug?: strin
         const p = r.data.product;
         if (p) {
           const fr = p.sourceLang !== "en";
-          setF((o) => ({ ...o, sourceLang: p.sourceLang, title: fr ? p.name : p.nameEn, description: fr ? p.description : p.descriptionEn, category: p.categorySlug, price: String(p.price), currency: p.currency, material: p.material, widthCm: p.widthCm == null ? "" : String(p.widthCm), heightCm: p.heightCm == null ? "" : String(p.heightCm), depthCm: p.depthCm == null ? "" : String(p.depthCm), weightG: p.weightG == null ? "" : String(p.weightG), edition: p.edition, attest: p.attested }));
+          setF((o) => ({ ...o, sourceLang: p.sourceLang, title: fr ? p.name : p.nameEn, description: fr ? p.description : p.descriptionEn, category: p.categorySlug, price: String(p.price), currency: p.currency, material: p.material, widthCm: p.widthCm == null ? "" : String(p.widthCm), heightCm: p.heightCm == null ? "" : String(p.heightCm), depthCm: p.depthCm == null ? "" : String(p.depthCm), weightG: p.weightG == null ? "" : String(p.weightG), edition: p.edition, story: fr ? p.story : p.storyEn, attest: p.attested }));
+          setSignature(p.signature);
           setPhotos(p.images);
         }
       }
@@ -85,9 +88,22 @@ export function WorkForm({ token, slug, onClose }: { token: string; slug?: strin
     setBusy(false);
   };
 
+  const pickSignature = async () => {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) { setMsg(tr("Autorisez l'accès aux photos pour ajouter une image.", "Allow photo access to add an image.")); return; }
+    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], quality: 1 });
+    if (res.canceled) return;
+    setBusy(true); setMsg("");
+    const r = await uploadPhoto(token, res.assets[0].uri, "signature");
+    setBusy(false);
+    if (r.url) setSignature(r.url);
+    else { const e = ERR[r.error ?? ""]; setMsg(e ? tr(e[0], e[1]) : tr("Envoi impossible.", "Upload failed.")); }
+  };
+
   const save = async (intent: "draft" | "submit") => {
     setBusy(true); setMsg("");
-    const r = await authed<{ error?: string; status?: string }>(token, "POST", "/api/v1/supplier/products/save", { ...f, slug, intent, photos });
+    const variants = f.variants.split("\n").map((l) => l.trim()).filter(Boolean).map((l) => { const i = l.lastIndexOf(":"); return { label: (i > 0 ? l.slice(0, i) : l).trim(), qty: i > 0 ? l.slice(i + 1).trim() : "1" }; });
+    const r = await authed<{ error?: string; status?: string }>(token, "POST", "/api/v1/supplier/products/save", { ...f, slug, intent, photos, variants, signature, story: f.sourceLang === "fr" ? f.story : undefined, storyEn: f.sourceLang === "en" ? f.story : undefined });
     setBusy(false);
     if (r.ok) { Alert.alert(intent === "submit" ? tr("Soumise à la modération.", "Submitted for review.") : tr("Brouillon enregistré.", "Draft saved.")); onClose(true); }
     else { const e = ERR[r.data.error ?? ""]; setMsg(e ? tr(e[0], e[1]) : tr("Enregistrement impossible.", "Could not save.")); }
@@ -118,11 +134,12 @@ export function WorkForm({ token, slug, onClose }: { token: string; slug?: strin
       {inp(tr("Profondeur (cm)", "Depth (cm)"), "depthCm", { keyboardType: "decimal-pad" })}
       {inp(tr("Poids (g)", "Weight (g)"), "weightG", { keyboardType: "number-pad" })}
       {isArt ? inp(tr("Édition (ex. 1/10)", "Edition (e.g. 1/10)"), "edition", { maxLength: 40 }) : null}
+      {inp(tr("Histoire de l'œuvre", "Story of the work"), "story", { multiline: true, style: [s.input, { minHeight: 90 }] })}
       {!slug ? (
         <View style={{ marginTop: 10 }}>
           <View style={{ flexDirection: "row", gap: 8 }}>{chip(tr("Pièce unique", "Unique piece"), f.unique, () => set("unique", !f.unique))}</View>
-          {!f.unique ? inp(tr("Stock initial", "Initial stock"), "stock", { keyboardType: "number-pad" }) : null}
-          <Text style={[s.mut, { marginTop: 4 }]}>{tr("Les variantes (tailles…) s'ajoutent ensuite dans Œuvres et stocks.", "Variants (sizes…) can then be added in Works and stock.")}</Text>
+          {!f.unique ? inp(tr("Variantes (une par ligne « libellé : quantité »)", "Variants (one per line “label: quantity”)"), "variants", { multiline: true, placeholder: "S : 3\nM : 5" }) : null}
+          {!f.unique && !f.variants.trim() ? inp(tr("Stock initial (sans variantes)", "Initial stock (no variants)"), "stock", { keyboardType: "number-pad" }) : null}
         </View>
       ) : null}
       <Text style={[s.mut, { marginTop: 14 }]}>{tr("Photos (6 maximum, réduites automatiquement)", "Photos (6 max, resized automatically)")}</Text>
@@ -135,6 +152,16 @@ export function WorkForm({ token, slug, onClose }: { token: string; slug?: strin
         ))}
         {photos.length < 6 ? <Pressable disabled={busy} onPress={pick} style={{ width: 84, height: 84, borderWidth: 1, borderColor: "#ded6c9", alignItems: "center", justifyContent: "center" }}><Text style={{ color: "#1c3060" }}>+ {tr("Photo", "Photo")}</Text></Pressable> : null}
       </View>
+      {isArt ? (
+        <View style={{ marginTop: 14 }}>
+          <Text style={s.mut}>{tr("Photo de la signature (privée)", "Signature photo (private)")}</Text>
+          <View style={{ flexDirection: "row", gap: 10, marginTop: 6, alignItems: "center" }}>
+            {signature ? <Image source={{ uri: `${API_URL}${signature}` }} style={{ width: 84, height: 84, backgroundColor: "#f2eadd" }} /> : null}
+            <Pressable disabled={busy} onPress={pickSignature} style={s.chip}><Text style={{ color: "#1c3060" }}>{signature ? tr("Remplacer", "Replace") : "+ " + tr("Signature", "Signature")}</Text></Pressable>
+            {signature ? <Pressable onPress={() => setSignature("")}><Text style={s.mut}>{tr("Retirer", "Remove")}</Text></Pressable> : null}
+          </View>
+        </View>
+      ) : null}
       {isArt ? (
         <Pressable onPress={() => set("attest", !f.attest)} style={{ flexDirection: "row", gap: 10, marginTop: 14, alignItems: "flex-start" }} accessibilityRole="checkbox" accessibilityState={{ checked: f.attest }}>
           <View style={{ width: 22, height: 22, borderWidth: 1, borderColor: "#221812", backgroundColor: f.attest ? "#221812" : "transparent" }} />

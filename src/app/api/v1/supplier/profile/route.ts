@@ -18,7 +18,7 @@ export async function GET(req: Request) {
   const s = await supplierFromRequest(req);
   if (!s) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   const avatar = s.creatorSlug ? (await db.creator.findUnique({ where: { slug: s.creatorSlug }, select: { image: true } }))?.image ?? "" : "";
-  return NextResponse.json({ displayName: s.displayName, country: s.country, contactEmail: s.contactEmail ?? "", phone: s.phone ?? "", address: s.address ?? "", bio: s.bio, bioEn: s.bioEn, videoUrl: s.videoUrl ?? "", avatar });
+  return NextResponse.json({ displayName: s.displayName, country: s.country, contactEmail: s.contactEmail ?? "", phone: s.phone ?? "", address: s.address ?? "", bio: s.bio, bioEn: s.bioEn, videoUrl: s.videoUrl ?? "", avatar, signature: s.signatureFileId ? `/api/media/${s.signatureFileId}` : "" });
 }
 
 // Mêmes règles et même journal d'audit que updateSupplierProfile (fournisseur/actions.ts).
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
     data: { ...contact, displayName: String(after.displayName), country: String(after.country), bio: lang === "fr" ? str("bio", 4000) : sup.bio, bioEn: lang === "en" ? str("bio", 4000) : sup.bioEn, videoUrl: video },
   });
   if (after.displayName !== before.displayName && sup.userId) await db.user.update({ where: { id: sup.userId }, data: { name: String(after.displayName) } });
-  if (b.avatar !== undefined && sup.userId) {
+  if (sup.userId && (b.avatar === "" || mediaId(b.avatar))) {
     const id = await owned(b.avatar, sup.userId);
     const slug = await ensureCreator(sup);
     await db.creator.update({ where: { slug }, data: { image: id ? `/api/media/${id}` : "" } });

@@ -1,4 +1,4 @@
-import { tr, lazy } from "./region";
+import { tr, lazy, getLang } from "./region";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { authed } from "./api";
@@ -23,11 +23,11 @@ function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: numbe
   const [reason, setReason] = useState("");
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
-  const date = (d: string) => new Date(d).toLocaleDateString("fr-FR");
+  const date = (d: string) => new Date(d).toLocaleDateString(getLang() === "en" ? "en-GB" : "fr-FR");
   const refunded = ["DONE", "AWAITING", "REQUESTED"].includes(p.refundStatus);
   const cancel = () =>
     Alert.alert(tr("Annuler ce colis ?", "Cancel this parcel?"), tr("Cette action est irréversible. Vous serez remboursé intégralement.", "This cannot be undone. You will be refunded in full."), [
-      { text: "Garder ma commande", style: "cancel" },
+      { text: tr("Garder ma commande", "Keep my order"), style: "cancel" },
       { text: tr("Annuler le colis", "Cancel the parcel"), style: "destructive", onPress: async () => { setBusy(true); const r = await authed(token, "POST", "/api/v1/orders/cancel", { id: p.id }); setBusy(false); if (r.ok) reload(); else setMsg(tr("Annulation impossible : le colis a déjà été pris en charge.", "Cancellation is not possible: the parcel has already been picked up.")); } },
     ]);
   const ask = async () => {
@@ -38,22 +38,22 @@ function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: numbe
   };
   return (
     <View style={{ marginTop: 10, gap: 3 }}>
-      <Text style={s.bold}>Colis {i + 1} sur {n}</Text>
-      {p.shop && <Text style={s.mut}>Vendu et expédié par {p.shop.name} ({p.shop.country})</Text>}
-      <Text style={s.bold}>{p.statusLabel}</Text>
+      <Text style={s.bold}>{tr(`Colis ${i + 1} sur ${n}`, `Parcel ${i + 1} of ${n}`)}</Text>
+      {p.shop && <Text style={s.mut}>{tr("Vendu et expédié par", "Sold and shipped by")} {p.shop.name} ({p.shop.country})</Text>}
+      <Text style={s.bold}>{STATUS[p.status] ?? p.statusLabel}</Text>
       {p.items.map((it, k) => <Text key={k}>{it.quantity} × {it.name}{it.size ? ` (${it.size})` : ""}</Text>)}
       {p.status === "PENDING" && <Text style={s.mut}>{tr("En attente de la réponse de la boutique (48 h maximum).", "Waiting for the shop's reply (48 h maximum).")}</Text>}
-      {p.shippedAt && <Text style={s.mut}>Expédiée le {date(p.shippedAt)}{p.carrier ? ` · ${p.carrier}` : ""}{p.trackingNumber ? ` · ${p.trackingNumber}` : ""}</Text>}
+      {p.shippedAt && <Text style={s.mut}>{tr("Expédiée le", "Shipped on")} {date(p.shippedAt)}{p.carrier ? ` · ${p.carrier}` : ""}{p.trackingNumber ? ` · ${p.trackingNumber}` : ""}</Text>}
       {p.trackingUrl && <Pressable onPress={() => Linking.openURL(p.trackingUrl!)}><Text style={s.link}>{tr("Suivre mon colis", "Track my parcel")}</Text></Pressable>}
-      {p.deliveredAt && <Text style={s.mut}>Livrée le {date(p.deliveredAt)}</Text>}
-      {p.reason && <Text style={s.mut}>Motif : {p.reason}</Text>}
+      {p.deliveredAt && <Text style={s.mut}>{tr("Livrée le", "Delivered on")} {date(p.deliveredAt)}</Text>}
+      {p.reason && <Text style={s.mut}>{tr("Motif", "Reason")} : {p.reason === "Annulée par le client depuis son compte" ? tr(p.reason, "Cancelled by the customer from their account") : p.reason}</Text>}
       {["REFUSED", "EXPIRED", "CANCELLED"].includes(p.status) && (
         <Text style={s.mut}>
-          {refunded ? tr(`Vous serez remboursé de ${eur(p.subtotalCents)} sur votre moyen de paiement sous 5 à 10 jours ouvrés.`, `You will be refunded ${eur(p.subtotalCents)} to your payment method within 5 to 10 working days.`) : p.refundStatus === "FAILED" ? "Nous revenons vers vous au sujet de votre remboursement." : tr("Commande annulée.", "Order cancelled.")}
+          {refunded ? tr(`Vous serez remboursé de ${eur(p.subtotalCents)} sur votre moyen de paiement sous 5 à 10 jours ouvrés.`, `You will be refunded ${eur(p.subtotalCents)} to your payment method within 5 to 10 working days.`) : p.refundStatus === "FAILED" ? tr("Nous revenons vers vous au sujet de votre remboursement.", "We will get back to you about your refund.") : tr("Commande annulée.", "Order cancelled.")}
         </Text>
       )}
       {p.canCancel && <Pressable disabled={busy} onPress={cancel}><Text style={s.link}>{tr("Annuler ma commande", "Cancel my order")}</Text></Pressable>}
-      {p.returnStatus && <Text style={s.bold}>{p.returnStatus}</Text>}
+      {p.returnStatus && <Text style={s.bold}>{RET[p.returnStatus] ?? p.returnStatus}</Text>}
       {p.canReturn && (
         <View style={{ gap: 6, marginTop: 4 }}>
           <Text style={s.bold}>{tr("Motif du retour", "Return reason")}</Text>
@@ -68,6 +68,7 @@ function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: numbe
 }
 
 const eur = (c: number) => `${(c / 100).toFixed(2).replace(".", ",")} €`;
+const RET: Record<string, string> = lazy(() => ({ "Retour demand?": tr("Retour demand?", "Return requested"), "Retour accept?": tr("Retour accept?", "Return accepted"), "Retour refus?": tr("Retour refus?", "Return refused"), "Rembours?": tr("Rembours?", "Refunded") }));
 const STATUS: Record<string, string> = lazy(() => ({ PENDING: tr("En attente de confirmation", "Awaiting confirmation"), ACCEPTED: tr("Confirmée", "Confirmed"), SHIPPED: tr("Expédiée", "Shipped"), DELIVERED: tr("Livrée", "Delivered"), CANCELLED: tr("Annulée", "Cancelled"), REFUSED: tr("Annulée", "Cancelled"), EXPIRED: tr("Annulée", "Cancelled") }));
 
 const ADDR_ERR: Record<string, string> = lazy(() => ({ required: tr("Veuillez renseigner les champs obligatoires.", "Please fill in the required fields."), postal: tr("Ce code postal ne semble pas valide pour ce pays.", "This postcode does not seem valid for this country."), locked: tr("L'adresse ne peut plus être modifiée : la commande est déjà en cours d'expédition.", "The address can no longer be changed: the order is already being shipped."), not_found: tr("Commande introuvable.", "Order not found.") }));
@@ -108,10 +109,10 @@ export function OrdersScreen({ token, onBack }: { token: string; onBack: () => v
       {orders?.length === 0 && <Text style={s.mut}>{tr("Vous n’avez pas encore de commande.", "You have no orders yet.")}</Text>}
       {orders?.map((o) => (
         <View key={o.number} style={s.card}>
-          <Text style={s.bold}>Commande {o.number}</Text>
+          <Text style={s.bold}>{tr("Commande", "Order")} {o.number}</Text>
           <Text style={s.mut}>{new Date(o.createdAt).toLocaleDateString("fr-FR")} · {eur(o.totalCents)}</Text>
           {o.items.map((i, k) => <Text key={k}>{i.quantity} × {i.name}{i.size ? ` (${i.size})` : ""} — {eur(i.unitPriceCents)}</Text>)}
-          <Text style={[s.mut, { marginTop: 6 }]}>Livraison : {o.address.fullName}, {o.address.street}, {o.address.postalCode} {o.address.city}</Text>
+          <Text style={[s.mut, { marginTop: 6 }]}>{tr("Livraison", "Delivery")} : {o.address.fullName}, {o.address.street}, {o.address.postalCode} {o.address.city}</Text>
           <EditAddress o={o} token={token} reload={load} />
           {o.parcels.map((p, k) => <ParcelView key={p.id} p={p} i={k} n={o.parcels.length} token={token} reload={load} />)}
         </View>

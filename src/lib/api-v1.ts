@@ -1,3 +1,4 @@
+import { ruleFor, SIZE_OPTIONS } from "@/lib/category-rules";
 import { getCategories, getCreators, getFilterOptions, getProduct, searchProducts, type CatalogParams, type ProductView } from "@/lib/catalog";
 
 export type MobileLocale = "fr" | "en";
@@ -34,6 +35,12 @@ export function toMobileProduct(p: ProductView, origin: string, locale: MobileLo
 
 export const localeOf = (v: string | null): MobileLocale => (v === "en" ? "en" : "fr");
 
+// Tailles proposées selon la catégorie (même règle que l'écran « Affiner » du site).
+export function sizesFor(category: string | undefined) {
+  const kind = ruleFor(category).sizeKind;
+  return { kind: kind ?? null, options: kind ? SIZE_OPTIONS[kind] : [] };
+}
+
 export function paramsOf(sp: URLSearchParams): CatalogParams {
   const get = (k: string) => sp.get(k) || undefined;
   const sort = sp.get("sort");
@@ -56,7 +63,7 @@ export async function listProducts(sp: URLSearchParams, origin: string) {
   const locale = localeOf(sp.get("locale"));
   const params = paramsOf(sp);
   const [res, options] = await Promise.all([searchProducts(params, locale), getFilterOptions(locale, params.category)]);
-  return { items: res.items.map((p) => toMobileProduct(p, origin, locale)), total: res.total, page: res.page, pages: res.pages, options };
+  return { items: res.items.map((p) => toMobileProduct(p, origin, locale)), total: res.total, page: res.page, pages: res.pages, options, sizes: sizesFor(params.category) };
 }
 
 export async function oneProduct(slug: string, locale: MobileLocale, origin: string) {

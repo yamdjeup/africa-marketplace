@@ -10,6 +10,7 @@ import { API_URL } from "./config";
 import { AccountScreen, useAuth } from "./auth";
 import { authed } from "./api";
 import { CartScreen, type CartLine } from "./cart";
+import { ShopScreen } from "./shop";
 import { StripeProvider } from "@stripe/stripe-react-native";
 
 type Product = { slug: string; name: string; description: string; story: string; creatorName: string; priceCents: number; images: string[]; material: string | null; technique: string | null; origin: string | null; dimensions: string | null; categorySlug: string; url: string; stock: number };
@@ -117,10 +118,6 @@ function Main() {
   const auth = useAuth();
   const [home, setHome] = useState<Home | null>(null);
   const [error, setError] = useState(false);
-  const [list, setList] = useState<List | null>(null);
-  const [category, setCategory] = useState("");
-  const [sort, setSort] = useState("new");
-  const [filtersOpen, setFiltersOpen] = useState(false);
   const [favItems, setFavItems] = useState<Product[]>([]);
   const [open, setOpen] = useState<Product | null>(null);
   const favs = favItems.map((p) => p.slug);
@@ -132,11 +129,6 @@ function Main() {
     AsyncStorage.getItem("cart").then((v) => v && setCart(JSON.parse(v) as CartLine[]));
     get<Home>("/api/v1/home?locale=fr").then(setHome).catch(() => setError(true));
   }, []);
-  useEffect(() => {
-    const q = new URLSearchParams({ locale: "fr", sort });
-    if (category) q.set("category", category);
-    get<List>(`/api/v1/products?${q}`).then(setList).catch(() => setError(true));
-  }, [category, sort]);
 
   const token = auth.accessToken;
   const toggle = useCallback((p: Product) => {
@@ -191,7 +183,7 @@ function Main() {
               <Text style={s.h2}>Créateurs du moment</Text>
               <FlatList horizontal showsHorizontalScrollIndicator={false} data={home.creators} keyExtractor={(c) => c.slug} contentContainerStyle={{ paddingHorizontal: 16, gap: 16 }}
                 renderItem={({ item }) => (
-                  <Pressable onPress={() => { setCategory(""); setTab("shop"); }} style={{ alignItems: "center", width: 90 }}>
+                  <Pressable onPress={() => { setTab("shop"); }} style={{ alignItems: "center", width: 90 }}>
                     <Image source={{ uri: item.image }} style={s.avatar} />
                     <Text numberOfLines={2} style={s.creator}>{item.name}</Text>
                   </Pressable>
@@ -202,27 +194,7 @@ function Main() {
           </ScrollView>
         ) : !error && <ActivityIndicator style={{ marginTop: 40 }} />)}
 
-        {tab === "shop" && (
-          <View style={{ flex: 1 }}>
-            <Pressable onPress={() => setFiltersOpen(true)} style={s.filterBtn}><Text style={s.filterText}>Filtrer et trier{category ? " ·1" : ""}</Text></Pressable>
-            {list ? grid(list.items) : <ActivityIndicator style={{ marginTop: 40 }} />}
-            {filtersOpen && (
-              <View style={s.sheet}>
-                <ScrollView>
-                  <Text style={s.h2}>Catégorie</Text>
-                  {[{ slug: "", label: "Toutes" }, ...(home?.categories ?? [])].map((c) => (
-                    <Pressable key={c.slug} onPress={() => setCategory(c.slug)} style={s.opt}><Text style={category === c.slug ? s.optOn : s.optOff}>{c.label}</Text></Pressable>
-                  ))}
-                  <Text style={[s.h2, { marginTop: 16 }]}>Tri</Text>
-                  {[["new", "Nouveautés"], ["price-asc", "Prix croissant (€)"], ["price-desc", "Prix décroissant (€)"]].map(([k, l]) => (
-                    <Pressable key={k} onPress={() => setSort(k)} style={s.opt}><Text style={sort === k ? s.optOn : s.optOff}>{l}</Text></Pressable>
-                  ))}
-                </ScrollView>
-                <Pressable onPress={() => setFiltersOpen(false)} style={s.cta}><Text style={s.ctaText}>Voir {list?.total ?? 0} résultats</Text></Pressable>
-              </View>
-            )}
-          </View>
-        )}
+        {tab === "shop" && <ShopScreen<Product> initialCategory="" renderItem={(item) => <Card wide p={item} fav={favs.includes(item.slug)} onFav={() => toggle(item)} onOpen={() => setOpen(item)} />} onOpenSlug={(slug) => { get<Product>(`/api/v1/products/${slug}?locale=fr`).then(setOpen).catch(() => {}); }} />}
 
         {tab === "favs" && (favItems.length ? grid(favItems) : <Text style={s.center}>Aucun favori pour le moment.{"\n"}Touchez ♡ sur une pièce.</Text>)}
 

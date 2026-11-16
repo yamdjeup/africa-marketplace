@@ -40,7 +40,7 @@ Définies dans Vercel > Settings > Environment Variables (Production : prod ; Pr
 | `OPENAI_API_KEY`, `TILA_PROVIDER`, `TILA_MODEL` | clé de prod | même clé ou clé dédiée avec plafond bas | idem |
 | **Permissions clé OpenAI** (`OPENAI_API_KEY`) | clé **Restricted** ; Chat completions (`/v1/chat/completions`) = **Request** (seul endpoint appelé par Tílá, `provider.ts` l.49) ; Responses = **Write** ; Audio = **Request** (lot 2) ; tout le reste = **None** | clé dédiée simu/preprod, limite mensuelle (€) sur le projet OpenAI ; variable (Secret) dans Vercel Preview·simu et Preview·preprod, redéploiement requis ; Tílá validé sur simu et preprod le 16/11/2026 | idem |
 | `GOOGLE_MOBILE_CLIENT_IDS` (app mobile, serveur) | non défini : connexion Google mobile désactivée (503) | IDs clients OAuth Google (Android + Web) séparés par des virgules, non secrets | idem ; `AUTH_SECRET` signe aussi les jetons mobile |
-| `RESEND_API_KEY`, `MAIL_FROM` (ou `GMAIL_*`) | prod (domaine vérifié) | **vide** (aucun envoi) ou domaine de test | domaine de test, destinataires = adresses de test |
+| `RESEND_API_KEY`, `MAIL_FROM` (ou `GMAIL_*`) | prod (domaine vérifié) | clé dédiée simu (limitée) + `MAIL_FROM` ; toutes les adresses de la base simu sont des adresses de test | domaine de test, destinataires = adresses de test |
 | `ADMIN_EMAILS` | adresse(s) admin | adresses de test | adresses de test |
 | `CRON_SECRET` | propre | distinct | distinct |
 | `NEXT_PUBLIC_GA_ID` | ID GA4 | **absente** | **absente** |
@@ -49,7 +49,7 @@ Définies dans Vercel > Settings > Environment Variables (Production : prod ; Pr
 | `GOOGLE_PLACES_API_KEY`, `CONTACT_PHONE_*` | prod | idem | idem |
 | `TEST_DATABASE_URL` | n'existe pas dans Vercel : secret GitHub Actions (branche `ci-test`) | | |
 
-Piège simu : la copie contient les adresses réelles de test. Sans clé e-mail sur simu, aucun message ne part ; ne pas la renseigner. Vider `PushSubscription` après la copie (étape 4).
+Piège simu : la copie contient les adresses réelles de test. Simu a sa propre clé Resend (dédiée, limitée) : les e-mails partent vers ces adresses de test. Garde-fou : n'ajouter aucune adresse réelle tierce dans la base simu. Vider `PushSubscription` après la copie (étape 4).
 
 ## 4. Étapes (dans l'ordre sûr)
 
@@ -63,7 +63,7 @@ Piège simu : la copie contient les adresses réelles de test. Sans clé e-mail 
    TRUNCATE "PushSubscription", "PasswordResetToken", "PasswordResetAttempt", "TilaRateHit", "CartInterest", "CheckoutHold" CASCADE;
    COMMIT;
    ```
-   (Les adresses e-mail restent : ce sont des adresses de test, et aucun envoi n'est configuré.)
+   (Les adresses e-mail restent : ce sont des adresses de test ; simu envoie via sa clé Resend dédiée.)
 5. **Git** : créer les branches `simu` et `preprod` depuis `main` (`git branch simu main ; git branch preprod main ; git push origin simu preprod`).
 
 ### Phase B : Vercel
@@ -77,7 +77,7 @@ Piège simu : la copie contient les adresses réelles de test. Sans clé e-mail 
 ### Phase D : services tiers
 10. **Google OAuth** (console Google Cloud > Identifiants > client OAuth) : ajouter les URI de redirection autorisées `https://simu.epomta.com/api/auth/callback/google` et `https://preprod.epomta.com/api/auth/callback/google`, et les origines JavaScript `https://simu.epomta.com`, `https://preprod.epomta.com`. Même opération pour Facebook/Apple si activés.
 11. **Stripe** (compte, mode **test/sandbox**) : créer un point de terminaison webhook par env (`https://simu.epomta.com/api/stripe/webhook`, `https://preprod.epomta.com/api/stripe/webhook`), copier chaque secret `whsec_…` dans la variable `STRIPE_WEBHOOK_SECRET` de l'env correspondant. Stripe Connect : ajouter les URL de retour des deux domaines si la configuration les exige.
-12. **Resend** : domaine epomta.com déjà vérifié pour la prod ; simu sans clé ; preprod : clé dédiée limitée.
+12. **Resend** : domaine epomta.com déjà vérifié pour la prod ; simu : clé dédiée limitée (adresses de test uniquement) ; preprod : clé dédiée limitée.
 
 ### Phase E : déployer et vérifier simu et preprod
 13. `git push origin simu preprod` (ou « Redeploy » dans Vercel). Le script `vercel-build` exécute `node scripts/db.mjs deploy && next build` : les migrations Prisma sont appliquées à la base de CHAQUE env au déploiement (aucune action manuelle). Contrôler dans les logs de build : « migrations applied ».
@@ -94,7 +94,7 @@ Règle ferme : **on ne vide jamais la prod avant que sa copie soit faite ET vér
     - [ ] Comptes (`User`) : même nombre ; se connecter avec 2 comptes de test (client, partenaire).
     - [ ] Images visibles : 5 fiches produit, 2 fiches créateur, l'avatar de Tílá, des images partenaires (médias en base).
     - [ ] Connexion admin sur simu OK (menu Admin, liste des commandes, versements).
-    - [ ] Aucun e-mail réel envoyé depuis simu pendant les tests.
+    - [ ] Depuis simu, e-mails reçus uniquement par des adresses de test (aucune adresse réelle tierce dans la base).
     - **STOP : ne pas continuer sans l'accord écrit de l'utilisateur** (message explicite « OK vider la prod »). Sans cet accord, s'arrêter ici : la prod reste intacte.
 17. Après l'accord écrit : annoncer la fenêtre de maintenance ; re-créer une branche Neon de secours fraîche `secours-avant-vidage-AAAAMMJJ` depuis `main` (même si celle de l'étape 1 existe) et contrôler qu'elle est visible dans Neon > Branches. Ne pas la supprimer avant plusieurs semaines.
 18. Essai du script §5 sur `preprod` : FAIT et validé (workflow `Essai vidage preprod`, rollback puis commit : 1 User admin, 6 Category, le reste à 0). Le bug d'accueil sur base vide (`heroProduct` undefined) a été corrigé (A-T50).
@@ -180,7 +180,7 @@ Coûts (à vérifier sur les grilles actuelles) :
 Risques :
 - Exécuter le vidage sur la mauvaise branche Neon : vérifier le nom de branche affiché, garder la sauvegarde (étape 1), essayer d'abord sur preprod.
 - Variables mélangées (clé live sur simu, `DATABASE_URL` de prod sur preprod) : relire le tableau §3 ligne par ligne, puis tester une commande sur chaque env et contrôler dans quelle base elle apparaît.
-- Courriels de test envoyés depuis simu à d'anciennes adresses : ne pas renseigner de clé e-mail sur simu.
+- Courriels de test envoyés depuis simu à d'anciennes adresses : règle caduque : simu a désormais sa clé Resend dédiée ; ne jamais y ajouter d'adresse réelle tierce.
 - Webhook Stripe : un secret de webhook par endpoint ; sinon les paiements restent « en attente ».
 - Google OAuth : URI de redirection manquante → erreur `redirect_uri_mismatch`.
 - Données personnelles dans simu : la copie contient des comptes (adresses de test de l'utilisateur) ; si des vrais clients existent plus tard, ne plus copier la prod vers simu sans anonymisation.

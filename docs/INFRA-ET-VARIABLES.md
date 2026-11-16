@@ -69,12 +69,12 @@ Compte Neon : yamdjeup@gmail.com (organisation `africa-marketplace`). Nom du pro
 Pas de clé live. Compte Stripe « Epomta sandbox » : africamadolo@gmail.com.
 
 ### Resend / e-mails
-Équipe Resend : yamdjeup (yamdjeup@gmail.com) ; clé API `epomta-prod` (permission Sending access) ; plan Free (3 000 e-mails/mois, 100/jour) ; passer à Pro (20 $/mois) avant l'ouverture.
+Équipe Resend : yamdjeup (yamdjeup@gmail.com) ; clé API `epomta-prod` (permission Sending access) ; simu : clé séparée ; garde-fou : aucune adresse réelle tierce dans la base simu ; plan Free (3 000 e-mails/mois, 100/jour) ; passer à Pro (20 $/mois) avant l'ouverture.
 
 | Variable | Env. | Rôle | Sensible | Où régénérer |
 |---|---|---|---|---|
-| `RESEND_API_KEY` | P | Envoi d'e-mails (prioritaire sur Gmail) | Oui | Resend > API Keys |
-| `MAIL_FROM` (alias lu : `EMAIL_FROM`) | P | Expéditeur : `Epomta <contact@epomta.com>` ; domaine à vérifier dans Resend (DNS chez OVH) | Non | — |
+| `RESEND_API_KEY` | P, S (simu : clé dédiée distincte, Sending access, limitée) | Envoi d'e-mails (prioritaire sur Gmail) | Oui | Resend > API Keys |
+| `MAIL_FROM` (alias lu : `EMAIL_FROM`) | P, S | Expéditeur : `Epomta <contact@epomta.com>` ; domaine à vérifier dans Resend (DNS chez OVH) | Non | — |
 | `GMAIL_USER`, `GMAIL_APP_PASSWORD` | P (repli) | SMTP Gmail ; mot de passe d'application, pas le mot de passe du compte | Oui | Compte Google > Mots de passe d'application |
 
 ### Google (Cloud / OAuth / Places)

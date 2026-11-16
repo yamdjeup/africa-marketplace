@@ -33,7 +33,7 @@ export function AddressesScreen({ token, onBack }: { token: string; onBack: () =
     return (
       <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
         <Text style={s.h2}>{editId ? "MODIFIER L’ADRESSE" : "NOUVELLE ADRESSE"}</Text>
-        {LABELS.map(([k, l]) => <TextInput key={k} style={s.input} placeholder={l} value={form[k]} onChangeText={(v) => setForm({ ...form, [k]: v })} keyboardType={k === "phone" ? "phone-pad" : "default"} />)}
+        {LABELS.map(([k, l]) => <TextInput placeholderTextColor="#767676" selectionColor="#000" key={k} style={s.input} placeholder={l} value={form[k]} onChangeText={(v) => setForm({ ...form, [k]: v })} keyboardType={k === "phone" ? "phone-pad" : "default"} />)}
         {msg ? <Text style={s.msg}>{msg}</Text> : null}
         <Pressable style={s.cta} onPress={save}><Text style={s.ctaText}>ENREGISTRER</Text></Pressable>
         <Pressable style={{ marginTop: 12 }} onPress={() => { setForm(null); setEditId(null); setMsg(null); }}><Text style={s.link}>Annuler</Text></Pressable>
@@ -68,7 +68,7 @@ const s = StyleSheet.create({
   h2: { fontSize: 18, fontWeight: "700", letterSpacing: 1, marginBottom: 16 },
   mut: { fontSize: 14, color: "#666" },
   bold: { fontWeight: "700", marginBottom: 2 },
-  input: { borderWidth: 1, borderColor: "#ccc", paddingHorizontal: 12, height: 48, fontSize: 16, marginBottom: 12 },
+  input: { backgroundColor: "#fff", color: "#111", borderWidth: 1, borderColor: "#ccc", paddingHorizontal: 12, height: 48, fontSize: 16, marginBottom: 12 },
   msg: { color: "#b00020", fontSize: 14, marginBottom: 8 },
   card: { borderWidth: 1, borderColor: "#ddd", padding: 12, marginBottom: 12 },
   cta: { backgroundColor: "#000", height: 48, alignItems: "center", justifyContent: "center" },

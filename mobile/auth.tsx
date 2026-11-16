@@ -154,9 +154,9 @@ export function AccountScreen({ auth, onOpenSite }: { auth: Auth; onOpenSite: (p
   return (
     <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
       <Text style={s.h2}>{titles[mode]}</Text>
-      {mode === "register" && <TextInput style={s.input} placeholder="Nom" value={name} onChangeText={setName} autoComplete="name" />}
-      <TextInput style={s.input} placeholder="Adresse e-mail" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" />
-      {mode !== "forgot" && <TextInput style={s.input} placeholder="Mot de passe" value={password} onChangeText={setPassword} secureTextEntry autoCapitalize="none" />}
+      {mode === "register" && <TextInput placeholderTextColor="#767676" selectionColor="#000" style={s.input} placeholder="Nom" value={name} onChangeText={setName} autoComplete="name" />}
+      <TextInput placeholderTextColor="#767676" selectionColor="#000" style={s.input} placeholder="Adresse e-mail" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" />
+      {mode !== "forgot" && <TextInput placeholderTextColor="#767676" selectionColor="#000" style={s.input} placeholder="Mot de passe" value={password} onChangeText={setPassword} secureTextEntry autoCapitalize="none" />}
       {msg ? <Text style={s.msg}>{msg}</Text> : null}
       <Pressable style={[s.cta, { marginTop: 12, opacity: busy ? 0.6 : 1 }]} disabled={busy} onPress={submit}>
         <Text style={s.ctaText}>{mode === "login" ? "SE CONNECTER" : mode === "register" ? "CRÉER MON COMPTE" : "ENVOYER LE LIEN"}</Text>
@@ -175,7 +175,7 @@ const s = StyleSheet.create({
   h2: { fontSize: 18, fontWeight: "700", letterSpacing: 1, marginBottom: 16 },
   body: { fontSize: 15, color: "#111", marginBottom: 4 },
   mut: { fontSize: 14, color: "#666" },
-  input: { borderWidth: 1, borderColor: "#ccc", paddingHorizontal: 12, height: 48, fontSize: 16, marginBottom: 12 },
+  input: { backgroundColor: "#fff", color: "#111", borderWidth: 1, borderColor: "#ccc", paddingHorizontal: 12, height: 48, fontSize: 16, marginBottom: 12 },
   msg: { color: "#b00020", fontSize: 14, marginBottom: 4 },
   cta: { backgroundColor: "#000", height: 48, alignItems: "center", justifyContent: "center" },
   ghost: { backgroundColor: "#fff", borderWidth: 1, borderColor: "#000" },

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { Component, useCallback, useEffect, useState, type ReactNode } from "react";
 import { useFonts, PlayfairDisplay_600SemiBold } from "@expo-google-fonts/playfair-display";
 import { Inter_400Regular } from "@expo-google-fonts/inter";
 import { ActivityIndicator, Alert, FlatList, Dimensions, Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StatusBar as RNStatusBar, StyleSheet, Text, View } from "react-native";
@@ -219,11 +219,20 @@ function DetailBody({ p, onClose, fav, onFav, onAdd, token, onNeedLogin, onOpenR
   );
 }
 
+class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
+  state = { error: null as Error | null };
+  static getDerivedStateFromError(error: Error) { return { error }; }
+  render() {
+    if (!this.state.error) return this.props.children;
+    return <ScrollView contentContainerStyle={{ padding: 24, paddingTop: 64 }}><Text style={{ fontSize: 18, fontWeight: "700" }}>Une erreur est survenue</Text><Text selectable style={{ marginTop: 12 }}>{String(this.state.error.stack ?? this.state.error.message)}</Text></ScrollView>;
+  }
+}
+
 export default function App() {
-  const [fontsReady] = useFonts({ PlayfairDisplay_600SemiBold, Inter_400Regular });
-  if (!fontsReady) return null;
+  const [fontsReady, fontError] = useFonts({ PlayfairDisplay_600SemiBold, Inter_400Regular });
   const lang = useLang();
-  return <SafeAreaProvider><Main key={lang} /></SafeAreaProvider>;
+  if (!fontsReady && !fontError) return null;
+  return <ErrorBoundary><SafeAreaProvider><Main key={lang} /></SafeAreaProvider></ErrorBoundary>;
 }
 
 function Main() {

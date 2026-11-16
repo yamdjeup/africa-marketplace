@@ -18,6 +18,7 @@ export default async function TryOnPage({ params }: { params: Promise<{ locale: 
   if (!mirror && !roomOk) notFound();
   return (
     <div className="mx-auto max-w-xl space-y-6">
+      <style>{`body > header, body header, body footer, body > nav { display: none !important; }`}</style>
       <h1 className="font-heading text-2xl text-primary">{p.name}</h1>
       {roomOk && (
         <RoomPreview locale={locale} image={p.images[0]} name={p.name} widthCm={p.widthCm!} heightCm={p.heightCm!} flat={p.categorySlug !== "sculpture"} />

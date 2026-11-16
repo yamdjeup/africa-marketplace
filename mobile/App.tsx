@@ -236,6 +236,7 @@ export default function App() {
 }
 
 function Main() {
+  const insets = useSafeAreaInsets();
   const [tab, setTab] = useState<Tab>("home");
   const auth = useAuth();
   const [home, setHome] = useState<Home | null>(null);
@@ -300,7 +301,7 @@ function Main() {
       <StatusBar style="dark" />
       <View style={{ flexDirection: "row", height: 4 }}>{["#e9a93a", "#1c3060", "#1e7546", "#bd5833"].map((c) => <View key={c} style={{ flex: 1, backgroundColor: c }} />)}</View>
       <View style={s.header}><Text style={s.logo}>E póm ta’</Text><Pressable onPress={() => setCartOpen(true)} hitSlop={10} style={s.cartBtn} accessibilityLabel={tr("Panier", "Cart")}><Text style={s.cartText}>Panier{cartCount ? ` (${cartCount})` : ""}</Text></Pressable></View>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+      <View style={{ flex: 1 }}>
       <View style={{ flex: 1 }}>
         {error && !home ? <Text style={s.center}>Connexion impossible. Vérifiez votre réseau.</Text> : null}
         {tab === "home" && (home ? (
@@ -322,12 +323,12 @@ function Main() {
           </ScrollView>
         )}
       </View>
-      <View style={s.tabs}>
+      <View style={[s.tabs, { paddingBottom: Math.max(insets.bottom, Platform.OS === "android" ? 16 : 0) }]}>
         {([["home", tr("Accueil", "Home")], ["shop", tr("Boutique", "Shop")], ["favs", tr("Favoris", "Wish list")], ["me", tr("Moi", "Me")]] as [Tab, string][]).map(([k, l]) => (
           <Pressable key={k} onPress={() => setTab(k)} style={s.tab}><Text style={[s.tabText, tab === k && { color: "#221812", fontWeight: "700" }]}>{l}{k === "favs" && favs.length ? ` (${favs.length})` : ""}</Text></Pressable>
         ))}
       </View>
-      </KeyboardAvoidingView>
+      </View>
       {supportSlug && <Modal animationType="slide" onRequestClose={() => setSupportSlug(null)}><SafeAreaProvider><SafeAreaView style={{ flex: 1, backgroundColor: "#faf6ee" }}><SupportScreen initialSlug={supportSlug} onBack={() => setSupportSlug(null)} /></SafeAreaView></SafeAreaProvider></Modal>}
       {creator && <CreatorScreen slug={creator} onClose={() => setCreator(null)} onOpenSlug={(slug) => { get<Product>(`/api/v1/products/${slug}?locale=fr`).then(setOpen).catch(() => {}); }} />}
       {!open && !cartOpen && !creator && <TilaButton onOpenSlug={(slug) => { get<Product>(`/api/v1/products/${slug}?locale=fr`).then(setOpen).catch(() => {}); }} />}

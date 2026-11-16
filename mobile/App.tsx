@@ -11,6 +11,7 @@ import { AccountScreen, useAuth } from "./auth";
 import { authed } from "./api";
 import { CartScreen, type CartLine } from "./cart";
 import { ShopScreen } from "./shop";
+import { TilaButton } from "./tila";
 import { StripeProvider } from "@stripe/stripe-react-native";
 
 type Product = { slug: string; name: string; description: string; story: string; creatorName: string; priceCents: number; images: string[]; material: string | null; technique: string | null; origin: string | null; dimensions: string | null; categorySlug: string; url: string; stock: number };
@@ -214,6 +215,7 @@ function Main() {
           <Pressable key={k} onPress={() => setTab(k)} style={s.tab}><Text style={[s.tabText, tab === k && { color: "#221812", fontWeight: "700" }]}>{l}{k === "favs" && favs.length ? ` (${favs.length})` : ""}</Text></Pressable>
         ))}
       </View>
+      {!open && !cartOpen && <TilaButton onOpenSlug={(slug) => { get<Product>(`/api/v1/products/${slug}?locale=fr`).then(setOpen).catch(() => {}); }} />}
       {open && <Detail token={auth.accessToken} onNeedLogin={() => { setOpen(null); setTab("me"); }} p={open} onClose={() => setOpen(null)} fav={favs.includes(open.slug)} onFav={() => toggle(open)} onAdd={() => addToCart(open)} />}
       {cartOpen && (
         <Modal animationType="slide" onRequestClose={() => setCartOpen(false)}>

@@ -1,3 +1,5 @@
+> **Recadrage (16/11/2026)** : ce document liste les **fonctions** et données du site à retrouver dans l'app. La **structure et la navigation** de l'app suivent l'app Farfetch (recherche en haut, carrousels larges, tuiles créateurs, boutique en liste de catégories à chevrons + bouton « Afficher N résultats », « Moi » en liste de sections ; newsletter, aide et à propos sont dans « Moi »).
+
 # Parité site / app mobile — tableau des écarts
 
 Règle : l'app doit reprendre le site à l'identique. Un écart n'est retiré que lorsqu'il est repris à l'identique.

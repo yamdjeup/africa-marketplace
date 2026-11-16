@@ -140,6 +140,16 @@ export function ShopScreen<P extends Item>({ initialCategory, renderItem, onOpen
           ))}
         </ScrollView>
       )}
+      {activeCount === 0 && options.categories.length > 0 && (
+        <View style={{ paddingHorizontal: 16, paddingBottom: 8 }}>
+          {options.categories.map((c) => (
+            <Pressable key={c.value} onPress={() => setV({ ...EMPTY, category: c.value })} style={st.catRow} accessibilityRole="button">
+              <Text style={{ color: "#221812", fontSize: 15 }}>{c.label}</Text>
+              <Text style={{ color: "#221812", fontSize: 18 }}>›</Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
       <View style={st.bar}>
         <Text style={{ color: "#6b5d52", fontSize: 13 }}>{total} pièce{total > 1 ? "s" : ""}</Text>
         <Pressable onPress={() => setSheet(true)} style={st.refine}><Text style={{ color: "#1c3060", fontWeight: "600" }}>Affiner{activeCount > 0 ? ` (${activeCount})` : ""}</Text></Pressable>
@@ -261,6 +271,7 @@ function RefineSheet({ initial, baseOptions, total, onClose, onApply }: { initia
 }
 
 const st = StyleSheet.create({
+  catRow: { minHeight: 48, flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderBottomWidth: StyleSheet.hairlineWidth, borderColor: "#ded6c9" },
   input: { height: 44, borderRadius: 8, backgroundColor: "#f2eadd", paddingHorizontal: 12, color: "#221812", fontSize: 14 },
   suggBox: { marginTop: 4, borderRadius: 8, borderWidth: 1, borderColor: "#ded6c9", backgroundColor: "#fefbf6" },
   suggRow: { minHeight: 44, justifyContent: "center", paddingHorizontal: 12, paddingVertical: 6 },

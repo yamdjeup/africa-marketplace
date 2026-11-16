@@ -42,15 +42,7 @@ function Section({ title, sub, onAll, all, children }: { title: string; sub?: st
 }
 
 /** Accueil du site (src/app/[locale]/page.tsx), blocs et textes identiques, dans le même ordre. */
-export function HomeBlocks({ site: x, renderCard, onShop, onProduct, onCreator, onSupport }: Props) {
-  const [status, setStatus] = useState<"idle" | "ok" | "invalid">("idle");
-  const [email, setEmail] = useState("");
-  const [consent, setConsent] = useState(false);
-  const submit = () => {
-    const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) && consent;
-    setStatus(ok ? "ok" : "invalid");
-    if (ok) { setEmail(""); setConsent(false); }
-  };
+export function HomeBlocks({ site: x, renderCard, onShop, onProduct, onCreator }: Props) {
   const banner = (i: number) => {
     const b = x.banners[i];
     if (!b) return null;
@@ -67,6 +59,8 @@ export function HomeBlocks({ site: x, renderCard, onShop, onProduct, onCreator, 
   );
   return (
     <ScrollView keyboardShouldPersistTaps="handled">
+      <View style={st.top}><Text style={st.wordmark}>E PÓM TA’</Text></View>
+      <Pressable onPress={() => onShop("")} accessibilityRole="search" accessibilityLabel="Rechercher" style={st.search}><Text style={{ color: "#6b5d52" }}>Rechercher</Text></Pressable>
       <View style={st.promo}><Text style={st.promoText}>{x.promoBar}</Text></View>
       <View style={{ padding: 16, alignItems: "center" }}>
         {x.hero.product ? (
@@ -118,15 +112,33 @@ export function HomeBlocks({ site: x, renderCard, onShop, onProduct, onCreator, 
       )}
 
       <Section title={x.artists.title} sub={x.artists.sub}>
-        <FlatList horizontal showsHorizontalScrollIndicator={false} data={x.artists.items} keyExtractor={(c) => c.slug} contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
-          renderItem={({ item }) => (
-            <Pressable onPress={() => onCreator(item.slug)} style={{ width: 150 }}>
-              <Image source={{ uri: item.image }} style={{ width: 150, height: 150, backgroundColor: "#f2eadd" }} />
-              <Text style={st.artistName} numberOfLines={2}>{item.name}</Text>
+        <View style={{ paddingHorizontal: 16, gap: 8 }}>
+          {x.artists.items.slice(0, 6).map((a) => (
+            <Pressable key={a.slug} onPress={() => onCreator(a.slug)} style={st.brandTile}>
+              <Image source={{ uri: a.image }} style={StyleSheet.absoluteFill} />
+              <View style={st.tileShade} />
+              <Text style={st.brandName}>{a.name}</Text>
             </Pressable>
-          )} />
+          ))}
+        </View>
       </Section>
+      <View style={{ height: 24 }} />
+    </ScrollView>
+  );
+}
 
+/** Newsletter, aide et à propos : déplacés dans « Moi » (l'app Farfetch n'a pas de pied de page). */
+export function MoreBlocks({ site: x, onSupport }: { site: Site; onSupport: (slug: string) => void }) {
+  const [status, setStatus] = useState<"idle" | "ok" | "invalid">("idle");
+  const [email, setEmail] = useState("");
+  const [consent, setConsent] = useState(false);
+  const submit = () => {
+    const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) && consent;
+    setStatus(ok ? "ok" : "invalid");
+    if (ok) { setEmail(""); setConsent(false); }
+  };
+  return (
+    <View>
       <View style={st.news}>
         <Text style={[st.h2, { paddingHorizontal: 0, textAlign: "center" }]}>{x.newsletter.title}</Text>
         <Text style={[st.mut, { textAlign: "center", marginVertical: 8 }]}>{x.newsletter.text}</Text>
@@ -156,12 +168,16 @@ export function HomeBlocks({ site: x, renderCard, onShop, onProduct, onCreator, 
         <Text style={[st.h2, { paddingHorizontal: 0 }]}>{x.about.title}</Text>
         <Text style={st.mut}>{x.about.text}</Text>
       </View>
-      <View style={{ height: 24 }} />
-    </ScrollView>
+    </View>
   );
 }
 
 const st = StyleSheet.create({
+  top: { alignItems: "center", paddingTop: 14, paddingBottom: 8 },
+  wordmark: { fontFamily: "PlayfairDisplay_600SemiBold", fontSize: 22, letterSpacing: 3, color: "#221812" },
+  search: { height: 44, marginHorizontal: 16, marginBottom: 12, borderRadius: 4, backgroundColor: "#f2eadd", justifyContent: "center", paddingHorizontal: 12 },
+  brandTile: { height: 150, backgroundColor: "#221812", justifyContent: "flex-end", padding: 12, overflow: "hidden" },
+  brandName: { color: "#fff", fontFamily: "PlayfairDisplay_600SemiBold", fontSize: 24 },
   promo: { backgroundColor: "#1c3060", paddingVertical: 10, paddingHorizontal: 16 },
   promoText: { color: "#fff", textAlign: "center", fontSize: 13 },
   hero: { width: "100%", height: 340, backgroundColor: "#f2eadd" },

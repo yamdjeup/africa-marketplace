@@ -14,7 +14,7 @@ import { CartScreen, type CartLine } from "./cart";
 import { ShopScreen } from "./shop";
 import { TilaButton } from "./tila";
 import { CreatorScreen } from "./creator";
-import { HomeBlocks, type Site } from "./home";
+import { HomeBlocks, MoreBlocks, type Site } from "./home";
 import { SupportScreen } from "./support";
 import { StripeProvider } from "@stripe/stripe-react-native";
 
@@ -274,7 +274,7 @@ function Main() {
 
         {tab === "favs" && (favItems.length ? grid(favItems) : <Text style={s.center}>Aucun favori pour le moment.{"\n"}Touchez ♡ sur une pièce.</Text>)}
 
-        {tab === "me" && <AccountScreen auth={auth} onOpenSite={(p) => WebBrowser.openBrowserAsync(`${API_URL}${p}`)} />}
+        {tab === "me" && <AccountScreen more={home?.site ? <MoreBlocks site={home.site} onSupport={setSupportSlug} /> : null} auth={auth} onOpenSite={(p) => WebBrowser.openBrowserAsync(`${API_URL}${p}`)} />}
         {false && (
           <ScrollView contentContainerStyle={{ padding: 16 }}>
             <Text style={s.h2}>Mon compte</Text>

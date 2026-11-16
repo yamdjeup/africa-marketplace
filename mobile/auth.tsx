@@ -115,7 +115,9 @@ function GoogleButton({ auth, onError }: { auth: Auth; onError: (m: string | nul
   );
 }
 
-export function AccountScreen({ auth, onOpenSite }: { auth: Auth; onOpenSite: (path: string) => void }) {
+import { Flag } from "./flags";
+
+export function AccountScreen({ auth, onOpenSite, more }: { auth: Auth; onOpenSite: (path: string) => void; more?: React.ReactNode }) {
   const [mode, setMode] = useState<"login" | "register" | "forgot">("login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -139,12 +141,14 @@ export function AccountScreen({ auth, onOpenSite }: { auth: Auth; onOpenSite: (p
         <Text style={s.h2}>Mon compte</Text>
         <Text style={s.body}>Bonjour {auth.user.name}</Text>
         <Text style={s.mut}>{auth.user.email}</Text>
-        <Text style={[s.body, { marginTop: 12 }]}>Langue : Français</Text>
+        <Text style={[s.h2, { marginTop: 16 }]}>Langue et région</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 4 }}><Flag code="FR" /><Text style={s.body}>Français · France · EUR</Text></View>
         <Pressable style={[s.cta, { marginTop: 16 }]} onPress={() => setOrders(true)}><Text style={s.ctaText}>Mes commandes</Text></Pressable>
         <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => setAddresses(true)}><Text style={s.ctaText}>Mes adresses</Text></Pressable>
         <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => setAlerts(true)}><Text style={s.ctaText}>Recevoir des alertes</Text></Pressable>
         <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => setSupport(true)}><Text style={s.ctaText}>Besoin d’aide ?</Text></Pressable>
         <Pressable style={[s.cta, s.ghost, { marginTop: 12 }]} onPress={auth.logout}><Text style={[s.ctaText, { color: "#221812" }]}>Se déconnecter</Text></Pressable>
+                {more}
       </ScrollView>
     );
   }
@@ -176,6 +180,7 @@ export function AccountScreen({ auth, onOpenSite }: { auth: Auth; onOpenSite: (p
         {mode === "login" && <Pressable onPress={() => { setMode("forgot"); setMsg(null); }}><Text style={s.link}>Mot de passe oublié ?</Text></Pressable>}
         <Pressable onPress={() => setSupport(true)}><Text style={s.link}>Besoin d’aide ?</Text></Pressable>
       </View>
+      {more}
     </ScrollView>
   );
 }

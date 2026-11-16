@@ -109,7 +109,7 @@ Règle : toute variable ajoutée ou modifiée doit être reportée ici (nom, env
 | `VAPID_PUBLIC_KEY`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | Clé publique Web Push | Non |
 | `VAPID_PRIVATE_KEY` | Clé privée Web Push (`npx web-push generate-vapid-keys`) | Oui |
 | `VAPID_SUBJECT` | Contact `mailto:` du push | Non |
-| Push mobile (Expo/FCM) | Aucune variable serveur : le serveur envoie via l'API Expo (`https://exp.host/--/api/v2/push/send`). Côté utilisateur : projet Firebase, app Android `com.…` (package de `mobile/app.json`), `google-services.json` à la racine de `mobile/` + `"android.googleServicesFile": "./google-services.json"` dans `app.json`, puis clé de compte de service FCM v1 envoyée via `eas credentials` (Android > Google Service Account > FCM V1). Sans ces éléments, l'app compile et l'activation du push affiche un message d'erreur. | Fichier/clé : oui (ne jamais les committer ni les coller dans le chat) |
+| Push mobile (Expo/FCM) | Aucune variable serveur : le serveur envoie via l'API Expo (`https://exp.host/--/api/v2/push/send`). Côté utilisateur : projet Firebase, app Android `com.epomta.app`, `google-services.json` placé dans `mobile/` ET commité (non secret, non ignoré par git : EAS Build n'envoie que les fichiers suivis ; `android.googleServicesFile` est déjà dans `app.json`), puis clé de compte de service FCM v1 envoyée via `eas credentials` (Android > Google Service Account > FCM V1). Sans ces éléments, l'app compile et l'activation du push affiche un message d'erreur. | Fichier/clé : oui (ne jamais les committer ni les coller dans le chat) |
 | `NEXT_PUBLIC_GA_ID` | ID de mesure GA4 `G-…` ; compte GA4 : À compléter | Non |
 
 ### GitHub / CI

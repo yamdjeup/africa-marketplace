@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useFonts, PlayfairDisplay_600SemiBold } from "@expo-google-fonts/playfair-display";
 import { Inter_400Regular } from "@expo-google-fonts/inter";
-import { ActivityIndicator, FlatList, Dimensions, Image, Modal, Platform, Pressable, ScrollView, StatusBar as RNStatusBar, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, Dimensions, Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StatusBar as RNStatusBar, StyleSheet, Text, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Badges } from "./badges";
 import { StatusBar } from "expo-status-bar";
@@ -32,7 +32,8 @@ function Card({ p, fav, onFav, onOpen, wide }: { p: Product; fav: boolean; onFav
   return (
     <Pressable onPress={onOpen} style={[s.card, wide && { width: "48%" }]}>
       <Image source={{ uri: p.images[0] }} style={s.cardImg} />
-      <Badges stock={p.stock} isNew={p.isNew} isExample={p.isExample} /> hitSlop={6} style={s.heart} accessibilityLabel={fav ? "Retirer des favoris" : "Ajouter aux favoris"}><Text style={[s.heartIcon, fav && { color: "#d4183d" }]}>{fav ? "♥" : "♡"}</Text></Pressable>
+      <Badges stock={p.stock} isNew={p.isNew} isExample={p.isExample} />
+      <Pressable onPress={onFav} hitSlop={6} style={s.heart} accessibilityLabel={fav ? "Retirer des favoris" : "Ajouter aux favoris"}><Text style={[s.heartIcon, fav && { color: "#d4183d" }]}>{fav ? "♥" : "♡"}</Text></Pressable>
       <Text style={s.brand} numberOfLines={1}>{p.creatorName}</Text>
       <Text numberOfLines={1} style={s.name}>{p.name}</Text>
       <Text style={s.price}>{eur(p.priceCents)}</Text>
@@ -233,9 +234,9 @@ function Main() {
       {open && <Detail token={auth.accessToken} onNeedLogin={() => { setOpen(null); setTab("me"); }} p={open} onClose={() => setOpen(null)} fav={favs.includes(open.slug)} onFav={() => toggle(open)} onAdd={() => addToCart(open)} />}
       {cartOpen && (
         <Modal animationType="slide" onRequestClose={() => setCartOpen(false)}>
-          <SafeAreaProvider><SafeAreaView style={{ flex: 1, backgroundColor: "#faf6ee" }}>
+          <SafeAreaProvider><SafeAreaView style={{ flex: 1, backgroundColor: "#faf6ee" }}><KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
             <CartScreen lines={cart} token={auth.accessToken} onNeedLogin={() => { setCartOpen(false); setTab("me"); }} onPaid={() => saveCart([])} onClose={() => setCartOpen(false)} onQty={(slug, q) => saveCart(q < 1 ? cart.filter((l) => l.slug !== slug) : cart.map((l) => (l.slug === slug ? { ...l, quantity: q } : l)))} onRemove={(slug) => saveCart(cart.filter((l) => l.slug !== slug))} />
-          </SafeAreaView></SafeAreaProvider>
+          </KeyboardAvoidingView></SafeAreaView></SafeAreaProvider>
         </Modal>
       )}
     </SafeAreaView>

@@ -54,7 +54,7 @@ export function TilaButton({ onOpenSlug }: { onOpenSlug: (slug: string) => void 
       {open && (
         <Modal animationType="slide" onRequestClose={() => setOpen(false)}>
           <SafeAreaProvider><SafeAreaView style={{ flex: 1, backgroundColor: "#faf6ee" }}>
-            <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+            <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "padding"}>
               <View style={st.head}>
                 <Image source={{ uri: AVATAR }} style={st.headImg} />
                 <View style={{ flex: 1 }}><Text style={st.name}>{T.name}</Text><Text style={st.badge}>{T.badge}</Text></View>

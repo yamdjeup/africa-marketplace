@@ -177,8 +177,46 @@ function ProductsPane({ token }: { token: string }) {
   );
 }
 
+type Dash = { name: string; country: string; craftType: string; commissionPct: number; toAccept: number; toShip: number; inTransit: number; balance: { pending: number; available: number; paid: number; gross: number; commission: number }; sales: { id: string; number: string; grossCents: number; commissionCents: number; netCents: number; state: string; availableAt: string }[]; payouts: { id: string; paidAt: string; reference: string; amountCents: number }[] };
+const SALE_ST: Record<string, [string, string]> = { reversed: ["Annulé", "Reversed"], paid: ["Versé", "Paid out"], available: ["Disponible", "Available"], pending: ["En attente", "Pending"] };
+const eur = (c: number) => `${(c / 100).toFixed(2)} EUR`;
+
+function DashboardPane({ token }: { token: string }) {
+  const [d, setD] = useState<Dash | null>(null);
+  useEffect(() => { authed<Dash>(token, "GET", "/api/v1/supplier/dashboard").then((r) => r.ok && setD(r.data)); }, []);
+  if (!d) return <ActivityIndicator style={{ marginTop: 16 }} />;
+  const stat = (label: string, v: string) => <View style={{ width: "47%", borderWidth: 1, borderColor: "#ded6c9", padding: 12 }}><Text style={st.mut}>{label}</Text><Text style={{ fontSize: 18, fontWeight: "600", color: "#221812" }}>{v}</Text></View>;
+  return (
+    <View>
+      <Text style={st.h3}>{tr(`Bonjour, ${d.name}`, `Hello, ${d.name}`)}</Text>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 10 }}>
+        {stat(tr("Commandes à accepter", "Orders to accept"), String(d.toAccept))}
+        {stat(tr("À préparer / expédier", "To prepare / ship"), String(d.toShip))}
+        {stat(tr("En livraison", "In transit"), String(d.inTransit))}
+        {stat(tr("Commission plateforme", "Platform commission"), `${d.commissionPct} %`)}
+      </View>
+      <Text style={st.h3}>{tr("Paiements", "Payments")}</Text>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 10 }}>
+        {stat(tr("En attente", "Pending"), eur(d.balance.pending))}
+        {stat(tr("Disponible", "Available"), eur(d.balance.available))}
+        {stat(tr("Versé", "Paid out"), eur(d.balance.paid))}
+      </View>
+      <Text style={st.mut}>{tr("Cumul ventes", "Total sales")} {eur(d.balance.gross)} · {tr("commission", "commission")} {eur(d.balance.commission)}</Text>
+      <Text style={st.h3}>{tr("Ventes", "Sales")}</Text>
+      {d.sales.length === 0 ? <Text style={st.mut}>{tr("Aucune vente livrée pour l'instant.", "No delivered sale yet.")}</Text> : d.sales.map((e) => (
+        <View key={e.id} style={st.row}>
+          <Text style={{ fontWeight: "600", color: "#221812" }}>{e.number} · {tr(SALE_ST[e.state]?.[0] ?? e.state, SALE_ST[e.state]?.[1] ?? e.state)}</Text>
+          <Text style={st.mut}>{eur(e.grossCents)} − {eur(e.commissionCents)} = {eur(e.netCents)}</Text>
+        </View>
+      ))}
+      <Text style={st.h3}>{tr("Versements", "Payouts")}</Text>
+      {d.payouts.length === 0 ? <Text style={st.mut}>—</Text> : d.payouts.map((p) => <Text key={p.id} style={{ color: "#221812", marginTop: 4 }}>{new Date(p.paidAt).toLocaleDateString()} · {p.reference} · {eur(p.amountCents)}</Text>)}
+    </View>
+  );
+}
+
 export function SupplierScreen({ token, onBack }: { token: string; onBack: () => void }) {
-  const [section, setSection] = useState<"orders" | "works">("orders");
+  const [section, setSection] = useState<"dash" | "orders" | "works">("dash");
   const [openId, setOpenId] = useState<string | null>(null);
   const [tab, setTab] = useState("todo");
   const [subs, setSubs] = useState<Sub[] | null>(null);
@@ -191,10 +229,12 @@ export function SupplierScreen({ token, onBack }: { token: string; onBack: () =>
     <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
       <Pressable onPress={onBack} hitSlop={12} style={{ height: 44, justifyContent: "center" }} accessibilityLabel={tr("Retour", "Back")}><Text style={{ fontSize: 28 }}>←</Text></Pressable>
       <Text style={st.h2}>{tr("Espace créateur", "Creator space")}</Text>
-      <View style={{ flexDirection: "row", gap: 8, marginTop: 12 }}>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 12 }}>
+        <Pressable onPress={() => setSection("dash")} style={[st.chip, section === "dash" && st.chipOn]}><Text style={{ color: section === "dash" ? "#fff" : "#221812" }}>{tr("Tableau de bord", "Dashboard")}</Text></Pressable>
         <Pressable onPress={() => setSection("orders")} style={[st.chip, section === "orders" && st.chipOn]}><Text style={{ color: section === "orders" ? "#fff" : "#221812" }}>{tr("Commandes", "Orders")}</Text></Pressable>
         <Pressable onPress={() => setSection("works")} style={[st.chip, section === "works" && st.chipOn]}><Text style={{ color: section === "works" ? "#fff" : "#221812" }}>{tr("Œuvres et stocks", "Works and stock")}</Text></Pressable>
       </View>
+      {section === "dash" ? <DashboardPane token={token} /> : null}
       {section === "works" ? <ProductsPane token={token} /> : null}
       {section === "orders" ? <>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginVertical: 12 }}>

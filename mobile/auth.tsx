@@ -15,11 +15,11 @@ const KEY = "epomta-session";
 const ERRORS: Record<string, string> = {
   required: "Veuillez remplir tous les champs.",
   email: "Adresse e-mail invalide.",
-  password: "Le mot de passe doit contenir au moins 8 caractères.",
-  exists: "Un compte existe déjà avec cet e-mail.",
+  password: "Le mot de passe doit contenir au moins 8 caractÃ¨res.",
+  exists: "Un compte existe dÃ©jÃ  avec cet e-mail.",
   invalid: "E-mail ou mot de passe incorrect.",
-  limited: "Trop de demandes : 3 par heure au maximum. Réessayez dans 1 h.",
-  network: "Connexion impossible. Vérifiez votre réseau.",
+  limited: "Trop de demandes : 3 par heure au maximum. RÃ©essayez dans 1 h.",
+  network: "Connexion impossible. VÃ©rifiez votre rÃ©seau.",
 };
 
 async function post(action: string, body: unknown): Promise<{ ok: boolean; data: Record<string, any> }> {
@@ -31,7 +31,7 @@ async function post(action: string, body: unknown): Promise<{ ok: boolean; data:
   }
 }
 
-/** Session persistante (jetons dans le stockage sécurisé) ; le jeton d'accès est renouvelé via le refresh. */
+/** Session persistante (jetons dans le stockage sÃ©curisÃ©) ; le jeton d'accÃ¨s est renouvelÃ© via le refresh. */
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [ready, setReady] = useState(false);
@@ -71,7 +71,7 @@ export function useAuth() {
   const forgot = async (email: string) => {
     const r = await post("forgot", { email, locale: "fr" });
     if (!r.ok) return ERRORS[r.data.error] ?? ERRORS.network;
-    return r.data.status === "unknown" ? "Aucun compte n’est associé à cette adresse e-mail." : r.data.status === "social" ? "Ce compte utilise la connexion Google : il n’a pas de mot de passe. Un e-mail vous indique comment vous connecter." : null;
+    return r.data.status === "unknown" ? "Aucun compte nâ€™est associÃ© Ã  cette adresse e-mail." : r.data.status === "social" ? "Ce compte utilise la connexion Google : il nâ€™a pas de mot de passe. Un e-mail vous indique comment vous connecter." : null;
   };
   const google = async (idToken: string) => {
     const r = await post("google", { idToken });
@@ -104,7 +104,7 @@ function GoogleButton({ auth, onError }: { auth: Auth; onError: (m: string | nul
       if (idToken) onError(await auth.google(idToken));
     } catch (e) {
       const code = (e as { code?: string }).code;
-      if (code !== statusCodes.SIGN_IN_CANCELLED) onError(`Connexion Google impossible. Réessayez. (code : ${code ?? "?"} — ${(e as Error).message ?? ""})`);
+      if (code !== statusCodes.SIGN_IN_CANCELLED) onError(`Connexion Google impossible. RÃ©essayez. (code : ${code ?? "?"} â€” ${(e as Error).message ?? ""})`);
     }
     setBusy(false);
   };
@@ -135,16 +135,16 @@ export function AccountScreen({ auth, onOpenSite }: { auth: Auth; onOpenSite: (p
 
   if (auth.user) {
     return (
-      <ScrollView contentContainerStyle={{ padding: 16 }}>
+      <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
         <Text style={s.h2}>Mon compte</Text>
         <Text style={s.body}>Bonjour {auth.user.name}</Text>
         <Text style={s.mut}>{auth.user.email}</Text>
-        <Text style={[s.body, { marginTop: 12 }]}>Langue : Français</Text>
+        <Text style={[s.body, { marginTop: 12 }]}>Langue : FranÃ§ais</Text>
         <Pressable style={[s.cta, { marginTop: 16 }]} onPress={() => setOrders(true)}><Text style={s.ctaText}>Mes commandes</Text></Pressable>
         <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => setAddresses(true)}><Text style={s.ctaText}>Mes adresses</Text></Pressable>
         <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => setAlerts(true)}><Text style={s.ctaText}>Recevoir des alertes</Text></Pressable>
-        <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => setSupport(true)}><Text style={s.ctaText}>Besoin d’aide ?</Text></Pressable>
-        <Pressable style={[s.cta, s.ghost, { marginTop: 12 }]} onPress={auth.logout}><Text style={[s.ctaText, { color: "#221812" }]}>Se déconnecter</Text></Pressable>
+        <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => setSupport(true)}><Text style={s.ctaText}>Besoin dâ€™aide ?</Text></Pressable>
+        <Pressable style={[s.cta, s.ghost, { marginTop: 12 }]} onPress={auth.logout}><Text style={[s.ctaText, { color: "#221812" }]}>Se dÃ©connecter</Text></Pressable>
       </ScrollView>
     );
   }
@@ -153,11 +153,11 @@ export function AccountScreen({ auth, onOpenSite }: { auth: Auth; onOpenSite: (p
     setBusy(true);
     setMsg(null);
     const err = mode === "login" ? await auth.login(email, password) : mode === "register" ? await auth.register(name, email, password) : await auth.forgot(email);
-    if (mode === "forgot" && !err) setMsg("Un e-mail vient d’être envoyé (lien valable 1 h). Pensez à vérifier vos courriers indésirables.");
+    if (mode === "forgot" && !err) setMsg("Un e-mail vient dâ€™Ãªtre envoyÃ© (lien valable 1 h). Pensez Ã  vÃ©rifier vos courriers indÃ©sirables.");
     else setMsg(err);
     setBusy(false);
   };
-  const titles = { login: "Connexion", register: "Créer un compte", forgot: "Mot de passe oublié" };
+  const titles = { login: "Connexion", register: "CrÃ©er un compte", forgot: "Mot de passe oubliÃ©" };
 
   return (
     <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
@@ -167,14 +167,14 @@ export function AccountScreen({ auth, onOpenSite }: { auth: Auth; onOpenSite: (p
       {mode !== "forgot" && <TextInput placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={s.input} placeholder="Mot de passe" value={password} onChangeText={setPassword} secureTextEntry autoCapitalize="none" />}
       {msg ? <Text style={s.msg}>{msg}</Text> : null}
       <Pressable style={[s.cta, { marginTop: 12, opacity: busy ? 0.6 : 1 }]} disabled={busy} onPress={submit}>
-        <Text style={s.ctaText}>{mode === "login" ? "Se connecter" : mode === "register" ? "Créer mon compte" : "Envoyer le lien"}</Text>
+        <Text style={s.ctaText}>{mode === "login" ? "Se connecter" : mode === "register" ? "CrÃ©er mon compte" : "Envoyer le lien"}</Text>
       </Pressable>
       {mode !== "forgot" && GOOGLE_ANDROID && GOOGLE_WEB ? <GoogleButton auth={auth} onError={setMsg} /> : null}
       <View style={{ marginTop: 16, gap: 12 }}>
-        {mode !== "login" && <Pressable onPress={() => { setMode("login"); setMsg(null); }}><Text style={s.link}>J’ai déjà un compte</Text></Pressable>}
-        {mode !== "register" && <Pressable onPress={() => { setMode("register"); setMsg(null); }}><Text style={s.link}>Créer un compte</Text></Pressable>}
-        {mode === "login" && <Pressable onPress={() => { setMode("forgot"); setMsg(null); }}><Text style={s.link}>Mot de passe oublié ?</Text></Pressable>}
-        <Pressable onPress={() => setSupport(true)}><Text style={s.link}>Besoin d’aide ?</Text></Pressable>
+        {mode !== "login" && <Pressable onPress={() => { setMode("login"); setMsg(null); }}><Text style={s.link}>Jâ€™ai dÃ©jÃ  un compte</Text></Pressable>}
+        {mode !== "register" && <Pressable onPress={() => { setMode("register"); setMsg(null); }}><Text style={s.link}>CrÃ©er un compte</Text></Pressable>}
+        {mode === "login" && <Pressable onPress={() => { setMode("forgot"); setMsg(null); }}><Text style={s.link}>Mot de passe oubliÃ© ?</Text></Pressable>}
+        <Pressable onPress={() => setSupport(true)}><Text style={s.link}>Besoin dâ€™aide ?</Text></Pressable>
       </View>
     </ScrollView>
   );

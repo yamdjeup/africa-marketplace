@@ -24,30 +24,30 @@ function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: numbe
   const date = (d: string) => new Date(d).toLocaleDateString("fr-FR");
   const refunded = ["DONE", "AWAITING", "REQUESTED"].includes(p.refundStatus);
   const cancel = () =>
-    Alert.alert("Annuler ce colis ?", "Cette action est irréversible. Vous serez remboursé intégralement.", [
+    Alert.alert("Annuler ce colis ?", "Cette action est irrÃ©versible. Vous serez remboursÃ© intÃ©gralement.", [
       { text: "Garder ma commande", style: "cancel" },
-      { text: "Annuler le colis", style: "destructive", onPress: async () => { setBusy(true); const r = await authed(token, "POST", "/api/v1/orders/cancel", { id: p.id }); setBusy(false); if (r.ok) reload(); else setMsg("Annulation impossible : le colis a déjà été pris en charge."); } },
+      { text: "Annuler le colis", style: "destructive", onPress: async () => { setBusy(true); const r = await authed(token, "POST", "/api/v1/orders/cancel", { id: p.id }); setBusy(false); if (r.ok) reload(); else setMsg("Annulation impossible : le colis a dÃ©jÃ  Ã©tÃ© pris en charge."); } },
     ]);
   const ask = async () => {
     setBusy(true);
     const r = await authed<{ error?: string }>(token, "POST", "/api/v1/orders/return", { id: p.id, reason });
     setBusy(false);
-    if (r.ok) reload(); else setMsg(r.data?.error === "reason" ? "Merci d’indiquer le motif du retour (3 caractères minimum)." : "Retour impossible pour ce colis.");
+    if (r.ok) reload(); else setMsg(r.data?.error === "reason" ? "Merci dâ€™indiquer le motif du retour (3 caractÃ¨res minimum)." : "Retour impossible pour ce colis.");
   };
   return (
     <View style={{ marginTop: 10, gap: 3 }}>
       <Text style={s.bold}>Colis {i + 1} sur {n}</Text>
-      {p.shop && <Text style={s.mut}>Vendu et expédié par {p.shop.name} ({p.shop.country})</Text>}
+      {p.shop && <Text style={s.mut}>Vendu et expÃ©diÃ© par {p.shop.name} ({p.shop.country})</Text>}
       <Text style={s.bold}>{p.statusLabel}</Text>
-      {p.items.map((it, k) => <Text key={k}>{it.quantity} × {it.name}{it.size ? ` (${it.size})` : ""}</Text>)}
-      {p.status === "PENDING" && <Text style={s.mut}>En attente de la réponse de la boutique (48 h maximum).</Text>}
-      {p.shippedAt && <Text style={s.mut}>Expédiée le {date(p.shippedAt)}{p.carrier ? ` · ${p.carrier}` : ""}{p.trackingNumber ? ` · ${p.trackingNumber}` : ""}</Text>}
+      {p.items.map((it, k) => <Text key={k}>{it.quantity} Ã— {it.name}{it.size ? ` (${it.size})` : ""}</Text>)}
+      {p.status === "PENDING" && <Text style={s.mut}>En attente de la rÃ©ponse de la boutique (48 h maximum).</Text>}
+      {p.shippedAt && <Text style={s.mut}>ExpÃ©diÃ©e le {date(p.shippedAt)}{p.carrier ? ` Â· ${p.carrier}` : ""}{p.trackingNumber ? ` Â· ${p.trackingNumber}` : ""}</Text>}
       {p.trackingUrl && <Pressable onPress={() => Linking.openURL(p.trackingUrl!)}><Text style={s.link}>Suivre mon colis</Text></Pressable>}
-      {p.deliveredAt && <Text style={s.mut}>Livrée le {date(p.deliveredAt)}</Text>}
+      {p.deliveredAt && <Text style={s.mut}>LivrÃ©e le {date(p.deliveredAt)}</Text>}
       {p.reason && <Text style={s.mut}>Motif : {p.reason}</Text>}
       {["REFUSED", "EXPIRED", "CANCELLED"].includes(p.status) && (
         <Text style={s.mut}>
-          {refunded ? `Vous serez remboursé de ${eur(p.subtotalCents)} sur votre moyen de paiement sous 5 à 10 jours ouvrés.` : p.refundStatus === "FAILED" ? "Nous revenons vers vous au sujet de votre remboursement." : "Commande annulée."}
+          {refunded ? `Vous serez remboursÃ© de ${eur(p.subtotalCents)} sur votre moyen de paiement sous 5 Ã  10 jours ouvrÃ©s.` : p.refundStatus === "FAILED" ? "Nous revenons vers vous au sujet de votre remboursement." : "Commande annulÃ©e."}
         </Text>
       )}
       {p.canCancel && <Pressable disabled={busy} onPress={cancel}><Text style={s.link}>Annuler ma commande</Text></Pressable>}
@@ -60,29 +60,29 @@ function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: numbe
         </View>
       )}
       {!!msg && <Text style={{ color: "#a33" }}>{msg}</Text>}
-      <Text style={[s.mut, { fontSize: 12 }]}>E póm ta’ est l’intermédiaire ; la boutique est le vendeur.</Text>
+      <Text style={[s.mut, { fontSize: 12 }]}>E pÃ³m taâ€™ est lâ€™intermÃ©diaire ; la boutique est le vendeur.</Text>
     </View>
   );
 }
 
-const eur = (c: number) => `${(c / 100).toFixed(2).replace(".", ",")} €`;
-const STATUS: Record<string, string> = { PENDING: "En attente de confirmation", ACCEPTED: "Confirmée", SHIPPED: "Expédiée", DELIVERED: "Livrée", CANCELLED: "Annulée", REFUSED: "Annulée", EXPIRED: "Annulée" };
+const eur = (c: number) => `${(c / 100).toFixed(2).replace(".", ",")} â‚¬`;
+const STATUS: Record<string, string> = { PENDING: "En attente de confirmation", ACCEPTED: "ConfirmÃ©e", SHIPPED: "ExpÃ©diÃ©e", DELIVERED: "LivrÃ©e", CANCELLED: "AnnulÃ©e", REFUSED: "AnnulÃ©e", EXPIRED: "AnnulÃ©e" };
 
 export function OrdersScreen({ token, onBack }: { token: string; onBack: () => void }) {
   const [orders, setOrders] = useState<Order[] | null>(null);
   const load = () => authed<{ orders: Order[] }>(token, "GET", "/api/v1/orders").then((r) => setOrders(r.ok ? r.data.orders : []));
   useEffect(() => { load(); }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
-    <ScrollView contentContainerStyle={{ padding: 16 }}>
-      <Pressable onPress={onBack} hitSlop={8} style={{ marginBottom: 8 }}><Text style={s.link}>← Mon compte</Text></Pressable>
+    <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
+      <Pressable onPress={onBack} hitSlop={8} style={{ marginBottom: 8 }}><Text style={s.link}>â† Mon compte</Text></Pressable>
       <Text style={s.h2}>Mes commandes</Text>
       {orders === null && <ActivityIndicator />}
-      {orders?.length === 0 && <Text style={s.mut}>Vous n’avez pas encore de commande.</Text>}
+      {orders?.length === 0 && <Text style={s.mut}>Vous nâ€™avez pas encore de commande.</Text>}
       {orders?.map((o) => (
         <View key={o.number} style={s.card}>
           <Text style={s.bold}>Commande {o.number}</Text>
-          <Text style={s.mut}>{new Date(o.createdAt).toLocaleDateString("fr-FR")} · {eur(o.totalCents)}</Text>
-          {o.items.map((i, k) => <Text key={k}>{i.quantity} × {i.name}{i.size ? ` (${i.size})` : ""} — {eur(i.unitPriceCents)}</Text>)}
+          <Text style={s.mut}>{new Date(o.createdAt).toLocaleDateString("fr-FR")} Â· {eur(o.totalCents)}</Text>
+          {o.items.map((i, k) => <Text key={k}>{i.quantity} Ã— {i.name}{i.size ? ` (${i.size})` : ""} â€” {eur(i.unitPriceCents)}</Text>)}
           <Text style={[s.mut, { marginTop: 6 }]}>Livraison : {o.address.fullName}, {o.address.street}, {o.address.postalCode} {o.address.city}</Text>
           {o.parcels.map((p, k) => <ParcelView key={p.id} p={p} i={k} n={o.parcels.length} token={token} reload={load} />)}
         </View>

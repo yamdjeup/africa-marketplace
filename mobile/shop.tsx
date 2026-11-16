@@ -8,13 +8,13 @@ import { CategoriesScreen } from "./categories";
 type Opt = { value: string; label: string };
 type Options = { categories: Opt[]; artists: Opt[]; materials: Opt[]; techniques: Opt[]; countries: Opt[] };
 type Sizes = { kind: "clothing" | "ring" | null; options: string[] };
-type Values = Record<"q" | "category" | "artist" | "material" | "technique" | "country" | "size" | "min" | "max" | "sort", string>;
+type Values = Record<"q" | "category" | "artist" | "material" | "technique" | "country" | "size" | "inStock" | "min" | "max" | "sort", string>;
 type Artist = { slug: string; name: string; image: string; label: string };
 type Extras = { artists: Artist[]; didYouMean: { kind: "artist" | "category"; slug: string; label: string } | null; suggested: Artist[] };
 type Suggest = { artists: { slug: string; name: string; label: string }[]; categories: { slug: string; label: string }[]; products: { slug: string; name: string; creator: string }[] };
 type Item = { slug: string };
 
-const EMPTY: Values = { q: "", category: "", artist: "", material: "", technique: "", country: "", size: "", min: "", max: "", sort: "new" };
+const EMPTY: Values = { q: "", category: "", artist: "", material: "", technique: "", country: "", size: "", inStock: "", min: "", max: "", sort: "new" };
 const NO_OPTIONS: Options = { categories: [], artists: [], materials: [], techniques: [], countries: [] };
 
 const qs = (v: Values, extra: Record<string, string> = {}) => {
@@ -265,6 +265,7 @@ function RefineSheet({ initial, baseOptions, total, onClose, onApply }: { initia
         {group("material", tr("Matière", "Material"), opts.materials, "Toutes")}
         {group("technique", "Techniques", opts.techniques, "Toutes")}
         {group("country", tr("Pays / région", "Country / region"), opts.countries, "Tous")}
+        <Pressable onPress={() => set("inStock", v.inStock === "1" ? "" : "1")} style={st.radioRow}><Text style={{ color: "#221812", fontSize: 15 }}>{tr("En stock uniquement", "In stock only")}</Text><View style={[st.radio, v.inStock === "1" && st.radioOn]} /></Pressable>
         {sizes.options.length > 0 && group("size", sizes.kind === "ring" ? "Tour de doigt" : "Tailles", sizes.options.map((o) => ({ value: o, label: o })), "Tous")}
         <Text style={[st.groupHead, { marginTop: 8 }]}>{tr("Fourchette de prix (EUR)", "Price range (EUR)")}</Text>
         <View style={{ flexDirection: "row", gap: 8 }}>

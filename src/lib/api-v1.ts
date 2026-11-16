@@ -61,6 +61,7 @@ export function paramsOf(sp: URLSearchParams): CatalogParams {
     technique: get("technique"),
     country: get("country"),
     size: get("size"),
+    inStock: sp.get("inStock") === "1" || sp.get("inStock") === "true" || undefined,
     min: num(sp.get("min")),
     max: num(sp.get("max")),
     page: num(sp.get("page")),

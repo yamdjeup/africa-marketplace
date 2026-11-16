@@ -169,6 +169,7 @@ export type CatalogParams = {
   technique?: string;
   country?: string;
   size?: string;
+  inStock?: boolean;
   min?: number;
   max?: number;
   sort?: "new" | "pick" | "price-asc" | "price-desc";
@@ -208,6 +209,7 @@ export async function searchProducts(params: CatalogParams, locale: Locale) {
     if (params.technique && !(p.technique && slugify(p.technique) === params.technique)) return false;
     if (params.country && !(p.country && slugify(p.country) === params.country) && !(CREATOR_COUNTRIES[p.creatorSlug] ?? []).some((c) => c.key === params.country)) return false;
     if (params.size && !strings(p.sizes).includes(params.size)) return false;
+    if (params.inStock && !((p.variants ?? []).length > 0 ? p.variants!.some((v) => v.stock - v.reserved > 0) : p.stock - p.reserved > 0)) return false;
     if (!q) return true;
     const artistCountries = (CREATOR_COUNTRIES[p.creatorSlug] ?? []).map((c) => `${c.fr} ${c.en}`);
     const core = tokenize(

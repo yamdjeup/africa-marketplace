@@ -6,7 +6,7 @@ import { getDict, type Locale } from "@/lib/i18n";
 import { ruleFor, SIZE_OPTIONS } from "@/lib/category-rules";
 
 type Opt = { value: string; label: string };
-type Values = Record<"q" | "category" | "artist" | "material" | "technique" | "country" | "size" | "min" | "max" | "sort", string>;
+type Values = Record<"q" | "category" | "artist" | "material" | "technique" | "country" | "size" | "inStock" | "min" | "max" | "sort", string>;
 
 export type RefineOptions = {
   categories: Opt[];
@@ -16,7 +16,7 @@ export type RefineOptions = {
   countries: Opt[];
 };
 
-const EMPTY: Values = { q: "", category: "", artist: "", material: "", technique: "", country: "", size: "", min: "", max: "", sort: "new" };
+const EMPTY: Values = { q: "", category: "", artist: "", material: "", technique: "", country: "", size: "", inStock: "", min: "", max: "", sort: "new" };
 
 // Écran « Affiner » plein écran (mobile) : tri + filtres, avec nombre de résultats et options recalculés selon la catégorie avant validation.
 export function RefineSheet({
@@ -149,6 +149,10 @@ export function RefineSheet({
             {select("technique", c.technique, opts.techniques, t.anyF)}
             {select("country", c.country, opts.countries, t.any)}
             {sizes.length > 0 && select("size", sizeKind === "ring" ? c.sizeRing : t.sizes, sizes.map((s) => ({ value: s, label: s })), t.any)}
+            <label className="flex min-h-14 cursor-pointer items-center justify-between border-b text-sm">
+              {t.inStockOnly}
+              <input type="checkbox" checked={v.inStock === "1"} onChange={(e) => set("inStock", e.target.checked ? "1" : "")} className="size-5 accent-black" />
+            </label>
             <details className="border-b" open={Boolean(v.min || v.max)}>
               <summary className="flex min-h-14 cursor-pointer items-center text-sm">{t.priceRange}</summary>
               <div className="flex gap-2 pb-3">

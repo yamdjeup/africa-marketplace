@@ -111,4 +111,19 @@ describe.skipIf(!enabled)("API mobile paiement + commandes (base de test)", () =
     await db.order.deleteMany({ where: { email: guestEmail } });
     await db.product.deleteMany({ where: { slug: guestSlug } });
   });
+
+  it("connecté : save=true enregistre l'adresse saisie dans le carnet", async () => {
+    vi.stubGlobal("fetch", async () => new Response(JSON.stringify({ id: "pi_save", client_secret: "pi_save_secret" }), { status: 200 }));
+    const saveSlug = `${slug}-s`;
+    await db.product.create({ data: { slug: saveSlug, name: "S", nameEn: "S", description: "d", descriptionEn: "d", story: "s", storyEn: "s", categorySlug: "test-mob", creatorSlug: "test-mob", priceCents: 1000, materials: [], sizes: [], images: [], stock: 3, supplierId, status: "PUBLISHED" } });
+    const user = await db.user.findUniqueOrThrow({ where: { email } });
+    const before = await db.address.count({ where: { userId: user.id } });
+    const co = await import("@/app/api/v1/checkout/[action]/route");
+    const address = { firstName: "Awa", lastName: "Diop", country: "France", line1: "Rue Neuve", houseNumber: "3", postalCode: "69001", city: "Lyon", phone: "+33612345678" };
+    const r = await co.POST(new Request(url("checkout/create"), post({ address, save: true, cart: [{ slug: saveSlug, size: null, quantity: 1 }] })), ctx("create"));
+    expect(r.status).toBe(200);
+    expect(await db.address.count({ where: { userId: user.id } })).toBe(before + 1);
+    await db.checkoutHold.deleteMany({ where: { buyerKey: { contains: email } } });
+    await db.product.deleteMany({ where: { slug: saveSlug } });
+  });
 });

@@ -201,6 +201,12 @@ export function CheckoutForm({
               <AddressFields locale={locale} values={manual} onChange={(p) => setManual((v) => ({ ...v, ...p }))} />
             </>
           )}
+          {user && !selected && (
+            <label className="flex min-h-11 items-center gap-3 text-sm">
+              <input type="checkbox" name="saveAddress" value="1" className="size-5 accent-primary" />
+              {t.saveAddress}
+            </label>
+          )}
           {user && (
             <Link href={newHref} className="flex min-h-11 items-center gap-2 text-sm font-medium hover:text-terracotta">
               <span aria-hidden="true" className="text-xl leading-none">+</span>

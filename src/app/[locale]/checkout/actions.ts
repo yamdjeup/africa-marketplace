@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { runAlerts } from "@/lib/alerts";
 import { auth } from "@/auth";
+import { saveAddress } from "@/lib/mobile-account";
 import { checkAddress, formatStreet, readAddress } from "@/lib/address";
 import { db } from "@/lib/db";
 import { returnOrigin } from "@/lib/origin";
@@ -87,6 +88,7 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
 
   const session = await auth();
   const user = session?.user?.id ? await db.user.findUnique({ where: { id: session.user.id } }) : null;
+  if (user && formData.get("saveAddress") === "1") await saveAddress(user.id, addr as unknown as Record<string, unknown>).catch(() => undefined);
   // Retour arrière depuis Stripe puis reconfirmation : la réservation précédente du même acheteur est libérée avant de vérifier le stock.
   await releaseBuyerHolds(db, buyerKeyOf(null, email));
   if (user) await releaseBuyerHolds(db, buyerKeyOf(user.id, email));

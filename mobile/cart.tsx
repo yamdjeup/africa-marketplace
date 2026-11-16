@@ -31,6 +31,7 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
   const [manual, setManual] = useState<AddressForm>(EMPTY_FORM);
   const [mismatch, setMismatch] = useState(false);
   const [checking, setChecking] = useState(false);
+  const [save, setSave] = useState(false);
   const useBook = !!token && addrs.length > 0;
 
   useEffect(() => {
@@ -66,7 +67,7 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
     setBusy(true);
     setMsg(null);
     const cart = lines.map((l) => ({ slug: l.slug, size: null, quantity: l.quantity }));
-    const c = await authed<{ number?: string; clientSecret?: string; guestToken?: string; error?: string; item?: string }>(token, "POST", "/api/v1/checkout/create", useBook ? { addressId: addrId, cart } : { address: manual, email: token ? undefined : email.trim(), cart });
+    const c = await authed<{ number?: string; clientSecret?: string; guestToken?: string; error?: string; item?: string }>(token, "POST", "/api/v1/checkout/create", useBook ? { addressId: addrId, cart } : { address: manual, email: token ? undefined : email.trim(), save: !!token && save, cart });
     if (!c.ok || !c.data.clientSecret || !c.data.number) {
       setMsg((ERRORS[c.data.error ?? ""] ?? "Le paiement n’a pas pu démarrer.") + (c.data.item ? ` (${c.data.item})` : ""));
       setBusy(false);
@@ -137,6 +138,12 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
               <>
                 <Text style={s.h3}>ADRESSE DE LIVRAISON</Text>
                 <AddressFields form={manual} setForm={setManual} />
+                {token ? (
+                  <Pressable onPress={() => setSave(!save)} style={{ flexDirection: "row", gap: 8, minHeight: 44, alignItems: "center" }}>
+                    <Text>{save ? "☑" : "☐"}</Text>
+                    <Text style={{ flex: 1 }}>Enregistrer cette adresse dans mon carnet</Text>
+                  </Pressable>
+                ) : null}
               </>
             )}
             <Pressable disabled={checking} onPress={verify} style={[s.cta, { backgroundColor: "#000", marginTop: 8 }]}>

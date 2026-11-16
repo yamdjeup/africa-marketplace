@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { checkAddress, formatStreet, readAddress } from "@/lib/address";
 import { buyerKeyOf, createHold, releaseBuyerHolds, releaseHold, attachSession, StockError, stockReason, type HoldPayload } from "@/lib/checkout-hold";
 import { db } from "@/lib/db";
+import { saveAddress } from "@/lib/mobile-account";
 import { confirmPaidOrder, stripeEnabled } from "@/lib/stripe-checkout";
 
 type MobileUser = { id: string; email: string };
@@ -9,7 +10,7 @@ export type CartInput = { slug: string; size: string | null; quantity: number }[
 export type CreateResult =
   | { number: string; paymentIntentId: string; clientSecret: string; totalCents: number; guestToken?: string }
   | { error: "disabled" | "empty" | "address" | "postal" | "email" | "unknown" | "stock" | "reserved" | "payment"; item?: string };
-export type PayInput = { addressId?: unknown; address?: Record<string, unknown>; email?: unknown };
+export type PayInput = { addressId?: unknown; address?: Record<string, unknown>; email?: unknown; save?: unknown };
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function parseCart(raw: unknown): CartInput {
@@ -41,6 +42,7 @@ export async function createMobilePayment(userIn: MobileUser | null, input: PayI
   }
   const problem = checkAddress(addr);
   if (problem) return { error: problem === "postal" ? "postal" : "address" };
+  if (user && !input.addressId && input.save === true) await saveAddress(user.id, input.address ?? {}).catch(() => undefined);
 
   const buyerKey = buyerKeyOf(user?.id ?? null, email);
   await releaseBuyerHolds(db, buyerKey);

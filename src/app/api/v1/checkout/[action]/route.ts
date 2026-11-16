@@ -9,9 +9,9 @@ export async function POST(req: Request, ctx: { params: Promise<{ action: string
   const { action } = await ctx.params;
   // Comme le site : connecté (Bearer) ou invité (e-mail + adresse saisie ; jeton invité renvoyé à la création).
   const user = await userFromRequest(req);
-  const body = (await req.json().catch(() => ({}))) as { addressId?: unknown; address?: Record<string, unknown>; email?: unknown; cart?: unknown; number?: unknown; guestToken?: unknown };
+  const body = (await req.json().catch(() => ({}))) as { addressId?: unknown; address?: Record<string, unknown>; email?: unknown; cart?: unknown; save?: unknown; number?: unknown; guestToken?: unknown };
   if (action === "create") {
-    const r = await createMobilePayment(user, { addressId: body.addressId, address: body.address && typeof body.address === "object" ? body.address : undefined, email: body.email }, body.cart);
+    const r = await createMobilePayment(user, { addressId: body.addressId, address: body.address && typeof body.address === "object" ? body.address : undefined, email: body.email, save: body.save }, body.cart);
     const status = !("error" in r) ? 200 : r.error === "disabled" || r.error === "payment" ? 503 : r.error === "email" || r.error === "address" || r.error === "postal" ? 400 : 409;
     return NextResponse.json(r, { status });
   }

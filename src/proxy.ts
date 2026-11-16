@@ -17,7 +17,7 @@ const locales = ["fr", "en"];
 const PUBLIC_PWA = /^\/(manifest\.webmanifest|icons\/[\w-]+\.png|sw\.js|debug-viewport)$/;
 
 // Liens des e-mails d'alertes (désinscription), cron et webhook Stripe et photos /api/media/[id] (images des e-mails) : publics, protégés par jeton signé / CRON_SECRET / signature Stripe ; les médias privés se protègent eux-mêmes.
-const PUBLIC_ALERTS = /^\/(api\/(v1\/(home|favorites|addresses|orders|checkout\/(create|confirm|cancel)|products(\/[\w-]+)?|auth\/(login|register|refresh|forgot|me|google))|alerts\/(run|unsubscribe)|address\/check|push\/test|stripe\/webhook|media\/[\w-]+)|images\/(artworks|examples)\/[\w.-]+\.(jpg|jpeg|png|webp)|(fr|en)\/alertes\/desinscription)$/;
+const PUBLIC_ALERTS = /^\/(api\/(v1\/(home|favorites|addresses|orders|checkout\/(create|confirm|cancel)|products(\/[\w-]+)?|auth\/(login|register|refresh|forgot|me|google))|alerts\/(run|unsubscribe)|address\/(check|suggest)|push\/test|stripe\/webhook|media\/[\w-]+)|images\/(artworks|examples)\/[\w.-]+\.(jpg|jpeg|png|webp)|(fr|en)\/alertes\/desinscription)$/;
 
 const htmlHeaders = { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex, nofollow" };
 

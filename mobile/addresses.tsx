@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { authed } from "./api";
+import { COUNTRY_FR } from "./countries";
 
 type Address = { id: string; firstName: string; lastName: string; line1: string; houseNumber: string; box?: string | null; line2?: string | null; postalCode: string; city: string; country: string; phone: string; isDefault: boolean };
 type Form = { firstName: string; lastName: string; country: string; houseNumber: string; box: string; line2: string; line1: string; postalCode: string; city: string; phone: string };
@@ -9,16 +10,52 @@ export type AddressForm = Form;
 export const EMPTY_FORM = EMPTY;
 const LABELS: [keyof Form, string][] = [["firstName", "Prénom *"], ["lastName", "Nom *"], ["country", "Pays / Région"], ["line1", "Rue *"], ["houseNumber", "Numéro"], ["box", "Boîte (facultatif)"], ["line2", "Complément (facultatif)"], ["postalCode", "Code postal *"], ["city", "Ville *"], ["phone", "Téléphone * (ex. +33612345678)"]];
 
-/** Champs d'adresse du site (address-fields.tsx), libellé au-dessus de chaque champ ; réutilisé par le panier. */
+type Suggestion = { label: string; placeId?: string; street: string; houseNumber: string; postalCode: string; city: string; countryCode: string };
+
+/** Champs d'adresse du site (address-fields.tsx), libellé au-dessus de chaque champ, recherche /api/address/suggest ; réutilisé par le panier. */
 export function AddressFields({ form, setForm }: { form: Form; setForm: (f: Form) => void }) {
+  const [query, setQuery] = useState("");
+  const [items, setItems] = useState<Suggestion[]>([]);
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => clearTimeout(timer.current), []);
+
+  const search = (q: string) => {
+    setQuery(q);
+    clearTimeout(timer.current);
+    if (q.trim().length < 3) return setItems([]);
+    timer.current = setTimeout(async () => {
+      const r = await authed<{ suggestions?: Suggestion[] }>(null, "GET", `/api/address/suggest?locale=fr&country=${encodeURIComponent(form.country)}&q=${encodeURIComponent(q)}`);
+      setItems(r.data.suggestions ?? []);
+    }, 350);
+  };
+  const choose = async (sg: Suggestion) => {
+    let full: Suggestion | null = sg;
+    if (sg.placeId) full = (await authed<{ suggestion?: Suggestion | null }>(null, "GET", `/api/address/suggest?locale=fr&placeId=${encodeURIComponent(sg.placeId)}`)).data.suggestion ?? null;
+    setItems([]);
+    if (!full) return;
+    setForm({ ...form, line1: full.street || form.line1, houseNumber: full.houseNumber, postalCode: full.postalCode, city: full.city, ...(COUNTRY_FR[full.countryCode] ? { country: COUNTRY_FR[full.countryCode] } : {}) });
+    setQuery("");
+  };
+  const field = (k: keyof Form, l: string) => (
+    <View key={k}>
+      <Text style={s.label}>{l}</Text>
+      <TextInput placeholderTextColor="#767676" selectionColor="#000" style={s.input} value={form[k]} onChangeText={(v) => setForm({ ...form, [k]: v })} keyboardType={k === "phone" ? "phone-pad" : "default"} autoCapitalize={k === "line1" || k === "city" || k === "firstName" || k === "lastName" ? "words" : "none"} />
+    </View>
+  );
+  const [first, second, country, ...rest] = LABELS;
   return (
     <>
-      {LABELS.map(([k, l]) => (
-        <View key={k}>
-          <Text style={s.label}>{l}</Text>
-          <TextInput placeholderTextColor="#767676" selectionColor="#000" style={s.input} value={form[k]} onChangeText={(v) => setForm({ ...form, [k]: v })} keyboardType={k === "phone" ? "phone-pad" : "default"} autoCapitalize={k === "line1" || k === "city" || k === "firstName" || k === "lastName" ? "words" : "none"} />
-        </View>
+      {field(...first)}
+      {field(...second)}
+      {field(...country)}
+      <Text style={s.label}>Rechercher votre adresse</Text>
+      <TextInput placeholderTextColor="#767676" selectionColor="#000" style={s.input} placeholder="Commencez à saisir : rue, numéro, ville…" value={query} onChangeText={search} autoCorrect={false} />
+      {items.map((sg, i) => (
+        <Pressable key={`${sg.label}-${i}`} onPress={() => choose(sg)} style={{ paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#eee" }}>
+          <Text>{sg.label}</Text>
+        </Pressable>
       ))}
+      {rest.map(([k, l]) => field(k, l))}
     </>
   );
 }

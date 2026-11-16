@@ -71,6 +71,9 @@ DerniÃ¨re exÃ©cution (11/11/2026, lot admin + e-mails de retour) : Vitest 62
 | A-T63 | Page artiste mobile : `/api/v1/creators/[slug]` (bio, video, creations, ancien slug) = page `/partenaires/[slug]` du site (verification manuelle : toucher un artiste depuis Accueil, suggestions de recherche, bloc Artistes ; lecture video Kenof / Nathalie Morere / Cruzz Taylor) | A valider manuellement |
 | A-T64 | Tailles/variantes mobile : selecteur de taille sur la fiche (meme regle que add-to-cart.tsx : taille obligatoire, variantes epuisees barrees), panier par {slug,size}, taille envoyee au checkout /api/v1, affichee dans panier et commandes (verification manuelle : bague/vetement, ajouter 2 tailles, payer, voir la taille dans Commandes) | A valider manuellement |
 | A-T28 | Purge des résidus de test avant seed (`prisma/test-residue.ts`, `test-residue.test.ts`) : dépendances supprimées avant les produits test-hold | OK en CI #47 (vert global, log détaillé non lu) | 13/11/2026 |
+| A-T65 | Routes mobiles creator/profil/adresse/annuaire sur base jetable : `supplier/*` (403 client, 404 commande ou oeuvre d'un autre createur), `auth/profile` (nom requis, mdp 8 car., mdp actuel verifie), `orders/address` (401/404 proprietaire, 400 adresse invalide), `creators`, `shop/categories` = `tests/unit/api-v1-mobile-creator.db.test.ts` (tourne en CI avec TEST_DATABASE_URL ; saute sans base, non execute localement) | Automatise (CI) |
+| A-T66 | Typecheck site + app (`npx tsc --noEmit` a la racine et dans `mobile/`) apres chaque lot | Automatise (execute, OK) |
+| A-T67 | Ecrans app (fiche/tailles, AR/miroir, clavier, drapeaux/telephone, accueil/boutique/Moi Farfetch, region/devise, langue FR/EN, espace createur, annuaire, categories, adresse de commande, details et securite) : rendu et gestes uniquement sur appareil ; liste detaillee dans « Recette de l'app mobile » ci-dessous | A valider manuellement |
 | A-T23 | T | Réveil de la base de test (Neon en veille) : connect_timeout ajouté si absent, retry/backoff sur P1001, abandon sur autre erreur ; sonde TCP sans client Prisma (régression CI sqlite) | `tests/unit/db-wake.test.ts` (Vitest) | OK en CI (#39, #42, #47) — 13/11/2026 | `npm run test:db` (logique) |
 | A-M1 | M | Fournisseur e-mail : Resend (from, reply_to, sans mention interdite) ; repli Gmail / aucun sans erreur | `tests/unit/email-provider.test.ts` (Vitest) | OK 2/2 â€” 10/11/2026 | T-MAIL-FROM (payload) |
 | A-M2 | M | Mur d'accÃ¨s : images `/api/media/<id>` et `/images/artworks/*` publiques, reste fermÃ© | `tests/unit/proxy-images.test.ts` (Vitest) | OK 2/2 â€” 10/11/2026 | T-MAIL-FROM 3 |
@@ -121,6 +124,24 @@ Lu dans le code : tests existants. Rien ci-dessous n'est passé « Validé » : 
 | H-01..H-16 | Non classés | Non relus un par un ; ne rien supposer. |
 
 Restes manuels indispensables : (1) boîte Gmail : réception, images, liens ; (2) rendu mobile réel ; (3) page Stripe réelle (retour arrière, expiration) ; (4) suivi UPS réel ; (5) connexion Google ; (6) consentement GA4 (étapes 1–8 de T-GA4).
+
+## Recette de l'app mobile (Android) — groupes par écran — à faire sur appareil
+
+**Accueil** — 1) Ouvrir l'app : bandeaux, catégories et nouveautés s'affichent comme le site. 2) Toucher un drapeau : la boutique filtre le pays. 3) Lire « Récemment consultés » après avoir ouvert 2 fiches.
+
+**Boutique** — 1) Onglets Tout/Art/Mode filtrent. 2) Filtres + tri + recherche avec suggestions. 3) « Tous les artistes » : onglets, recherche, A–Z, pays. 4) « Catégories » : racine, Nouveautés et tendances, Découvrir, explorateur ; appliquer une catégorie filtre la boutique.
+
+**Fiche œuvre** — 1) Choisir une taille (obligatoire ; épuisées barrées). 2) Ajouter au panier. 3) AR/miroir : ouvrir la vue AR puis le miroir (caméra). 4) « Dans le même univers » : prix approximatifs dans ma devise. 5) Page artiste : bio, vidéo, créations.
+
+**Panier / paiement** — 1) Deux tailles = deux lignes. 2) Récapitulatif : sous-total, livraison —, total, conditions. 3) Saisie adresse : clavier ne masque pas les champs ; indicatif téléphone (drapeau) correct. 4) Payer (feuille Stripe) ; fermer la feuille libère la réservation. 5) Confirmation détaillée (articles, total, adresse, rappel de modification).
+
+**Commandes** — 1) Détail des colis, taille affichée. 2) Modifier l'adresse (≤ délai) : enregistrée ; commande verrouillée : message « verrouillée ». 3) Annuler un colis en attente ; demander un retour sur un colis livré.
+
+**Alertes** — 1) Activer/désactiver e-mail et promo. 2) E-mail de test reçu.
+
+**Moi** — 1) Sélecteur région/devise : prix convertis. 2) Onglet Langue : tout passe en EN et reste mémorisé. 3) Liens support/légal (FAQ, CGV, confidentialité, cookies, livraison/retours, contact) ouvrent les écrans in-app. 4) Détails et sécurité : changer le nom ; mdp < 8 car. refusé ; mauvais mdp actuel refusé ; compte Google sans champs mdp.
+
+**Espace Créateur (compte fournisseur seulement)** — 1) Un client simple ne voit pas l'espace. 2) Commandes : accepter, préparer, expédier (suivi), livrer, refuser ; statuts lisibles FR/EN. 3) Œuvres : créer (photos via galerie, variantes, histoire, signature), modifier, soumettre, retirer. 4) Stocks : ajuster, alerte stock bas. 5) Tableau de bord/paiements. 6) Profil : texte, photo, contact.
 
 ## Lots rÃ©cents
 

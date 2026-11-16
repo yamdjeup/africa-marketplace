@@ -26,9 +26,10 @@ const ERRORS: Record<string, string> = {
 async function post(action: string, body: unknown): Promise<{ ok: boolean; data: Record<string, any> }> {
   try {
     const res = await fetch(`${API_URL}/api/v1/auth/${action}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
-    return { ok: res.ok, data: await res.json().catch(() => ({})) };
-  } catch {
-    return { ok: false, data: { error: "network" } };
+    const data = await res.json().catch(() => ({ error: "bad_response" }));
+    return { ok: res.ok, data: { ...data, http: res.status } };
+  } catch (e) {
+    return { ok: false, data: { error: "network", detail: String((e as Error)?.message ?? e) } };
   }
 }
 
@@ -77,7 +78,7 @@ export function useAuth() {
   const google = async (idToken: string) => {
     const r = await post("google", { idToken });
     if (r.ok) await apply(r.data);
-    return r.ok ? null : ERRORS[r.data.error] ?? ERRORS.network;
+    return r.ok ? null : `${ERRORS[r.data.error] ?? "Connexion Google impossible."} (${API_URL} · HTTP ${r.data.http ?? "-"} · ${r.data.error ?? "?"}${r.data.detail ? " · " + r.data.detail : ""})`;
   };
   const logout = async () => {
     await SecureStore.deleteItemAsync(KEY);

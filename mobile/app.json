@@ -4,6 +4,8 @@
     "slug": "epomta",
     "scheme": "epomta",
     "version": "1.0.0",
+    "runtimeVersion": { "policy": "appVersion" },
+    "updates": { "enabled": true, "checkAutomatically": "ON_LOAD", "fallbackToCacheTimeout": 0 },
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "icon": "./assets/icon-1024.png",

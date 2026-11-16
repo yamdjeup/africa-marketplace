@@ -103,3 +103,5 @@ Source de la 1re passe : routes `src/app/[locale]/**` et composants `src/compone
 | Adresses / checkout | TÃ©lÃ©phone : sÃ©lecteur d'indicatif + drapeau, E.164 (PhoneField) | Oui |
 | Inscription / profil | TÃ©lÃ©phone | Non : pas de champ tÃ©lÃ©phone dans l'app, Ã  vÃ©rifier sur le site |
 | RÃ©gion / devise | Panneau rÃ©gion avec drapeaux (region-panel.tsx) | Non (voir Ã€ valider) |
+
+- Groupes B/D/E : annuaire artistes, arborescence catégories, vus récemment, ApproxPrice, récapitulatif panier, confirmation, modification d'adresse de commande, détails et sécurité (nom / mot de passe). Pas de champ téléphone à l'inscription sur le site (le téléphone est dans les adresses).

@@ -139,6 +139,15 @@ export function MoreBlocks({ site: x, onSupport }: { site: Site; onSupport: (slu
   };
   return (
     <View>
+      <View style={{ marginTop: 24, paddingHorizontal: 16 }}>
+        <Text style={[st.h2, { paddingHorizontal: 0 }]}>Aide et informations</Text>
+        {([["faq", "FAQ"], ["contact", "Nous contacter"], ["orders", "Commandes"], ["returns", "Livraison et retours"], ["payment", "Paiement"], ["discounts", "Réductions et parrainage"], ["about", "À propos"], ["terms", "Conditions générales"], ["privacy", "Confidentialité"], ["cookies", "Gestion des cookies"]] as const).map(([slug, label]) => (
+          <Pressable key={slug} onPress={() => onSupport(slug)} style={st.linkRow} accessibilityRole="button">
+            <Text style={{ color: "#221812", fontSize: 15 }}>{label}</Text>
+            <Text style={{ color: "#221812", fontSize: 18 }}>›</Text>
+          </Pressable>
+        ))}
+      </View>
       <View style={st.news}>
         <Text style={[st.h2, { paddingHorizontal: 0, textAlign: "center" }]}>{x.newsletter.title}</Text>
         <Text style={[st.mut, { textAlign: "center", marginVertical: 8 }]}>{x.newsletter.text}</Text>
@@ -173,6 +182,7 @@ export function MoreBlocks({ site: x, onSupport }: { site: Site; onSupport: (slu
 }
 
 const st = StyleSheet.create({
+  linkRow: { minHeight: 48, flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderBottomWidth: StyleSheet.hairlineWidth, borderColor: "#ded6c9" },
   top: { alignItems: "center", paddingTop: 14, paddingBottom: 8 },
   wordmark: { fontFamily: "PlayfairDisplay_600SemiBold", fontSize: 22, letterSpacing: 3, color: "#221812" },
   search: { height: 44, marginHorizontal: 16, marginBottom: 12, borderRadius: 4, backgroundColor: "#f2eadd", justifyContent: "center", paddingHorizontal: 12 },

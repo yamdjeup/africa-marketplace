@@ -43,23 +43,23 @@ Source de la 1re passe : routes `src/app/[locale]/**` et composants `src/compone
 | Partager (`share-button.tsx`) | Non |
 | Favori | Oui |
 | Lien vers l'artiste | ? |
-| Badge catégorie | Non |
+| Badge catégorie | Oui |
 | Prix + équivalent devise | Prix seul |
-| Stock (« Plus que n », « Pièce unique ») + édition | Édition seule |
+| Stock (« Plus que n », « Pièce unique ») + édition | Oui |
 | Message « Réservée par un autre client » | Non |
 | Avis « déjà dans le panier » (`in-cart-notice.tsx`) | Non |
 | Sélecteur de taille / variante | Oui (ce lot) |
-| Quantité (stock > 1) | Non |
+| Quantité (stock > 1) | Oui |
 | « Me prévenir » (alerte) | Oui |
 | Aperçu dans une pièce (`room-preview.tsx`) | Non |
 | Essayage miroir (`mirror-try-on.tsx`) | Non |
 | Réalité augmentée (`ar-viewer.tsx`) | Non (à étudier) |
-| Matière, technique, origine, matériaux, dimensions (selon catégorie) | Partiel |
-| Bloc Authenticité | Non |
-| Entretien (`care`) | Non |
+| Matière, technique, origine, matériaux, dimensions (selon catégorie) | Oui |
+| Bloc Authenticité (+ certificat, signature) | Oui |
+| Entretien (`care`) | Oui |
 | Histoire de la pièce | Oui |
 | Livraison / retours | Non |
-| « Vous aimerez aussi » (`getRelatedProducts`) | Non |
+| « Dans le même univers » (`getRelatedProducts`) | Oui |
 
 ## Groupe D — Panier, checkout, commandes
 | Élément | Dans l'app |

@@ -1,7 +1,7 @@
 import { ruleFor, SIZE_OPTIONS } from "@/lib/category-rules";
 import { db } from "@/lib/db";
 import { CREATOR_VIDEOS } from "@/lib/creator-videos";
-import { getCategories, getCreatorWithProducts, getCreators, getFilterOptions, getProduct, searchProducts, type CatalogParams, type ProductView } from "@/lib/catalog";
+import { getCategories, getCreatorWithProducts, getCreators, getFilterOptions, getProduct, getRelatedProducts, searchProducts, type CatalogParams, type ProductView } from "@/lib/catalog";
 
 export type MobileLocale = "fr" | "en";
 
@@ -73,8 +73,22 @@ export async function listProducts(sp: URLSearchParams, origin: string) {
 }
 
 export async function oneProduct(slug: string, locale: MobileLocale, origin: string) {
-  const p = await getProduct(slug, locale);
-  return p ? toMobileProduct(p.product, origin, locale) : null;
+  const [p, more] = await Promise.all([getProduct(slug, locale), getRelatedProducts(slug, locale, 4)]);
+  if (!p) return null;
+  const v = p.product;
+  const rule = ruleFor(v.categorySlug);
+  const cm = [v.widthCm, v.heightCm, v.depthCm].filter((x): x is number => x != null).join(" × ");
+  return {
+    ...toMobileProduct(v, origin, locale),
+    categoryLabel: p.categoryLabel,
+    materials: v.materials,
+    dimensionsText: rule.dimensions ? (cm ? `${cm} cm` : v.dimensions) : null,
+    careInstructions: rule.care ? v.careInstructions : null,
+    hasCertificate: v.hasCertificate,
+    attestedAt: v.attestedAt,
+    signatureUrl: v.signatureUrl && v.attestedAt ? absolute(v.signatureUrl, origin) : null,
+    related: more.map((m) => toMobileProduct(m, origin, locale)),
+  };
 }
 
 export async function homeData(locale: MobileLocale, origin: string) {

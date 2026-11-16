@@ -17,6 +17,7 @@ import { CreatorScreen } from "./creator";
 import { StripeProvider } from "@stripe/stripe-react-native";
 
 type Product = { slug: string; name: string; description: string; story: string; creatorName: string; priceCents: number; images: string[]; material: string | null; technique: string | null; origin: string | null; dimensions: string | null; categorySlug: string; url: string; stock: number; isNew?: boolean; isExample?: boolean; edition?: string | null; sizes?: string[]; sizeStock?: Record<string, number> | null; sizeLabel?: string };
+type Extra = { categoryLabel: string; materials: string[]; dimensionsText: string | null; careInstructions: string | null; hasCertificate: boolean; attestedAt: string | null; signatureUrl: string | null; related: Product[] };
 type Home = { categories: { slug: string; label: string }[]; news: Product[]; latest: Product[]; creators: { slug: string; name: string; specialty: string; image: string }[]; byCategory: { slug: string; label: string; items: Product[] }[] };
 type List = { items: Product[]; total: number; page: number; pages: number };
 type Tab = "home" | "shop" | "favs" | "me";
@@ -52,23 +53,30 @@ function Row({ title, items, favs, toggle, open }: { title: string; items: Produ
   );
 }
 
-function Detail({ p, onClose, fav, onFav, onAdd, token, onNeedLogin }: { token: string | null; onNeedLogin: () => void; p: Product; onClose: () => void; fav: boolean; onFav: () => void; onAdd: (size: string | null) => void }) {
+function Detail({ p, onClose, fav, onFav, onAdd, token, onNeedLogin, onOpenRelated }: { token: string | null; onNeedLogin: () => void; p: Product; onClose: () => void; fav: boolean; onFav: () => void; onAdd: (size: string | null, qty: number) => void; onOpenRelated: (q: Product) => void }) {
   return (
     <Modal animationType="slide" onRequestClose={onClose} statusBarTranslucent navigationBarTranslucent>
       <SafeAreaProvider>
-        <DetailBody token={token} onNeedLogin={onNeedLogin} p={p} onClose={onClose} fav={fav} onFav={onFav} onAdd={onAdd} />
+        <DetailBody token={token} onNeedLogin={onNeedLogin} p={p} onClose={onClose} fav={fav} onFav={onFav} onAdd={onAdd} onOpenRelated={onOpenRelated} />
       </SafeAreaProvider>
     </Modal>
   );
 }
 
-function DetailBody({ p, onClose, fav, onFav, onAdd, token, onNeedLogin }: { token: string | null; onNeedLogin: () => void; p: Product; onClose: () => void; fav: boolean; onFav: () => void; onAdd: (size: string | null) => void }) {
+function DetailBody({ p, onClose, fav, onFav, onAdd, token, onNeedLogin, onOpenRelated }: { token: string | null; onNeedLogin: () => void; p: Product; onClose: () => void; fav: boolean; onFav: () => void; onAdd: (size: string | null, qty: number) => void; onOpenRelated: (q: Product) => void }) {
   const insets = useSafeAreaInsets();
   const [added, setAdded] = useState(false);
   const [size, setSize] = useState<string | null>(null);
   const [missing, setMissing] = useState(false);
   const sizes = p.sizes ?? [];
-  const buy = () => { if (sizes.length > 0 && !size) { setMissing(true); return; } onAdd(size); setAdded(true); };
+  const [x, setX] = useState<Extra | null>(null);
+  const [qty, setQty] = useState(1);
+  useEffect(() => { get<Extra>(`/api/v1/products/${encodeURIComponent(p.slug)}`).then(setX).catch(() => {}); }, [p.slug]);
+  const unique = !!p.edition && /pi[eè]ce unique/i.test(p.edition);
+  const cap = size && p.sizeStock ? p.sizeStock[size] ?? p.stock : p.stock;
+  const showQty = p.stock > 1 && !unique;
+  const q = Math.min(qty, Math.max(1, cap));
+  const buy = () => { if (sizes.length > 0 && !size) { setMissing(true); return; } onAdd(size, showQty ? q : 1); setAdded(true); };
   const [watch, setWatch] = useState(false);
   const [busy, setBusy] = useState(false);
   const [watchErr, setWatchErr] = useState("");
@@ -98,12 +106,38 @@ function DetailBody({ p, onClose, fav, onFav, onAdd, token, onNeedLogin }: { tok
             {p.images.map((u) => <Image key={u} source={{ uri: u }} style={s.hero} resizeMode="cover" />)}
           </ScrollView><Badges stock={p.stock} isNew={p.isNew} isExample={p.isExample} /></View>
           <View style={{ padding: 16 }}>
+            {x?.categoryLabel ? <Text style={{ alignSelf: "flex-start", backgroundColor: "#f2eadd", color: "#221812", fontSize: 12, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, overflow: "hidden", marginBottom: 6 }}>{x.categoryLabel}</Text> : null}
             <Text style={s.brand}>{p.creatorName}</Text>
             <Text style={[s.h2, { paddingHorizontal: 0 }]}>{p.name}</Text>
             <Text style={[s.price, { fontSize: 18 }]}>{eur(p.priceCents)}</Text>
+            <Text style={[s.meta, { color: p.stock === 0 ? "#b42318" : "#1e7546" }]}>{p.stock === 0 ? "Épuisée" : p.stock <= 1 ? "Pièce unique" : p.stock <= 3 ? `Plus que ${p.stock}` : "En stock"}</Text>
             <Text style={s.body}>{p.description}</Text>
-            {[p.edition && `Édition : ${p.edition}`, p.material && `Matière : ${p.material}`, p.technique && `Technique : ${p.technique}`, p.origin && `Origine : ${p.origin}`, p.dimensions && `Dimensions : ${p.dimensions}`].filter(Boolean).map((l) => <Text key={l as string} style={s.meta}>{l}</Text>)}
+            {[p.edition && !(p.stock > 0 && p.stock <= 1 && unique) && `Édition : ${p.edition}`, p.material && `Matière : ${p.material}`, p.technique && `Technique : ${p.technique}`, !p.material && !p.technique && x?.materials?.length ? `Matières : ${x.materials.join(", ")}` : null, p.origin && `Origine : ${p.origin}`, (x ? x.dimensionsText : p.dimensions) && `Dimensions : ${x ? x.dimensionsText : p.dimensions}`].filter(Boolean).map((l) => <Text key={l as string} style={s.meta}>{l}</Text>)}
+            {x?.attestedAt ? (
+              <View style={{ marginTop: 12, padding: 12, borderWidth: 1, borderColor: "#ded6c9", borderRadius: 6, backgroundColor: "#f2eadd" }}>
+                <Text style={{ fontWeight: "600", color: "#221812" }}>Authenticité</Text>
+                <Text style={{ color: "#221812" }}>{`Œuvre d'art originale, certifiée par l'artiste le ${new Date(x.attestedAt).toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" })}`}{p.edition ? ` · Édition ${p.edition}` : ""}</Text>
+                {x.signatureUrl ? <Image source={{ uri: x.signatureUrl }} style={{ height: 80, width: 160, marginTop: 8 }} resizeMode="contain" accessibilityLabel="Signature de l'artiste" /> : null}
+              </View>
+            ) : null}
+            {x?.hasCertificate ? <Text style={{ marginTop: 10, color: "#221812" }}>✓ Certificat d’authenticité fourni</Text> : null}
+            {x?.careInstructions ? <View style={{ marginTop: 12 }}><Text style={{ fontWeight: "600", color: "#221812" }}>Entretien</Text><Text style={s.meta}>{x.careInstructions}</Text></View> : null}
             {p.story ? <Text style={[s.body, { marginTop: 12 }]}>{p.story}</Text> : null}
+            {x?.related?.length ? (
+              <View style={{ marginTop: 20 }}>
+                <Text style={[s.h2, { paddingHorizontal: 0 }]}>Dans le même univers</Text>
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+                  {x.related.map((m) => (
+                    <Pressable key={m.slug} onPress={() => onOpenRelated(m)} style={{ width: "47%" }}>
+                      <View><Image source={{ uri: m.images[0] }} style={{ width: "100%", aspectRatio: 1, backgroundColor: "#f2eadd" }} /><Badges stock={m.stock} isNew={m.isNew} isExample={m.isExample} /></View>
+                      <Text numberOfLines={1} style={s.brand}>{m.creatorName}</Text>
+                      <Text numberOfLines={2} style={{ color: "#221812" }}>{m.name}</Text>
+                      <Text style={{ color: "#221812", fontWeight: "700" }}>{eur(m.priceCents)}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+            ) : null}
           </View>
         </ScrollView>
         <View style={[s.buyBar, { paddingBottom: 12 + Math.max(insets.bottom, Platform.OS === "android" ? 32 : 0) }]}>
@@ -116,6 +150,14 @@ function DetailBody({ p, onClose, fav, onFav, onAdd, token, onNeedLogin }: { tok
             </>
           ) : (
           <>
+          {showQty ? (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 16, marginBottom: 10 }}>
+              <Text style={{ color: "#221812", fontWeight: "600" }}>Quantité</Text>
+              <Pressable disabled={q <= 1} hitSlop={6} onPress={() => { setAdded(false); setQty(q - 1); }} accessibilityLabel="Diminuer" style={{ width: 44, height: 44, borderWidth: 1, borderColor: "#ded6c9", borderRadius: 6, alignItems: "center", justifyContent: "center", opacity: q <= 1 ? 0.4 : 1 }}><Text style={{ fontSize: 20 }}>−</Text></Pressable>
+              <Text>{q}</Text>
+              <Pressable disabled={q >= Math.max(1, cap)} hitSlop={6} onPress={() => { setAdded(false); setQty(q + 1); }} accessibilityLabel="Augmenter" style={{ width: 44, height: 44, borderWidth: 1, borderColor: "#ded6c9", borderRadius: 6, alignItems: "center", justifyContent: "center", opacity: q >= Math.max(1, cap) ? 0.4 : 1 }}><Text style={{ fontSize: 20 }}>+</Text></Pressable>
+            </View>
+          ) : null}
           {sizes.length > 0 ? (
             <View style={{ marginBottom: 10 }}>
               <Text style={{ fontWeight: "600", color: "#221812", marginBottom: 6 }}>{p.sizeLabel ?? "Taille"}</Text>
@@ -192,12 +234,12 @@ function Main() {
   }, [token]);
 
   const saveCart = (next: CartLine[]) => { setCart(next); AsyncStorage.setItem("cart", JSON.stringify(next)); };
-  const addToCart = (p: Product, size: string | null = null) => {
+  const addToCart = (p: Product, size: string | null = null, qty = 1) => {
     const max = Math.max(1, size && p.sizeStock ? p.sizeStock[size] ?? p.stock : p.stock);
     const same = (l: CartLine) => l.slug === p.slug && (l.size ?? null) === size;
     saveCart(cart.some(same)
-      ? cart.map((l) => (same(l) ? { ...l, quantity: Math.min(max, l.quantity + 1) } : l))
-      : [...cart, { slug: p.slug, size, name: p.name, creatorName: p.creatorName, image: p.images[0], priceCents: p.priceCents, quantity: 1, maxQuantity: max }]);
+      ? cart.map((l) => (same(l) ? { ...l, quantity: Math.min(max, l.quantity + qty) } : l))
+      : [...cart, { slug: p.slug, size, name: p.name, creatorName: p.creatorName, image: p.images[0], priceCents: p.priceCents, quantity: Math.min(max, qty), maxQuantity: max }]);
   };
   const cartCount = cart.reduce((n, l) => n + l.quantity, 0);
 
@@ -254,7 +296,7 @@ function Main() {
       </View>
       {creator && <CreatorScreen slug={creator} onClose={() => setCreator(null)} onOpenSlug={(slug) => { get<Product>(`/api/v1/products/${slug}?locale=fr`).then(setOpen).catch(() => {}); }} />}
       {!open && !cartOpen && !creator && <TilaButton onOpenSlug={(slug) => { get<Product>(`/api/v1/products/${slug}?locale=fr`).then(setOpen).catch(() => {}); }} />}
-      {open && <Detail token={auth.accessToken} onNeedLogin={() => { setOpen(null); setTab("me"); }} p={open} onClose={() => setOpen(null)} fav={favs.includes(open.slug)} onFav={() => toggle(open)} onAdd={(size) => addToCart(open, size)} />}
+      {open && <Detail key={open.slug} token={auth.accessToken} onNeedLogin={() => { setOpen(null); setTab("me"); }} p={open} onClose={() => setOpen(null)} fav={favs.includes(open.slug)} onFav={() => toggle(open)} onAdd={(size, qty) => addToCart(open, size, qty)} onOpenRelated={(q) => setOpen(q)} />}
       {cartOpen && (
         <Modal animationType="slide" onRequestClose={() => setCartOpen(false)}>
           <SafeAreaProvider><SafeAreaView style={{ flex: 1, backgroundColor: "#faf6ee" }}><KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">

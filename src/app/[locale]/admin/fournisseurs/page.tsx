@@ -78,7 +78,7 @@ export default async function SuppliersPage({ params, searchParams }: { params: 
                 <td className="p-2"><span className="rounded-full bg-muted px-2 py-0.5 text-xs">{s.status === "ACTIVE" ? tr(locale, "Actif", "Active") : s.status === "SUSPENDED" ? tr(locale, "Suspendu", "Suspended") : tr(locale, "Révoqué", "Revoked")}</span></td>
                 <td className="break-all p-2">{s.isDemo ? tr(locale, "interne", "internal") : s.user?.email ?? "—"}</td>
                 <td className="break-all p-2">{s.isDemo ? "—" : s.contactEmail || "—"}</td>
-                <td className="whitespace-nowrap p-2">{s.createdAt.toLocaleDateString(dateFmt)}</td>
+                <td className="whitespace-nowrap p-2">{s.createdAt.toLocaleDateString(dateFmt, { timeZone: "Europe/Paris" })}</td>
                 <td className="p-2">
                   <div className="flex items-center justify-end gap-2 whitespace-nowrap">
                     {s.status === "ACTIVE" && (
@@ -118,7 +118,7 @@ export default async function SuppliersPage({ params, searchParams }: { params: 
             <tbody>
               {events.map((e) => (
                 <tr key={e.id} className="border-t align-middle">
-                  <td className="whitespace-nowrap p-2">{e.at.toLocaleString(dateFmt)}</td>
+                  <td className="whitespace-nowrap p-2">{e.at.toLocaleString(dateFmt, { timeZone: "Europe/Paris" })}</td>
                   <td className="p-2">{names.get(e.supplierId) ?? e.supplierId}</td>
                   <td className="p-2"><strong>{actionLabels[e.action] ? tr(locale, ...actionLabels[e.action]) : e.action}</strong></td>
                   <td className="p-2">{e.reason || "—"}</td>

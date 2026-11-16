@@ -31,7 +31,7 @@ export default async function AdminOrders({ params, searchParams }: { params: Pr
   const path = `/${locale}/admin/commandes`;
   const tabs = [{ value: "todo", label: tr(locale, "À traiter", "To handle"), count: nTodo }, { value: "open", label: tr(locale, "En cours", "In progress") }, { value: "SHIPPED", label: tr(locale, "Expédiées", "Shipped") }, { value: "DELIVERED", label: tr(locale, "Livrées", "Delivered") }, { value: "closed", label: tr(locale, "Annulées / refusées", "Cancelled / refused") }, { value: "all", label: tr(locale, "Toutes", "All") }];
   const name = new Map(shops.map((s) => [s.id, s.displayName]));
-  const fmt = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "fr-FR", { dateStyle: "medium", timeStyle: "short" });
+  const fmt = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "fr-FR", { timeZone: "Europe/Paris", dateStyle: "medium", timeStyle: "short" });
   const eur = (c: number) => new Intl.NumberFormat(locale === "en" ? "en-GB" : "fr-FR", { style: "currency", currency: "EUR" }).format(c / 100);
   const late = (s: (typeof subs)[number]) => s.status === "PENDING" && s.escalatedAt;
   return (

@@ -46,7 +46,7 @@ export default async function ApplicationsPage({ params, searchParams }: { param
               <p className="font-semibold">{a.name} <span className="font-normal text-muted-foreground">· {a.email}</span></p>
               <Pill cls={STATUS_CLS[a.status]}>{label[a.status]}</Pill>
             </div>
-            <p className="text-sm text-muted-foreground">{a.country} · {a.craftType} · {a.createdAt.toLocaleDateString(locale === "en" ? "en-GB" : "fr-FR")}</p>
+            <p className="text-sm text-muted-foreground">{a.country} · {a.craftType} · {a.createdAt.toLocaleDateString(locale === "en" ? "en-GB" : "fr-FR", { timeZone: "Europe/Paris" })}</p>
             <p className="whitespace-pre-line text-sm">{a.about}</p>
             {a.portfolioUrl && <a href={a.portfolioUrl} target="_blank" rel="noopener noreferrer" className="break-all text-sm underline">{a.portfolioUrl}</a>}
             {allFiles.some((f) => f.applicationId === a.id) && (

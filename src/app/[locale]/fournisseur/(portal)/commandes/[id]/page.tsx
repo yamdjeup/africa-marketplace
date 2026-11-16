@@ -39,7 +39,7 @@ export default async function PartnerOrder({ params, searchParams }: { params: P
   const items = await db.orderItem.findMany({ where: { subOrderId: sub.id } });
   const st = subLabel(sub.status);
   const o = sub.order;
-  const fmt = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "fr-FR", { dateStyle: "long", timeStyle: "short" });
+  const fmt = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "fr-FR", { timeZone: "Europe/Paris", dateStyle: "long", timeStyle: "short" });
   const eur = (c: number) => new Intl.NumberFormat(locale === "en" ? "en-GB" : "fr-FR", { style: "currency", currency: "EUR" }).format(c / 100);
   const ro = ctx.viewingAs;
   const hidden = (

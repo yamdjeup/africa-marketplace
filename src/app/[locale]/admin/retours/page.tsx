@@ -21,7 +21,7 @@ export default async function ReturnsAdmin({ params, searchParams }: { params: P
   const path = `/${locale}/admin/retours`;
   const tabs = [{ value: "REQUESTED", label: tr(locale, "À traiter", "To handle"), count: nReq }, { value: "ACCEPTED", label: tr(locale, "Acceptés (à rembourser)", "Accepted (to refund)") }, { value: "REFUNDED", label: tr(locale, "Remboursés", "Refunded") }, { value: "REFUSED", label: tr(locale, "Refusés", "Refused") }, { value: "all", label: tr(locale, "Tous", "All") }];
   const eur = (c: number) => new Intl.NumberFormat(locale === "en" ? "en-GB" : "fr-FR", { style: "currency", currency: "EUR" }).format(c / 100);
-  const fmt = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "fr-FR", { dateStyle: "medium" });
+  const fmt = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "fr-FR", { timeZone: "Europe/Paris", dateStyle: "medium" });
   const ok: Record<string, [string, string]> = { accepted: ["Retour accepté, client prévenu.", "Return accepted, customer notified."], refused: ["Retour refusé, client prévenu.", "Return refused, customer notified."], refunded: ["Remboursement enregistré, client prévenu.", "Refund recorded, customer notified."] };
   const err: Record<string, [string, string]> = { state: ["Cette demande a déjà été traitée.", "This request has already been handled."], refund: ["Remboursement Stripe non effectué (voir la note). Vous pouvez le marquer comme fait manuellement.", "Stripe refund not completed (see note). You can mark it as done manually."] };
   return (

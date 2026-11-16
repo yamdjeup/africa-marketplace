@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { authed } from "./api";
 import { tr, useLang } from "./region";
+import { WorkForm } from "./work-form";
 
 type Lbl = { fr: string; en: string };
 type Sub = { id: string; number: string; status: string; statusLabel: Lbl; createdAt: string; customer: string; subtotalCents: number; acceptBy: string | null };
@@ -121,6 +122,7 @@ function ProductsPane({ token }: { token: string }) {
   const [variant, setVariant] = useState("");
   const [vLabel, setVLabel] = useState("");
   const [vQty, setVQty] = useState("");
+  const [editing, setEditing] = useState<string | null>(null);
   const load = () => authed<{ products: Prod[] }>(token, "GET", "/api/v1/supplier/products").then((r) => setList(r.ok ? r.data.products : []));
   useEffect(() => { load(); }, []);
   const act = async (slug: string, body: Record<string, unknown>) => {
@@ -133,11 +135,13 @@ function ProductsPane({ token }: { token: string }) {
   const btn = (label: string, onPress: () => void, ghost?: boolean) => (
     <Pressable disabled={busy} onPress={onPress} style={[st.btn, ghost && st.btnGhost, { opacity: busy ? 0.6 : 1 }]}><Text style={{ color: ghost ? "#221812" : "#fff", fontWeight: "600" }}>{label}</Text></Pressable>
   );
+  if (editing !== null) return <WorkForm token={token} slug={editing || undefined} onClose={(ch) => { setEditing(null); if (ch) load(); }} />;
   if (!list) return <ActivityIndicator />;
-  if (list.length === 0) return <Text style={st.mut}>{tr("Aucune création.", "No creations.")}</Text>;
+  const newBtn = btn(tr("Nouvelle œuvre", "New work"), () => setEditing(""));
+  if (list.length === 0) return <View><Text style={st.mut}>{tr("Aucune création.", "No creations.")}</Text>{newBtn}</View>;
   return (
     <View>
-      <Text style={st.mut}>{tr("Pour créer ou modifier une fiche (photos, textes), utilisez le site.", "To create or edit a listing (photos, texts), use the website.")}</Text>
+      {newBtn}
       {msg ? <Text style={{ color: "#b42318", marginTop: 8 }}>{msg}</Text> : null}
       {list.map((p) => {
         const s = PST[p.status] ?? [p.status, p.status];
@@ -150,6 +154,7 @@ function ProductsPane({ token }: { token: string }) {
             </Pressable>
             {isOpen ? (
               <View style={{ gap: 10, marginTop: 10 }}>
+                {btn(tr("Modifier la fiche", "Edit listing"), () => setEditing(p.slug), true)}
                 {p.rejectReason && p.status === "REJECTED" ? <Text style={st.mut}>{tr("Motif : ", "Reason: ")}{p.rejectReason}</Text> : null}
                 {p.variants.map((v) => <Text key={v.id} style={{ color: "#221812" }}>{v.label} : {v.stock} ({tr("réservé", "reserved")} {v.reserved})</Text>)}
                 <Text style={st.h3}>{tr("Ajuster le stock", "Adjust stock")}</Text>

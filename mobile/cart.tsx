@@ -77,7 +77,7 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
     }
     const number = c.data.number;
     const guestToken = c.data.guestToken;
-    const init = await initPaymentSheet({ merchantDisplayName: "E póm ta’", paymentIntentClientSecret: c.data.clientSecret, returnURL: "epomta://stripe-redirect", allowsDelayedPaymentMethods: false });
+    const init = await initPaymentSheet({ merchantDisplayName: "E póm ta’", paymentIntentClientSecret: c.data.clientSecret, returnURL: "epomta://stripe-redirect", allowsDelayedPaymentMethods: false, billingDetailsCollectionConfiguration: { name: "always" as never, email: token ? undefined : ("always" as never) }, defaultBillingDetails: { name: `${(useBook ? addrs.find((x) => x.id === addrId) ?? manual : manual).firstName} ${(useBook ? addrs.find((x) => x.id === addrId) ?? manual : manual).lastName}`.trim(), email: token ? undefined : email.trim() } });
     const shown = init.error ? init : await presentPaymentSheet();
     if (shown.error) {
       await authed(token, "POST", "/api/v1/checkout/cancel", { number, guestToken });
@@ -239,7 +239,7 @@ const s = StyleSheet.create({
   qty: { width: 32, height: 32, borderWidth: 1, borderColor: "#ded6c9", alignItems: "center", justifyContent: "center" },
   qtyText: { fontSize: 18 },
   footer: { padding: 16, paddingBottom: 28, borderTopWidth: 1, borderTopColor: "#f2eadd" },
-  cta: { borderRadius: 8, height: 48, alignItems: "center", justifyContent: "center" },
+  cta: { backgroundColor: "#1c3060", borderRadius: 8, height: 48, alignItems: "center", justifyContent: "center" },
   ctaText: { color: "#fff",  },
   link: { textDecorationLine: "underline", fontSize: 15, color: "#221812" },
 });

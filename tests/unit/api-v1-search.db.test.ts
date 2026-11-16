@@ -47,6 +47,18 @@ describe.skipIf(!enabled)("API mobile recherche et filtres (base de test)", () =
     expect(r.sizes).toHaveProperty("options");
   });
 
+  it("support : sommaire et page d'aide identiques au site, slug inconnu = 404", async () => {
+    const idx = await import("@/app/api/v1/support/route");
+    const ij = await (await idx.GET(new Request(`${base}/api/v1/support?locale=fr`))).json();
+    expect(ij.support.map((r: { slug: string }) => r.slug)).toContain("faq");
+    const one = await import("@/app/api/v1/support/[slug]/route");
+    const faq = await (await one.GET(new Request(`${base}/api/v1/support/faq?locale=fr`), { params: Promise.resolve({ slug: "faq" }) })).json();
+    expect(faq.isHelp).toBe(true);
+    expect(faq.body[0]).toContain("Comment acheter");
+    const none = await one.GET(new Request(`${base}/api/v1/support/x`), { params: Promise.resolve({ slug: "x" }) });
+    expect(none.status).toBe(404);
+  });
+
   it("search/suggest et search/extras répondent", async () => {
     const s = await import("@/app/api/v1/search/suggest/route");
     const sj = await (await s.GET(new Request(`${base}/api/v1/search/suggest?q=Alpha`))).json();

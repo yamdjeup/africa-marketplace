@@ -4,6 +4,7 @@ import * as SecureStore from "expo-secure-store";
 import { GoogleSignin, statusCodes } from "@react-native-google-signin/google-signin";
 import { API_URL } from "./config";
 import { AlertsScreen } from "./alerts";
+import { SupportScreen } from "./support";
 import { AddressesScreen } from "./addresses";
 import { OrdersScreen } from "./orders";
 
@@ -124,8 +125,10 @@ export function AccountScreen({ auth, onOpenSite }: { auth: Auth; onOpenSite: (p
   const [addresses, setAddresses] = useState(false);
   const [orders, setOrders] = useState(false);
   const [alerts, setAlerts] = useState(false);
+  const [support, setSupport] = useState(false);
 
   if (!auth.ready) return <ActivityIndicator style={{ marginTop: 40 }} />;
+  if (support) return <SupportScreen onBack={() => setSupport(false)} />;
   if (auth.user && addresses && auth.accessToken) return <AddressesScreen token={auth.accessToken} onBack={() => setAddresses(false)} />;
   if (auth.user && alerts && auth.accessToken) return <AlertsScreen token={auth.accessToken} onBack={() => setAlerts(false)} />;
   if (auth.user && orders && auth.accessToken) return <OrdersScreen token={auth.accessToken} onBack={() => setOrders(false)} />;
@@ -138,8 +141,9 @@ export function AccountScreen({ auth, onOpenSite }: { auth: Auth; onOpenSite: (p
         <Text style={s.mut}>{auth.user.email}</Text>
         <Text style={[s.body, { marginTop: 12 }]}>Langue : Français</Text>
         <Pressable style={[s.cta, { marginTop: 16 }]} onPress={() => setOrders(true)}><Text style={s.ctaText}>Mes commandes</Text></Pressable>
-        <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => setAddresses(true)}><Text style={s.ctaText}>Mes adresses</Text></Pressable>`n        <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => setAlerts(true)}><Text style={s.ctaText}>Recevoir des alertes</Text></Pressable>
-        <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => onOpenSite("/fr/support")}><Text style={s.ctaText}>Besoin d’aide ?</Text></Pressable>
+        <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => setAddresses(true)}><Text style={s.ctaText}>Mes adresses</Text></Pressable>
+        <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => setAlerts(true)}><Text style={s.ctaText}>Recevoir des alertes</Text></Pressable>
+        <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => setSupport(true)}><Text style={s.ctaText}>Besoin d’aide ?</Text></Pressable>
         <Pressable style={[s.cta, s.ghost, { marginTop: 12 }]} onPress={auth.logout}><Text style={[s.ctaText, { color: "#221812" }]}>Se déconnecter</Text></Pressable>
       </ScrollView>
     );
@@ -170,6 +174,7 @@ export function AccountScreen({ auth, onOpenSite }: { auth: Auth; onOpenSite: (p
         {mode !== "login" && <Pressable onPress={() => { setMode("login"); setMsg(null); }}><Text style={s.link}>J’ai déjà un compte</Text></Pressable>}
         {mode !== "register" && <Pressable onPress={() => { setMode("register"); setMsg(null); }}><Text style={s.link}>Créer un compte</Text></Pressable>}
         {mode === "login" && <Pressable onPress={() => { setMode("forgot"); setMsg(null); }}><Text style={s.link}>Mot de passe oublié ?</Text></Pressable>}
+        <Pressable onPress={() => setSupport(true)}><Text style={s.link}>Besoin d’aide ?</Text></Pressable>
       </View>
     </ScrollView>
   );

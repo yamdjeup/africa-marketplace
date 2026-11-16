@@ -409,6 +409,7 @@ const fr = {
       postal: "Code postal invalide pour ce pays.",
     },
     fakeCardNote: "Paiement par carte : aucune saisie requise pour cette commande.",
+    saveAddress: "Enregistrer cette adresse dans mon carnet",
     shippingBanner: "Livraison assurée, signature requise à la réception.",
     verify: "Vérifier mon adresse",
     review: {
@@ -956,6 +957,7 @@ const en: Dict = {
       postal: "Invalid postal code for this country.",
     },
     fakeCardNote: "Card payment: no input required for this order.",
+    saveAddress: "Save this address to my address book",
     shippingBanner: "Insured delivery, signature required on receipt.",
     verify: "Check my address",
     review: {

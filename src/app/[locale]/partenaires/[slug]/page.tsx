@@ -4,6 +4,7 @@ import { CreatorAvatar } from "@/components/marketplace/creator-avatar";
 import { db } from "@/lib/db";
 import { ProductCard } from "@/components/marketplace/product-card";
 import { getCreatorWithProducts } from "@/lib/catalog";
+import { CREATOR_VIDEOS } from "@/lib/creator-videos";
 import { getDict, type Locale } from "@/lib/i18n";
 
 const VIDEO_LAYOUT = {
@@ -11,11 +12,7 @@ const VIDEO_LAYOUT = {
   landscape: "aspect-video w-full md:w-[600px] md:max-w-[60%]",
 } as const;
 
-const CREATOR_VIDEOS: Record<string, { src: string; poster: string; orientation: keyof typeof VIDEO_LAYOUT }> = {
-  kenof: { src: "/videos/kenof.mp4", poster: "/videos/posters/kenof-poster.jpg", orientation: "landscape" },
-  "nathalie-morere": { src: "/videos/nathalie.mp4", poster: "/videos/posters/nathalie-poster.jpg", orientation: "portrait" },
-  "cruzz-taylor": { src: "/videos/taylor.mp4", poster: "/videos/posters/taylor-poster.jpg", orientation: "portrait" },
-};
+
 
 type Props = { params: Promise<{ locale: Locale; slug: string }> };
 

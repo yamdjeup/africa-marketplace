@@ -1,10 +1,10 @@
 import { API_URL } from "./config";
 
-export async function authed<T>(token: string, method: string, path: string, body?: unknown): Promise<{ ok: boolean; status: number; data: T }> {
+export async function authed<T>(token: string | null, method: string, path: string, body?: unknown): Promise<{ ok: boolean; status: number; data: T }> {
   try {
     const res = await fetch(`${API_URL}${path}`, {
       method,
-      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+      headers: { ...(token ? { authorization: `Bearer ${token}` } : {}), "content-type": "application/json" },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
     return { ok: res.ok, status: res.status, data: (await res.json().catch(() => ({}))) as T };

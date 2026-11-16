@@ -41,4 +41,14 @@ describe.skipIf(!enabled)("API mobile auth (base de test)", () => {
     await db.user.update({ where: { email }, data: { sessionVersion: { increment: 1 } } });
     expect((await call("refresh", { refreshToken: login.refreshToken })).status).toBe(401);
   });
+
+  it("mot de passe oublié : mêmes statuts que le site (inconnu / envoyé / limité)", async () => {
+    const ip = { "x-forwarded-for": `10.9.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}` };
+    const unknown = await (await call("forgot", { email: `inconnu-${email}` }, ip)).json();
+    expect(unknown.status).toBe("unknown");
+    const known = await (await call("forgot", { email }, ip)).json();
+    expect(known.status).toBe("sent");
+    await call("forgot", { email }, ip);
+    expect((await call("forgot", { email }, ip)).status).toBe(429);
+  });
 });

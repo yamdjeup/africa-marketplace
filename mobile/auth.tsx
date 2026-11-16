@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import * as SecureStore from "expo-secure-store";
-import * as Google from "expo-auth-session/providers/google";
-import * as WebBrowser from "expo-web-browser";
+import { GoogleSignin, statusCodes } from "@react-native-google-signin/google-signin";
 import { API_URL } from "./config";
+import { AlertsScreen } from "./alerts";
+import { SupportScreen } from "./support";
 import { AddressesScreen } from "./addresses";
 import { OrdersScreen } from "./orders";
 
@@ -17,7 +18,7 @@ const ERRORS: Record<string, string> = {
   password: "Le mot de passe doit contenir au moins 8 caractères.",
   exists: "Un compte existe déjà avec cet e-mail.",
   invalid: "E-mail ou mot de passe incorrect.",
-  limited: "Trop de demandes. Réessayez dans quelques minutes.",
+  limited: "Trop de demandes : 3 par heure au maximum. Réessayez dans 1 h.",
   network: "Connexion impossible. Vérifiez votre réseau.",
 };
 
@@ -69,7 +70,8 @@ export function useAuth() {
   };
   const forgot = async (email: string) => {
     const r = await post("forgot", { email, locale: "fr" });
-    return r.ok ? null : ERRORS[r.data.error] ?? ERRORS.network;
+    if (!r.ok) return ERRORS[r.data.error] ?? ERRORS.network;
+    return r.data.status === "unknown" ? "Aucun compte n’est associé à cette adresse e-mail." : r.data.status === "social" ? "Ce compte utilise la connexion Google : il n’a pas de mot de passe. Un e-mail vous indique comment vous connecter." : null;
   };
   const google = async (idToken: string) => {
     const r = await post("google", { idToken });
@@ -86,21 +88,29 @@ export function useAuth() {
 
 type Auth = ReturnType<typeof useAuth>;
 
-WebBrowser.maybeCompleteAuthSession();
 const GOOGLE_ANDROID = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID;
 const GOOGLE_WEB = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+GoogleSignin.configure({ webClientId: GOOGLE_WEB });
 
 function GoogleButton({ auth, onError }: { auth: Auth; onError: (m: string | null) => void }) {
-  const [request, response, prompt] = Google.useIdTokenAuthRequest({ androidClientId: GOOGLE_ANDROID, webClientId: GOOGLE_WEB });
-  useEffect(() => {
-    if (response?.type !== "success") return;
-    const idToken = response.params?.id_token;
-    if (idToken) auth.google(idToken).then(onError);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [response]);
+  const [busy, setBusy] = useState(false);
+  const signIn = async () => {
+    setBusy(true);
+    onError(null);
+    try {
+      await GoogleSignin.hasPlayServices();
+      const r = await GoogleSignin.signIn();
+      const idToken = r.type === "success" ? r.data.idToken : null;
+      if (idToken) onError(await auth.google(idToken));
+    } catch (e) {
+      const code = (e as { code?: string }).code;
+      if (code !== statusCodes.SIGN_IN_CANCELLED) onError("Connexion Google impossible. Réessayez.");
+    }
+    setBusy(false);
+  };
   return (
-    <Pressable style={[s.cta, s.ghost, { marginTop: 12, opacity: request ? 1 : 0.6 }]} disabled={!request} onPress={() => prompt()}>
-      <Text style={[s.ctaText, { color: "#000" }]}>CONTINUER AVEC GOOGLE</Text>
+    <Pressable style={[s.cta, s.ghost, { marginTop: 12, opacity: busy ? 0.6 : 1 }]} disabled={busy} onPress={signIn}>
+      <Text style={[s.ctaText, { color: "#221812" }]}>Continuer avec google</Text>
     </Pressable>
   );
 }
@@ -114,22 +124,27 @@ export function AccountScreen({ auth, onOpenSite }: { auth: Auth; onOpenSite: (p
   const [busy, setBusy] = useState(false);
   const [addresses, setAddresses] = useState(false);
   const [orders, setOrders] = useState(false);
+  const [alerts, setAlerts] = useState(false);
+  const [support, setSupport] = useState(false);
 
   if (!auth.ready) return <ActivityIndicator style={{ marginTop: 40 }} />;
+  if (support) return <SupportScreen onBack={() => setSupport(false)} />;
   if (auth.user && addresses && auth.accessToken) return <AddressesScreen token={auth.accessToken} onBack={() => setAddresses(false)} />;
+  if (auth.user && alerts && auth.accessToken) return <AlertsScreen token={auth.accessToken} onBack={() => setAlerts(false)} />;
   if (auth.user && orders && auth.accessToken) return <OrdersScreen token={auth.accessToken} onBack={() => setOrders(false)} />;
 
   if (auth.user) {
     return (
       <ScrollView contentContainerStyle={{ padding: 16 }}>
-        <Text style={s.h2}>MON COMPTE</Text>
+        <Text style={s.h2}>Mon compte</Text>
         <Text style={s.body}>Bonjour {auth.user.name}</Text>
         <Text style={s.mut}>{auth.user.email}</Text>
         <Text style={[s.body, { marginTop: 12 }]}>Langue : Français</Text>
-        <Pressable style={[s.cta, { marginTop: 16 }]} onPress={() => setOrders(true)}><Text style={s.ctaText}>MES COMMANDES</Text></Pressable>
-        <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => setAddresses(true)}><Text style={s.ctaText}>MES ADRESSES</Text></Pressable>
-        <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => onOpenSite("/fr/support")}><Text style={s.ctaText}>BESOIN D’AIDE ?</Text></Pressable>
-        <Pressable style={[s.cta, s.ghost, { marginTop: 12 }]} onPress={auth.logout}><Text style={[s.ctaText, { color: "#000" }]}>SE DÉCONNECTER</Text></Pressable>
+        <Pressable style={[s.cta, { marginTop: 16 }]} onPress={() => setOrders(true)}><Text style={s.ctaText}>Mes commandes</Text></Pressable>
+        <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => setAddresses(true)}><Text style={s.ctaText}>Mes adresses</Text></Pressable>
+        <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => setAlerts(true)}><Text style={s.ctaText}>Recevoir des alertes</Text></Pressable>
+        <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => setSupport(true)}><Text style={s.ctaText}>Besoin d’aide ?</Text></Pressable>
+        <Pressable style={[s.cta, s.ghost, { marginTop: 12 }]} onPress={auth.logout}><Text style={[s.ctaText, { color: "#221812" }]}>Se déconnecter</Text></Pressable>
       </ScrollView>
     );
   }
@@ -138,40 +153,41 @@ export function AccountScreen({ auth, onOpenSite }: { auth: Auth; onOpenSite: (p
     setBusy(true);
     setMsg(null);
     const err = mode === "login" ? await auth.login(email, password) : mode === "register" ? await auth.register(name, email, password) : await auth.forgot(email);
-    if (mode === "forgot" && !err) setMsg("Si un compte existe avec cet e-mail, un lien de réinitialisation vient d’être envoyé.");
+    if (mode === "forgot" && !err) setMsg("Un e-mail vient d’être envoyé (lien valable 1 h). Pensez à vérifier vos courriers indésirables.");
     else setMsg(err);
     setBusy(false);
   };
-  const titles = { login: "CONNEXION", register: "CRÉER UN COMPTE", forgot: "MOT DE PASSE OUBLIÉ" };
+  const titles = { login: "Connexion", register: "Créer un compte", forgot: "Mot de passe oublié" };
 
   return (
     <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
       <Text style={s.h2}>{titles[mode]}</Text>
-      {mode === "register" && <TextInput style={s.input} placeholder="Nom" value={name} onChangeText={setName} autoComplete="name" />}
-      <TextInput style={s.input} placeholder="Adresse e-mail" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" />
-      {mode !== "forgot" && <TextInput style={s.input} placeholder="Mot de passe" value={password} onChangeText={setPassword} secureTextEntry autoCapitalize="none" />}
+      {mode === "register" && <TextInput placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={s.input} placeholder="Nom" value={name} onChangeText={setName} autoComplete="name" />}
+      <TextInput placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={s.input} placeholder="Adresse e-mail" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" />
+      {mode !== "forgot" && <TextInput placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={s.input} placeholder="Mot de passe" value={password} onChangeText={setPassword} secureTextEntry autoCapitalize="none" />}
       {msg ? <Text style={s.msg}>{msg}</Text> : null}
       <Pressable style={[s.cta, { marginTop: 12, opacity: busy ? 0.6 : 1 }]} disabled={busy} onPress={submit}>
-        <Text style={s.ctaText}>{mode === "login" ? "SE CONNECTER" : mode === "register" ? "CRÉER MON COMPTE" : "ENVOYER LE LIEN"}</Text>
+        <Text style={s.ctaText}>{mode === "login" ? "Se connecter" : mode === "register" ? "Créer mon compte" : "Envoyer le lien"}</Text>
       </Pressable>
       {mode !== "forgot" && GOOGLE_ANDROID && GOOGLE_WEB ? <GoogleButton auth={auth} onError={setMsg} /> : null}
       <View style={{ marginTop: 16, gap: 12 }}>
         {mode !== "login" && <Pressable onPress={() => { setMode("login"); setMsg(null); }}><Text style={s.link}>J’ai déjà un compte</Text></Pressable>}
         {mode !== "register" && <Pressable onPress={() => { setMode("register"); setMsg(null); }}><Text style={s.link}>Créer un compte</Text></Pressable>}
         {mode === "login" && <Pressable onPress={() => { setMode("forgot"); setMsg(null); }}><Text style={s.link}>Mot de passe oublié ?</Text></Pressable>}
+        <Pressable onPress={() => setSupport(true)}><Text style={s.link}>Besoin d’aide ?</Text></Pressable>
       </View>
     </ScrollView>
   );
 }
 
 const s = StyleSheet.create({
-  h2: { fontSize: 18, fontWeight: "700", letterSpacing: 1, marginBottom: 16 },
-  body: { fontSize: 15, color: "#111", marginBottom: 4 },
+  h2: { fontFamily: "PlayfairDisplay_600SemiBold", fontSize: 18, fontWeight: "700", marginBottom: 16 },
+  body: { fontSize: 15, color: "#221812", marginBottom: 4 },
   mut: { fontSize: 14, color: "#666" },
-  input: { borderWidth: 1, borderColor: "#ccc", paddingHorizontal: 12, height: 48, fontSize: 16, marginBottom: 12 },
+  input: { backgroundColor: "#faf6ee", color: "#221812", borderWidth: 1, borderColor: "#ded6c9", paddingHorizontal: 12, height: 48, fontSize: 16, marginBottom: 12 },
   msg: { color: "#b00020", fontSize: 14, marginBottom: 4 },
-  cta: { backgroundColor: "#000", height: 48, alignItems: "center", justifyContent: "center" },
-  ghost: { backgroundColor: "#fff", borderWidth: 1, borderColor: "#000" },
-  ctaText: { color: "#fff", fontWeight: "700", letterSpacing: 1 },
-  link: { textDecorationLine: "underline", fontSize: 15, color: "#111" },
+  cta: { borderRadius: 8, backgroundColor: "#1c3060", height: 48, alignItems: "center", justifyContent: "center" },
+  ghost: { backgroundColor: "#faf6ee", borderWidth: 1, borderColor: "#1c3060" },
+  ctaText: { color: "#fff",  },
+  link: { textDecorationLine: "underline", fontSize: 15, color: "#221812" },
 });

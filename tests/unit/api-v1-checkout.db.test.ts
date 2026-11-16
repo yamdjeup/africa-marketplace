@@ -1,4 +1,4 @@
-﻿import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import type { PrismaClient } from "@prisma/client";
 import { requireTestDatabaseUrl } from "../../scripts/test-env";
 
@@ -50,7 +50,7 @@ describe.skipIf(!enabled)("API mobile paiement + commandes (base de test)", () =
 
   it("401 sans jeton ; stock insuffisant refusÃ©", async () => {
     const co = await import("@/app/api/v1/checkout/[action]/route");
-    expect((await co.POST(new Request(url("checkout/create"), { method: "POST", body: "{}" }), ctx("create"))).status).toBe(401);
+    expect((await co.POST(new Request(url("checkout/create"), { method: "POST", body: "{}" }), ctx("create"))).status).toBe(400);
     const r = await co.POST(new Request(url("checkout/create"), post({ addressId, cart: [{ slug, size: null, quantity: 5 }] })), ctx("create"));
     expect(r.status).toBe(409);
   });
@@ -79,5 +79,51 @@ describe.skipIf(!enabled)("API mobile paiement + commandes (base de test)", () =
     expect(list.orders[0].totalCents).toBe(2000);
     const again = await (await co.POST(new Request(url("checkout/confirm"), post({ number: c.number })), ctx("confirm"))).json();
     expect(again.status).toBe("paid");
+  });
+
+  it("invité : adresse saisie + e-mail, jeton invité requis pour confirmer", async () => {
+    vi.stubGlobal("fetch", async (u: string, init?: RequestInit) => {
+      if (String(u).endsWith("/payment_intents")) {
+        (globalThis as { __n?: string }).__n = new URLSearchParams(String(init?.body)).get("metadata[orderNumber]") ?? "";
+        return new Response(JSON.stringify({ id: "pi_guest", client_secret: "pi_guest_secret" }), { status: 200 });
+      }
+      return new Response(JSON.stringify({ id: "pi_guest", status: "succeeded", amount_received: 1000, metadata: { orderNumber: (globalThis as { __n?: string }).__n } }), { status: 200 });
+    });
+    const guestSlug = `${slug}-g`;
+    await db.product.create({ data: { slug: guestSlug, name: "G", nameEn: "G", description: "d", descriptionEn: "d", story: "s", storyEn: "s", categorySlug: "test-mob", creatorSlug: "test-mob", priceCents: 1000, materials: [], sizes: [], images: [], stock: 3, supplierId, status: "PUBLISHED" } });
+    const co = await import("@/app/api/v1/checkout/[action]/route");
+    const guestEmail = `guest-${email}`;
+    const address = { firstName: "Awa", lastName: "Diop", country: "France", line1: "Rue de la Paix", houseNumber: "12", postalCode: "75002", city: "Paris", phone: "+33612345678" };
+    const cart = [{ slug: guestSlug, size: null, quantity: 1 }];
+    const H = { "content-type": "application/json" };
+    const bad = await co.POST(new Request(url("checkout/create"), post({ address, email: "pas-un-email", cart }, H)), ctx("create"));
+    expect(bad.status).toBe(400);
+    const badPostal = await co.POST(new Request(url("checkout/create"), post({ address: { ...address, postalCode: "12" }, email: guestEmail, cart }, H)), ctx("create"));
+    expect(((await badPostal.json()) as { error: string }).error).toBe("postal");
+    const c = await (await co.POST(new Request(url("checkout/create"), post({ address, email: guestEmail, cart }, H)), ctx("create"))).json();
+    expect(c.clientSecret).toBe("pi_guest_secret");
+    expect(typeof c.guestToken).toBe("string");
+    expect((await (await co.POST(new Request(url("checkout/confirm"), post({ number: c.number, guestToken: "faux" }, H)), ctx("confirm"))).json()).status).toBe("unknown");
+    expect((await (await co.POST(new Request(url("checkout/confirm"), post({ number: c.number, guestToken: c.guestToken }, H)), ctx("confirm"))).json()).status).toBe("paid");
+    const order = await db.order.findUniqueOrThrow({ where: { number: c.number } });
+    expect(order.userId).toBeNull();
+    expect(order.email).toBe(guestEmail);
+    await db.order.deleteMany({ where: { email: guestEmail } });
+    await db.product.deleteMany({ where: { slug: guestSlug } });
+  });
+
+  it("connecté : save=true enregistre l'adresse saisie dans le carnet", async () => {
+    vi.stubGlobal("fetch", async () => new Response(JSON.stringify({ id: "pi_save", client_secret: "pi_save_secret" }), { status: 200 }));
+    const saveSlug = `${slug}-s`;
+    await db.product.create({ data: { slug: saveSlug, name: "S", nameEn: "S", description: "d", descriptionEn: "d", story: "s", storyEn: "s", categorySlug: "test-mob", creatorSlug: "test-mob", priceCents: 1000, materials: [], sizes: [], images: [], stock: 3, supplierId, status: "PUBLISHED" } });
+    const user = await db.user.findUniqueOrThrow({ where: { email } });
+    const before = await db.address.count({ where: { userId: user.id } });
+    const co = await import("@/app/api/v1/checkout/[action]/route");
+    const address = { firstName: "Awa", lastName: "Diop", country: "France", line1: "Rue Neuve", houseNumber: "3", postalCode: "69001", city: "Lyon", phone: "+33612345678" };
+    const r = await co.POST(new Request(url("checkout/create"), post({ address, save: true, cart: [{ slug: saveSlug, size: null, quantity: 1 }] })), ctx("create"));
+    expect(r.status).toBe(200);
+    expect(await db.address.count({ where: { userId: user.id } })).toBe(before + 1);
+    await db.checkoutHold.deleteMany({ where: { buyerKey: { contains: email } } });
+    await db.product.deleteMany({ where: { slug: saveSlug } });
   });
 });

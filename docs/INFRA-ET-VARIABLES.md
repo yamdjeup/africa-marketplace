@@ -69,12 +69,12 @@ Compte Neon : yamdjeup@gmail.com (organisation `africa-marketplace`). Nom du pro
 Pas de clé live. Compte Stripe « Epomta sandbox » : africamadolo@gmail.com.
 
 ### Resend / e-mails
-Équipe Resend : yamdjeup (yamdjeup@gmail.com) ; clé API `epomta-prod` (permission Sending access) ; plan Free (3 000 e-mails/mois, 100/jour) ; passer à Pro (20 $/mois) avant l'ouverture.
+Équipe Resend : yamdjeup (yamdjeup@gmail.com) ; clé API `epomta-prod` (permission Sending access) ; simu : clé séparée ; garde-fou : aucune adresse réelle tierce dans la base simu ; plan Free (3 000 e-mails/mois, 100/jour) ; passer à Pro (20 $/mois) avant l'ouverture.
 
 | Variable | Env. | Rôle | Sensible | Où régénérer |
 |---|---|---|---|---|
-| `RESEND_API_KEY` | P | Envoi d'e-mails (prioritaire sur Gmail) | Oui | Resend > API Keys |
-| `MAIL_FROM` (alias lu : `EMAIL_FROM`) | P | Expéditeur : `Epomta <contact@epomta.com>` ; domaine à vérifier dans Resend (DNS chez OVH) | Non | — |
+| `RESEND_API_KEY` | P, S (simu : clé dédiée distincte, Sending access, limitée) | Envoi d'e-mails (prioritaire sur Gmail) | Oui | Resend > API Keys |
+| `MAIL_FROM` (alias lu : `EMAIL_FROM`) | P, S | Expéditeur : `Epomta <contact@epomta.com>` ; domaine à vérifier dans Resend (DNS chez OVH) | Non | — |
 | `GMAIL_USER`, `GMAIL_APP_PASSWORD` | P (repli) | SMTP Gmail ; mot de passe d'application, pas le mot de passe du compte | Oui | Compte Google > Mots de passe d'application |
 
 ### Google (Cloud / OAuth / Places)
@@ -92,8 +92,8 @@ Compte Google Cloud : africamadolo@gmail.com, projet `epomta-demo`. Client « Ep
 | `AUTH_SECRET` (serveur) | S, P, Pv | Signe aussi les jetons mobiles (accès 1 h, refresh 30 j) | Oui | `npx auth secret` ; le changer déconnecte aussi l'app |
 | `GOOGLE_MOBILE_CLIENT_IDS` (serveur) | S, P | Audiences acceptées pour l'id_token Google de l'app : ID Android + ID Web, séparés par une virgule | Non | Vercel > Settings > Environment Variables |
 | `EXPO_PUBLIC_API_URL` | `mobile/eas.json` | URL de l'API appelée par l'app (simu : `https://simu.epomta.com`) | Non | `mobile/eas.json` (profils preview/production) |
-| `EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID` | `mobile/eas.json` | ID client OAuth Android (package `com.epomta.app` + SHA-1 du keystore EAS) | Non | Google Cloud > Identifiants > ID client Android |
-| `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` | `mobile/eas.json` | ID client Web « Epomta web » (utilisé par expo-auth-session) | Non | Google Cloud > Identifiants |
+| `EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID` | `mobile/eas.json` | ID client OAuth Android (package `com.epomta.app` + SHA-1 du keystore EAS) ; Google Sign-In natif le retrouve par package + SHA-1, sans redirection navigateur | Non | Google Cloud > Identifiants > ID client Android |
+| `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` | `mobile/eas.json` | ID client Web « Epomta web » : audience de l'id_token (Google Sign-In natif, @react-native-google-signin) | Non | Google Cloud > Identifiants |
 | `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY` | `mobile/eas.json` | Clé publiable Stripe `pk_test_…` pour la PaymentSheet (renseignée dans eas.json le 16/11/2026) | Non (publique) | Stripe > Développeurs > Clés API (mode test) |
 | `STRIPE_SECRET_KEY` (serveur) | S | Crée les PaymentIntents mobiles (déjà utilisée par le site) | Oui | Stripe > Clés API |
 | `EXPO_TOKEN` | poste du développeur | Authentifie `eas build` ; ne jamais le committer | Oui | expo.dev > Access tokens (à révoquer après la démo, voir ENVIRONNEMENTS §11) |
@@ -109,6 +109,7 @@ Règle : toute variable ajoutée ou modifiée doit être reportée ici (nom, env
 | `VAPID_PUBLIC_KEY`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | Clé publique Web Push | Non |
 | `VAPID_PRIVATE_KEY` | Clé privée Web Push (`npx web-push generate-vapid-keys`) | Oui |
 | `VAPID_SUBJECT` | Contact `mailto:` du push | Non |
+| Push mobile (Expo/FCM) | Aucune variable serveur : le serveur envoie via l'API Expo (`https://exp.host/--/api/v2/push/send`). Côté utilisateur : projet Firebase, app Android `com.epomta.app`, `google-services.json` placé dans `mobile/` ET commité (non secret, non ignoré par git : EAS Build n'envoie que les fichiers suivis ; `android.googleServicesFile` est déjà dans `app.json`), puis clé de compte de service FCM v1 envoyée via `eas credentials` (Android > Google Service Account > FCM V1). Sans ces éléments, l'app compile et l'activation du push affiche un message d'erreur. | Fichier/clé : oui (ne jamais les committer ni les coller dans le chat) |
 | `NEXT_PUBLIC_GA_ID` | ID de mesure GA4 `G-…` ; compte GA4 : À compléter | Non |
 
 ### GitHub / CI

@@ -17,7 +17,7 @@ import { CreatorScreen } from "./creator";
 import { StripeProvider } from "@stripe/stripe-react-native";
 
 type Product = { slug: string; name: string; description: string; story: string; creatorName: string; priceCents: number; images: string[]; material: string | null; technique: string | null; origin: string | null; dimensions: string | null; categorySlug: string; url: string; stock: number; isNew?: boolean; isExample?: boolean; edition?: string | null; sizes?: string[]; sizeStock?: Record<string, number> | null; sizeLabel?: string };
-type Extra = { categoryLabel: string; materials: string[]; dimensionsText: string | null; careInstructions: string | null; hasCertificate: boolean; attestedAt: string | null; signatureUrl: string | null; related: Product[] };
+type Extra = { categoryLabel: string; materials: string[]; dimensionsText: string | null; careInstructions: string | null; hasCertificate: boolean; roomPreview?: boolean; mirrorTryOn?: boolean; attestedAt: string | null; signatureUrl: string | null; related: Product[] };
 type Home = { categories: { slug: string; label: string }[]; news: Product[]; latest: Product[]; creators: { slug: string; name: string; specialty: string; image: string }[]; byCategory: { slug: string; label: string; items: Product[] }[] };
 type List = { items: Product[]; total: number; page: number; pages: number };
 type Tab = "home" | "shop" | "favs" | "me";
@@ -119,6 +119,11 @@ function DetailBody({ p, onClose, fav, onFav, onAdd, token, onNeedLogin, onOpenR
                 <Text style={{ color: "#221812" }}>{`Œuvre d'art originale, certifiée par l'artiste le ${new Date(x.attestedAt).toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" })}`}{p.edition ? ` · Édition ${p.edition}` : ""}</Text>
                 {x.signatureUrl ? <Image source={{ uri: x.signatureUrl }} style={{ height: 80, width: 160, marginTop: 8 }} resizeMode="contain" accessibilityLabel="Signature de l'artiste" /> : null}
               </View>
+            ) : null}
+            {x?.roomPreview || x?.mirrorTryOn ? (
+              <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => WebBrowser.openBrowserAsync(`${API_URL}/fr/produits/${p.slug}/essayage`)}>
+                <Text style={s.ctaText}>{x?.roomPreview ? "Aperçu dans une pièce · réalité augmentée" : "Essayage au miroir"}</Text>
+              </Pressable>
             ) : null}
             {x?.hasCertificate ? <Text style={{ marginTop: 10, color: "#221812" }}>✓ Certificat d’authenticité fourni</Text> : null}
             {x?.careInstructions ? <View style={{ marginTop: 12 }}><Text style={{ fontWeight: "600", color: "#221812" }}>Entretien</Text><Text style={s.meta}>{x.careInstructions}</Text></View> : null}

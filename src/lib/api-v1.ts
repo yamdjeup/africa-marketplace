@@ -1,6 +1,7 @@
 import { ruleFor, SIZE_OPTIONS } from "@/lib/category-rules";
 import { db } from "@/lib/db";
 import { CREATOR_VIDEOS } from "@/lib/creator-videos";
+import { MIRROR_CATEGORIES, MIRROR_ITEMS } from "@/data/mirror-items";
 import { getCategories, getCreatorWithProducts, getCreators, getFilterOptions, getProduct, getRelatedProducts, searchProducts, type CatalogParams, type ProductView } from "@/lib/catalog";
 
 export type MobileLocale = "fr" | "en";
@@ -85,6 +86,8 @@ export async function oneProduct(slug: string, locale: MobileLocale, origin: str
     dimensionsText: rule.dimensions ? (cm ? `${cm} cm` : v.dimensions) : null,
     careInstructions: rule.care ? v.careInstructions : null,
     hasCertificate: v.hasCertificate,
+    roomPreview: ["peinture", "sculpture", "photographie", "textile-decoration"].includes(v.categorySlug) && !!v.widthCm && !!v.heightCm && v.widthCm > 0 && v.heightCm > 0 && v.images.length > 0,
+    mirrorTryOn: MIRROR_CATEGORIES.includes(v.categorySlug) && v.images.length > 0 && !!MIRROR_ITEMS[v.slug],
     attestedAt: v.attestedAt,
     signatureUrl: v.signatureUrl && v.attestedAt ? absolute(v.signatureUrl, origin) : null,
     related: more.map((m) => toMobileProduct(m, origin, locale)),

@@ -64,8 +64,8 @@ function OrderDetail({ token, id, onBack }: { token: string; id: string; onBack:
       <Text style={st.mut}>{tr(d.statusLabel.fr, d.statusLabel.en)}</Text>
       {msg ? <Text style={{ color: "#b42318", marginTop: 8 }}>{msg}</Text> : null}
       <Text style={st.h3}>{tr("Articles", "Items")}</Text>
-      {d.items.map((i) => <Text key={i.id} style={{ color: "#221812", marginTop: 4 }}>{i.quantity} × {i.name}{i.size ? ` (${i.size})` : ""} — {(i.unitPriceCents * i.quantity / 100).toFixed(2)} EUR</Text>)}
-      <Text style={{ fontWeight: "600", marginTop: 8 }}>{tr("Total boutique", "Shop total")} : {(d.subtotalCents / 100).toFixed(2)} EUR</Text>
+      {d.items.map((i) => <Text key={i.id} style={{ color: "#221812", marginTop: 4 }}>{i.quantity} × {i.name}{i.size ? ` (${i.size})` : ""} — {eur(i.unitPriceCents * i.quantity)}</Text>)}
+      <Text style={{ fontWeight: "600", marginTop: 8 }}>{tr("Total boutique", "Shop total")} : {eur(d.subtotalCents)}</Text>
       <Text style={st.h3}>{tr("Livrer à", "Ship to")}</Text>
       <Text style={{ color: "#221812" }}>{o.fullName}</Text>
       <Text style={{ color: "#221812" }}>{o.address}, {o.postalCode} {o.city}, {o.country}</Text>
@@ -152,7 +152,7 @@ function ProductsPane({ token }: { token: string }) {
           <View key={p.slug} style={st.row}>
             <Pressable onPress={() => { setOpen(isOpen ? null : p.slug); setMsg(null); }}>
               <Text style={{ fontWeight: "600", color: "#221812" }}>{tr(p.name, p.nameEn)}</Text>
-              <Text style={st.mut}>{tr(s[0], s[1])} · {(p.priceCents / 100).toFixed(2)} EUR · {tr("Stock", "Stock")} {p.stock} ({tr("réservé", "reserved")} {p.reserved})</Text>
+              <Text style={st.mut}>{tr(s[0], s[1])} · {eur(p.priceCents)} · {tr("Stock", "Stock")} {p.stock} ({tr("réservé", "reserved")} {p.reserved})</Text>
             </Pressable>
             {isOpen ? (
               <View style={{ gap: 10, marginTop: 10 }}>
@@ -186,7 +186,7 @@ function ProductsPane({ token }: { token: string }) {
 
 type Dash = { name: string; country: string; craftType: string; commissionPct: number; toAccept: number; toShip: number; inTransit: number; balance: { pending: number; available: number; paid: number; gross: number; commission: number }; sales: { id: string; number: string; grossCents: number; commissionCents: number; netCents: number; state: string; availableAt: string }[]; payouts: { id: string; paidAt: string; reference: string; amountCents: number }[] };
 const SALE_ST: Record<string, [string, string]> = { reversed: ["Annulé", "Reversed"], paid: ["Versé", "Paid out"], available: ["Disponible", "Available"], pending: ["En attente", "Pending"] };
-const eur = (c: number) => `${(c / 100).toFixed(2)} EUR`;
+const eur = (c: number) => `${(c / 100).toFixed(2).replace(".", ",")} €`;
 
 function DashboardPane({ token }: { token: string }) {
   const [d, setD] = useState<Dash | null>(null);
@@ -287,12 +287,12 @@ export function SupplierScreen({ token, onBack }: { token: string; onBack: () =>
     <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
       <Pressable onPress={onBack} hitSlop={12} style={{ height: 44, justifyContent: "center" }} accessibilityLabel={tr("Retour", "Back")}><Text style={{ fontSize: 28 }}>←</Text></Pressable>
       <Text style={st.h2}>{tr("Espace créateur", "Creator space")}</Text>
-      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 12 }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 12, marginBottom: 16, flexGrow: 0 }} contentContainerStyle={{ gap: 8, paddingRight: 16 }}>
         <Pressable onPress={() => setSection("profile")} style={[st.chip, section === "profile" && st.chipOn]}><Text style={{ color: section === "profile" ? "#fff" : "#221812" }}>{tr("Profil", "Profile")}</Text></Pressable>
         <Pressable onPress={() => setSection("dash")} style={[st.chip, section === "dash" && st.chipOn]}><Text style={{ color: section === "dash" ? "#fff" : "#221812" }}>{tr("Tableau de bord", "Dashboard")}</Text></Pressable>
         <Pressable onPress={() => setSection("orders")} style={[st.chip, section === "orders" && st.chipOn]}><Text style={{ color: section === "orders" ? "#fff" : "#221812" }}>{tr("Commandes", "Orders")}</Text></Pressable>
         <Pressable onPress={() => setSection("works")} style={[st.chip, section === "works" && st.chipOn]}><Text style={{ color: section === "works" ? "#fff" : "#221812" }}>{tr("Œuvres et stocks", "Works and stock")}</Text></Pressable>
-      </View>
+      </ScrollView>
       {section === "dash" ? <DashboardPane token={token} /> : null}
       {section === "profile" ? <ProfilePane token={token} /> : null}
       {section === "works" ? <ProductsPane token={token} /> : null}
@@ -305,7 +305,7 @@ export function SupplierScreen({ token, onBack }: { token: string; onBack: () =>
       {!subs ? <ActivityIndicator /> : subs.length === 0 ? <Text style={st.mut}>{tr("Aucune commande.", "No orders.")}</Text> : subs.map((x) => (
         <Pressable key={x.id} onPress={() => setOpenId(x.id)} style={st.row}>
           <Text style={{ fontWeight: "600", color: "#221812" }}>{x.number} · {tr(x.statusLabel.fr, x.statusLabel.en)}</Text>
-          <Text style={st.mut}>{new Date(x.createdAt).toLocaleDateString()} · {x.customer} · {(x.subtotalCents / 100).toFixed(2)} EUR</Text>
+          <Text style={st.mut}>{new Date(x.createdAt).toLocaleDateString()} · {x.customer} · {eur(x.subtotalCents)}</Text>
           {x.status === "PENDING" && x.acceptBy ? <Text style={{ color: "#92400e", fontSize: 12 }}>{tr("À accepter avant le ", "Accept before ")}{new Date(x.acceptBy).toLocaleString()}</Text> : null}
         </Pressable>
       ))}

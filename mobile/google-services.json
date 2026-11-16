@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1032734190746",
+    "project_id": "epomta-b35f3",
+    "storage_bucket": "epomta-b35f3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1032734190746:android:0194e79c18c00590f38323",
+        "android_client_info": {
+          "package_name": "com.epomta.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyANZ-Q4AJ0TSE7SdJV-aEwz2HBpBHuHaaw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

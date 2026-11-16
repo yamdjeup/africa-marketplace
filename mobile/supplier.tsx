@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { authed } from "./api";
-import { tr } from "./region";
+import { tr, useLang } from "./region";
 
 type Lbl = { fr: string; en: string };
 type Sub = { id: string; number: string; status: string; statusLabel: Lbl; createdAt: string; customer: string; subtotalCents: number; acceptBy: string | null };
@@ -215,8 +215,44 @@ function DashboardPane({ token }: { token: string }) {
   );
 }
 
+type Prof = { displayName: string; country: string; contactEmail: string; phone: string; address: string; bio: string; bioEn: string; videoUrl: string; avatar: string };
+const PROF_ERR: Record<string, [string, string]> = { name: ["Ce nom est déjà utilisé par un partenaire.", "This name is already used by a partner."], invalid: ["Données invalides.", "Invalid data."] };
+
+function ProfilePane({ token }: { token: string }) {
+  const lang = useLang();
+  const [p, setP] = useState<Prof | null>(null);
+  const [bio, setBio] = useState("");
+  const [msg, setMsg] = useState("");
+  useEffect(() => { authed<Prof>(token, "GET", "/api/v1/supplier/profile").then((r) => { if (r.ok) { setP(r.data); setBio(lang === "en" ? r.data.bioEn : r.data.bio); } }); }, []);
+  if (!p) return <ActivityIndicator style={{ marginTop: 16 }} />;
+  const set = (k: keyof Prof) => (v: string) => setP({ ...p, [k]: v });
+  const field = (label: string, k: keyof Prof, extra: object = {}) => (
+    <View style={{ marginTop: 10 }}><Text style={st.mut}>{label}</Text><TextInput value={p[k]} onChangeText={set(k)} style={st.input} accessibilityLabel={label} {...extra} /></View>
+  );
+  const save = async () => {
+    setMsg("");
+    const r = await authed<{ ok?: boolean; error?: string }>(token, "POST", "/api/v1/supplier/profile", { ...p, bio, lang });
+    if (r.ok) setMsg(tr("Profil enregistré.", "Profile saved."));
+    else { const e = PROF_ERR[(r.data as { error?: string })?.error ?? ""]; setMsg(e ? tr(e[0], e[1]) : tr("Enregistrement impossible. Vérifiez e-mail et téléphone.", "Could not save. Check email and phone.")); }
+  };
+  return (
+    <View>
+      <Text style={st.h3}>{tr("Profil", "Profile")}</Text>
+      {field(tr("Nom d'artiste / d'atelier", "Artist / studio name"), "displayName")}
+      {field(tr("Pays", "Country"), "country")}
+      {field(tr("E-mail de contact", "Contact email"), "contactEmail", { keyboardType: "email-address", autoCapitalize: "none" })}
+      {field(tr("Téléphone", "Phone"), "phone", { keyboardType: "phone-pad" })}
+      {field(tr("Adresse", "Address"), "address", { multiline: true })}
+      <View style={{ marginTop: 10 }}><Text style={st.mut}>{tr("Biographie", "Biography")}</Text><TextInput value={bio} onChangeText={setBio} multiline style={[st.input, { minHeight: 110 }]} accessibilityLabel={tr("Biographie", "Biography")} /></View>
+      {field(tr("Vidéo de présentation (lien https)", "Intro video (https link)"), "videoUrl", { autoCapitalize: "none", keyboardType: "url" })}
+      <Pressable onPress={save} style={[st.btn, { marginTop: 14 }]}><Text style={{ color: "#fff", fontWeight: "600" }}>{tr("Enregistrer", "Save")}</Text></Pressable>
+      {msg ? <Text style={{ marginTop: 8, color: "#221812" }}>{msg}</Text> : null}
+    </View>
+  );
+}
+
 export function SupplierScreen({ token, onBack }: { token: string; onBack: () => void }) {
-  const [section, setSection] = useState<"dash" | "orders" | "works">("dash");
+  const [section, setSection] = useState<"dash" | "orders" | "works" | "profile">("dash");
   const [openId, setOpenId] = useState<string | null>(null);
   const [tab, setTab] = useState("todo");
   const [subs, setSubs] = useState<Sub[] | null>(null);
@@ -230,11 +266,13 @@ export function SupplierScreen({ token, onBack }: { token: string; onBack: () =>
       <Pressable onPress={onBack} hitSlop={12} style={{ height: 44, justifyContent: "center" }} accessibilityLabel={tr("Retour", "Back")}><Text style={{ fontSize: 28 }}>←</Text></Pressable>
       <Text style={st.h2}>{tr("Espace créateur", "Creator space")}</Text>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 12 }}>
+        <Pressable onPress={() => setSection("profile")} style={[st.chip, section === "profile" && st.chipOn]}><Text style={{ color: section === "profile" ? "#fff" : "#221812" }}>{tr("Profil", "Profile")}</Text></Pressable>
         <Pressable onPress={() => setSection("dash")} style={[st.chip, section === "dash" && st.chipOn]}><Text style={{ color: section === "dash" ? "#fff" : "#221812" }}>{tr("Tableau de bord", "Dashboard")}</Text></Pressable>
         <Pressable onPress={() => setSection("orders")} style={[st.chip, section === "orders" && st.chipOn]}><Text style={{ color: section === "orders" ? "#fff" : "#221812" }}>{tr("Commandes", "Orders")}</Text></Pressable>
         <Pressable onPress={() => setSection("works")} style={[st.chip, section === "works" && st.chipOn]}><Text style={{ color: section === "works" ? "#fff" : "#221812" }}>{tr("Œuvres et stocks", "Works and stock")}</Text></Pressable>
       </View>
       {section === "dash" ? <DashboardPane token={token} /> : null}
+      {section === "profile" ? <ProfilePane token={token} /> : null}
       {section === "works" ? <ProductsPane token={token} /> : null}
       {section === "orders" ? <>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginVertical: 12 }}>

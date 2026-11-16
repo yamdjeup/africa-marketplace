@@ -1,11 +1,13 @@
+import { tr } from "./region";
 import { useEffect, useState } from "react";
+import { Badges } from "./badges";
 import { ActivityIndicator, Image, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { VideoView, useVideoPlayer } from "expo-video";
 import { authed } from "./api";
 
 // Reprend src/app/[locale]/partenaires/[slug]/page.tsx (bio, vidéo « Rencontre avec », citation, « Ses créations ») ; textes de i18n.creator.
-type Product = { slug: string; name: string; creatorName: string; priceCents: number; images: string[] };
+type Product = { slug: string; name: string; creatorName: string; priceCents: number; images: string[]; stock?: number; isNew?: boolean; isExample?: boolean };
 type Creator = { slug: string; name: string; specialty: string; image: string; bio: string; sourceUrl: string | null; video: { src: string; poster: string; orientation: "portrait" | "landscape"; excerpt: string } | null; products: Product[] };
 const eur = (c: number) => `${(c / 100).toFixed(2).replace(".", ",")} €`;
 
@@ -31,9 +33,9 @@ export function CreatorScreen({ slug, onClose, onOpenSlug }: { slug: string; onC
   return (
     <Modal animationType="slide" onRequestClose={onClose}>
       <SafeAreaProvider><SafeAreaView style={{ flex: 1, backgroundColor: "#faf6ee" }}>
-        <Pressable onPress={onClose} hitSlop={12} style={{ height: 44, justifyContent: "center", paddingHorizontal: 16 }} accessibilityLabel="Retour"><Text style={{ fontSize: 28, color: "#221812" }}>←</Text></Pressable>
+        <Pressable onPress={onClose} hitSlop={12} style={{ height: 44, justifyContent: "center", paddingHorizontal: 16 }} accessibilityLabel={tr("Retour", "Back")}><Text style={{ fontSize: 28, color: "#221812" }}>←</Text></Pressable>
         {!c && !missing && <ActivityIndicator />}
-        {missing && <Text style={[st.p, { padding: 16 }]}>Artiste introuvable</Text>}
+        {missing && <Text style={[st.p, { padding: 16 }]}>{tr("Artiste introuvable", "Artist not found")}</Text>}
         {c && (
           <ScrollView contentContainerStyle={{ padding: 16, gap: 20 }}>
             <View style={{ alignItems: "center", gap: 8 }}>
@@ -48,7 +50,7 @@ export function CreatorScreen({ slug, onClose, onOpenSlug }: { slug: string; onC
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
               {c.products.map((p) => (
                 <Pressable key={p.slug} onPress={() => { onClose(); onOpenSlug(p.slug); }} style={{ width: "47%" }}>
-                  <Image source={{ uri: p.images[0] }} style={{ width: "100%", aspectRatio: 1, backgroundColor: "#f2eadd" }} />
+                  <View><Image source={{ uri: p.images[0] }} style={{ width: "100%", aspectRatio: 1, backgroundColor: "#f2eadd" }} /><Badges stock={p.stock} isNew={p.isNew} isExample={p.isExample} /></View>
                   <Text numberOfLines={2} style={{ color: "#221812", marginTop: 4 }}>{p.name}</Text>
                   <Text style={{ color: "#221812", fontWeight: "700" }}>{eur(p.priceCents)}</Text>
                 </Pressable>

@@ -9,6 +9,7 @@
     "icon": "./assets/icon-1024.png",
     "plugins": [
       "expo-notifications",
+      ["expo-image-picker", { "photosPermission": "Epomta utilise vos photos pour illustrer vos œuvres et votre profil." }],
       [
         "@stripe/stripe-react-native",
         {

@@ -7,6 +7,7 @@ import { AlertsScreen } from "./alerts";
 import { SupportScreen } from "./support";
 import { AddressesScreen } from "./addresses";
 import { OrdersScreen } from "./orders";
+import { SupplierScreen, useIsSupplier } from "./supplier";
 
 export type User = { id: string; email: string; name: string };
 type Tokens = { accessToken: string; refreshToken: string };
@@ -104,18 +105,21 @@ function GoogleButton({ auth, onError }: { auth: Auth; onError: (m: string | nul
       if (idToken) onError(await auth.google(idToken));
     } catch (e) {
       const code = (e as { code?: string }).code;
-      if (code !== statusCodes.SIGN_IN_CANCELLED) onError("Connexion Google impossible. Réessayez.");
+      if (code !== statusCodes.SIGN_IN_CANCELLED) onError(`Connexion Google impossible. Réessayez. (code : ${code ?? "?"} — ${(e as Error).message ?? ""})`);
     }
     setBusy(false);
   };
   return (
     <Pressable style={[s.cta, s.ghost, { marginTop: 12, opacity: busy ? 0.6 : 1 }]} disabled={busy} onPress={signIn}>
-      <Text style={[s.ctaText, { color: "#221812" }]}>Continuer avec google</Text>
+      <Text style={[s.ctaText, { color: "#221812" }]}>{tr("Continuer avec google", "Continue with Google")}</Text>
     </Pressable>
   );
 }
 
-export function AccountScreen({ auth, onOpenSite }: { auth: Auth; onOpenSite: (path: string) => void }) {
+import { RegionRow, tr } from "./region";
+import { ProfileScreen } from "./profile";
+
+export function AccountScreen({ auth, onOpenSite, more }: { auth: Auth; onOpenSite: (path: string) => void; more?: React.ReactNode }) {
   const [mode, setMode] = useState<"login" | "register" | "forgot">("login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -125,26 +129,35 @@ export function AccountScreen({ auth, onOpenSite }: { auth: Auth; onOpenSite: (p
   const [addresses, setAddresses] = useState(false);
   const [orders, setOrders] = useState(false);
   const [alerts, setAlerts] = useState(false);
+  const [profile, setProfile] = useState(false);
   const [support, setSupport] = useState(false);
+  const [space, setSpace] = useState(false);
+  const isSupplier = useIsSupplier(auth.accessToken ?? null);
 
   if (!auth.ready) return <ActivityIndicator style={{ marginTop: 40 }} />;
   if (support) return <SupportScreen onBack={() => setSupport(false)} />;
   if (auth.user && addresses && auth.accessToken) return <AddressesScreen token={auth.accessToken} onBack={() => setAddresses(false)} />;
+  if (auth.user && profile && auth.accessToken) return <ProfileScreen token={auth.accessToken} onBack={() => setProfile(false)} />;
   if (auth.user && alerts && auth.accessToken) return <AlertsScreen token={auth.accessToken} onBack={() => setAlerts(false)} />;
+  if (auth.user && space && isSupplier && auth.accessToken) return <SupplierScreen token={auth.accessToken} onBack={() => setSpace(false)} />;
   if (auth.user && orders && auth.accessToken) return <OrdersScreen token={auth.accessToken} onBack={() => setOrders(false)} />;
 
   if (auth.user) {
     return (
-      <ScrollView contentContainerStyle={{ padding: 16 }}>
-        <Text style={s.h2}>Mon compte</Text>
+      <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
+        <Text style={s.h2}>{tr("Mon compte", "My account")}</Text>
         <Text style={s.body}>Bonjour {auth.user.name}</Text>
         <Text style={s.mut}>{auth.user.email}</Text>
-        <Text style={[s.body, { marginTop: 12 }]}>Langue : Français</Text>
-        <Pressable style={[s.cta, { marginTop: 16 }]} onPress={() => setOrders(true)}><Text style={s.ctaText}>Mes commandes</Text></Pressable>
-        <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => setAddresses(true)}><Text style={s.ctaText}>Mes adresses</Text></Pressable>
-        <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => setAlerts(true)}><Text style={s.ctaText}>Recevoir des alertes</Text></Pressable>
+        <Text style={[s.h2, { marginTop: 16 }]}>Langue et région</Text>
+                <View style={{ marginTop: 16 }}><RegionRow /></View>
+        {isSupplier ? <Pressable style={[s.cta, { marginTop: 16 }]} onPress={() => setSpace(true)}><Text style={s.ctaText}>{tr("Espace créateur", "Creator space")}</Text></Pressable> : null}
+        <Pressable style={[s.cta, { marginTop: 16 }]} onPress={() => setProfile(true)}><Text style={s.ctaText}>{tr("Détails et sécurité", "Details and security")}</Text></Pressable>
+        <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => setOrders(true)}><Text style={s.ctaText}>{tr("Mes commandes", "My orders")}</Text></Pressable>
+        <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => setAddresses(true)}><Text style={s.ctaText}>{tr("Mes adresses", "My addresses")}</Text></Pressable>
+        <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => setAlerts(true)}><Text style={s.ctaText}>{tr("Recevoir des alertes", "Get alerts")}</Text></Pressable>
         <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => setSupport(true)}><Text style={s.ctaText}>Besoin d’aide ?</Text></Pressable>
         <Pressable style={[s.cta, s.ghost, { marginTop: 12 }]} onPress={auth.logout}><Text style={[s.ctaText, { color: "#221812" }]}>Se déconnecter</Text></Pressable>
+                {more}
       </ScrollView>
     );
   }
@@ -162,9 +175,10 @@ export function AccountScreen({ auth, onOpenSite }: { auth: Auth; onOpenSite: (p
   return (
     <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
       <Text style={s.h2}>{titles[mode]}</Text>
+      <View style={{ marginBottom: 16 }}><RegionRow /></View>
       {mode === "register" && <TextInput placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={s.input} placeholder="Nom" value={name} onChangeText={setName} autoComplete="name" />}
-      <TextInput placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={s.input} placeholder="Adresse e-mail" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" />
-      {mode !== "forgot" && <TextInput placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={s.input} placeholder="Mot de passe" value={password} onChangeText={setPassword} secureTextEntry autoCapitalize="none" />}
+      <TextInput placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={s.input} placeholder={tr("Adresse e-mail", "Email address")} value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" />
+      {mode !== "forgot" && <TextInput placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={s.input} placeholder={tr("Mot de passe", "Password")} value={password} onChangeText={setPassword} secureTextEntry autoCapitalize="none" />}
       {msg ? <Text style={s.msg}>{msg}</Text> : null}
       <Pressable style={[s.cta, { marginTop: 12, opacity: busy ? 0.6 : 1 }]} disabled={busy} onPress={submit}>
         <Text style={s.ctaText}>{mode === "login" ? "Se connecter" : mode === "register" ? "Créer mon compte" : "Envoyer le lien"}</Text>
@@ -176,6 +190,7 @@ export function AccountScreen({ auth, onOpenSite }: { auth: Auth; onOpenSite: (p
         {mode === "login" && <Pressable onPress={() => { setMode("forgot"); setMsg(null); }}><Text style={s.link}>Mot de passe oublié ?</Text></Pressable>}
         <Pressable onPress={() => setSupport(true)}><Text style={s.link}>Besoin d’aide ?</Text></Pressable>
       </View>
+      {more}
     </ScrollView>
   );
 }

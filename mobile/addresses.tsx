@@ -1,7 +1,9 @@
+import { tr } from "./region";
 import { useEffect, useRef, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { authed } from "./api";
 import { COUNTRY_FR } from "./countries";
+import { CountryPicker, Flag, PhoneInput, codeOfCountry } from "./flags";
 
 type Address = { id: string; firstName: string; lastName: string; line1: string; houseNumber: string; box?: string | null; line2?: string | null; postalCode: string; city: string; country: string; phone: string; isDefault: boolean };
 type Form = { firstName: string; lastName: string; country: string; houseNumber: string; box: string; line2: string; line1: string; postalCode: string; city: string; phone: string };
@@ -36,10 +38,25 @@ export function AddressFields({ form, setForm }: { form: Form; setForm: (f: Form
     setForm({ ...form, line1: full.street || form.line1, houseNumber: full.houseNumber, postalCode: full.postalCode, city: full.city, ...(COUNTRY_FR[full.countryCode] ? { country: COUNTRY_FR[full.countryCode] } : {}) });
     setQuery("");
   };
-  const field = (k: keyof Form, l: string) => (
+  const field = (k: keyof Form, l: string) => k === "country" ? (
     <View key={k}>
       <Text style={s.label}>{l}</Text>
-      <TextInput placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={s.input} value={form[k]} onChangeText={(v) => setForm({ ...form, [k]: v })} keyboardType={k === "phone" ? "phone-pad" : "default"} autoCapitalize={k === "line1" || k === "city" || k === "firstName" || k === "lastName" ? "words" : "none"} />
+      <CountryPicker value={codeOfCountry(form.country)} onSelect={(c) => setForm({ ...form, country: COUNTRY_FR[c] })}>
+        <View style={[s.input, { flexDirection: "row", alignItems: "center", gap: 10 }]}>
+          {codeOfCountry(form.country) ? <Flag code={codeOfCountry(form.country)} /> : null}
+          <Text style={{ flex: 1, fontSize: 16, color: "#221812" }}>{form.country}</Text><Text>▾</Text>
+        </View>
+      </CountryPicker>
+    </View>
+  ) : k === "phone" ? (
+    <View key={k}>
+      <Text style={s.label}>{l}</Text>
+      <PhoneInput country={form.country} value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} inputStyle={s.input} />
+    </View>
+  ) : (
+    <View key={k}>
+      <Text style={s.label}>{l}</Text>
+      <TextInput placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={s.input} value={form[k]} onChangeText={(v) => setForm({ ...form, [k]: v })} keyboardType="default" autoCapitalize={k === "line1" || k === "city" || k === "firstName" || k === "lastName" ? "words" : "none"} />
     </View>
   );
   const [first, second, country, ...rest] = LABELS;
@@ -48,7 +65,7 @@ export function AddressFields({ form, setForm }: { form: Form; setForm: (f: Form
       {field(...first)}
       {field(...second)}
       {field(...country)}
-      <Text style={s.label}>Rechercher votre adresse</Text>
+      <Text style={s.label}>{tr("Rechercher votre adresse", "Search your address")}</Text>
       <TextInput placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={s.input} placeholder="Commencez à saisir : rue, numéro, ville…" value={query} onChangeText={search} autoCorrect={false} />
       {items.map((sg, i) => (
         <Pressable key={`${sg.label}-${i}`} onPress={() => choose(sg)} style={{ paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#f2eadd" }}>
@@ -88,16 +105,16 @@ export function AddressesScreen({ token, onBack }: { token: string; onBack: () =
         <Text style={s.h2}>{editId ? "Modifier l’adresse" : "Nouvelle adresse"}</Text>
         <AddressFields form={form} setForm={setForm} />
         {msg ? <Text style={s.msg}>{msg}</Text> : null}
-        <Pressable style={s.cta} onPress={save}><Text style={s.ctaText}>Enregistrer</Text></Pressable>
-        <Pressable style={{ marginTop: 12 }} onPress={() => { setForm(null); setEditId(null); setMsg(null); }}><Text style={s.link}>Annuler</Text></Pressable>
+        <Pressable style={s.cta} onPress={save}><Text style={s.ctaText}>{tr("Enregistrer", "Save")}</Text></Pressable>
+        <Pressable style={{ marginTop: 12 }} onPress={() => { setForm(null); setEditId(null); setMsg(null); }}><Text style={s.link}>{tr("Annuler", "Cancel")}</Text></Pressable>
       </ScrollView>
     );
   }
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 16 }}>
+    <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
       <Pressable onPress={onBack} style={{ marginBottom: 8 }}><Text style={s.link}>← Mon compte</Text></Pressable>
-      <Text style={s.h2}>Mes adresses</Text>
+      <Text style={s.h2}>{tr("Mes adresses", "My addresses")}</Text>
       {items.length === 0 && <Text style={s.mut}>Aucune adresse enregistrée.</Text>}
       {items.map((a) => (
         <View key={a.id} style={s.card}>
@@ -106,13 +123,13 @@ export function AddressesScreen({ token, onBack }: { token: string; onBack: () =
           <Text>{a.postalCode} {a.city}, {a.country}</Text>
           <Text style={s.mut}>{a.phone}</Text>
           <View style={{ flexDirection: "row", gap: 16, marginTop: 8, flexWrap: "wrap" }}>
-            <Pressable hitSlop={8} onPress={() => { setEditId(a.id); setForm({ firstName: a.firstName, lastName: a.lastName, country: a.country, houseNumber: a.houseNumber, box: a.box ?? "", line2: a.line2 ?? "", line1: a.line1, postalCode: a.postalCode, city: a.city, phone: a.phone }); }}><Text style={s.link}>Modifier</Text></Pressable>
+            <Pressable hitSlop={8} onPress={() => { setEditId(a.id); setForm({ firstName: a.firstName, lastName: a.lastName, country: a.country, houseNumber: a.houseNumber, box: a.box ?? "", line2: a.line2 ?? "", line1: a.line1, postalCode: a.postalCode, city: a.city, phone: a.phone }); }}><Text style={s.link}>{tr("Modifier", "Edit")}</Text></Pressable>
             {!a.isDefault && <Pressable hitSlop={8} onPress={() => act("PATCH", "/api/v1/addresses", { id: a.id })}><Text style={s.link}>Par défaut</Text></Pressable>}
-            <Pressable hitSlop={8} onPress={() => Alert.alert("Supprimer cette adresse ?", "", [{ text: "Annuler" }, { text: "Supprimer", style: "destructive", onPress: () => act("Delete", `/api/v1/addresses?id=${encodeURIComponent(a.id)}`) }])}><Text style={s.link}>Supprimer</Text></Pressable>
+            <Pressable hitSlop={8} onPress={() => Alert.alert(tr("Supprimer cette adresse ?", "Delete this address?"), "", [{ text: "Annuler" }, { text: "Supprimer", style: "destructive", onPress: () => act("Delete", `/api/v1/addresses?id=${encodeURIComponent(a.id)}`) }])}><Text style={s.link}>{tr("Supprimer", "Delete")}</Text></Pressable>
           </View>
         </View>
       ))}
-      <Pressable style={[s.cta, { marginTop: 16 }]} onPress={() => setForm(EMPTY)}><Text style={s.ctaText}>Ajouter une adresse</Text></Pressable>
+      <Pressable style={[s.cta, { marginTop: 16 }]} onPress={() => setForm(EMPTY)}><Text style={s.ctaText}>{tr("Ajouter une adresse", "Add an address")}</Text></Pressable>
     </ScrollView>
   );
 }

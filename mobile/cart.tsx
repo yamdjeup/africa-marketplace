@@ -1,10 +1,11 @@
+import { ApproxPrice, tr } from "./region";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { initPaymentSheet, presentPaymentSheet } from "@stripe/stripe-react-native";
 import { authed } from "./api";
 import { AddressFields, EMPTY_FORM, type AddressForm } from "./addresses";
 
-export type CartLine = { slug: string; name: string; creatorName: string; image: string; priceCents: number; quantity: number; maxQuantity: number };
+export type CartLine = { slug: string; name: string; creatorName: string; image: string; priceCents: number; quantity: number; maxQuantity: number; size?: string | null };
 type Addr = { id: string; firstName: string; lastName: string; line1: string; houseNumber: string; postalCode: string; city: string; isDefault: boolean };
 
 const eur = (c: number) => `${(c / 100).toFixed(2).replace(".", ",")} €`;
@@ -19,7 +20,7 @@ const ERRORS: Record<string, string> = {
   payment: "Le paiement est momentanément indisponible.",
 };
 
-export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove, onClose }: { lines: CartLine[]; token: string | null; onNeedLogin: () => void; onPaid: () => void; onQty: (slug: string, q: number) => void; onRemove: (slug: string) => void; onClose: () => void }) {
+export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove, onClose }: { lines: CartLine[]; token: string | null; onNeedLogin: () => void; onPaid: () => void; onQty: (slug: string, size: string | null, q: number) => void; onRemove: (slug: string, size: string | null) => void; onClose: () => void }) {
   const total = lines.reduce((n, l) => n + l.priceCents * l.quantity, 0);
   const [addrs, setAddrs] = useState<Addr[]>([]);
   const [addrId, setAddrId] = useState<string | null>(null);
@@ -63,10 +64,11 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
     setStep("review");
   };
 
+  const [snap, setSnap] = useState<{ lines: typeof lines; total: number; name: string; addr: string } | null>(null);
   const pay = async () => {
     setBusy(true);
     setMsg(null);
-    const cart = lines.map((l) => ({ slug: l.slug, size: null, quantity: l.quantity }));
+    const cart = lines.map((l) => ({ slug: l.slug, size: l.size ?? null, quantity: l.quantity }));
     const c = await authed<{ number?: string; clientSecret?: string; guestToken?: string; error?: string; item?: string }>(token, "POST", "/api/v1/checkout/create", useBook ? { addressId: addrId, cart } : { address: manual, email: token ? undefined : email.trim(), save: !!token && save, cart });
     if (!c.ok || !c.data.clientSecret || !c.data.number) {
       setMsg((ERRORS[c.data.error ?? ""] ?? "Le paiement n’a pas pu démarrer.") + (c.data.item ? ` (${c.data.item})` : ""));
@@ -90,18 +92,31 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
     }
     setBusy(false);
     if (status === "paid") {
+      const shipTo = useBook ? addrs.find((x) => x.id === addrId) : undefined;
+      const dest = shipTo ?? manual;
+      setSnap({ lines, total, name: ` ${dest.lastName}`.trim(), addr: ` ${dest.line1}`.trim() + `, ${dest.postalCode} ${dest.city}` });
       setDone(number);
       onPaid();
     } else if (status === "failed") setMsg("Votre commande n’a pas pu être finalisée ; vous serez remboursé(e) si un montant a été débité.");
-    else Alert.alert("Paiement en cours de validation", "Votre commande apparaîtra dans « Mes commandes » dans un instant.");
+    else Alert.alert(tr("Paiement en cours de validation", "Payment being confirmed"), "Votre commande apparaîtra dans « Mes commandes » dans un instant.");
   };
 
   if (done)
     return (
       <View style={{ flex: 1, backgroundColor: "#faf6ee", padding: 24, justifyContent: "center" }}>
-        <Text style={s.h2}>Merci pour votre commande</Text>
+        <Text style={s.h2}>{tr("Merci pour votre commande", "Thank you for your order")}</Text>
         <Text style={s.mut}>Commande {done}. Vous pouvez la suivre dans Moi › Mes commandes.</Text>
-        <Pressable style={[s.cta, { marginTop: 24 }]} onPress={onClose}><Text style={s.ctaText}>Continuer mes achats</Text></Pressable>
+        {snap && (
+          <View style={{ marginTop: 16, gap: 4 }}>
+            <Text style={s.bold}>{tr("Votre commande", "Your order")}</Text>
+            {snap.lines.map((l, k) => <Text key={k}>{l.quantity} × {l.name}{l.size ? ` (${l.size})` : ""} — {eur(l.priceCents * l.quantity)}</Text>)}
+            <Text style={[s.bold, { marginTop: 4 }]}>{tr("Total", "Total")} : {eur(snap.total)}</Text>
+            <Text style={[s.bold, { marginTop: 12 }]}>{tr("Livraison à", "Delivering to")}</Text>
+            <Text>{snap.name}{"\n"}{snap.addr}</Text>
+            <Text style={[s.mut, { marginTop: 8 }]}>{tr("Une erreur dans l'adresse ? Vous pouvez la modifier tant que le colis n'est pas expédié, dans Moi › Mes commandes.", "A mistake in the address? You can change it until the parcel ships, in Me › My orders.")}</Text>
+          </View>
+        )}
+        <Pressable style={[s.cta, { marginTop: 24 }]} onPress={onClose}><Text style={s.ctaText}>{tr("Continuer mes achats", "Continue shopping")}</Text></Pressable>
       </View>
     );
   const addrLine = (a: { houseNumber: string; line1: string; postalCode: string; city: string }) => `${a.houseNumber} ${a.line1}`.trim() + `\n${a.postalCode} ${a.city}`;
@@ -110,7 +125,7 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
     return (
       <ScrollView style={{ flex: 1, backgroundColor: "#faf6ee" }} contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
         <Pressable onPress={() => { setMsg(null); setStep(step === "review" ? "form" : "cart"); }} hitSlop={8} style={{ marginBottom: 8 }}><Text style={s.link}>← {step === "review" ? "Modifier" : "Mon panier"}</Text></Pressable>
-        <Text style={s.h2}>Commande</Text>
+        <Text style={s.h2}>{tr("Commande", "Order")}</Text>
         <Text style={[s.note, { fontWeight: "600" }]}>Livraison assurée, signature requise à la réception.</Text>
         <Text style={[s.note, { marginTop: 8 }]}>Paiement sécurisé par carte bancaire.</Text>
         {msg ? <Text style={{ color: "#b00020", marginVertical: 8 }}>{msg}</Text> : null}
@@ -120,7 +135,7 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
             <Text style={s.h3}>Coordonnées</Text>
             {token ? null : (
               <>
-                <Text style={s.label}>E-mail *</Text>
+                <Text style={s.label}>{tr("E-mail *", "Email *")}</Text>
                 <TextInput style={s.input} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" placeholderTextColor="#6b5d52" selectionColor="#1c3060" />
               </>
             )}
@@ -136,12 +151,12 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
               </>
             ) : (
               <>
-                <Text style={s.h3}>Adresse de livraison</Text>
+                <Text style={s.h3}>{tr("Adresse de livraison", "Delivery address")}</Text>
                 <AddressFields form={manual} setForm={setManual} />
                 {token ? (
                   <Pressable onPress={() => setSave(!save)} style={{ flexDirection: "row", gap: 8, minHeight: 44, alignItems: "center" }}>
                     <Text>{save ? "☑" : "☐"}</Text>
-                    <Text style={{ flex: 1 }}>Enregistrer cette adresse dans mon carnet</Text>
+                    <Text style={{ flex: 1 }}>{tr("Enregistrer cette adresse dans mon carnet", "Save this address in my address book")}</Text>
                   </Pressable>
                 ) : null}
               </>
@@ -173,20 +188,21 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
     <View style={{ flex: 1, backgroundColor: "#faf6ee" }}>
       <ScrollView contentContainerStyle={{ padding: 16 }}>
         <Pressable onPress={onClose} hitSlop={8} style={{ marginBottom: 8 }}><Text style={s.link}>← Continuer mes achats</Text></Pressable>
-        <Text style={s.h2}>Mon panier</Text>
-        {lines.length === 0 && <Text style={s.mut}>Votre panier est vide.</Text>}
+        <Text style={s.h2}>{tr("Mon panier", "My cart")}</Text>
+        {lines.length === 0 && <Text style={s.mut}>{tr("Votre panier est vide.", "Your cart is empty.")}</Text>}
         {lines.map((l) => (
-          <View key={l.slug} style={s.line}>
+          <View key={`${l.slug}|${l.size ?? ""}`} style={s.line}>
             <Image source={{ uri: l.image }} style={s.img} />
             <View style={{ flex: 1 }}>
               <Text style={s.bold} numberOfLines={1}>{l.creatorName}</Text>
               <Text numberOfLines={2}>{l.name}</Text>
-              <Text style={s.bold}>{eur(l.priceCents)}</Text>
+              {l.size ? <Text style={s.bold}>Taille / variante : {l.size}</Text> : null}
+              <Text style={s.bold}>{eur(l.priceCents)}</Text><ApproxPrice cents={l.priceCents} />
               <View style={{ flexDirection: "row", alignItems: "center", gap: 16, marginTop: 6 }}>
-                <Pressable style={s.qty} hitSlop={6} onPress={() => onQty(l.slug, l.quantity - 1)}><Text style={s.qtyText}>−</Text></Pressable>
+                <Pressable style={s.qty} hitSlop={6} onPress={() => onQty(l.slug, l.size ?? null, l.quantity - 1)}><Text style={s.qtyText}>−</Text></Pressable>
                 <Text>{l.quantity}</Text>
-                <Pressable style={s.qty} hitSlop={6} onPress={() => onQty(l.slug, Math.min(l.maxQuantity, l.quantity + 1))}><Text style={s.qtyText}>+</Text></Pressable>
-                <Pressable hitSlop={8} onPress={() => onRemove(l.slug)}><Text style={s.link}>Retirer</Text></Pressable>
+                <Pressable style={s.qty} hitSlop={6} onPress={() => onQty(l.slug, l.size ?? null, Math.min(l.maxQuantity, l.quantity + 1))}><Text style={s.qtyText}>+</Text></Pressable>
+                <Pressable hitSlop={8} onPress={() => onRemove(l.slug, l.size ?? null)}><Text style={s.link}>{tr("Retirer", "Remove")}</Text></Pressable>
               </View>
             </View>
           </View>
@@ -194,10 +210,14 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
       </ScrollView>
       {lines.length > 0 && (
         <View style={s.footer}>
-          <Text style={s.bold}>Sous-total : {eur(total)}</Text>
-          <Text style={[s.mut, { marginTop: 4 }]}>Livraison par créateur.</Text>
+          <Text style={s.bold}>{tr("Récapitulatif", "Summary")}</Text>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 4 }}><Text style={s.mut}>{tr("Sous-total", "Subtotal")}</Text><Text>{eur(total)}</Text></View>
+          <View style={{ flexDirection: "row", justifyContent: "space-between" }}><Text style={s.mut}>{tr("Livraison", "Shipping")}</Text><Text>—</Text></View>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 4 }}><Text style={s.bold}>Total</Text><Text style={s.bold}>{eur(total)}</Text></View>
+          <ApproxPrice cents={total} />
+          <Text style={[s.mut, { marginTop: 4 }]}>{tr("Conditions détaillées à l'étape suivante. Livraison assurée, signature requise ; paiement sécurisé par carte.", "Detailed terms at the next step. Insured delivery, signature required; secure card payment.")}</Text>
           <Pressable onPress={() => { setMsg(null); setStep("form"); }} style={[s.cta, { marginTop: 8, backgroundColor: "#1c3060" }]}>
-            <Text style={s.ctaText}>Passer commande</Text>
+            <Text style={s.ctaText}>{tr("Passer commande", "Checkout")}</Text>
           </Pressable>
         </View>
       )}
@@ -218,7 +238,7 @@ const s = StyleSheet.create({
   img: { width: 80, height: 100, backgroundColor: "#f2eadd" },
   qty: { width: 32, height: 32, borderWidth: 1, borderColor: "#ded6c9", alignItems: "center", justifyContent: "center" },
   qtyText: { fontSize: 18 },
-  footer: { padding: 16, borderTopWidth: 1, borderTopColor: "#f2eadd" },
+  footer: { padding: 16, paddingBottom: 28, borderTopWidth: 1, borderTopColor: "#f2eadd" },
   cta: { borderRadius: 8, height: 48, alignItems: "center", justifyContent: "center" },
   ctaText: { color: "#fff",  },
   link: { textDecorationLine: "underline", fontSize: 15, color: "#221812" },

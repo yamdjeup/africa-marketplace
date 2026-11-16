@@ -1,3 +1,4 @@
+import { tr } from "./region";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { API_URL } from "./config";
@@ -8,9 +9,9 @@ type Doc = { slug: string; title: string; body: string[]; isHelp: boolean };
 
 // Reprend src/app/[locale]/support/[slug]/page.tsx (contenu, rubriques d'aide, « Ce contenu vous semble-t-il pertinent ? ")
 // et la rubrique Support de src/app/[locale]/account/page.tsx.
-export function SupportScreen({ onBack }: { onBack: () => void }) {
+export function SupportScreen({ onBack, initialSlug }: { onBack: () => void; initialSlug?: string }) {
   const [index, setIndex] = useState<Index | null>(null);
-  const [slug, setSlug] = useState<string | null>(null);
+  const [slug, setSlug] = useState<string | null>(initialSlug ?? null);
   const [doc, setDoc] = useState<Doc | null>(null);
   const [answer, setAnswer] = useState<boolean | null>(null);
   const [failed, setFailed] = useState(false);
@@ -27,7 +28,7 @@ export function SupportScreen({ onBack }: { onBack: () => void }) {
 
   if (slug) {
     return (
-      <ScrollView contentContainerStyle={{ padding: 16 }}>
+      <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
         <Pressable onPress={() => setSlug(null)} hitSlop={10}><Text style={st.back}>‹ Retour</Text></Pressable>
         {!doc ? <ActivityIndicator style={{ marginTop: 30 }} /> : (
           <View>
@@ -37,13 +38,13 @@ export function SupportScreen({ onBack }: { onBack: () => void }) {
               <View style={st.feedback}>
                 {answer === null ? (
                   <>
-                    <Text style={{ fontWeight: "600", color: "#221812" }}>Ce contenu vous semble-t-il pertinent ?</Text>
+                    <Text style={{ fontWeight: "600", color: "#221812" }}>{tr("Ce contenu vous semble-t-il pertinent ?", "Was this content helpful?")}</Text>
                     <View style={{ flexDirection: "row", gap: 8, marginTop: 8 }}>
-                      <Pressable onPress={() => setAnswer(true)} style={st.btn}><Text style={st.btnText}>Oui</Text></Pressable>
-                      <Pressable onPress={() => setAnswer(false)} style={st.btn}><Text style={st.btnText}>Pas vraiment</Text></Pressable>
+                      <Pressable onPress={() => setAnswer(true)} style={st.btn}><Text style={st.btnText}>{tr("Oui", "Yes")}</Text></Pressable>
+                      <Pressable onPress={() => setAnswer(false)} style={st.btn}><Text style={st.btnText}>{tr("Pas vraiment", "Not really")}</Text></Pressable>
                     </View>
                   </>
-                ) : <Text style={{ color: "#221812" }}>Merci pour votre retour.</Text>}
+                ) : <Text style={{ color: "#221812" }}>{tr("Merci pour votre retour.", "Thanks for your feedback.")}</Text>}
               </View>
             )}
           </View>
@@ -65,7 +66,7 @@ export function SupportScreen({ onBack }: { onBack: () => void }) {
   );
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 16 }}>
+    <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
       <Pressable onPress={onBack} hitSlop={10}><Text style={st.back}>‹ Retour</Text></Pressable>
       <Text style={st.title}>Besoin d’aide ?</Text>
       {failed && !index ? <Text style={st.p}>Connexion impossible. Vérifiez votre réseau.</Text> : !index ? <ActivityIndicator style={{ marginTop: 30 }} /> : (

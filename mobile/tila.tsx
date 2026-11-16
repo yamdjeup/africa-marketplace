@@ -1,3 +1,4 @@
+import { tr } from "./region";
 import { useRef, useState } from "react";
 import { ActivityIndicator, Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
@@ -54,11 +55,11 @@ export function TilaButton({ onOpenSlug }: { onOpenSlug: (slug: string) => void 
       {open && (
         <Modal animationType="slide" onRequestClose={() => setOpen(false)}>
           <SafeAreaProvider><SafeAreaView style={{ flex: 1, backgroundColor: "#faf6ee" }}>
-            <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+            <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "padding"}>
               <View style={st.head}>
                 <Image source={{ uri: AVATAR }} style={st.headImg} />
                 <View style={{ flex: 1 }}><Text style={st.name}>{T.name}</Text><Text style={st.badge}>{T.badge}</Text></View>
-                <Pressable onPress={() => setOpen(false)} hitSlop={10} accessibilityLabel="Fermer"><Text style={{ fontSize: 28, color: "#221812" }}>×</Text></Pressable>
+                <Pressable onPress={() => setOpen(false)} hitSlop={10} accessibilityLabel={tr("Fermer", "Close")}><Text style={{ fontSize: 28, color: "#221812" }}>×</Text></Pressable>
               </View>
               <ScrollView ref={scroller} onContentSizeChange={() => scroller.current?.scrollToEnd()} contentContainerStyle={{ padding: 12, gap: 10 }} keyboardShouldPersistTaps="handled">
                 <Text style={[st.bubble, { backgroundColor: "#f2eadd" }]}>{T.hello}</Text>
@@ -91,7 +92,7 @@ export function TilaButton({ onOpenSlug }: { onOpenSlug: (slug: string) => void 
 }
 
 const st = StyleSheet.create({
-  fab: { position: "absolute", right: 12, bottom: 70, flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "#1c3060", borderRadius: 40, paddingVertical: 4, paddingLeft: 4, paddingRight: 14, elevation: 6 },
+  fab: { position: "absolute", right: 12, bottom: 100, flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "#1c3060", borderRadius: 40, paddingVertical: 4, paddingLeft: 4, paddingRight: 14, elevation: 6 },
   fabImg: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: "#f59e0b" },
   fabName: { color: "#fff", fontWeight: "600", fontSize: 14 },
   fabBadge: { color: "#fff", opacity: 0.8, fontSize: 11 },

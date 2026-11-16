@@ -1,6 +1,9 @@
+import { tr } from "./region";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { ActivityIndicator, FlatList, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { API_URL } from "./config";
+import { ArtistsScreen } from "./artists";
+import { CategoriesScreen } from "./categories";
 
 type Opt = { value: string; label: string };
 type Options = { categories: Opt[]; artists: Opt[]; materials: Opt[]; techniques: Opt[]; countries: Opt[] };
@@ -43,6 +46,8 @@ export function ShopScreen<P extends Item>({ initialCategory, renderItem, onOpen
   const [sugg, setSugg] = useState<{ key: string; label: string; hint: string; act: () => void }[]>([]);
   const [open, setOpen] = useState(false);
   const [sheet, setSheet] = useState(false);
+  const [artistsOpen, setArtistsOpen] = useState(false);
+  const [catsOpen, setCatsOpen] = useState(false);
   const loadingMore = useRef(false);
 
   useEffect(() => {
@@ -117,6 +122,10 @@ export function ShopScreen<P extends Item>({ initialCategory, renderItem, onOpen
 
   const header = (
     <View>
+      <View style={{ flexDirection: "row", gap: 20, paddingHorizontal: 16, paddingTop: 12 }}><Pressable onPress={() => setCatsOpen(true)} accessibilityRole="button"><Text style={{ color: "#221812", textDecorationLine: "underline", fontWeight: "700" }}>{tr("Catégories", "Categories")}</Text></Pressable>
+      <Pressable onPress={() => setArtistsOpen(true)} accessibilityRole="button"><Text style={{ color: "#221812", textDecorationLine: "underline", fontWeight: "700" }}>{tr("Tous les artistes", "All artists")}</Text></Pressable></View>
+      {catsOpen && <CategoriesScreen onClose={() => setCatsOpen(false)} onApply={(a) => setV({ ...EMPTY, ...a })} />}
+      {artistsOpen && <ArtistsScreen onClose={() => setArtistsOpen(false)} onOpenCreator={(s) => { setArtistsOpen(false); onOpenCreator(s); }} />}
       <View style={{ padding: 16, paddingBottom: 8 }}>
         <TextInput value={text} onChangeText={setText} onFocus={() => setOpen(true)} placeholder="Un titre, un artiste, une technique…" placeholderTextColor="#8a7d70" accessibilityLabel="Recherche" returnKeyType="search" autoCorrect={false}
           onSubmitEditing={() => { setOpen(false); setV({ ...EMPTY, q: text.trim() }); }} style={st.input} />
@@ -140,13 +149,23 @@ export function ShopScreen<P extends Item>({ initialCategory, renderItem, onOpen
           ))}
         </ScrollView>
       )}
+      {activeCount === 0 && options.categories.length > 0 && (
+        <View style={{ paddingHorizontal: 16, paddingBottom: 8 }}>
+          {options.categories.map((c) => (
+            <Pressable key={c.value} onPress={() => setV({ ...EMPTY, category: c.value })} style={st.catRow} accessibilityRole="button">
+              <Text style={{ color: "#221812", fontSize: 15 }}>{c.label}</Text>
+              <Text style={{ color: "#221812", fontSize: 18 }}>›</Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
       <View style={st.bar}>
         <Text style={{ color: "#6b5d52", fontSize: 13 }}>{total} pièce{total > 1 ? "s" : ""}</Text>
         <Pressable onPress={() => setSheet(true)} style={st.refine}><Text style={{ color: "#1c3060", fontWeight: "600" }}>Affiner{activeCount > 0 ? ` (${activeCount})` : ""}</Text></Pressable>
       </View>
       {extras && extras.artists.length > 0 && (
         <View>
-          <Text style={st.h2}>Artistes</Text>
+          <Text style={st.h2}>{tr("Artistes", "Artists")}</Text>
           {artistRow(extras.artists)}
           {items.length > 0 && <Text style={st.h2}>Créations</Text>}
         </View>
@@ -228,26 +247,26 @@ function RefineSheet({ initial, baseOptions, total, onClose, onApply }: { initia
   return (
     <View style={st.sheet}>
       <View style={st.sheetTop}>
-        <Pressable onPress={onClose} accessibilityLabel="Fermer" hitSlop={10}><Text style={{ fontSize: 24, color: "#221812" }}>✕</Text></Pressable>
-        <Pressable onPress={() => { setCount(null); setV(EMPTY); }}><Text style={{ textDecorationLine: "underline", color: "#221812" }}>Tout effacer</Text></Pressable>
+        <Pressable onPress={onClose} accessibilityLabel={tr("Fermer", "Close")} hitSlop={10}><Text style={{ fontSize: 24, color: "#221812" }}>✕</Text></Pressable>
+        <Pressable onPress={() => { setCount(null); setV(EMPTY); }}><Text style={{ textDecorationLine: "underline", color: "#221812" }}>{tr("Tout effacer", "Clear all")}</Text></Pressable>
       </View>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
         <TextInput value={v.q} onChangeText={(t) => set("q", t)} placeholder="Rechercher une création" placeholderTextColor="#8a7d70" style={st.input} />
-        <Text style={st.sheetH}>Trier par</Text>
+        <Text style={st.sheetH}>{tr("Trier par", "Sort by")}</Text>
         {([["pick", "Notre sélection"], ["new", "Nouveautés"], ["price-desc", "Prix décroissant"], ["price-asc", "Prix croissant"]] as const).map(([k, l]) => (
           <Pressable key={k} onPress={() => set("sort", k)} style={st.radioRow}>
             <Text style={{ color: "#221812" }}>{l}</Text>
             <View style={[st.radio, v.sort === k && st.radioOn]} />
           </Pressable>
         ))}
-        <Text style={st.sheetH}>Filtrer par</Text>
+        <Text style={st.sheetH}>{tr("Filtrer par", "Filter by")}</Text>
         {group("category", "Catégorie", opts.categories, "Toutes")}
         {group("artist", "Artistes", opts.artists, "Tous")}
         {group("material", "Matière", opts.materials, "Toutes")}
         {group("technique", "Techniques", opts.techniques, "Toutes")}
         {group("country", "Pays / région", opts.countries, "Tous")}
         {sizes.options.length > 0 && group("size", sizes.kind === "ring" ? "Tour de doigt" : "Tailles", sizes.options.map((o) => ({ value: o, label: o })), "Tous")}
-        <Text style={[st.groupHead, { marginTop: 8 }]}>Fourchette de prix (EUR)</Text>
+        <Text style={[st.groupHead, { marginTop: 8 }]}>{tr("Fourchette de prix (EUR)", "Price range (EUR)")}</Text>
         <View style={{ flexDirection: "row", gap: 8 }}>
           <TextInput value={v.min} onChangeText={(t) => set("min", t.replace(/[^\d]/g, ""))} keyboardType="number-pad" placeholder="Min" placeholderTextColor="#8a7d70" accessibilityLabel="Prix Min" style={[st.input, { flex: 1 }]} />
           <TextInput value={v.max} onChangeText={(t) => set("max", t.replace(/[^\d]/g, ""))} keyboardType="number-pad" placeholder="Max" placeholderTextColor="#8a7d70" accessibilityLabel="Prix Max" style={[st.input, { flex: 1 }]} />
@@ -261,6 +280,7 @@ function RefineSheet({ initial, baseOptions, total, onClose, onApply }: { initia
 }
 
 const st = StyleSheet.create({
+  catRow: { minHeight: 48, flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderBottomWidth: StyleSheet.hairlineWidth, borderColor: "#ded6c9" },
   input: { height: 44, borderRadius: 8, backgroundColor: "#f2eadd", paddingHorizontal: 12, color: "#221812", fontSize: 14 },
   suggBox: { marginTop: 4, borderRadius: 8, borderWidth: 1, borderColor: "#ded6c9", backgroundColor: "#fefbf6" },
   suggRow: { minHeight: 44, justifyContent: "center", paddingHorizontal: 12, paddingVertical: 6 },

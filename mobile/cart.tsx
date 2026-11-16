@@ -64,6 +64,7 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
     setStep("review");
   };
 
+  const [snap, setSnap] = useState<{ lines: typeof lines; total: number; name: string; addr: string } | null>(null);
   const pay = async () => {
     setBusy(true);
     setMsg(null);
@@ -91,6 +92,9 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
     }
     setBusy(false);
     if (status === "paid") {
+      const shipTo = useBook ? addrs.find((x) => x.id === addrId) : undefined;
+      const dest = shipTo ?? manual;
+      setSnap({ lines, total, name: ` ${dest.lastName}`.trim(), addr: ` ${dest.line1}`.trim() + `, ${dest.postalCode} ${dest.city}` });
       setDone(number);
       onPaid();
     } else if (status === "failed") setMsg("Votre commande n’a pas pu être finalisée ; vous serez remboursé(e) si un montant a été débité.");
@@ -102,6 +106,16 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
       <View style={{ flex: 1, backgroundColor: "#faf6ee", padding: 24, justifyContent: "center" }}>
         <Text style={s.h2}>{tr("Merci pour votre commande", "Thank you for your order")}</Text>
         <Text style={s.mut}>Commande {done}. Vous pouvez la suivre dans Moi › Mes commandes.</Text>
+        {snap && (
+          <View style={{ marginTop: 16, gap: 4 }}>
+            <Text style={s.bold}>{tr("Votre commande", "Your order")}</Text>
+            {snap.lines.map((l, k) => <Text key={k}>{l.quantity} × {l.name}{l.size ? ` (${l.size})` : ""} — {eur(l.priceCents * l.quantity)}</Text>)}
+            <Text style={[s.bold, { marginTop: 4 }]}>{tr("Total", "Total")} : {eur(snap.total)}</Text>
+            <Text style={[s.bold, { marginTop: 12 }]}>{tr("Livraison à", "Delivering to")}</Text>
+            <Text>{snap.name}{"\n"}{snap.addr}</Text>
+            <Text style={[s.mut, { marginTop: 8 }]}>{tr("Une erreur dans l'adresse ? Vous pouvez la modifier tant que le colis n'est pas expédié, dans Moi › Mes commandes.", "A mistake in the address? You can change it until the parcel ships, in Me › My orders.")}</Text>
+          </View>
+        )}
         <Pressable style={[s.cta, { marginTop: 24 }]} onPress={onClose}><Text style={s.ctaText}>{tr("Continuer mes achats", "Continue shopping")}</Text></Pressable>
       </View>
     );
@@ -196,8 +210,12 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
       </ScrollView>
       {lines.length > 0 && (
         <View style={s.footer}>
-          <Text style={s.bold}>Sous-total : {eur(total)}</Text><ApproxPrice cents={total} />
-          <Text style={[s.mut, { marginTop: 4 }]}>Livraison par créateur.</Text>
+          <Text style={s.bold}>{tr("Récapitulatif", "Summary")}</Text>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 4 }}><Text style={s.mut}>{tr("Sous-total", "Subtotal")}</Text><Text>{eur(total)}</Text></View>
+          <View style={{ flexDirection: "row", justifyContent: "space-between" }}><Text style={s.mut}>{tr("Livraison", "Shipping")}</Text><Text>—</Text></View>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 4 }}><Text style={s.bold}>Total</Text><Text style={s.bold}>{eur(total)}</Text></View>
+          <ApproxPrice cents={total} />
+          <Text style={[s.mut, { marginTop: 4 }]}>{tr("Conditions détaillées à l'étape suivante. Livraison assurée, signature requise ; paiement sécurisé par carte.", "Detailed terms at the next step. Insured delivery, signature required; secure card payment.")}</Text>
           <Pressable onPress={() => { setMsg(null); setStep("form"); }} style={[s.cta, { marginTop: 8, backgroundColor: "#1c3060" }]}>
             <Text style={s.ctaText}>{tr("Passer commande", "Checkout")}</Text>
           </Pressable>

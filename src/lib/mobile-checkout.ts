@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { isAddressEditable } from "@/lib/order-edit";
 import { checkAddress, formatStreet, readAddress } from "@/lib/address";
 import { buyerKeyOf, createHold, releaseBuyerHolds, releaseHold, attachSession, StockError, stockReason, type HoldPayload } from "@/lib/checkout-hold";
 import { db } from "@/lib/db";
@@ -147,7 +148,8 @@ export async function listOrders(userId: string) {
     createdAt: o.createdAt.toISOString(),
     status: o.status,
     totalCents: o.totalCents,
-    address: { fullName: o.fullName, street: o.address, postalCode: o.postalCode, city: o.city, country: o.country },
+    address: { fullName: o.fullName, street: o.address, postalCode: o.postalCode, city: o.city, country: o.country, line1: o.street || o.address, houseNumber: o.houseNumber, box: o.box ?? "", line2: o.complement ?? "", phone: o.phone },
+    canEditAddress: isAddressEditable(o.createdAt) && !o.subOrders.some((s) => ["CANCELLED", "REFUSED", "EXPIRED", "SHIPPED", "DELIVERED"].includes(s.status)),
     items: o.items.map((i) => ({ slug: i.productSlug, name: i.name, size: i.size, quantity: i.quantity, unitPriceCents: i.unitPriceCents })),
     parcels: o.subOrders.map((s) => {
       const shop = shops.find((x) => x.id === s.supplierId);

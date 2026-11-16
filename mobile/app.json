@@ -16,7 +16,8 @@
           "enableGooglePay": false
         }
       ],
-      "expo-video"
+      "expo-video",
+      "expo-font"
     ],
     "ios": {
       "bundleIdentifier": "com.epomta.app",

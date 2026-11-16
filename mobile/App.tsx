@@ -47,20 +47,29 @@ function Row({ title, items, favs, toggle, open }: { title: string; items: Produ
   );
 }
 
-function Detail({ p, onClose, fav, onFav, onAdd }: { p: Product; onClose: () => void; fav: boolean; onFav: () => void; onAdd: () => void }) {
+function Detail({ p, onClose, fav, onFav, onAdd, token, onNeedLogin }: { token: string | null; onNeedLogin: () => void; p: Product; onClose: () => void; fav: boolean; onFav: () => void; onAdd: () => void }) {
   return (
     <Modal animationType="slide" onRequestClose={onClose} statusBarTranslucent navigationBarTranslucent>
       <SafeAreaProvider>
-        <DetailBody p={p} onClose={onClose} fav={fav} onFav={onFav} onAdd={onAdd} />
+        <DetailBody token={token} onNeedLogin={onNeedLogin} p={p} onClose={onClose} fav={fav} onFav={onFav} onAdd={onAdd} />
       </SafeAreaProvider>
     </Modal>
   );
 }
 
-function DetailBody({ p, onClose, fav, onFav, onAdd }: { p: Product; onClose: () => void; fav: boolean; onFav: () => void; onAdd: () => void }) {
+function DetailBody({ p, onClose, fav, onFav, onAdd, token, onNeedLogin }: { token: string | null; onNeedLogin: () => void; p: Product; onClose: () => void; fav: boolean; onFav: () => void; onAdd: () => void }) {
   const insets = useSafeAreaInsets();
   const [added, setAdded] = useState(false);
   const buy = () => { onAdd(); setAdded(true); };
+  const [watch, setWatch] = useState(false);
+  useEffect(() => {
+    if (token && p.stock < 1) authed<{ slugs?: string[] }>(token, "GET", "/api/v1/restock-watch").then((r) => setWatch((r.data.slugs ?? []).includes(p.slug)));
+  }, [token, p.slug, p.stock]);
+  const toggleWatch = async () => {
+    if (!token) return onNeedLogin();
+    const r = watch ? await authed(token, "DELETE", `/api/v1/restock-watch?slug=${encodeURIComponent(p.slug)}`) : await authed(token, "POST", "/api/v1/restock-watch", { slug: p.slug, locale: "fr" });
+    if (r.status < 300) setWatch(!watch);
+  };
   return (
       <View style={{ flex: 1, backgroundColor: "#faf6ee", paddingTop: Math.max(insets.top, Platform.OS === "android" ? RNStatusBar.currentHeight ?? 24 : 0) }}>
         <View style={s.bar}>
@@ -81,9 +90,17 @@ function DetailBody({ p, onClose, fav, onFav, onAdd }: { p: Product; onClose: ()
           </View>
         </ScrollView>
         <View style={[s.buyBar, { paddingBottom: 12 + Math.max(insets.bottom, 0) }]}>
-          <Pressable onPress={buy} disabled={p.stock < 1} style={[s.cta, p.stock < 1 && { backgroundColor: "#b8ad9f" }]}>
-            <Text style={s.ctaText}>{p.stock < 1 ? "Épuisé" : added ? "Ajouté au panier ✓" : "Ajouter au panier"}</Text>
+          {p.stock < 1 ? (
+            <>
+              {watch ? <Text style={{ color: "#1e7546", marginBottom: 6 }}>Vous serez prévenu(e) dès qu’elle est disponible.</Text> : null}
+              <Pressable onPress={toggleWatch} style={s.cta}><Text style={s.ctaText}>{watch ? "Annuler l’alerte" : "Me prévenir quand elle est disponible"}</Text></Pressable>
+              {watch ? <Text style={{ color: "#6b5d52", fontSize: 12, marginTop: 6 }}>Pièce unique : premier arrivé, premier servi.</Text> : null}
+            </>
+          ) : (
+          <Pressable onPress={buy} style={s.cta}>
+            <Text style={s.ctaText}>{added ? "Ajouté au panier ✓" : "Ajouter au panier"}</Text>
           </Pressable>
+          )}
         </View>
       </View>
   );
@@ -225,7 +242,7 @@ function Main() {
           <Pressable key={k} onPress={() => setTab(k)} style={s.tab}><Text style={[s.tabText, tab === k && { color: "#221812", fontWeight: "700" }]}>{l}{k === "favs" && favs.length ? ` (${favs.length})` : ""}</Text></Pressable>
         ))}
       </View>
-      {open && <Detail p={open} onClose={() => setOpen(null)} fav={favs.includes(open.slug)} onFav={() => toggle(open)} onAdd={() => addToCart(open)} />}
+      {open && <Detail token={auth.accessToken} onNeedLogin={() => { setOpen(null); setTab("me"); }} p={open} onClose={() => setOpen(null)} fav={favs.includes(open.slug)} onFav={() => toggle(open)} onAdd={() => addToCart(open)} />}
       {cartOpen && (
         <Modal animationType="slide" onRequestClose={() => setCartOpen(false)}>
           <SafeAreaProvider><SafeAreaView style={{ flex: 1, backgroundColor: "#faf6ee" }}>

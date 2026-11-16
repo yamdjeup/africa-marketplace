@@ -4,6 +4,7 @@ import * as SecureStore from "expo-secure-store";
 import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
 import { API_URL } from "./config";
+import { AddressesScreen } from "./addresses";
 
 export type User = { id: string; email: string; name: string };
 type Tokens = { accessToken: string; refreshToken: string };
@@ -110,8 +111,10 @@ export function AccountScreen({ auth, onOpenSite }: { auth: Auth; onOpenSite: (p
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [addresses, setAddresses] = useState(false);
 
   if (!auth.ready) return <ActivityIndicator style={{ marginTop: 40 }} />;
+  if (auth.user && addresses && auth.accessToken) return <AddressesScreen token={auth.accessToken} onBack={() => setAddresses(false)} />;
 
   if (auth.user) {
     return (
@@ -120,7 +123,8 @@ export function AccountScreen({ auth, onOpenSite }: { auth: Auth; onOpenSite: (p
         <Text style={s.body}>Bonjour {auth.user.name}</Text>
         <Text style={s.mut}>{auth.user.email}</Text>
         <Text style={[s.body, { marginTop: 12 }]}>Langue : Français</Text>
-        <Pressable style={[s.cta, { marginTop: 16 }]} onPress={() => onOpenSite("/fr/support")}><Text style={s.ctaText}>BESOIN D’AIDE ?</Text></Pressable>
+        <Pressable style={[s.cta, { marginTop: 16 }]} onPress={() => setAddresses(true)}><Text style={s.ctaText}>MES ADRESSES</Text></Pressable>
+        <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => onOpenSite("/fr/support")}><Text style={s.ctaText}>BESOIN D’AIDE ?</Text></Pressable>
         <Pressable style={[s.cta, s.ghost, { marginTop: 12 }]} onPress={auth.logout}><Text style={[s.ctaText, { color: "#000" }]}>SE DÉCONNECTER</Text></Pressable>
       </ScrollView>
     );

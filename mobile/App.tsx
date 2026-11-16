@@ -57,17 +57,17 @@ function Row({ title, items, favs, toggle, open }: { title: string; items: Produ
   );
 }
 
-function Detail({ p, onClose, fav, onFav, onAdd, token, onNeedLogin, onOpenRelated }: { token: string | null; onNeedLogin: () => void; p: Product; onClose: () => void; fav: boolean; onFav: () => void; onAdd: (size: string | null, qty: number) => void; onOpenRelated: (q: Product) => void }) {
+function Detail({ p, onClose, fav, onFav, onAdd, inCart, onOpenCart, token, onNeedLogin, onOpenRelated }: { token: string | null; onNeedLogin: () => void; p: Product; onClose: () => void; fav: boolean; onFav: () => void; onAdd: (size: string | null, qty: number) => void; inCart: (size: string | null) => boolean; onOpenCart: () => void; onOpenRelated: (q: Product) => void }) {
   return (
     <Modal animationType="slide" onRequestClose={onClose} statusBarTranslucent navigationBarTranslucent>
       <SafeAreaProvider>
-        <DetailBody token={token} onNeedLogin={onNeedLogin} p={p} onClose={onClose} fav={fav} onFav={onFav} onAdd={onAdd} onOpenRelated={onOpenRelated} />
+        <DetailBody token={token} onNeedLogin={onNeedLogin} p={p} onClose={onClose} fav={fav} onFav={onFav} onAdd={onAdd} inCart={inCart} onOpenCart={onOpenCart} onOpenRelated={onOpenRelated} />
       </SafeAreaProvider>
     </Modal>
   );
 }
 
-function DetailBody({ p, onClose, fav, onFav, onAdd, token, onNeedLogin, onOpenRelated }: { token: string | null; onNeedLogin: () => void; p: Product; onClose: () => void; fav: boolean; onFav: () => void; onAdd: (size: string | null, qty: number) => void; onOpenRelated: (q: Product) => void }) {
+function DetailBody({ p, onClose, fav, onFav, onAdd, inCart, onOpenCart, token, onNeedLogin, onOpenRelated }: { token: string | null; onNeedLogin: () => void; p: Product; onClose: () => void; fav: boolean; onFav: () => void; onAdd: (size: string | null, qty: number) => void; inCart: (size: string | null) => boolean; onOpenCart: () => void; onOpenRelated: (q: Product) => void }) {
   const insets = useSafeAreaInsets();
   const [added, setAdded] = useState(false);
   const [size, setSize] = useState<string | null>(null);
@@ -209,9 +209,15 @@ function DetailBody({ p, onClose, fav, onFav, onAdd, token, onNeedLogin, onOpenR
               {missing ? <Text style={{ color: "#b42318", marginTop: 6 }}>{tr("Veuillez choisir une taille.", "Please choose a size.")}</Text> : null}
             </View>
           ) : null}
+          {inCart(size) ? (
+            <Pressable onPress={onOpenCart} style={({ pressed }) => [s.cta, { opacity: pressed ? 0.6 : 1 }]}>
+              <Text style={s.ctaText}>{tr("Dans votre panier · Voir le panier", "In your bag · View bag")}</Text>
+            </Pressable>
+          ) : (
           <Pressable onPress={buy} style={({ pressed }) => [s.cta, { opacity: pressed ? 0.6 : 1 }]}>
-            <Text style={s.ctaText}>{added ? tr("Ajouté au panier ✓", "Added to cart ✓") : tr("Ajouter au panier", "Add to cart")}</Text>
+            <Text style={s.ctaText}>{tr("Ajouter au panier", "Add to cart")}</Text>
           </Pressable>
+          )}
           </>
           )}
         </View>
@@ -344,7 +350,7 @@ function Main() {
       {supportSlug && <Modal animationType="slide" onRequestClose={() => setSupportSlug(null)}><SafeAreaProvider><SafeAreaView style={{ flex: 1, backgroundColor: "#faf6ee" }}><SupportScreen initialSlug={supportSlug} onBack={() => setSupportSlug(null)} /></SafeAreaView></SafeAreaProvider></Modal>}
       {creator && <CreatorScreen slug={creator} onClose={() => setCreator(null)} onOpenSlug={(slug) => { get<Product>(`/api/v1/products/${slug}?locale=fr`).then(setOpen).catch(() => {}); }} />}
       {!open && !cartOpen && !creator && <TilaButton onOpenSlug={(slug) => { get<Product>(`/api/v1/products/${slug}?locale=fr`).then(setOpen).catch(() => {}); }} />}
-      {open && <Detail key={open.slug} token={auth.accessToken} onNeedLogin={() => { setOpen(null); setTab("me"); }} p={open} onClose={() => setOpen(null)} fav={favs.includes(open.slug)} onFav={() => toggle(open)} onAdd={(size, qty) => addToCart(open, size, qty)} onOpenRelated={(q) => setOpen(q)} />}
+      {open && <Detail key={open.slug} token={auth.accessToken} onNeedLogin={() => { setOpen(null); setTab("me"); }} p={open} onClose={() => setOpen(null)} fav={favs.includes(open.slug)} onFav={() => toggle(open)} onAdd={(size, qty) => addToCart(open, size, qty)} inCart={(size) => cart.some((l) => l.slug === open.slug && (l.size ?? null) === size)} onOpenCart={() => setCartOpen(true)} onOpenRelated={(q) => setOpen(q)} />}
       {cartOpen && (
         <Modal animationType="slide" onRequestClose={() => setCartOpen(false)}>
           <SafeAreaProvider><SafeAreaView style={{ flex: 1, backgroundColor: "#faf6ee" }}><KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">

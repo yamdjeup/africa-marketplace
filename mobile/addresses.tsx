@@ -55,7 +55,7 @@ export function AddressFields({ form, setForm }: { form: Form; setForm: (f: Form
   ) : (
     <View key={k}>
       <Text style={s.label}>{l}</Text>
-      <TextInput placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={s.input} value={form[k]} onChangeText={(v) => setForm({ ...form, [k]: v })} keyboardType={k === "phone" ? "phone-pad" : "default"} autoCapitalize={k === "line1" || k === "city" || k === "firstName" || k === "lastName" ? "words" : "none"} />
+      <TextInput placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={s.input} value={form[k]} onChangeText={(v) => setForm({ ...form, [k]: v })} keyboardType="default" autoCapitalize={k === "line1" || k === "city" || k === "firstName" || k === "lastName" ? "words" : "none"} />
     </View>
   );
   const [first, second, country, ...rest] = LABELS;

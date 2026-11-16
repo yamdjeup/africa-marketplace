@@ -4,6 +4,7 @@ import { notifySubOrder } from "@/lib/order-notify";
 import { settleSubRefund } from "@/lib/refund";
 import { acceptSub, deliverSub, prepareSub, refuseSub, shipSub } from "@/lib/suborders";
 import { supplierFromRequest } from "@/lib/mobile-supplier";
+import { subLabel } from "@/lib/suborders";
 import { cleanTrackingNumber } from "@/lib/tracking";
 
 export const dynamic = "force-dynamic";
@@ -22,6 +23,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     id: sub.id,
     number: sub.number,
     status: sub.status as string,
+    statusLabel: { fr: subLabel(sub.status).fr, en: subLabel(sub.status).en },
     createdAt: sub.createdAt.toISOString(),
     acceptBy: sub.acceptBy ? sub.acceptBy.toISOString() : null,
     subtotalCents: sub.subtotalCents,

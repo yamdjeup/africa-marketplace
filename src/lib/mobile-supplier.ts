@@ -1,5 +1,6 @@
 import "server-only";
 import { db } from "@/lib/db";
+import { subLabel } from "@/lib/suborders";
 import { userFromRequest } from "@/lib/mobile-auth";
 
 /** Fournisseur ACTIF rattaché au jeton mobile ; null sinon (jamais de vue « admin » côté app). */
@@ -17,6 +18,7 @@ export async function supplierOrders(supplierId: string, status: string) {
     id: s.id,
     number: s.number,
     status: s.status as string,
+    statusLabel: { fr: subLabel(s.status).fr, en: subLabel(s.status).en },
     createdAt: s.createdAt.toISOString(),
     customer: s.order.fullName,
     subtotalCents: s.subtotalCents,

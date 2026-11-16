@@ -3,7 +3,8 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, 
 import { authed } from "./api";
 import { tr } from "./region";
 
-type Sub = { id: string; number: string; status: string; createdAt: string; customer: string; subtotalCents: number; acceptBy: string | null };
+type Lbl = { fr: string; en: string };
+type Sub = { id: string; number: string; status: string; statusLabel: Lbl; createdAt: string; customer: string; subtotalCents: number; acceptBy: string | null };
 
 const TABS: { v: string; fr: string; en: string }[] = [
   { v: "todo", fr: "À traiter", en: "To handle" },
@@ -22,7 +23,7 @@ export function useIsSupplier(token: string | null) {
   return ok;
 }
 
-type Detail = { id: string; number: string; status: string; createdAt: string; acceptBy: string | null; subtotalCents: number; carrier: string | null; trackingNumber: string | null; reason: string | null; items: { id: string; name: string; size: string | null; quantity: number; unitPriceCents: number }[]; shipTo: { fullName: string; address: string; postalCode: string; city: string; country: string; phone: string | null } };
+type Detail = { id: string; number: string; status: string; statusLabel: Lbl; createdAt: string; acceptBy: string | null; subtotalCents: number; carrier: string | null; trackingNumber: string | null; reason: string | null; items: { id: string; name: string; size: string | null; quantity: number; unitPriceCents: number }[]; shipTo: { fullName: string; address: string; postalCode: string; city: string; country: string; phone: string | null } };
 const CARRIERS = ["UPS", "DHL", "Colissimo"];
 const ERRS: Record<string, [string, string]> = {
   state: ["Cette commande a changé d'état (déjà traitée ou expirée).", "This order changed state (already handled or expired)."],
@@ -57,7 +58,7 @@ function OrderDetail({ token, id, onBack }: { token: string; id: string; onBack:
     <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
       <Pressable onPress={onBack} hitSlop={12} style={{ height: 44, justifyContent: "center" }} accessibilityLabel={tr("Retour", "Back")}><Text style={{ fontSize: 28 }}>←</Text></Pressable>
       <Text style={st.h2}>{tr("Commande", "Order")} {d.number}</Text>
-      <Text style={st.mut}>{d.status}</Text>
+      <Text style={st.mut}>{tr(d.statusLabel.fr, d.statusLabel.en)}</Text>
       {msg ? <Text style={{ color: "#b42318", marginTop: 8 }}>{msg}</Text> : null}
       <Text style={st.h3}>{tr("Articles", "Items")}</Text>
       {d.items.map((i) => <Text key={i.id} style={{ color: "#221812", marginTop: 4 }}>{i.quantity} × {i.name}{i.size ? ` (${i.size})` : ""} — {(i.unitPriceCents * i.quantity / 100).toFixed(2)} EUR</Text>)}
@@ -118,7 +119,7 @@ export function SupplierScreen({ token, onBack }: { token: string; onBack: () =>
       </View>
       {!subs ? <ActivityIndicator /> : subs.length === 0 ? <Text style={st.mut}>{tr("Aucune commande.", "No orders.")}</Text> : subs.map((x) => (
         <Pressable key={x.id} onPress={() => setOpenId(x.id)} style={st.row}>
-          <Text style={{ fontWeight: "600", color: "#221812" }}>{x.number} · {x.status}</Text>
+          <Text style={{ fontWeight: "600", color: "#221812" }}>{x.number} · {tr(x.statusLabel.fr, x.statusLabel.en)}</Text>
           <Text style={st.mut}>{new Date(x.createdAt).toLocaleDateString()} · {x.customer} · {(x.subtotalCents / 100).toFixed(2)} EUR</Text>
           {x.status === "PENDING" && x.acceptBy ? <Text style={{ color: "#92400e", fontSize: 12 }}>{tr("À accepter avant le ", "Accept before ")}{new Date(x.acceptBy).toLocaleString()}</Text> : null}
         </Pressable>

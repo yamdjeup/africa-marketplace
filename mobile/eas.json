@@ -4,12 +4,12 @@
     "preview": {
       "distribution": "internal",
       "android": { "buildType": "apk" },
-      "env": { "EXPO_PUBLIC_API_URL": "https://simu.epomta.com" }
+      "env": { "EXPO_PUBLIC_API_URL": "https://simu.epomta.com", "EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY": "pk_test_REMPLACER"  }
     },
     "production": {
       "autoIncrement": true,
       "ios": { "image": "latest" },
-      "env": { "EXPO_PUBLIC_API_URL": "https://simu.epomta.com" }
+      "env": { "EXPO_PUBLIC_API_URL": "https://simu.epomta.com", "EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY": "pk_test_REMPLACER"  }
     }
   },
   "submit": {

@@ -8,6 +8,7 @@ import { API_URL } from "./config";
 import { AccountScreen, useAuth } from "./auth";
 import { authed } from "./api";
 import { CartScreen, type CartLine } from "./cart";
+import { StripeProvider } from "@stripe/stripe-react-native";
 
 type Product = { slug: string; name: string; description: string; story: string; creatorName: string; priceCents: number; images: string[]; material: string | null; technique: string | null; origin: string | null; dimensions: string | null; categorySlug: string; url: string; stock: number };
 type Home = { categories: { slug: string; label: string }[]; news: Product[]; latest: Product[]; creators: { slug: string; name: string; specialty: string; image: string }[]; byCategory: { slug: string; label: string; items: Product[] }[] };
@@ -155,6 +156,7 @@ function Main() {
   );
 
   return (
+    <StripeProvider publishableKey={process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""} urlScheme="epomta">
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
       <StatusBar style="dark" />
       <View style={s.header}><Text style={s.logo}>E PÓM TA’      </Text><Pressable onPress={() => setCartOpen(true)} hitSlop={10} style={s.cartBtn} accessibilityLabel="Panier"><Text style={s.cartText}>PANIER{cartCount ? ` (${cartCount})` : ""}</Text></Pressable></View>
@@ -222,11 +224,12 @@ function Main() {
       {cartOpen && (
         <Modal animationType="slide" onRequestClose={() => setCartOpen(false)}>
           <SafeAreaProvider><SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
-            <CartScreen lines={cart} onClose={() => setCartOpen(false)} onQty={(slug, q) => saveCart(q < 1 ? cart.filter((l) => l.slug !== slug) : cart.map((l) => (l.slug === slug ? { ...l, quantity: q } : l)))} onRemove={(slug) => saveCart(cart.filter((l) => l.slug !== slug))} />
+            <CartScreen lines={cart} token={auth.accessToken} onNeedLogin={() => { setCartOpen(false); setTab("me"); }} onPaid={() => saveCart([])} onClose={() => setCartOpen(false)} onQty={(slug, q) => saveCart(q < 1 ? cart.filter((l) => l.slug !== slug) : cart.map((l) => (l.slug === slug ? { ...l, quantity: q } : l)))} onRemove={(slug) => saveCart(cart.filter((l) => l.slug !== slug))} />
           </SafeAreaView></SafeAreaProvider>
         </Modal>
       )}
     </SafeAreaView>
+    </StripeProvider>
   );
 }
 

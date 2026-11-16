@@ -3,6 +3,7 @@ import { useFonts, PlayfairDisplay_600SemiBold } from "@expo-google-fonts/playfa
 import { Inter_400Regular } from "@expo-google-fonts/inter";
 import { ActivityIndicator, FlatList, Dimensions, Image, Modal, Platform, Pressable, ScrollView, StatusBar as RNStatusBar, StyleSheet, Text, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { Badges } from "./badges";
 import { StatusBar } from "expo-status-bar";
 import * as WebBrowser from "expo-web-browser";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -15,7 +16,7 @@ import { TilaButton } from "./tila";
 import { CreatorScreen } from "./creator";
 import { StripeProvider } from "@stripe/stripe-react-native";
 
-type Product = { slug: string; name: string; description: string; story: string; creatorName: string; priceCents: number; images: string[]; material: string | null; technique: string | null; origin: string | null; dimensions: string | null; categorySlug: string; url: string; stock: number };
+type Product = { slug: string; name: string; description: string; story: string; creatorName: string; priceCents: number; images: string[]; material: string | null; technique: string | null; origin: string | null; dimensions: string | null; categorySlug: string; url: string; stock: number; isNew?: boolean; isExample?: boolean; edition?: string | null; sizes?: string[] };
 type Home = { categories: { slug: string; label: string }[]; news: Product[]; latest: Product[]; creators: { slug: string; name: string; specialty: string; image: string }[]; byCategory: { slug: string; label: string; items: Product[] }[] };
 type List = { items: Product[]; total: number; page: number; pages: number };
 type Tab = "home" | "shop" | "favs" | "me";
@@ -31,7 +32,7 @@ function Card({ p, fav, onFav, onOpen, wide }: { p: Product; fav: boolean; onFav
   return (
     <Pressable onPress={onOpen} style={[s.card, wide && { width: "48%" }]}>
       <Image source={{ uri: p.images[0] }} style={s.cardImg} />
-      <Pressable onPress={onFav} hitSlop={6} style={s.heart} accessibilityLabel={fav ? "Retirer des favoris" : "Ajouter aux favoris"}><Text style={[s.heartIcon, fav && { color: "#d4183d" }]}>{fav ? "♥" : "♡"}</Text></Pressable>
+      <Badges stock={p.stock} isNew={p.isNew} isExample={p.isExample} /> hitSlop={6} style={s.heart} accessibilityLabel={fav ? "Retirer des favoris" : "Ajouter aux favoris"}><Text style={[s.heartIcon, fav && { color: "#d4183d" }]}>{fav ? "♥" : "♡"}</Text></Pressable>
       <Text style={s.brand} numberOfLines={1}>{p.creatorName}</Text>
       <Text numberOfLines={1} style={s.name}>{p.name}</Text>
       <Text style={s.price}>{eur(p.priceCents)}</Text>
@@ -89,15 +90,15 @@ function DetailBody({ p, onClose, fav, onFav, onAdd, token, onNeedLogin }: { tok
           <Pressable onPress={onFav} hitSlop={12} style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }} accessibilityLabel={fav ? "Retirer des favoris" : "Ajouter aux favoris"}><Text style={{ fontSize: 28, color: fav ? "#d4183d" : "#111" }}>{fav ? "♥" : "♡"}</Text></Pressable>
         </View>
         <ScrollView>
-          <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false}>
+          <View><ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false}>
             {p.images.map((u) => <Image key={u} source={{ uri: u }} style={s.hero} resizeMode="cover" />)}
-          </ScrollView>
+          </ScrollView><Badges stock={p.stock} isNew={p.isNew} isExample={p.isExample} /></View>
           <View style={{ padding: 16 }}>
             <Text style={s.brand}>{p.creatorName}</Text>
             <Text style={[s.h2, { paddingHorizontal: 0 }]}>{p.name}</Text>
             <Text style={[s.price, { fontSize: 18 }]}>{eur(p.priceCents)}</Text>
             <Text style={s.body}>{p.description}</Text>
-            {[p.material && `Matière : ${p.material}`, p.technique && `Technique : ${p.technique}`, p.origin && `Origine : ${p.origin}`, p.dimensions && `Dimensions : ${p.dimensions}`].filter(Boolean).map((l) => <Text key={l as string} style={s.meta}>{l}</Text>)}
+            {[p.edition && `Édition : ${p.edition}`, p.material && `Matière : ${p.material}`, p.technique && `Technique : ${p.technique}`, p.origin && `Origine : ${p.origin}`, p.dimensions && `Dimensions : ${p.dimensions}`].filter(Boolean).map((l) => <Text key={l as string} style={s.meta}>{l}</Text>)}
             {p.story ? <Text style={[s.body, { marginTop: 12 }]}>{p.story}</Text> : null}
           </View>
         </ScrollView>

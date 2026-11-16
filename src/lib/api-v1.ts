@@ -30,6 +30,8 @@ export function toMobileProduct(p: ProductView, origin: string, locale: MobileLo
     dimensions: p.dimensions,
     sizes: p.sizes,
     isNew: p.isNew,
+    isExample: p.isExample,
+    edition: p.edition,
     stock: p.stock,
     url: `${origin}/${locale}/produits/${p.slug}`,
   };

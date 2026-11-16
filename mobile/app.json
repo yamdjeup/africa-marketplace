@@ -7,7 +7,7 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "icon": "./assets/icon-1024.png",
-    "plugins": [["@stripe/stripe-react-native", { "merchantIdentifier": "", "enableGooglePay": false }]],
+    "plugins": ["expo-notifications", ["@stripe/stripe-react-native", { "merchantIdentifier": "", "enableGooglePay": false }]],
     "ios": {
       "bundleIdentifier": "com.epomta.app",
       "supportsTablet": false,

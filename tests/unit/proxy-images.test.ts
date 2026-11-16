@@ -13,3 +13,11 @@ describe("mur d'accès : images des e-mails", () => {
     for (const p of ["/fr", "/fr/catalogue", "/images/other/x.jpg", "/images/artworks/../x.jpg", "/api/orders"]) expect(re.test(p)).toBe(false);
   });
 });
+
+describe("mur d'accès : API mobile", () => {
+  const re = new RegExp(readFileSync("src/proxy.ts", "utf8").match(/const PUBLIC_ALERTS = \/(.*)\/;/)![1]);
+  it("laisse passer /api/v1/* (Bearer) mais pas le site", () => {
+    for (const p of ["/api/v1/auth/profile", "/api/v1/creators", "/api/v1/shop/categories", "/api/v1/supplier/orders/abc", "/api/v1/push/token"]) expect(re.test(p)).toBe(true);
+    for (const p of ["/api/v1", "/api/admin/x", "/fr/admin"]) expect(re.test(p)).toBe(false);
+  });
+});

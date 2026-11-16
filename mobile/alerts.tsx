@@ -10,6 +10,13 @@ export function AlertsScreen({ token, onBack }: { token: string; onBack: () => v
   const [promo, setPromo] = useState(false);
   const [pushTok, setPushTok] = useState<string | null>(null);
   const [msg, setMsg] = useState("");
+  const [testMsg, setTestMsg] = useState("");
+  const sendTest = async () => {
+    setTestMsg("");
+    const r = await authed<{ status?: string }>(token, "POST", "/api/v1/alerts/test");
+    const st = r.data.status;
+    setTestMsg(st === "sent" ? "E-mail de test envoyé à votre adresse." : st === "rate_limited" ? "Patientez une minute avant un nouvel essai." : st === "unconfigured" ? "L'envoi d'e-mails n'est pas configuré sur ce site." : "L'envoi a échoué, réessayez plus tard.");
+  };
   useEffect(() => {
     authed<{ email?: boolean; promo?: boolean }>(token, "GET", "/api/v1/alerts/prefs").then((r) => { setEmail(!!r.data.email); setPromo(!!r.data.promo); });
     AsyncStorage.getItem("expoPushToken").then(setPushTok);
@@ -39,6 +46,8 @@ export function AlertsScreen({ token, onBack }: { token: string; onBack: () => v
       {row("E-mail", email, (v) => { setEmail(v); save({ email: v }); })}
       <Text style={[s.h3]}>Envie de plus ?</Text>
       {row("Recevoir des notifications sur les promotions, nouveautés et stocks", promo, (v) => { setPromo(v); save({ promo: v }); })}
+      <Pressable onPress={sendTest} style={{ minHeight: 44, justifyContent: "center", paddingHorizontal: 20, borderWidth: 1, borderColor: "#221812", alignSelf: "flex-start", marginTop: 8 }}><Text style={{ color: "#221812" }}>Envoyer un e-mail de test</Text></Pressable>
+      {testMsg ? <Text style={{ color: "#221812", marginTop: 8 }}>{testMsg}</Text> : null}
     </ScrollView>
   );
 }

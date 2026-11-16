@@ -2,6 +2,9 @@ import { randomUUID } from "node:crypto";
 import { checkAddress, formatStreet, readAddress } from "@/lib/address";
 import { buyerKeyOf, createHold, releaseBuyerHolds, releaseHold, attachSession, StockError, stockReason, type HoldPayload } from "@/lib/checkout-hold";
 import { db } from "@/lib/db";
+import { RETURN_LABELS, returnEligibility, showShippedNotice, type ReturnStatus } from "@/lib/returns";
+import { subLabel } from "@/lib/suborders";
+import { carrierLabel, cleanTrackingNumber, trackingUrl } from "@/lib/tracking";
 import { saveAddress } from "@/lib/mobile-account";
 import { confirmPaidOrder, stripeEnabled } from "@/lib/stripe-checkout";
 
@@ -133,8 +136,12 @@ export async function cancelMobilePayment(user: MobileUser | null, number: strin
   return true;
 }
 
+// Colis détaillés comme SubOrderTracking du site (components/marketplace/sub-order-tracking.tsx) : boutique, articles, état, suivi, remboursement, annulation, retour.
 export async function listOrders(userId: string) {
-  const rows = await db.order.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, include: { items: true, subOrders: { select: { number: true, status: true, carrier: true, trackingNumber: true, shippedAt: true, deliveredAt: true } } } });
+  const rows = await db.order.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, include: { items: true, subOrders: { orderBy: { createdAt: "asc" } } } });
+  const subs = rows.flatMap((o) => o.subOrders);
+  const shops = await db.supplier.findMany({ where: { id: { in: subs.map((s) => s.supplierId) } }, select: { id: true, displayName: true, country: true } });
+  const returns = await db.returnRequest.findMany({ where: { subOrderId: { in: subs.map((s) => s.id) } } });
   return rows.map((o) => ({
     number: o.number,
     createdAt: o.createdAt.toISOString(),
@@ -142,6 +149,30 @@ export async function listOrders(userId: string) {
     totalCents: o.totalCents,
     address: { fullName: o.fullName, street: o.address, postalCode: o.postalCode, city: o.city, country: o.country },
     items: o.items.map((i) => ({ slug: i.productSlug, name: i.name, size: i.size, quantity: i.quantity, unitPriceCents: i.unitPriceCents })),
-    parcels: o.subOrders,
+    parcels: o.subOrders.map((s) => {
+      const shop = shops.find((x) => x.id === s.supplierId);
+      const ret = returns.find((r) => r.subOrderId === s.id);
+      const retLabel = ret ? RETURN_LABELS[ret.status as ReturnStatus]?.fr ?? ret.status : null;
+      return {
+        id: s.id,
+        number: s.number,
+        status: s.status,
+        statusLabel: subLabel(s.status).fr,
+        shop: shop ? { name: shop.displayName, country: shop.country } : null,
+        items: o.items.filter((i) => i.subOrderId === s.id).map((i) => ({ slug: i.productSlug, name: i.name, size: i.size, quantity: i.quantity })),
+        carrier: s.carrier ? carrierLabel(s.carrier, true) : "",
+        trackingNumber: s.trackingNumber ? cleanTrackingNumber(s.trackingNumber) : "",
+        trackingUrl: s.trackingNumber ? trackingUrl(s.carrier, s.trackingNumber) : null,
+        shippedAt: s.shippedAt?.toISOString() ?? null,
+        deliveredAt: s.deliveredAt?.toISOString() ?? null,
+        reason: ["REFUSED", "CANCELLED"].includes(s.status) ? s.reason : null,
+        subtotalCents: s.subtotalCents,
+        refundStatus: s.refundStatus,
+        canCancel: ["PENDING", "ACCEPTED", "PREPARING"].includes(s.status),
+        returnStatus: retLabel,
+        canReturn: !ret && returnEligibility(s, false) === "ok",
+        shippedNotice: showShippedNotice(s.status, !!ret),
+      };
+    }),
   }));
 }

@@ -15,7 +15,7 @@ import { ShopScreen } from "./shop";
 import { TilaButton } from "./tila";
 import { CreatorScreen } from "./creator";
 import { HomeBlocks, MoreBlocks, type Site } from "./home";
-import { ApproxPrice, tr, useLang } from "./region";
+import { ApproxPrice, getLang, tr, useLang } from "./region";
 import { SupportScreen } from "./support";
 import { StripeProvider } from "@stripe/stripe-react-native";
 
@@ -125,7 +125,7 @@ function DetailBody({ p, onClose, fav, onFav, onAdd, inCart, onOpenCart, token, 
             <ApproxPrice cents={p.priceCents} />
             <Text style={[s.meta, { color: p.stock === 0 ? "#b42318" : "#1e7546" }]}>{p.stock === 0 ? tr("Épuisée", "Sold out") : p.stock <= 1 ? tr("Pièce unique", "Unique piece") : p.stock <= 3 ? tr(`Plus que ${p.stock}`, `Only ${p.stock} left`) : tr("En stock", "In stock")}</Text>
             <Text style={s.body}>{p.description}</Text>
-            {[p.edition && !(p.stock > 0 && p.stock <= 1 && unique) && tr(`Édition : ${p.edition}`, `Edition: ${p.edition}`), p.material && tr(`Matière : ${p.material}`, `Material: ${p.material}`), p.technique && `Technique : ${p.technique}`, !p.material && !p.technique && x?.materials?.length ? tr(`Matières : ${x.materials.join(", ")}`, `Materials: ${x.materials.join(", ")}`) : null, p.origin && `Origine : ${p.origin}`, (x ? x.dimensionsText : p.dimensions) && `Dimensions : ${x ? x.dimensionsText : p.dimensions}`].filter(Boolean).map((l) => <Text key={l as string} style={s.meta}>{l}</Text>)}
+            {[p.edition && !(p.stock > 0 && p.stock <= 1 && unique) && tr(`Édition : ${p.edition}`, `Edition: ${p.edition}`), p.material && tr(`Matière : ${p.material}`, `Material: ${p.material}`), p.technique && tr(`Technique : ${p.technique}`, `Technique: ${p.technique}`), !p.material && !p.technique && x?.materials?.length ? tr(`Matières : ${x.materials.join(", ")}`, `Materials: ${x.materials.join(", ")}`) : null, p.origin && tr(`Origine : ${p.origin}`, `Origin: ${p.origin}`), (x ? x.dimensionsText : p.dimensions) && tr(`Dimensions : ${x ? x.dimensionsText : p.dimensions}`, `Dimensions: ${x ? x.dimensionsText : p.dimensions}`)].filter(Boolean).map((l) => <Text key={l as string} style={s.meta}>{l}</Text>)}
             {x?.attestedAt ? (
               <View style={{ marginTop: 12, padding: 12, borderWidth: 1, borderColor: "#ded6c9", borderRadius: 6, backgroundColor: "#f2eadd" }}>
                 <Text style={{ fontWeight: "600", color: "#221812" }}>{tr("Authenticité", "Authenticity")}</Text>
@@ -134,7 +134,7 @@ function DetailBody({ p, onClose, fav, onFav, onAdd, inCart, onOpenCart, token, 
               </View>
             ) : null}
             {x?.roomPreview || x?.mirrorTryOn ? (
-              <Pressable style={[s.cta, { marginTop: 12 }]} onPress={async () => { try { await WebBrowser.openBrowserAsync(`${API_URL}/fr/produits/${p.slug}/essayage`); } catch { Alert.alert(tr("Indisponible", "Unavailable"), tr("Impossible d’ouvrir cet aperçu : aucun navigateur compatible n’est disponible sur cet appareil. Vérifiez que Chrome est installé et à jour, ainsi que la réalité augmentée (Services Google Play pour la RA).", "Unable to open this preview: no compatible browser is available on this device. Check that Chrome is installed and up to date, as well as augmented reality (Google Play Services for AR).")); } }}>
+              <Pressable style={[s.cta, { marginTop: 12 }]} onPress={async () => { try { await WebBrowser.openBrowserAsync(`${API_URL}/${getLang()}/produits/${p.slug}/essayage`); } catch { Alert.alert(tr("Indisponible", "Unavailable"), tr("Impossible d’ouvrir cet aperçu : aucun navigateur compatible n’est disponible sur cet appareil. Vérifiez que Chrome est installé et à jour, ainsi que la réalité augmentée (Services Google Play pour la RA).", "Unable to open this preview: no compatible browser is available on this device. Check that Chrome is installed and up to date, as well as augmented reality (Google Play Services for AR).")); } }}>
                 <Text style={s.ctaText}>{x?.roomPreview ? tr("Aperçu dans une pièce · réalité augmentée", "Preview in a room · augmented reality") : tr("Essayage au miroir", "Mirror try-on")}</Text>
               </Pressable>
             ) : null}
@@ -336,8 +336,8 @@ function Main() {
             <Text style={s.h2}>{tr("Mon compte", "My account")}</Text>
             <Text style={s.body}>{tr("Langue : Français", "Language: English")}</Text>
             <Text style={s.body}>{tr("Le suivi des commandes se fait par e-mail et sur le site.", "Order tracking is done by email and on the website.")}</Text>
-            <Pressable style={[s.cta, { marginTop: 16 }]} onPress={() => WebBrowser.openBrowserAsync(`${API_URL}/fr/login`)}><Text style={s.ctaText}>{tr("Mon compte sur le site", "My account on the website")}</Text></Pressable>
-            <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => WebBrowser.openBrowserAsync(`${API_URL}/fr/support`)}><Text style={s.ctaText}>{tr("Besoin d’aide ?", "Need help?")}</Text></Pressable>
+            <Pressable style={[s.cta, { marginTop: 16 }]} onPress={() => WebBrowser.openBrowserAsync(`${API_URL}/${getLang()}/login`)}><Text style={s.ctaText}>{tr("Mon compte sur le site", "My account on the website")}</Text></Pressable>
+            <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => WebBrowser.openBrowserAsync(`${API_URL}/${getLang()}/support`)}><Text style={s.ctaText}>{tr("Besoin d’aide ?", "Need help?")}</Text></Pressable>
           </ScrollView>
         )}
       </View>

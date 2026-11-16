@@ -1,0 +1,14 @@
+{
+  "expo": {
+    "name": "Epomta",
+    "slug": "epomta",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "icon": "./assets/icon.png",
+    "android": {
+      "package": "com.epomta.app",
+      "adaptiveIcon": { "foregroundImage": "./assets/icon.png", "backgroundColor": "#ffffff" }
+    }
+  }
+}

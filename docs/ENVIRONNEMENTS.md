@@ -39,6 +39,7 @@ Définies dans Vercel > Settings > Environment Variables (Production : prod ; Pr
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | clé live (quand le mode réel est décidé) ; mode test tant que non | clé **sandbox** + webhook simu | clé **sandbox** + webhook preprod |
 | `OPENAI_API_KEY`, `TILA_PROVIDER`, `TILA_MODEL` | clé de prod | même clé ou clé dédiée avec plafond bas | idem |
 | **Permissions clé OpenAI** (`OPENAI_API_KEY`) | clé **Restricted** ; Chat completions (`/v1/chat/completions`) = **Request** (seul endpoint appelé par Tílá, `provider.ts` l.49) ; Responses = **Write** ; Audio = **Request** (lot 2) ; tout le reste = **None** | clé dédiée simu/preprod, limite mensuelle (€) sur le projet OpenAI ; variable (Secret) dans Vercel Preview·simu et Preview·preprod, redéploiement requis ; Tílá validé sur simu et preprod le 16/11/2026 | idem |
+| `GOOGLE_MOBILE_CLIENT_IDS` (app mobile, serveur) | non défini : connexion Google mobile désactivée (503) | IDs clients OAuth Google (Android + Web) séparés par des virgules, non secrets | idem ; `AUTH_SECRET` signe aussi les jetons mobile |
 | `RESEND_API_KEY`, `MAIL_FROM` (ou `GMAIL_*`) | prod (domaine vérifié) | **vide** (aucun envoi) ou domaine de test | domaine de test, destinataires = adresses de test |
 | `ADMIN_EMAILS` | adresse(s) admin | adresses de test | adresses de test |
 | `CRON_SECRET` | propre | distinct | distinct |

@@ -5,6 +5,7 @@ import { StatusBar } from "expo-status-bar";
 import * as WebBrowser from "expo-web-browser";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { API_URL } from "./config";
+import { AccountScreen, useAuth } from "./auth";
 
 type Product = { slug: string; name: string; description: string; story: string; creatorName: string; priceCents: number; images: string[]; material: string | null; technique: string | null; origin: string | null; dimensions: string | null; categorySlug: string; url: string; stock: number };
 type Home = { categories: { slug: string; label: string }[]; news: Product[]; latest: Product[]; creators: { slug: string; name: string; specialty: string; image: string }[]; byCategory: { slug: string; label: string; items: Product[] }[] };
@@ -88,6 +89,7 @@ export default function App() {
 
 function Main() {
   const [tab, setTab] = useState<Tab>("home");
+  const auth = useAuth();
   const [home, setHome] = useState<Home | null>(null);
   const [error, setError] = useState(false);
   const [list, setList] = useState<List | null>(null);
@@ -169,7 +171,8 @@ function Main() {
 
         {tab === "favs" && (favItems.length ? grid(favItems) : <Text style={s.center}>Aucun favori pour le moment.{"\n"}Touchez ♡ sur une pièce.</Text>)}
 
-        {tab === "me" && (
+        {tab === "me" && <AccountScreen auth={auth} onOpenSite={(p) => WebBrowser.openBrowserAsync(`${API_URL}${p}`)} />}
+        {false && (
           <ScrollView contentContainerStyle={{ padding: 16 }}>
             <Text style={s.h2}>MON COMPTE</Text>
             <Text style={s.body}>Langue : Français</Text>

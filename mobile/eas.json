@@ -5,6 +5,14 @@
       "distribution": "internal",
       "android": { "buildType": "apk" },
       "env": { "EXPO_PUBLIC_API_URL": "https://simu.epomta.com" }
+    },
+    "production": {
+      "autoIncrement": true,
+      "ios": { "image": "latest" },
+      "env": { "EXPO_PUBLIC_API_URL": "https://simu.epomta.com" }
     }
+  },
+  "submit": {
+    "production": { "ios": {} }
   }
 }

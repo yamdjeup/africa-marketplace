@@ -1,3 +1,4 @@
+import { tr } from "./region";
 import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";

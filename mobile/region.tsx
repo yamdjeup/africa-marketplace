@@ -37,6 +37,28 @@ export function setRegion(code: string) {
   listeners.forEach((l) => l());
 }
 
+export type Lang = "fr" | "en";
+let lang: Lang = "fr";
+const langListeners = new Set<() => void>();
+AsyncStorage.getItem("epomta-lang").then((v) => { if (v === "en" || v === "fr") { lang = v; langListeners.forEach((l) => l()); } });
+export const getLang = () => lang;
+export function setLang(l: Lang) { lang = l; AsyncStorage.setItem("epomta-lang", l); langListeners.forEach((f) => f()); }
+export function useLang(): Lang {
+  const [, force] = useState(0);
+  useEffect(() => {
+    const l = () => force((n) => n + 1);
+    langListeners.add(l);
+    return () => { langListeners.delete(l); };
+  }, []);
+  return lang;
+}
+// Les écrans appellent l'API avec « locale=fr » : on le remplace par la langue choisie.
+const baseFetch = globalThis.fetch;
+globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) =>
+  baseFetch(typeof input === "string" ? input.replace("locale=fr", `locale=${lang}`) : input, init)) as typeof fetch;
+/** Texte FR/EN (textes du site, lib/i18n). */
+export const tr = (fr: string, en: string) => (lang === "en" ? en : fr);
+
 export function useRegion(): Region {
   const [, force] = useState(0);
   useEffect(() => {
@@ -57,6 +79,7 @@ export function ApproxPrice({ cents, style }: { cents: number; style?: object })
 
 export function RegionRow() {
   const region = useRegion();
+  const curLang = useLang();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
@@ -65,7 +88,7 @@ export function RegionRow() {
     <View>
       <Pressable onPress={() => setOpen(true)} style={st.row} accessibilityRole="button" accessibilityLabel="Langue et région">
         <Flag code={region.code} />
-        <Text style={st.rowText}>Français · {region.fr} · {region.currency}</Text>
+        <Text style={st.rowText}>{curLang === "en" ? "English" : "Français"} · {region.fr} · {region.currency}</Text>
         <Text style={st.chev}>›</Text>
       </Pressable>
       <Modal visible={open} animationType="slide" onRequestClose={() => setOpen(false)}>
@@ -74,7 +97,13 @@ export function RegionRow() {
             <Text style={st.title}>Langue et région</Text>
             <Pressable onPress={() => setOpen(false)} hitSlop={10} accessibilityLabel="Fermer"><Text style={{ fontSize: 24, color: "#221812" }}>✕</Text></Pressable>
           </View>
-          <Text style={st.lang}>Français ✓</Text>
+          <View style={{ flexDirection: "row", gap: 8, marginBottom: 8 }}>
+            {(["fr", "en"] as Lang[]).map((l) => (
+              <Pressable key={l} onPress={() => setLang(l)} accessibilityState={{ selected: l === curLang }} style={[st.langBtn, l === curLang && { backgroundColor: "#1c3060" }]}>
+                <Text style={{ color: l === curLang ? "#fff" : "#221812" }}>{l === "fr" ? "Français" : "English"}</Text>
+              </Pressable>
+            ))}
+          </View>
           <TextInput value={query} onChangeText={setQuery} placeholder="Rechercher un pays" placeholderTextColor="#8a7d70" style={st.input} />
           <FlatList data={list} keyExtractor={(r) => r.code} keyboardShouldPersistTaps="handled"
             ListEmptyComponent={<Text style={{ color: "#6b5d52", padding: 12 }}>Aucun pays trouvé.</Text>}
@@ -100,7 +129,7 @@ const st = StyleSheet.create({
   modal: { flex: 1, backgroundColor: "#faf6ee", padding: 16, paddingTop: 40 },
   top: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
   title: { fontFamily: "PlayfairDisplay_600SemiBold", fontSize: 20, color: "#1c3060" },
-  lang: { color: "#1c3060", fontWeight: "600", paddingVertical: 10 },
+  langBtn: { height: 40, paddingHorizontal: 16, borderRadius: 8, borderWidth: 1, borderColor: "#1c3060", justifyContent: "center" },
   input: { height: 44, borderRadius: 8, backgroundColor: "#f2eadd", paddingHorizontal: 12, color: "#221812", marginBottom: 8 },
   item: { minHeight: 48, flexDirection: "row", alignItems: "center", gap: 12 },
   itemText: { flex: 1, color: "#221812", fontSize: 15 },

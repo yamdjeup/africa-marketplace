@@ -15,7 +15,7 @@ import { ShopScreen } from "./shop";
 import { TilaButton } from "./tila";
 import { CreatorScreen } from "./creator";
 import { HomeBlocks, MoreBlocks, type Site } from "./home";
-import { ApproxPrice } from "./region";
+import { ApproxPrice, tr, useLang } from "./region";
 import { SupportScreen } from "./support";
 import { StripeProvider } from "@stripe/stripe-react-native";
 
@@ -198,7 +198,8 @@ function DetailBody({ p, onClose, fav, onFav, onAdd, token, onNeedLogin, onOpenR
 export default function App() {
   const [fontsReady] = useFonts({ PlayfairDisplay_600SemiBold, Inter_400Regular });
   if (!fontsReady) return null;
-  return <SafeAreaProvider><Main /></SafeAreaProvider>;
+  const lang = useLang();
+  return <SafeAreaProvider><Main key={lang} /></SafeAreaProvider>;
 }
 
 function Main() {
@@ -289,7 +290,7 @@ function Main() {
         )}
       </View>
       <View style={s.tabs}>
-        {([["home", "Accueil"], ["shop", "Boutique"], ["favs", "Favoris"], ["me", "Moi"]] as [Tab, string][]).map(([k, l]) => (
+        {([["home", tr("Accueil", "Home")], ["shop", tr("Boutique", "Shop")], ["favs", tr("Favoris", "Wish list")], ["me", tr("Moi", "Me")]] as [Tab, string][]).map(([k, l]) => (
           <Pressable key={k} onPress={() => setTab(k)} style={s.tab}><Text style={[s.tabText, tab === k && { color: "#221812", fontWeight: "700" }]}>{l}{k === "favs" && favs.length ? ` (${favs.length})` : ""}</Text></Pressable>
         ))}
       </View>

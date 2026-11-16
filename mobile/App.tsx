@@ -16,7 +16,7 @@ import { TilaButton } from "./tila";
 import { CreatorScreen } from "./creator";
 import { StripeProvider } from "@stripe/stripe-react-native";
 
-type Product = { slug: string; name: string; description: string; story: string; creatorName: string; priceCents: number; images: string[]; material: string | null; technique: string | null; origin: string | null; dimensions: string | null; categorySlug: string; url: string; stock: number; isNew?: boolean; isExample?: boolean; edition?: string | null; sizes?: string[] };
+type Product = { slug: string; name: string; description: string; story: string; creatorName: string; priceCents: number; images: string[]; material: string | null; technique: string | null; origin: string | null; dimensions: string | null; categorySlug: string; url: string; stock: number; isNew?: boolean; isExample?: boolean; edition?: string | null; sizes?: string[]; sizeStock?: Record<string, number> | null; sizeLabel?: string };
 type Home = { categories: { slug: string; label: string }[]; news: Product[]; latest: Product[]; creators: { slug: string; name: string; specialty: string; image: string }[]; byCategory: { slug: string; label: string; items: Product[] }[] };
 type List = { items: Product[]; total: number; page: number; pages: number };
 type Tab = "home" | "shop" | "favs" | "me";
@@ -52,7 +52,7 @@ function Row({ title, items, favs, toggle, open }: { title: string; items: Produ
   );
 }
 
-function Detail({ p, onClose, fav, onFav, onAdd, token, onNeedLogin }: { token: string | null; onNeedLogin: () => void; p: Product; onClose: () => void; fav: boolean; onFav: () => void; onAdd: () => void }) {
+function Detail({ p, onClose, fav, onFav, onAdd, token, onNeedLogin }: { token: string | null; onNeedLogin: () => void; p: Product; onClose: () => void; fav: boolean; onFav: () => void; onAdd: (size: string | null) => void }) {
   return (
     <Modal animationType="slide" onRequestClose={onClose} statusBarTranslucent navigationBarTranslucent>
       <SafeAreaProvider>
@@ -62,10 +62,13 @@ function Detail({ p, onClose, fav, onFav, onAdd, token, onNeedLogin }: { token: 
   );
 }
 
-function DetailBody({ p, onClose, fav, onFav, onAdd, token, onNeedLogin }: { token: string | null; onNeedLogin: () => void; p: Product; onClose: () => void; fav: boolean; onFav: () => void; onAdd: () => void }) {
+function DetailBody({ p, onClose, fav, onFav, onAdd, token, onNeedLogin }: { token: string | null; onNeedLogin: () => void; p: Product; onClose: () => void; fav: boolean; onFav: () => void; onAdd: (size: string | null) => void }) {
   const insets = useSafeAreaInsets();
   const [added, setAdded] = useState(false);
-  const buy = () => { onAdd(); setAdded(true); };
+  const [size, setSize] = useState<string | null>(null);
+  const [missing, setMissing] = useState(false);
+  const sizes = p.sizes ?? [];
+  const buy = () => { if (sizes.length > 0 && !size) { setMissing(true); return; } onAdd(size); setAdded(true); };
   const [watch, setWatch] = useState(false);
   const [busy, setBusy] = useState(false);
   const [watchErr, setWatchErr] = useState("");
@@ -112,9 +115,28 @@ function DetailBody({ p, onClose, fav, onFav, onAdd, token, onNeedLogin }: { tok
               {watch ? <Text style={{ color: "#6b5d52", fontSize: 12, marginTop: 6 }}>Pièce unique : premier arrivé, premier servi.</Text> : null}
             </>
           ) : (
-          <Pressable onPress={buy} style={s.cta}>
+          <>
+          {sizes.length > 0 ? (
+            <View style={{ marginBottom: 10 }}>
+              <Text style={{ fontWeight: "600", color: "#221812", marginBottom: 6 }}>{p.sizeLabel ?? "Taille"}</Text>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                {sizes.map((sz) => {
+                  const out = p.sizeStock ? (p.sizeStock[sz] ?? 0) <= 0 : false;
+                  const on = size === sz;
+                  return (
+                    <Pressable key={sz} disabled={out} onPress={() => { setSize(sz); setAdded(false); setMissing(false); }} style={{ minWidth: 44, height: 44, paddingHorizontal: 12, borderRadius: 6, borderWidth: 1, borderColor: on ? "#1c3060" : "#ded6c9", backgroundColor: on ? "#1c3060" : "#faf6ee", alignItems: "center", justifyContent: "center", opacity: out ? 0.5 : 1 }}>
+                      <Text style={{ color: on ? "#fff" : "#221812", textDecorationLine: out ? "line-through" : "none" }}>{sz}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+              {missing ? <Text style={{ color: "#b42318", marginTop: 6 }}>Veuillez choisir une taille.</Text> : null}
+            </View>
+          ) : null}
+          <Pressable onPress={buy} style={({ pressed }) => [s.cta, { opacity: pressed ? 0.6 : 1 }]}>
             <Text style={s.ctaText}>{added ? "Ajouté au panier ✓" : "Ajouter au panier"}</Text>
           </Pressable>
+          </>
           )}
         </View>
       </View>
@@ -170,11 +192,12 @@ function Main() {
   }, [token]);
 
   const saveCart = (next: CartLine[]) => { setCart(next); AsyncStorage.setItem("cart", JSON.stringify(next)); };
-  const addToCart = (p: Product) => {
-    const max = Math.max(1, p.stock);
-    saveCart(cart.some((l) => l.slug === p.slug)
-      ? cart.map((l) => (l.slug === p.slug ? { ...l, quantity: Math.min(max, l.quantity + 1) } : l))
-      : [...cart, { slug: p.slug, name: p.name, creatorName: p.creatorName, image: p.images[0], priceCents: p.priceCents, quantity: 1, maxQuantity: max }]);
+  const addToCart = (p: Product, size: string | null = null) => {
+    const max = Math.max(1, size && p.sizeStock ? p.sizeStock[size] ?? p.stock : p.stock);
+    const same = (l: CartLine) => l.slug === p.slug && (l.size ?? null) === size;
+    saveCart(cart.some(same)
+      ? cart.map((l) => (same(l) ? { ...l, quantity: Math.min(max, l.quantity + 1) } : l))
+      : [...cart, { slug: p.slug, size, name: p.name, creatorName: p.creatorName, image: p.images[0], priceCents: p.priceCents, quantity: 1, maxQuantity: max }]);
   };
   const cartCount = cart.reduce((n, l) => n + l.quantity, 0);
 
@@ -231,11 +254,11 @@ function Main() {
       </View>
       {creator && <CreatorScreen slug={creator} onClose={() => setCreator(null)} onOpenSlug={(slug) => { get<Product>(`/api/v1/products/${slug}?locale=fr`).then(setOpen).catch(() => {}); }} />}
       {!open && !cartOpen && !creator && <TilaButton onOpenSlug={(slug) => { get<Product>(`/api/v1/products/${slug}?locale=fr`).then(setOpen).catch(() => {}); }} />}
-      {open && <Detail token={auth.accessToken} onNeedLogin={() => { setOpen(null); setTab("me"); }} p={open} onClose={() => setOpen(null)} fav={favs.includes(open.slug)} onFav={() => toggle(open)} onAdd={() => addToCart(open)} />}
+      {open && <Detail token={auth.accessToken} onNeedLogin={() => { setOpen(null); setTab("me"); }} p={open} onClose={() => setOpen(null)} fav={favs.includes(open.slug)} onFav={() => toggle(open)} onAdd={(size) => addToCart(open, size)} />}
       {cartOpen && (
         <Modal animationType="slide" onRequestClose={() => setCartOpen(false)}>
           <SafeAreaProvider><SafeAreaView style={{ flex: 1, backgroundColor: "#faf6ee" }}><KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
-            <CartScreen lines={cart} token={auth.accessToken} onNeedLogin={() => { setCartOpen(false); setTab("me"); }} onPaid={() => saveCart([])} onClose={() => setCartOpen(false)} onQty={(slug, q) => saveCart(q < 1 ? cart.filter((l) => l.slug !== slug) : cart.map((l) => (l.slug === slug ? { ...l, quantity: q } : l)))} onRemove={(slug) => saveCart(cart.filter((l) => l.slug !== slug))} />
+            <CartScreen lines={cart} token={auth.accessToken} onNeedLogin={() => { setCartOpen(false); setTab("me"); }} onPaid={() => saveCart([])} onClose={() => setCartOpen(false)} onQty={(slug, size, q) => saveCart(q < 1 ? cart.filter((l) => !(l.slug === slug && (l.size ?? null) === size)) : cart.map((l) => (l.slug === slug && (l.size ?? null) === size ? { ...l, quantity: q } : l)))} onRemove={(slug, size) => saveCart(cart.filter((l) => !(l.slug === slug && (l.size ?? null) === size)))} />
           </KeyboardAvoidingView></SafeAreaView></SafeAreaProvider>
         </Modal>
       )}

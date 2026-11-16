@@ -4,7 +4,7 @@ import { initPaymentSheet, presentPaymentSheet } from "@stripe/stripe-react-nati
 import { authed } from "./api";
 import { AddressFields, EMPTY_FORM, type AddressForm } from "./addresses";
 
-export type CartLine = { slug: string; name: string; creatorName: string; image: string; priceCents: number; quantity: number; maxQuantity: number };
+export type CartLine = { slug: string; name: string; creatorName: string; image: string; priceCents: number; quantity: number; maxQuantity: number; size?: string | null };
 type Addr = { id: string; firstName: string; lastName: string; line1: string; houseNumber: string; postalCode: string; city: string; isDefault: boolean };
 
 const eur = (c: number) => `${(c / 100).toFixed(2).replace(".", ",")} €`;
@@ -19,7 +19,7 @@ const ERRORS: Record<string, string> = {
   payment: "Le paiement est momentanément indisponible.",
 };
 
-export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove, onClose }: { lines: CartLine[]; token: string | null; onNeedLogin: () => void; onPaid: () => void; onQty: (slug: string, q: number) => void; onRemove: (slug: string) => void; onClose: () => void }) {
+export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove, onClose }: { lines: CartLine[]; token: string | null; onNeedLogin: () => void; onPaid: () => void; onQty: (slug: string, size: string | null, q: number) => void; onRemove: (slug: string, size: string | null) => void; onClose: () => void }) {
   const total = lines.reduce((n, l) => n + l.priceCents * l.quantity, 0);
   const [addrs, setAddrs] = useState<Addr[]>([]);
   const [addrId, setAddrId] = useState<string | null>(null);
@@ -66,7 +66,7 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
   const pay = async () => {
     setBusy(true);
     setMsg(null);
-    const cart = lines.map((l) => ({ slug: l.slug, size: null, quantity: l.quantity }));
+    const cart = lines.map((l) => ({ slug: l.slug, size: l.size ?? null, quantity: l.quantity }));
     const c = await authed<{ number?: string; clientSecret?: string; guestToken?: string; error?: string; item?: string }>(token, "POST", "/api/v1/checkout/create", useBook ? { addressId: addrId, cart } : { address: manual, email: token ? undefined : email.trim(), save: !!token && save, cart });
     if (!c.ok || !c.data.clientSecret || !c.data.number) {
       setMsg((ERRORS[c.data.error ?? ""] ?? "Le paiement n’a pas pu démarrer.") + (c.data.item ? ` (${c.data.item})` : ""));
@@ -176,17 +176,18 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
         <Text style={s.h2}>Mon panier</Text>
         {lines.length === 0 && <Text style={s.mut}>Votre panier est vide.</Text>}
         {lines.map((l) => (
-          <View key={l.slug} style={s.line}>
+          <View key={`${l.slug}|${l.size ?? ""}`} style={s.line}>
             <Image source={{ uri: l.image }} style={s.img} />
             <View style={{ flex: 1 }}>
               <Text style={s.bold} numberOfLines={1}>{l.creatorName}</Text>
               <Text numberOfLines={2}>{l.name}</Text>
+              {l.size ? <Text style={s.bold}>Taille / variante : {l.size}</Text> : null}
               <Text style={s.bold}>{eur(l.priceCents)}</Text>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 16, marginTop: 6 }}>
-                <Pressable style={s.qty} hitSlop={6} onPress={() => onQty(l.slug, l.quantity - 1)}><Text style={s.qtyText}>−</Text></Pressable>
+                <Pressable style={s.qty} hitSlop={6} onPress={() => onQty(l.slug, l.size ?? null, l.quantity - 1)}><Text style={s.qtyText}>−</Text></Pressable>
                 <Text>{l.quantity}</Text>
-                <Pressable style={s.qty} hitSlop={6} onPress={() => onQty(l.slug, Math.min(l.maxQuantity, l.quantity + 1))}><Text style={s.qtyText}>+</Text></Pressable>
-                <Pressable hitSlop={8} onPress={() => onRemove(l.slug)}><Text style={s.link}>Retirer</Text></Pressable>
+                <Pressable style={s.qty} hitSlop={6} onPress={() => onQty(l.slug, l.size ?? null, Math.min(l.maxQuantity, l.quantity + 1))}><Text style={s.qtyText}>+</Text></Pressable>
+                <Pressable hitSlop={8} onPress={() => onRemove(l.slug, l.size ?? null)}><Text style={s.link}>Retirer</Text></Pressable>
               </View>
             </View>
           </View>

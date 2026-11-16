@@ -92,7 +92,7 @@ function DetailBody({ p, onClose, fav, onFav, onAdd, token, onNeedLogin }: { tok
             {p.story ? <Text style={[s.body, { marginTop: 12 }]}>{p.story}</Text> : null}
           </View>
         </ScrollView>
-        <View style={[s.buyBar, { paddingBottom: 12 + Math.max(insets.bottom, 0) }]}>
+        <View style={[s.buyBar, { paddingBottom: 12 + Math.max(insets.bottom, Platform.OS === "android" ? 32 : 0) }]}>
           {p.stock < 1 ? (
             <>
               {watch ? <Text style={{ color: "#1e7546", marginBottom: 6 }}>Vous serez prévenu(e) dès qu’elle est disponible.</Text> : null}

@@ -218,7 +218,7 @@ const s = StyleSheet.create({
   img: { width: 80, height: 100, backgroundColor: "#f2eadd" },
   qty: { width: 32, height: 32, borderWidth: 1, borderColor: "#ded6c9", alignItems: "center", justifyContent: "center" },
   qtyText: { fontSize: 18 },
-  footer: { padding: 16, borderTopWidth: 1, borderTopColor: "#f2eadd" },
+  footer: { padding: 16, paddingBottom: 28, borderTopWidth: 1, borderTopColor: "#f2eadd" },
   cta: { borderRadius: 8, height: 48, alignItems: "center", justifyContent: "center" },
   ctaText: { color: "#fff",  },
   link: { textDecorationLine: "underline", fontSize: 15, color: "#221812" },

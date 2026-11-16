@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import * as SecureStore from "expo-secure-store";
-import * as Google from "expo-auth-session/providers/google";
-import * as WebBrowser from "expo-web-browser";
+import { GoogleSignin, statusCodes } from "@react-native-google-signin/google-signin";
 import { API_URL } from "./config";
 import { AddressesScreen } from "./addresses";
 import { OrdersScreen } from "./orders";
@@ -86,20 +85,28 @@ export function useAuth() {
 
 type Auth = ReturnType<typeof useAuth>;
 
-WebBrowser.maybeCompleteAuthSession();
 const GOOGLE_ANDROID = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID;
 const GOOGLE_WEB = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+GoogleSignin.configure({ webClientId: GOOGLE_WEB });
 
 function GoogleButton({ auth, onError }: { auth: Auth; onError: (m: string | null) => void }) {
-  const [request, response, prompt] = Google.useIdTokenAuthRequest({ androidClientId: GOOGLE_ANDROID, webClientId: GOOGLE_WEB });
-  useEffect(() => {
-    if (response?.type !== "success") return;
-    const idToken = response.params?.id_token;
-    if (idToken) auth.google(idToken).then(onError);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [response]);
+  const [busy, setBusy] = useState(false);
+  const signIn = async () => {
+    setBusy(true);
+    onError(null);
+    try {
+      await GoogleSignin.hasPlayServices();
+      const r = await GoogleSignin.signIn();
+      const idToken = r.type === "success" ? r.data.idToken : null;
+      if (idToken) onError(await auth.google(idToken));
+    } catch (e) {
+      const code = (e as { code?: string }).code;
+      if (code !== statusCodes.SIGN_IN_CANCELLED) onError("Connexion Google impossible. Réessayez.");
+    }
+    setBusy(false);
+  };
   return (
-    <Pressable style={[s.cta, s.ghost, { marginTop: 12, opacity: request ? 1 : 0.6 }]} disabled={!request} onPress={() => prompt()}>
+    <Pressable style={[s.cta, s.ghost, { marginTop: 12, opacity: busy ? 0.6 : 1 }]} disabled={busy} onPress={signIn}>
       <Text style={[s.ctaText, { color: "#000" }]}>CONTINUER AVEC GOOGLE</Text>
     </Pressable>
   );

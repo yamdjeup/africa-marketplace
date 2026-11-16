@@ -92,8 +92,8 @@ Compte Google Cloud : africamadolo@gmail.com, projet `epomta-demo`. Client « Ep
 | `AUTH_SECRET` (serveur) | S, P, Pv | Signe aussi les jetons mobiles (accès 1 h, refresh 30 j) | Oui | `npx auth secret` ; le changer déconnecte aussi l'app |
 | `GOOGLE_MOBILE_CLIENT_IDS` (serveur) | S, P | Audiences acceptées pour l'id_token Google de l'app : ID Android + ID Web, séparés par une virgule | Non | Vercel > Settings > Environment Variables |
 | `EXPO_PUBLIC_API_URL` | `mobile/eas.json` | URL de l'API appelée par l'app (simu : `https://simu.epomta.com`) | Non | `mobile/eas.json` (profils preview/production) |
-| `EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID` | `mobile/eas.json` | ID client OAuth Android (package `com.epomta.app` + SHA-1 du keystore EAS) | Non | Google Cloud > Identifiants > ID client Android |
-| `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` | `mobile/eas.json` | ID client Web « Epomta web » (utilisé par expo-auth-session) | Non | Google Cloud > Identifiants |
+| `EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID` | `mobile/eas.json` | ID client OAuth Android (package `com.epomta.app` + SHA-1 du keystore EAS) ; Google Sign-In natif le retrouve par package + SHA-1, sans redirection navigateur | Non | Google Cloud > Identifiants > ID client Android |
+| `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` | `mobile/eas.json` | ID client Web « Epomta web » : audience de l'id_token (Google Sign-In natif, @react-native-google-signin) | Non | Google Cloud > Identifiants |
 | `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY` | `mobile/eas.json` | Clé publiable Stripe `pk_test_…` pour la PaymentSheet (renseignée dans eas.json le 16/11/2026) | Non (publique) | Stripe > Développeurs > Clés API (mode test) |
 | `STRIPE_SECRET_KEY` (serveur) | S | Crée les PaymentIntents mobiles (déjà utilisée par le site) | Oui | Stripe > Clés API |
 | `EXPO_TOKEN` | poste du développeur | Authentifie `eas build` ; ne jamais le committer | Oui | expo.dev > Access tokens (à révoquer après la démo, voir ENVIRONNEMENTS §11) |

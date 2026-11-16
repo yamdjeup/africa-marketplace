@@ -47,9 +47,9 @@ export async function POST(req: Request, ctx: { params: Promise<{ action: string
         return sendEmail({ to: m.to, subject: e.subject, text: `${e.text}\n${m.url}`, html: renderEmailHtml({ locale: m.locale, title: e.title, paragraphs: [e.text], cta: { label: e.cta, url: m.url } }) });
       });
       if (r.status === "limited") return fail("limited", 429);
-      return NextResponse.json({ ok: true });
+      return NextResponse.json({ ok: true, status: r.status, email });
     } catch {
-      return NextResponse.json({ ok: true });
+      return NextResponse.json({ ok: true, status: "sent", email });
     }
   }
   return fail("not_found", 404);

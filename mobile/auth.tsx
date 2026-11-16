@@ -16,7 +16,7 @@ const ERRORS: Record<string, string> = {
   password: "Le mot de passe doit contenir au moins 8 caractères.",
   exists: "Un compte existe déjà avec cet e-mail.",
   invalid: "E-mail ou mot de passe incorrect.",
-  limited: "Trop de demandes. Réessayez dans quelques minutes.",
+  limited: "Trop de demandes : 3 par heure au maximum. Réessayez dans 1 h.",
   network: "Connexion impossible. Vérifiez votre réseau.",
 };
 
@@ -68,7 +68,8 @@ export function useAuth() {
   };
   const forgot = async (email: string) => {
     const r = await post("forgot", { email, locale: "fr" });
-    return r.ok ? null : ERRORS[r.data.error] ?? ERRORS.network;
+    if (!r.ok) return ERRORS[r.data.error] ?? ERRORS.network;
+    return r.data.status === "unknown" ? "Aucun compte n’est associé à cette adresse e-mail." : r.data.status === "social" ? "Ce compte utilise la connexion Google : il n’a pas de mot de passe. Un e-mail vous indique comment vous connecter." : null;
   };
   const google = async (idToken: string) => {
     const r = await post("google", { idToken });
@@ -145,7 +146,7 @@ export function AccountScreen({ auth, onOpenSite }: { auth: Auth; onOpenSite: (p
     setBusy(true);
     setMsg(null);
     const err = mode === "login" ? await auth.login(email, password) : mode === "register" ? await auth.register(name, email, password) : await auth.forgot(email);
-    if (mode === "forgot" && !err) setMsg("Si un compte existe avec cet e-mail, un lien de réinitialisation vient d’être envoyé.");
+    if (mode === "forgot" && !err) setMsg("Un e-mail vient d’être envoyé (lien valable 1 h). Pensez à vérifier vos courriers indésirables.");
     else setMsg(err);
     setBusy(false);
   };

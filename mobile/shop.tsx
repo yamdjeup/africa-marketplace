@@ -2,6 +2,7 @@ import { tr } from "./region";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { ActivityIndicator, FlatList, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { API_URL } from "./config";
+import { ArtistsScreen } from "./artists";
 
 type Opt = { value: string; label: string };
 type Options = { categories: Opt[]; artists: Opt[]; materials: Opt[]; techniques: Opt[]; countries: Opt[] };
@@ -44,6 +45,7 @@ export function ShopScreen<P extends Item>({ initialCategory, renderItem, onOpen
   const [sugg, setSugg] = useState<{ key: string; label: string; hint: string; act: () => void }[]>([]);
   const [open, setOpen] = useState(false);
   const [sheet, setSheet] = useState(false);
+  const [artistsOpen, setArtistsOpen] = useState(false);
   const loadingMore = useRef(false);
 
   useEffect(() => {
@@ -118,6 +120,8 @@ export function ShopScreen<P extends Item>({ initialCategory, renderItem, onOpen
 
   const header = (
     <View>
+      <Pressable onPress={() => setArtistsOpen(true)} style={{ paddingHorizontal: 16, paddingTop: 12 }} accessibilityRole="button"><Text style={{ color: "#221812", textDecorationLine: "underline", fontWeight: "700" }}>{tr("Tous les artistes", "All artists")}</Text></Pressable>
+      {artistsOpen && <ArtistsScreen onClose={() => setArtistsOpen(false)} onOpenCreator={(s) => { setArtistsOpen(false); onOpenCreator(s); }} />}
       <View style={{ padding: 16, paddingBottom: 8 }}>
         <TextInput value={text} onChangeText={setText} onFocus={() => setOpen(true)} placeholder="Un titre, un artiste, une technique…" placeholderTextColor="#8a7d70" accessibilityLabel="Recherche" returnKeyType="search" autoCorrect={false}
           onSubmitEditing={() => { setOpen(false); setV({ ...EMPTY, q: text.trim() }); }} style={st.input} />

@@ -5,7 +5,9 @@ import { COUNTRY_FR } from "./countries";
 // Mêmes indicatifs que src/lib/phone.ts (DIAL) ; drapeaux en images flagcdn comme le site (flag.tsx / phone-field.tsx).
 export const DIAL: Record<string, string> = {
   FR: "33", BE: "32", CH: "41", LU: "352", DE: "49", ES: "34", IT: "39", NL: "31", GB: "44", US: "1", CA: "1",
-  SN: "221", CI: "225", CM: "237", CD: "243", BJ: "229", MG: "261", MA: "212", DZ: "213", TN: "216", NG: "234", GH: "233", KE: "254", ET: "251", ZA: "27",
+  SN: "221", CI: "225", CM: "237", CD: "243", CG: "242", GA: "241", ML: "223", BF: "226", BJ: "229", TG: "228",
+  NE: "227", GN: "224", MG: "261", MA: "212", DZ: "213", TN: "216", NG: "234", GH: "233", KE: "254", ET: "251",
+  ZA: "27", AO: "244", HT: "509", GP: "590", MQ: "596", RE: "262", GF: "594", PT: "351", BR: "55",
 };
 const FIRST = ["FR", "CM", "BE", "CI"];
 const fold = (v: string) => v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();

@@ -14,11 +14,13 @@ import { CartScreen, type CartLine } from "./cart";
 import { ShopScreen } from "./shop";
 import { TilaButton } from "./tila";
 import { CreatorScreen } from "./creator";
+import { HomeBlocks, type Site } from "./home";
+import { SupportScreen } from "./support";
 import { StripeProvider } from "@stripe/stripe-react-native";
 
 type Product = { slug: string; name: string; description: string; story: string; creatorName: string; priceCents: number; images: string[]; material: string | null; technique: string | null; origin: string | null; dimensions: string | null; categorySlug: string; url: string; stock: number; isNew?: boolean; isExample?: boolean; edition?: string | null; sizes?: string[]; sizeStock?: Record<string, number> | null; sizeLabel?: string };
 type Extra = { categoryLabel: string; materials: string[]; dimensionsText: string | null; careInstructions: string | null; hasCertificate: boolean; roomPreview?: boolean; mirrorTryOn?: boolean; attestedAt: string | null; signatureUrl: string | null; related: Product[] };
-type Home = { categories: { slug: string; label: string }[]; news: Product[]; latest: Product[]; creators: { slug: string; name: string; specialty: string; image: string }[]; byCategory: { slug: string; label: string; items: Product[] }[] };
+type Home = { site?: Site; categories: { slug: string; label: string }[]; news: Product[]; latest: Product[]; creators: { slug: string; name: string; specialty: string; image: string }[]; byCategory: { slug: string; label: string; items: Product[] }[] };
 type List = { items: Product[]; total: number; page: number; pages: number };
 type Tab = "home" | "shop" | "favs" | "me";
 
@@ -207,6 +209,8 @@ function Main() {
   const [cart, setCart] = useState<CartLine[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [creator, setCreator] = useState<string | null>(null);
+  const [shopCat, setShopCat] = useState("");
+  const [supportSlug, setSupportSlug] = useState<string | null>(null);
 
   useEffect(() => {
     AsyncStorage.getItem("favs").then((v) => v && setFavItems(JSON.parse(v) as Product[]));
@@ -263,24 +267,10 @@ function Main() {
       <View style={{ flex: 1 }}>
         {error && !home ? <Text style={s.center}>Connexion impossible. Vérifiez votre réseau.</Text> : null}
         {tab === "home" && (home ? (
-          <ScrollView>
-            <Row title="Nouveautés" items={home.news.length ? home.news : home.latest} favs={favs} toggle={toggle} open={setOpen} />
-            <View style={{ marginTop: 24 }}>
-              <Text style={s.h2}>Créateurs du moment</Text>
-              <FlatList horizontal showsHorizontalScrollIndicator={false} data={home.creators} keyExtractor={(c) => c.slug} contentContainerStyle={{ paddingHorizontal: 16, gap: 16 }}
-                renderItem={({ item }) => (
-                  <Pressable onPress={() => setCreator(item.slug)} style={{ alignItems: "center", width: 90 }}>
-                    <Image source={{ uri: item.image }} style={s.avatar} />
-                    <Text numberOfLines={2} style={s.creator}>{item.name}</Text>
-                  </Pressable>
-                )} />
-            </View>
-            {home.byCategory.map((c) => <Row key={c.slug} title={c.label} items={c.items} favs={favs} toggle={toggle} open={setOpen} />)}
-            <View style={{ height: 24 }} />
-          </ScrollView>
+          home.site ? <HomeBlocks site={home.site} renderCard={(p: Product) => <Card p={p} fav={favs.includes(p.slug)} onFav={() => toggle(p)} onOpen={() => setOpen(p)} />} onShop={(cat) => { setShopCat(cat); setTab("shop"); }} onProduct={(slug) => { get<Product>(`/api/v1/products/${slug}?locale=fr`).then(setOpen).catch(() => {}); }} onCreator={setCreator} onSupport={setSupportSlug} /> : null
         ) : !error && <ActivityIndicator style={{ marginTop: 40 }} />)}
 
-        {tab === "shop" && <ShopScreen<Product> initialCategory="" onOpenCreator={setCreator} renderItem={(item) => <Card wide p={item} fav={favs.includes(item.slug)} onFav={() => toggle(item)} onOpen={() => setOpen(item)} />} onOpenSlug={(slug) => { get<Product>(`/api/v1/products/${slug}?locale=fr`).then(setOpen).catch(() => {}); }} />}
+        {tab === "shop" && <ShopScreen<Product> key={shopCat} initialCategory={shopCat} onOpenCreator={setCreator} renderItem={(item) => <Card wide p={item} fav={favs.includes(item.slug)} onFav={() => toggle(item)} onOpen={() => setOpen(item)} />} onOpenSlug={(slug) => { get<Product>(`/api/v1/products/${slug}?locale=fr`).then(setOpen).catch(() => {}); }} />}
 
         {tab === "favs" && (favItems.length ? grid(favItems) : <Text style={s.center}>Aucun favori pour le moment.{"\n"}Touchez ♡ sur une pièce.</Text>)}
 
@@ -301,6 +291,7 @@ function Main() {
         ))}
       </View>
       </KeyboardAvoidingView>
+      {supportSlug && <Modal animationType="slide" onRequestClose={() => setSupportSlug(null)}><SafeAreaProvider><SafeAreaView style={{ flex: 1, backgroundColor: "#faf6ee" }}><SupportScreen initialSlug={supportSlug} onBack={() => setSupportSlug(null)} /></SafeAreaView></SafeAreaProvider></Modal>}
       {creator && <CreatorScreen slug={creator} onClose={() => setCreator(null)} onOpenSlug={(slug) => { get<Product>(`/api/v1/products/${slug}?locale=fr`).then(setOpen).catch(() => {}); }} />}
       {!open && !cartOpen && !creator && <TilaButton onOpenSlug={(slug) => { get<Product>(`/api/v1/products/${slug}?locale=fr`).then(setOpen).catch(() => {}); }} />}
       {open && <Detail key={open.slug} token={auth.accessToken} onNeedLogin={() => { setOpen(null); setTab("me"); }} p={open} onClose={() => setOpen(null)} fav={favs.includes(open.slug)} onFav={() => toggle(open)} onAdd={(size, qty) => addToCart(open, size, qty)} onOpenRelated={(q) => setOpen(q)} />}

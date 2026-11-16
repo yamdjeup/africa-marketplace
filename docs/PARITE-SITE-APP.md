@@ -7,14 +7,14 @@ Source de la 1re passe : routes `src/app/[locale]/**` et composants `src/compone
 ## Groupe A — Accueil, en-tête, pied de page, menus
 | Page / élément (fichier du site) | Dans l'app |
 |---|---|
-| Accueil : bandeau héros + titre + bouton catalogue (`[locale]/page.tsx`) | ? |
-| Accueil : blocs par catégorie (grille 4/3 + bouton) | ? |
+| Accueil : bandeau héros + titre + bouton catalogue (`[locale]/page.tsx`) | Oui (mobile/home.tsx) |
+| Accueil : blocs par catégorie (grille 4/3 + bouton) | Oui (mobile/home.tsx) |
 | Accueil : rangées Nouveautés / sélection (ScrollRow) | Oui |
-| Accueil : vidéos des artistes (`id="vid"`) | Non |
+| Accueil : vidéos des artistes (`id="vid"`) | Oui (mobile/home.tsx) |
 | Accueil : artistes à la une | Oui |
-| Accueil : Newsletter (`newsletter.tsx`) | Non |
-| Accueil : bloc Aide (liens `/support/[slug]`) | ? |
-| Accueil : bloc À propos | Non |
+| Accueil : Newsletter (`newsletter.tsx`) | Oui (mobile/home.tsx) |
+| Accueil : bloc Aide (liens `/support/[slug]`) | Oui (mobile/home.tsx) |
+| Accueil : bloc À propos | Oui (mobile/home.tsx) |
 | Pieds de page : FAQ, contact, CGV, confidentialité, orders, returns, payment, discounts (parrainage/étudiant), about, cookies | Partiel (écran Aide) |
 | Gestion des cookies / consentement (`cookie-consent.tsx`) | Non |
 | Installer l'app (`install-app.tsx`) | Sans objet (déjà une app) |

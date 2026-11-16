@@ -2,7 +2,9 @@ import { ruleFor, SIZE_OPTIONS } from "@/lib/category-rules";
 import { db } from "@/lib/db";
 import { CREATOR_VIDEOS } from "@/lib/creator-videos";
 import { MIRROR_CATEGORIES, MIRROR_ITEMS } from "@/data/mirror-items";
-import { getCategories, getCreatorWithProducts, getCreators, getFilterOptions, getProduct, getRelatedProducts, searchProducts, type CatalogParams, type ProductView } from "@/lib/catalog";
+import { CREATOR_VIDEO_SHOWCASE } from "@/data/creator-videos";
+import { getDict } from "@/lib/i18n";
+import { getCategories, getCategoryShowcase, getFeaturedProducts, getHeroProduct, getCreatorWithProducts, getCreators, getFilterOptions, getProduct, getRelatedProducts, searchProducts, type CatalogParams, type ProductView } from "@/lib/catalog";
 
 export type MobileLocale = "fr" | "en";
 
@@ -95,9 +97,17 @@ export async function oneProduct(slug: string, locale: MobileLocale, origin: str
 }
 
 export async function homeData(locale: MobileLocale, origin: string) {
-  const [fresh, categories, creators] = await Promise.all([searchProducts({ sort: "new" }, locale), getCategories(locale), getCreators(locale, 12)]);
+  const [fresh, categories, creators, featured, showcase, hero, allCreators] = await Promise.all([searchProducts({ sort: "new" }, locale), getCategories(locale), getCreators(locale, 12), getFeaturedProducts(locale, 16), getCategoryShowcase(locale), getHeroProduct(locale), getCreators(locale)]);
   const wrap = (p: ProductView) => toMobileProduct(p, origin, locale);
   const items = fresh.items;
+  const t = getDict(locale);
+  const heroProduct = hero ?? featured[0];
+  const banners = ["couture-mode", "peinture"].flatMap((s) => showcase.filter((c) => c.slug === s && c.count > 0 && c.image));
+  const videos = CREATOR_VIDEO_SHOWCASE.flatMap((v) => {
+    const c = allCreators.find((x) => x.slug === v.slug);
+    return c ? [{ slug: v.slug, name: c.name, poster: absolute(v.poster, origin) }] : [];
+  });
+  const f = t.f4;
   return {
     categories,
     news: items.filter((p) => p.isNew).slice(0, 10).map(wrap),
@@ -106,6 +116,21 @@ export async function homeData(locale: MobileLocale, origin: string) {
     byCategory: categories
       .map((c) => ({ ...c, items: items.filter((p) => p.categorySlug === c.slug).slice(0, 8).map(wrap) }))
       .filter((c) => c.items.length > 0),
+    // Page d'accueil du site (src/app/[locale]/page.tsx) : mêmes blocs, mêmes textes (i18n).
+    site: {
+      promoBar: f.promoBar,
+      hero: { kicker: t.home.heroKicker, title: t.home.heroTitle, text: t.home.heroText, cta: t.home.heroCta, product: heroProduct ? wrap(heroProduct) : null },
+      categoriesTitle: t.home.categories,
+      categoryTiles: showcase.map((c) => ({ slug: c.slug, label: c.label, count: c.count, image: c.image ? absolute(c.image, origin) : null, countText: c.count > 0 ? t.home.worksCount(c.count) : t.home.soon })),
+      newIn: { title: f.newIn, sub: f.newInSub, items: featured.slice(0, 8).map(wrap) },
+      trending: { title: f.trending, sub: f.trendingSub, items: (featured.length > 8 ? featured.slice(8) : featured).map(wrap) },
+      banners: banners.map((c) => ({ slug: c.slug, label: c.label, image: absolute(c.image!, origin), cta: f.seeAll })),
+      videos: { title: t.home.videosTitle, intro: t.home.videosIntro, watch: t.home.watch, items: videos },
+      artists: { title: f.artists, sub: f.artistsSub, items: allCreators.map((c) => ({ slug: c.slug, name: c.name, image: absolute(c.image, origin) })) },
+      newsletter: { title: f.newsTitle, text: f.newsText, email: f.newsEmail, submit: f.newsSubmit, consent: f.newsConsent, ok: f.newsOk, invalid: f.newsInvalid },
+      help: { title: f.helpTitle, items: f.help },
+      about: { title: t.home.aboutTitle, text: t.home.aboutText },
+    },
   };
 }
 

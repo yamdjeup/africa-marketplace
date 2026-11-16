@@ -8,9 +8,9 @@ type Doc = { slug: string; title: string; body: string[]; isHelp: boolean };
 
 // Reprend src/app/[locale]/support/[slug]/page.tsx (contenu, rubriques d'aide, « Ce contenu vous semble-t-il pertinent ? ")
 // et la rubrique Support de src/app/[locale]/account/page.tsx.
-export function SupportScreen({ onBack }: { onBack: () => void }) {
+export function SupportScreen({ onBack, initialSlug }: { onBack: () => void; initialSlug?: string }) {
   const [index, setIndex] = useState<Index | null>(null);
-  const [slug, setSlug] = useState<string | null>(null);
+  const [slug, setSlug] = useState<string | null>(initialSlug ?? null);
   const [doc, setDoc] = useState<Doc | null>(null);
   const [answer, setAnswer] = useState<boolean | null>(null);
   const [failed, setFailed] = useState(false);

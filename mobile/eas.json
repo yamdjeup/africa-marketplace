@@ -4,12 +4,12 @@
     "preview": {
       "distribution": "internal",
       "android": { "buildType": "apk" },
-      "env": { "EXPO_PUBLIC_API_URL": "https://simu.epomta.com", "EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY": "pk_test_REMPLACER"  }
+      "env": { "EXPO_PUBLIC_API_URL": "https://simu.epomta.com", "EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY": "pk_test_REMPLACER", "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "691333344380-44agp3f0nntceoctpkejas61thacm07e.apps.googleusercontent.com", "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "691333344380-nfi96ajitv15ofp0npgdqq2pveh7m3ql.apps.googleusercontent.com" }
     },
     "production": {
       "autoIncrement": true,
       "ios": { "image": "latest" },
-      "env": { "EXPO_PUBLIC_API_URL": "https://simu.epomta.com", "EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY": "pk_test_REMPLACER"  }
+      "env": { "EXPO_PUBLIC_API_URL": "https://simu.epomta.com", "EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY": "pk_test_REMPLACER", "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "691333344380-44agp3f0nntceoctpkejas61thacm07e.apps.googleusercontent.com", "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "691333344380-nfi96ajitv15ofp0npgdqq2pveh7m3ql.apps.googleusercontent.com" }
     }
   },
   "submit": {

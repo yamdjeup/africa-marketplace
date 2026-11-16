@@ -15,6 +15,7 @@ import { ShopScreen } from "./shop";
 import { TilaButton } from "./tila";
 import { CreatorScreen } from "./creator";
 import { HomeBlocks, MoreBlocks, type Site } from "./home";
+import { ApproxPrice } from "./region";
 import { SupportScreen } from "./support";
 import { StripeProvider } from "@stripe/stripe-react-native";
 
@@ -40,6 +41,7 @@ function Card({ p, fav, onFav, onOpen, wide }: { p: Product; fav: boolean; onFav
       <Text style={s.brand} numberOfLines={1}>{p.creatorName}</Text>
       <Text numberOfLines={1} style={s.name}>{p.name}</Text>
       <Text style={s.price}>{eur(p.priceCents)}</Text>
+      <ApproxPrice cents={p.priceCents} />
     </Pressable>
   );
 }
@@ -112,6 +114,7 @@ function DetailBody({ p, onClose, fav, onFav, onAdd, token, onNeedLogin, onOpenR
             <Text style={s.brand}>{p.creatorName}</Text>
             <Text style={[s.h2, { paddingHorizontal: 0 }]}>{p.name}</Text>
             <Text style={[s.price, { fontSize: 18 }]}>{eur(p.priceCents)}</Text>
+            <ApproxPrice cents={p.priceCents} />
             <Text style={[s.meta, { color: p.stock === 0 ? "#b42318" : "#1e7546" }]}>{p.stock === 0 ? "Épuisée" : p.stock <= 1 ? "Pièce unique" : p.stock <= 3 ? `Plus que ${p.stock}` : "En stock"}</Text>
             <Text style={s.body}>{p.description}</Text>
             {[p.edition && !(p.stock > 0 && p.stock <= 1 && unique) && `Édition : ${p.edition}`, p.material && `Matière : ${p.material}`, p.technique && `Technique : ${p.technique}`, !p.material && !p.technique && x?.materials?.length ? `Matières : ${x.materials.join(", ")}` : null, p.origin && `Origine : ${p.origin}`, (x ? x.dimensionsText : p.dimensions) && `Dimensions : ${x ? x.dimensionsText : p.dimensions}`].filter(Boolean).map((l) => <Text key={l as string} style={s.meta}>{l}</Text>)}

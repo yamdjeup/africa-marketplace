@@ -115,7 +115,7 @@ function GoogleButton({ auth, onError }: { auth: Auth; onError: (m: string | nul
   );
 }
 
-import { Flag } from "./flags";
+import { RegionRow } from "./region";
 
 export function AccountScreen({ auth, onOpenSite, more }: { auth: Auth; onOpenSite: (path: string) => void; more?: React.ReactNode }) {
   const [mode, setMode] = useState<"login" | "register" | "forgot">("login");
@@ -142,7 +142,7 @@ export function AccountScreen({ auth, onOpenSite, more }: { auth: Auth; onOpenSi
         <Text style={s.body}>Bonjour {auth.user.name}</Text>
         <Text style={s.mut}>{auth.user.email}</Text>
         <Text style={[s.h2, { marginTop: 16 }]}>Langue et région</Text>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 4 }}><Flag code="FR" /><Text style={s.body}>Français · France · EUR</Text></View>
+                <View style={{ marginTop: 16 }}><RegionRow /></View>
         <Pressable style={[s.cta, { marginTop: 16 }]} onPress={() => setOrders(true)}><Text style={s.ctaText}>Mes commandes</Text></Pressable>
         <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => setAddresses(true)}><Text style={s.ctaText}>Mes adresses</Text></Pressable>
         <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => setAlerts(true)}><Text style={s.ctaText}>Recevoir des alertes</Text></Pressable>
@@ -166,6 +166,7 @@ export function AccountScreen({ auth, onOpenSite, more }: { auth: Auth; onOpenSi
   return (
     <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
       <Text style={s.h2}>{titles[mode]}</Text>
+      <View style={{ marginBottom: 16 }}><RegionRow /></View>
       {mode === "register" && <TextInput placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={s.input} placeholder="Nom" value={name} onChangeText={setName} autoComplete="name" />}
       <TextInput placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={s.input} placeholder="Adresse e-mail" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" />
       {mode !== "forgot" && <TextInput placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={s.input} placeholder="Mot de passe" value={password} onChangeText={setPassword} secureTextEntry autoCapitalize="none" />}

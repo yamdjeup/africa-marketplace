@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { authed } from "./api";
+import { API_URL } from "./config";
 import { tr } from "./region";
 
 // Reprend src/app/[locale]/account/security/page.tsx + profile-form.tsx (nom, mot de passe ; compte Google : pas de mot de passe).
@@ -18,7 +19,15 @@ export function ProfileScreen({ token, onBack, onSaved }: { token: string; onBac
   const [pwd, setPwd] = useState("");
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
-  useEffect(() => { authed<Info>(token, "GET", "/api/v1/auth/profile").then((r) => { if (r.ok) { setInfo(r.data); setName(r.data.name); } }); }, [token]);
+  const [loadErr, setLoadErr] = useState("");
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    setLoadErr("");
+    authed<Info>(token, "GET", "/api/v1/auth/profile").then((r) => {
+      if (r.ok && r.data.email) { setInfo(r.data); setName(r.data.name); }
+      else setLoadErr(`${API_URL}/api/v1/auth/profile · HTTP ${r.status || "réseau/délai"}`);
+    });
+  }, [token, tick]);
   const save = async () => {
     setBusy(true); setMsg(null);
     const r = await authed<{ error?: string; name?: string }>(token, "POST", "/api/v1/auth/profile", { name, currentPassword: cur, newPassword: pwd });
@@ -26,7 +35,13 @@ export function ProfileScreen({ token, onBack, onSaved }: { token: string; onBac
     if (r.ok) { setCur(""); setPwd(""); setMsg({ ok: true, text: tr("Modifications enregistrées.", "Changes saved.") }); onSaved?.(name.trim()); }
     else { const e = ERR[r.data.error ?? ""]; setMsg({ ok: false, text: e ? tr(e[0], e[1]) : tr("Une erreur est survenue. Réessayez.", "Something went wrong. Please try again.") }); }
   };
-  if (!info) return <ActivityIndicator style={{ marginTop: 40 }} />;
+  if (!info) return loadErr ? (
+    <View style={{ padding: 16 }}>
+      <Pressable onPress={onBack} hitSlop={8}><Text style={s.link}>← {tr("Mon compte", "My account")}</Text></Pressable>
+      <Text style={[s.mut, { marginTop: 16 }]}>{tr("Chargement impossible.", "Could not load.")} {loadErr}</Text>
+      <Pressable onPress={() => setTick((n) => n + 1)} style={s.cta}><Text style={s.ctaText}>{tr("Réessayer", "Retry")}</Text></Pressable>
+    </View>
+  ) : <ActivityIndicator style={{ marginTop: 40 }} />;
   const since = new Intl.DateTimeFormat(tr("fr-FR", "en-GB"), { dateStyle: "long" }).format(new Date(info.memberSince));
   return (
     <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">

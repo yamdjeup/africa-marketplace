@@ -19,7 +19,7 @@ import { ApproxPrice, tr, useLang } from "./region";
 import { SupportScreen } from "./support";
 import { StripeProvider } from "@stripe/stripe-react-native";
 
-type Product = { slug: string; name: string; description: string; story: string; creatorName: string; priceCents: number; images: string[]; material: string | null; technique: string | null; origin: string | null; dimensions: string | null; categorySlug: string; url: string; stock: number; isNew?: boolean; isExample?: boolean; edition?: string | null; sizes?: string[]; sizeStock?: Record<string, number> | null; sizeLabel?: string };
+type Product = { slug: string; name: string; description: string; story: string; creatorName: string; priceCents: number; images: string[]; material: string | null; technique: string | null; origin: string | null; dimensions: string | null; categorySlug: string; url: string; stock: number; soldOut?: boolean; isNew?: boolean; isExample?: boolean; edition?: string | null; sizes?: string[]; sizeStock?: Record<string, number> | null; sizeLabel?: string };
 type Extra = { categoryLabel: string; materials: string[]; dimensionsText: string | null; careInstructions: string | null; hasCertificate: boolean; roomPreview?: boolean; mirrorTryOn?: boolean; attestedAt: string | null; signatureUrl: string | null; related: Product[] };
 type Home = { site?: Site; categories: { slug: string; label: string }[]; news: Product[]; latest: Product[]; creators: { slug: string; name: string; specialty: string; image: string }[]; byCategory: { slug: string; label: string; items: Product[] }[] };
 type List = { items: Product[]; total: number; page: number; pages: number };
@@ -35,8 +35,8 @@ const get = async <T,>(path: string): Promise<T> => {
 function Card({ p, fav, onFav, onOpen, wide }: { p: Product; fav: boolean; onFav: () => void; onOpen: () => void; wide?: boolean }) {
   return (
     <Pressable onPress={onOpen} style={[s.card, wide && { width: "48%" }]}>
-      <Image source={{ uri: p.images[0] }} style={s.cardImg} />
-      <Badges stock={p.stock} isNew={p.isNew} isExample={p.isExample} />
+      <Image source={{ uri: p.images[0] }} style={[s.cardImg, p.soldOut && { opacity: 0.55 }]} />
+      <Badges soldOut={p.soldOut} stock={p.stock} isNew={p.isNew} isExample={p.isExample} />
       <Pressable onPress={onFav} hitSlop={6} style={s.heart} accessibilityLabel={fav ? "Retirer des favoris" : tr("Ajouter aux favoris", "Add to wish list")}><Text style={[s.heartIcon, fav && { color: "#d4183d" }]}>{fav ? "♥" : "♡"}</Text></Pressable>
       <Text style={s.brand} numberOfLines={1}>{p.creatorName}</Text>
       <Text numberOfLines={1} style={s.name}>{p.name}</Text>
@@ -116,7 +116,7 @@ function DetailBody({ p, onClose, fav, onFav, onAdd, token, onNeedLogin, onOpenR
         <ScrollView>
           <View><ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false}>
             {p.images.map((u) => <Image key={u} source={{ uri: u }} style={s.hero} resizeMode="cover" />)}
-          </ScrollView><Badges stock={p.stock} isNew={p.isNew} isExample={p.isExample} /></View>
+          </ScrollView><Badges soldOut={p.soldOut} stock={p.stock} isNew={p.isNew} isExample={p.isExample} /></View>
           <View style={{ padding: 16 }}>
             {x?.categoryLabel ? <Text style={{ alignSelf: "flex-start", backgroundColor: "#f2eadd", color: "#221812", fontSize: 12, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, overflow: "hidden", marginBottom: 6 }}>{x.categoryLabel}</Text> : null}
             <Text style={s.brand}>{p.creatorName}</Text>
@@ -147,7 +147,7 @@ function DetailBody({ p, onClose, fav, onFav, onAdd, token, onNeedLogin, onOpenR
                 <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
                   {x.related.map((m) => (
                     <Pressable key={m.slug} onPress={() => onOpenRelated(m)} style={{ width: "47%" }}>
-                      <View><Image source={{ uri: m.images[0] }} style={{ width: "100%", aspectRatio: 1, backgroundColor: "#f2eadd" }} /><Badges stock={m.stock} isNew={m.isNew} isExample={m.isExample} /></View>
+                      <View><Image source={{ uri: m.images[0] }} style={{ width: "100%", aspectRatio: 1, backgroundColor: "#f2eadd" }} /><Badges soldOut={m.soldOut} stock={m.stock} isNew={m.isNew} isExample={m.isExample} /></View>
                       <Text numberOfLines={1} style={s.brand}>{m.creatorName}</Text>
                       <Text numberOfLines={2} style={{ color: "#221812" }}>{m.name}</Text>
                       <Text style={{ color: "#221812", fontWeight: "700" }}>{eur(m.priceCents)}</Text>

@@ -13,6 +13,9 @@ describe.skipIf(!enabled)("filtre « En stock uniquement » (base de test)", () 
     const all = await searchProducts({}, "fr");
     const some = await searchProducts({ inStock: true }, "fr");
     expect(some.total).toBeLessThanOrEqual(all.total);
+    const { listProducts } = await import("@/lib/api-v1");
+    const l = await listProducts(new URLSearchParams(""), "https://x.test");
+    for (const p of l.items) expect(p.soldOut).toBe(p.stock <= 0 || (p.sizeStock != null && Object.values(p.sizeStock).every((n) => n <= 0)));
     for (const p of some.items) {
       expect(p.variants.length > 0 ? p.variants.some((v) => v.available > 0) : p.stock > 0).toBe(true);
     }

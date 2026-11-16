@@ -1,3 +1,4 @@
+import { tr } from "./region";
 import { useState } from "react";
 import { FlatList, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
@@ -140,7 +141,7 @@ export function MoreBlocks({ site: x, onSupport }: { site: Site; onSupport: (slu
   return (
     <View>
       <View style={{ marginTop: 24, paddingHorizontal: 16 }}>
-        <Text style={[st.h2, { paddingHorizontal: 0 }]}>Aide et informations</Text>
+        <Text style={[st.h2, { paddingHorizontal: 0 }]}>{tr("Aide et informations", "Help and information")}</Text>
         {([["faq", "FAQ"], ["contact", "Nous contacter"], ["orders", "Commandes"], ["returns", "Livraison et retours"], ["payment", "Paiement"], ["discounts", "Réductions et parrainage"], ["about", "À propos"], ["terms", "Conditions générales"], ["privacy", "Confidentialité"], ["cookies", "Gestion des cookies"]] as const).map(([slug, label]) => (
           <Pressable key={slug} onPress={() => onSupport(slug)} style={st.linkRow} accessibilityRole="button">
             <Text style={{ color: "#221812", fontSize: 15 }}>{label}</Text>

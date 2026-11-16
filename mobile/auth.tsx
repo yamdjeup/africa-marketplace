@@ -110,12 +110,12 @@ function GoogleButton({ auth, onError }: { auth: Auth; onError: (m: string | nul
   };
   return (
     <Pressable style={[s.cta, s.ghost, { marginTop: 12, opacity: busy ? 0.6 : 1 }]} disabled={busy} onPress={signIn}>
-      <Text style={[s.ctaText, { color: "#221812" }]}>Continuer avec google</Text>
+      <Text style={[s.ctaText, { color: "#221812" }]}>{tr("Continuer avec google", "Continue with Google")}</Text>
     </Pressable>
   );
 }
 
-import { RegionRow } from "./region";
+import { RegionRow, tr } from "./region";
 
 export function AccountScreen({ auth, onOpenSite, more }: { auth: Auth; onOpenSite: (path: string) => void; more?: React.ReactNode }) {
   const [mode, setMode] = useState<"login" | "register" | "forgot">("login");
@@ -138,14 +138,14 @@ export function AccountScreen({ auth, onOpenSite, more }: { auth: Auth; onOpenSi
   if (auth.user) {
     return (
       <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
-        <Text style={s.h2}>Mon compte</Text>
+        <Text style={s.h2}>{tr("Mon compte", "My account")}</Text>
         <Text style={s.body}>Bonjour {auth.user.name}</Text>
         <Text style={s.mut}>{auth.user.email}</Text>
         <Text style={[s.h2, { marginTop: 16 }]}>Langue et région</Text>
                 <View style={{ marginTop: 16 }}><RegionRow /></View>
-        <Pressable style={[s.cta, { marginTop: 16 }]} onPress={() => setOrders(true)}><Text style={s.ctaText}>Mes commandes</Text></Pressable>
-        <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => setAddresses(true)}><Text style={s.ctaText}>Mes adresses</Text></Pressable>
-        <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => setAlerts(true)}><Text style={s.ctaText}>Recevoir des alertes</Text></Pressable>
+        <Pressable style={[s.cta, { marginTop: 16 }]} onPress={() => setOrders(true)}><Text style={s.ctaText}>{tr("Mes commandes", "My orders")}</Text></Pressable>
+        <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => setAddresses(true)}><Text style={s.ctaText}>{tr("Mes adresses", "My addresses")}</Text></Pressable>
+        <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => setAlerts(true)}><Text style={s.ctaText}>{tr("Recevoir des alertes", "Get alerts")}</Text></Pressable>
         <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => setSupport(true)}><Text style={s.ctaText}>Besoin d’aide ?</Text></Pressable>
         <Pressable style={[s.cta, s.ghost, { marginTop: 12 }]} onPress={auth.logout}><Text style={[s.ctaText, { color: "#221812" }]}>Se déconnecter</Text></Pressable>
                 {more}

@@ -105,7 +105,7 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
     return (
       <View style={{ flex: 1, backgroundColor: "#faf6ee", padding: 24, justifyContent: "center" }}>
         <Text style={s.h2}>{tr("Merci pour votre commande", "Thank you for your order")}</Text>
-        <Text style={s.mut}>Commande {done}. Vous pouvez la suivre dans Moi › Mes commandes.</Text>
+        <Text style={s.mut}>{tr(`Commande ${done}. Vous pouvez la suivre dans Moi › Mes commandes.`, `Order ${done}. You can track it in Me › My orders.`)}</Text>
         {snap && (
           <View style={{ marginTop: 16, gap: 4 }}>
             <Text style={s.bold}>{tr("Votre commande", "Your order")}</Text>
@@ -131,7 +131,7 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
         {msg ? <Text style={{ color: "#b00020", marginVertical: 8 }}>{msg}</Text> : null}
         {step === "form" ? (
           <>
-            {!token && <Text style={[s.mut, { marginTop: 12 }]}>Vous commandez en invité. Connectez-vous pour retrouver vos commandes.{"  "}<Text style={s.link} onPress={onNeedLogin}>{tr("Se connecter", "Sign in")}</Text></Text>}
+            {!token && <Text style={[s.mut, { marginTop: 12 }]}>{tr("Vous commandez en invité. Connectez-vous pour retrouver vos commandes.", "You are ordering as a guest. Sign in to find your orders later.")}{"  "}<Text style={s.link} onPress={onNeedLogin}>{tr("Se connecter", "Sign in")}</Text></Text>}
             <Text style={s.h3}>{tr("Coordonnées", "Contact details")}</Text>
             {token ? null : (
               <>
@@ -177,7 +177,7 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
             <Text style={s.mut}>{tr("Nous vous contacterons par téléphone en cas de doute sur l’adresse.", "We will call you if there is any doubt about the address.")}</Text>
             {mismatch && !ship ? <Text style={{ color: "#b00020", marginTop: 8 }}>{tr("Attention : ce code postal ne semble pas correspondre à cette ville. Vérifiez-les avant de confirmer.", "Warning: this postcode does not seem to match this city. Please check them before confirming.")}</Text> : null}
             <Pressable disabled={busy} onPress={pay} style={[s.cta, { backgroundColor: "#1c3060", marginTop: 16 }]}>
-              {busy ? <ActivityIndicator color="#fff" /> : <Text style={s.ctaText}>Confirmer la commande · {eur(total)}</Text>}
+              {busy ? <ActivityIndicator color="#fff" /> : <Text style={s.ctaText}>{tr("Confirmer la commande", "Confirm order")} · {eur(total)}</Text>}
             </Pressable>
           </>
         )}
@@ -187,7 +187,7 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
   return (
     <View style={{ flex: 1, backgroundColor: "#faf6ee" }}>
       <ScrollView contentContainerStyle={{ padding: 16 }}>
-        <Pressable onPress={onClose} hitSlop={8} style={{ marginBottom: 8 }}><Text style={s.link}>← Continuer mes achats</Text></Pressable>
+        <Pressable onPress={onClose} hitSlop={8} style={{ marginBottom: 8 }}><Text style={s.link}>{tr("← Continuer mes achats", "← Continue shopping")}</Text></Pressable>
         <Text style={s.h2}>{tr("Mon panier", "My cart")}</Text>
         {lines.length === 0 && <Text style={s.mut}>{tr("Votre panier est vide.", "Your cart is empty.")}</Text>}
         {lines.map((l) => (
@@ -196,7 +196,7 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
             <View style={{ flex: 1 }}>
               <Text style={s.bold} numberOfLines={1}>{l.creatorName}</Text>
               <Text numberOfLines={2}>{l.name}</Text>
-              {l.size ? <Text style={s.bold}>Taille / variante : {l.size}</Text> : null}
+              {l.size ? <Text style={s.bold}>{tr("Taille / variante", "Size / variant")} : {l.size}</Text> : null}
               <Text style={s.bold}>{eur(l.priceCents)}</Text><ApproxPrice cents={l.priceCents} />
               <View style={{ flexDirection: "row", alignItems: "center", gap: 16, marginTop: 6 }}>
                 <Pressable style={s.qty} hitSlop={6} onPress={() => onQty(l.slug, l.size ?? null, l.quantity - 1)}><Text style={s.qtyText}>−</Text></Pressable>

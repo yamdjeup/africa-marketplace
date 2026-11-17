@@ -46,6 +46,8 @@ export async function returnDecideAction(f: FormData) {
   const r = await partnerDecideReturn(db, id, supplierId, s(f, "decision") === "REFUSED" ? "REFUSED" : "ACCEPTED", s(f, "note", 500));
   if (r === "note") redirect(back("?error=reason"));
   if (r !== "ok") redirect(back("?error=state"));
+  const decision = s(f, "decision") === "REFUSED" ? "REFUSED" : "ACCEPTED";
+  await sendReturnMail(id, decision === "REFUSED" ? "decided_refused" : "decided_accepted", s(f, "note", 500));
   done(back("?ok=returndecided"));
 }
 

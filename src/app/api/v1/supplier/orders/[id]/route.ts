@@ -96,6 +96,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       const r = await partnerDecideReturn(db, id, sup.id, b.decision === "REFUSED" ? "REFUSED" : "ACCEPTED", str(b.note, 500));
       if (r === "note") return NextResponse.json({ error: "reason" }, { status: 400 });
       if (r !== "ok") return state();
+      await sendReturnMail(id, b.decision === "REFUSED" ? "decided_refused" : "decided_accepted", str(b.note, 500));
       break;
     }
     default:

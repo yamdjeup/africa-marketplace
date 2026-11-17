@@ -22,14 +22,16 @@ export default async function AdminOrders({ params, searchParams }: { params: Pr
   const where = subOrdersWhere(q, matched.map((m) => m.id));
   const total = await db.subOrder.count({ where });
   q.page = Math.min(q.page, pageCount(total));
-  const [subs, nTodo] = await Promise.all([
+  const [subs, nTodo, nOpen, nShip] = await Promise.all([
     db.subOrder.findMany({ where, include: { order: true }, orderBy: [{ createdAt: q.asc ? "asc" : "desc" }], ...pageArgs(q.page) }),
     db.subOrder.count({ where: subOrdersWhere({ ...q, q: "", from: null, to: null, st: "todo" }) }),
+    db.subOrder.count({ where: subOrdersWhere({ ...q, q: "", from: null, to: null, st: "open" }) }),
+    db.subOrder.count({ where: subOrdersWhere({ ...q, q: "", from: null, to: null, st: "SHIPPED" }) }),
   ]);
   const orphans = q.st === "all" && !q.q && q.page === 1 ? await db.order.findMany({ where: { subOrders: { none: {} }, archivedAt: null }, include: { items: true }, orderBy: { createdAt: "desc" }, take: 25 }) : [];
   const shops = await db.supplier.findMany({ where: { id: { in: [...new Set(subs.map((s) => s.supplierId))] } } });
   const path = `/${locale}/admin/commandes`;
-  const tabs = [{ value: "todo", label: tr(locale, "À traiter", "To handle"), count: nTodo }, { value: "open", label: tr(locale, "En cours", "In progress") }, { value: "SHIPPED", label: tr(locale, "Expédiées", "Shipped") }, { value: "DELIVERED", label: tr(locale, "Livrées", "Delivered") }, { value: "closed", label: tr(locale, "Annulées / refusées", "Cancelled / refused") }, { value: "all", label: tr(locale, "Toutes", "All") }];
+  const tabs = [{ value: "todo", label: tr(locale, "À traiter", "To handle"), count: nTodo }, { value: "open", label: tr(locale, "En cours", "In progress"), count: nOpen }, { value: "SHIPPED", label: tr(locale, "Expédiées", "Shipped"), count: nShip }, { value: "DELIVERED", label: tr(locale, "Livrées", "Delivered") }, { value: "closed", label: tr(locale, "Annulées / refusées", "Cancelled / refused") }, { value: "all", label: tr(locale, "Toutes", "All") }];
   const name = new Map(shops.map((s) => [s.id, s.displayName]));
   const fmt = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "fr-FR", { timeZone: "Europe/Paris", dateStyle: "medium", timeStyle: "short" });
   const eur = (c: number) => new Intl.NumberFormat(locale === "en" ? "en-GB" : "fr-FR", { style: "currency", currency: "EUR" }).format(c / 100);

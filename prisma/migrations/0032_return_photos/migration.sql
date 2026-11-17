@@ -1,0 +1,1 @@
+ALTER TABLE "ReturnRequest" ADD COLUMN "photoIds" TEXT NOT NULL DEFAULT '';

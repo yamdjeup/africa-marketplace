@@ -8,6 +8,8 @@ import { db } from "@/lib/db";
 import { notifySubOrder } from "@/lib/order-notify";
 import { settleSubRefund } from "@/lib/refund";
 import { acceptSub, deliverSub, prepareSub, refuseSub, shipSub } from "@/lib/suborders";
+import { markReturnReceivedByPartner } from "@/lib/returns";
+import { sendReturnMail } from "@/lib/return-email";
 import { getPortalContext } from "@/lib/supplier";
 
 const s = (f: FormData, k: string, max = 500) => String(f.get(k) ?? "").trim().slice(0, max);
@@ -27,6 +29,16 @@ async function ctxOf(f: FormData) {
 function done(path: string) {
   revalidatePath(path);
   redirect(path);
+}
+
+export async function returnCheckAction(f: FormData) {
+  const { id, supplierId, back } = await ctxOf(f);
+  const condition = s(f, "condition") === "DAMAGED" ? "DAMAGED" : "OK";
+  const r = await markReturnReceivedByPartner(db, id, supplierId, condition, s(f, "note", 300));
+  if (r === "note") redirect(back("?error=note"));
+  if (r !== "ok") redirect(back("?error=state"));
+  await sendReturnMail(id, "received");
+  done(back("?ok=returnchecked"));
 }
 
 export async function acceptOrderAction(f: FormData) {

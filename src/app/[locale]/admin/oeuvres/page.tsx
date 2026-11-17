@@ -43,13 +43,14 @@ export default async function AdminWorks({ params, searchParams }: Props) {
   const sortHref = (key: string) => href({ sort: key, dir: sp.sort === key && sp.dir !== "asc" ? "asc" : "desc", p: undefined });
   const arrow = (key: string) => (sp.sort === key ? (sp.dir === "asc" ? " ▲" : " ▼") : "");
 
-  const [{ list, total }, counts, sups, cats, moves, movesTotal] = await Promise.all([
+  const [{ list, total }, counts, sups, cats, moves, movesTotal, nPendingAll] = await Promise.all([
     queryWorks(sp, tab, { page }),
     Promise.all(TABS.map(async (t) => [t, await db.product.count({ where: await worksWhere(sp, t) })] as const)),
     db.supplier.findMany({ where: { isDemo: false }, orderBy: { displayName: "asc" }, select: { id: true, displayName: true } }),
     db.category.findMany({ orderBy: { sortOrder: "asc" }, select: { slug: true, name: true, nameEn: true } }),
     db.stockMovement.findMany({ orderBy: { createdAt: "desc" }, skip: (mpage - 1) * PAGE_SIZE, take: PAGE_SIZE }),
     db.stockMovement.count(),
+    db.product.count({ where: { status: "SUBMITTED" } }),
   ]);
   const hidden = tab === "pending" || mode === "all" ? 0 : (await db.product.count({ where: await worksWhere(sp, tab, true) })) - total;
   const showWait = tab === "pending" || tab === "all";
@@ -78,7 +79,7 @@ export default async function AdminWorks({ params, searchParams }: Props) {
         <nav aria-label={tr(locale, "Filtrer par statut", "Filter by status")} className="flex flex-wrap gap-2">
           {counts.map(([k, n]) => (
             <Link key={k} href={href({ f: k, p: undefined, sort: undefined, dir: undefined })} aria-current={k === tab ? "page" : undefined} className={`inline-flex min-h-11 items-center rounded-md border px-3 text-sm ${k === tab ? "bg-primary text-primary-foreground" : ""}`}>
-              {tr(locale, ...TAB_LABEL[k])} ({n})
+              {tr(locale, ...TAB_LABEL[k])}{k === "pending" ? (nPendingAll > 0 ? <span className="ml-2 rounded-full bg-accent px-2 py-0.5 text-xs font-semibold text-accent-foreground">{nPendingAll}</span> : null) : null}
             </Link>
           ))}
         </nav>

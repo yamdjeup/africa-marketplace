@@ -141,7 +141,7 @@ export function MoreBlocks({ site: x, onSupport }: { site: Site; onSupport: (slu
     <View>
       <View style={{ marginTop: 24, paddingHorizontal: 16 }}>
         <Text style={[st.h2, { paddingHorizontal: 0 }]}>{tr("Aide et informations", "Help and information")}</Text>
-        {([["faq", "FAQ"], ["contact", "Nous contacter"], ["orders", tr("Commandes", "Orders")], ["returns", tr("Livraison et retours", "Delivery and returns")], ["payment", "Paiement"], ["discounts", tr("Réductions et parrainage", "Discounts and referral")], ["about", tr("À propos", "About")], ["terms", tr("Conditions générales", "Terms and conditions")], ["privacy", tr("Confidentialité", "Privacy")], ["cookies", "Gestion des cookies"]] as const).map(([slug, label]) => (
+        {([["faq", "FAQ"], ["contact", tr("Nous contacter", "Contact us")], ["orders", tr("Commandes", "Orders")], ["returns", tr("Livraison et retours", "Delivery and returns")], ["payment", tr("Paiement", "Payment")], ["discounts", tr("Réductions et parrainage", "Discounts and referral")], ["about", tr("À propos", "About")], ["terms", tr("Conditions générales", "Terms and conditions")], ["privacy", tr("Confidentialité", "Privacy")], ["cookies", tr("Gestion des cookies", "Cookie settings")]] as const).map(([slug, label]) => (
           <Pressable key={slug} onPress={() => onSupport(slug)} style={st.linkRow} accessibilityRole="button">
             <Text style={{ color: "#221812", fontSize: 15 }}>{label}</Text>
             <Text style={{ color: "#221812", fontSize: 18 }}>›</Text>

@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("@/lib/db", () => ({ db: {} }));
 vi.mock("@/lib/supplier-email", () => ({ safeSend: vi.fn() }));
 
-import { adminCounts, applicationsWhere, dateRange, has, ledgerWhere, pageArgs, pageCount, parseList, partnerCounts, partnerLedgerWhere, partnerSubOrdersWhere, returnsWhere, subOrdersWhere } from "@/lib/admin-list";
+import { PAYOUT_FILTERS, payoutHistoryWhere, adminCounts, applicationsWhere, dateRange, has, ledgerWhere, pageArgs, pageCount, parseList, partnerCounts, partnerLedgerWhere, partnerSubOrdersWhere, returnsWhere, subOrdersWhere } from "@/lib/admin-list";
 import { buildPartnerReturnEmail, buildReturnEmail } from "@/lib/return-email";
 
 const ST = ["todo", "open", "all"] as const;
@@ -66,6 +66,16 @@ describe("listes admin : filtres", () => {
     expect((ledgerWhere("pending", now) as { availableAt?: unknown }).availableAt).toEqual({ gt: now });
     expect(ledgerWhere("all", now)).toEqual({ payoutId: null, reversedAt: null });
   });
+  it("versements « Réalisés » : statut accepté, recherche partenaire/référence et période sur paidAt", () => {
+    expect(PAYOUT_FILTERS).toContain("done");
+    const q = parseList({ st: "done", q: "ref1", from: "2026-11-01", to: "2026-11-30" }, PAYOUT_FILTERS, "topay", ["displayName"], "displayName");
+    expect(q.st).toBe("done");
+    const w = JSON.stringify(payoutHistoryWhere(q, ["sup1"]));
+    expect(w).toContain("ref1");
+    expect(w).toContain("sup1");
+    expect(w).toContain("paidAt");
+    expect(payoutHistoryWhere(parseList({}, PAYOUT_FILTERS, "topay", ["displayName"], "displayName"), [])).toEqual({});
+  });
   it("espace partenaire : toujours limité au partenaire connecté", () => {
     expect(JSON.stringify(partnerSubOrdersWhere(parse({ st: "all" }), "sup1"))).toContain("sup1");
     expect(JSON.stringify(partnerSubOrdersWhere(parseList({ st: "todo" }, ["todo"], "todo", ["createdAt"], "createdAt"), "sup1"))).toContain("PREPARING");
@@ -92,6 +102,7 @@ describe("pastilles de compteur", () => {
     };
     expect(await adminCounts(db as never)).toEqual({ applications: 2, creations: 3, orders: 1, returns: 4, payouts: 2 });
     expect(db.product.count).toHaveBeenCalledWith({ where: { status: "SUBMITTED" } });
+    expect(db.returnRequest.count).toHaveBeenCalledWith({ where: { status: { in: ["REQUESTED", "ACCEPTED", "RECEIVED"] } } });
   });
   it("partenaire : colis à accepter/expédier et créations refusées", async () => {
     const db = { subOrder: { count: vi.fn().mockResolvedValue(5) }, product: { count: vi.fn().mockResolvedValue(1) } };

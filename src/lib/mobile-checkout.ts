@@ -5,6 +5,8 @@ import { buyerKeyOf, createHold, releaseBuyerHolds, releaseHold, attachSession, 
 import { db } from "@/lib/db";
 import { RETURN_LABELS, returnEligibility, showShippedNotice, type ReturnStatus } from "@/lib/returns";
 import { subLabel } from "@/lib/suborders";
+import { absoluteImageUrl } from "@/lib/email-layout";
+import { orderBucket, parcelTimeline } from "@/lib/order-view";
 import { carrierLabel, cleanTrackingNumber, trackingUrl } from "@/lib/tracking";
 import { saveAddress } from "@/lib/mobile-account";
 import { confirmPaidOrder, stripeEnabled } from "@/lib/stripe-checkout";
@@ -143,14 +145,19 @@ export async function listOrders(userId: string) {
   const subs = rows.flatMap((o) => o.subOrders);
   const shops = await db.supplier.findMany({ where: { id: { in: subs.map((s) => s.supplierId) } }, select: { id: true, displayName: true, country: true } });
   const returns = await db.returnRequest.findMany({ where: { subOrderId: { in: subs.map((s) => s.id) } } });
+  const slugs = [...new Set(rows.flatMap((o) => o.items.map((i) => i.productSlug)))];
+  const prods = await db.product.findMany({ where: { slug: { in: slugs } }, select: { slug: true, images: true } });
+  const img = new Map(prods.map((p) => [p.slug, absoluteImageUrl(p.images) ?? null]));
   return rows.map((o) => ({
     number: o.number,
     createdAt: o.createdAt.toISOString(),
     status: o.status,
     totalCents: o.totalCents,
+    shippingCents: Math.max(0, o.totalCents - o.items.reduce((n, i) => n + i.unitPriceCents * i.quantity, 0)),
+    bucket: orderBucket(o.subOrders.map((s) => ({ status: s.status, returnStatus: returns.find((r) => r.subOrderId === s.id)?.status ?? null }))),
     address: { fullName: o.fullName, street: o.address, postalCode: o.postalCode, city: o.city, country: o.country, line1: o.street || o.address, houseNumber: o.houseNumber, box: o.box ?? "", line2: o.complement ?? "", phone: o.phone },
     canEditAddress: isAddressEditable(o.createdAt) && !o.subOrders.some((s) => ["CANCELLED", "REFUSED", "EXPIRED", "SHIPPED", "DELIVERED"].includes(s.status)),
-    items: o.items.map((i) => ({ slug: i.productSlug, name: i.name, size: i.size, quantity: i.quantity, unitPriceCents: i.unitPriceCents })),
+    items: o.items.map((i) => ({ slug: i.productSlug, name: i.name, size: i.size, quantity: i.quantity, unitPriceCents: i.unitPriceCents, image: img.get(i.productSlug) ?? null })),
     parcels: o.subOrders.map((s) => {
       const shop = shops.find((x) => x.id === s.supplierId);
       const ret = returns.find((r) => r.subOrderId === s.id);
@@ -161,7 +168,8 @@ export async function listOrders(userId: string) {
         status: s.status,
         statusLabel: subLabel(s.status).fr,
         shop: shop ? { name: shop.displayName, country: shop.country } : null,
-        items: o.items.filter((i) => i.subOrderId === s.id).map((i) => ({ slug: i.productSlug, name: i.name, size: i.size, quantity: i.quantity })),
+        items: o.items.filter((i) => i.subOrderId === s.id).map((i) => ({ slug: i.productSlug, name: i.name, size: i.size, quantity: i.quantity, unitPriceCents: i.unitPriceCents, image: img.get(i.productSlug) ?? null })),
+        timeline: parcelTimeline(s, ret ?? null),
         carrier: s.carrier ? carrierLabel(s.carrier, true) : "",
         trackingNumber: s.trackingNumber ? cleanTrackingNumber(s.trackingNumber) : "",
         trackingUrl: s.trackingNumber ? trackingUrl(s.carrier, s.trackingNumber) : null,
@@ -172,6 +180,7 @@ export async function listOrders(userId: string) {
         refundStatus: s.refundStatus,
         canCancel: ["PENDING", "ACCEPTED", "PREPARING"].includes(s.status),
         returnStatus: retLabel,
+        returnStatusEn: ret ? RETURN_LABELS[ret.status as ReturnStatus]?.en ?? ret.status : null,
         canReturn: !ret && returnEligibility(s, false) === "ok",
         shippedNotice: showShippedNotice(s.status, !!ret),
       };

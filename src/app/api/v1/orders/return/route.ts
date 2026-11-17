@@ -9,8 +9,9 @@ export const runtime = "nodejs";
 export async function POST(req: Request) {
   const user = await userFromRequest(req);
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  const body = (await req.json().catch(() => ({}))) as { id?: unknown; reason?: unknown };
-  const r = await requestReturnForUser(user.id, user.email, String(body.id ?? ""), String(body.reason ?? ""));
+  const body = (await req.json().catch(() => ({}))) as { id?: unknown; reason?: unknown; photos?: unknown };
+  const photos = Array.isArray(body.photos) ? body.photos.map(String) : [];
+  const r = await requestReturnForUser(user.id, user.email, String(body.id ?? ""), String(body.reason ?? ""), photos);
   if (r.ok) return NextResponse.json({ ok: true });
-  return NextResponse.json({ ok: false, error: r.error }, { status: r.error === "forbidden" ? 403 : r.error === "reason" ? 400 : 409 });
+  return NextResponse.json({ ok: false, error: r.error }, { status: r.error === "forbidden" ? 403 : r.error === "reason" || r.error === "photos" ? 400 : 409 });
 }

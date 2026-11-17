@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { decideReturn, markReturnReceived, refundReturn, requestReturn, returnEligibility } from "@/lib/returns";
+import { decideReturn, markReturnReceived, parseStockChoice, refundReturn, requestReturn, returnEligibility } from "@/lib/returns";
 
 const now = new Date("2026-11-20T12:00:00Z");
 const days = (n: number) => new Date(now.getTime() - n * 86_400_000);
@@ -79,6 +79,25 @@ describe("retour : colis reçu, remise en vente, frais de port", () => {
     const on = mk("RECEIVED");
     await refundReturn(on as never, "r1", async () => ({ status: "DONE", refundId: "re_1" }), now, true);
     expect(on.stockMovement.create.mock.calls[0][0].data).toMatchObject({ productSlug: "p1", type: "RETURN", quantity: 2 });
+  });
+  it("exclusion du stock : mouvement de 0 unité avec motif, stock inchangé", async () => {
+    const db = mk("RECEIVED");
+    await refundReturn(db as never, "r1", async () => ({ status: "DONE", refundId: "re_1" }), now, { exclude: "article endommagé" });
+    expect(db.$executeRaw).not.toHaveBeenCalled();
+    expect(db.stockMovement.create.mock.calls[0][0].data).toMatchObject({ productSlug: "p1", quantity: 0, authorLabel: "administration", reason: "Retour remboursé, exclu du stock : AM-1-A — article endommagé" });
+  });
+  it("exclusion sans motif : refusée avant tout remboursement", async () => {
+    const db = mk("RECEIVED");
+    const refund = vi.fn();
+    expect(await refundReturn(db as never, "r1", refund, now, { exclude: "  " })).toBeNull();
+    expect(refund).not.toHaveBeenCalled();
+  });
+  it("parseStockChoice : liste obligatoire, motif obligatoire si exclu", () => {
+    const fd = (o: Record<string, string>) => { const f = new FormData(); for (const [k, v] of Object.entries(o)) f.set(k, v); return f; };
+    expect(parseStockChoice(fd({}))).toBeNull();
+    expect(parseStockChoice(fd({ stock: "restock" }))).toBe(true);
+    expect(parseStockChoice(fd({ stock: "exclude" }))).toBeNull();
+    expect(parseStockChoice(fd({ stock: "exclude", excludeReason: " cassé " }))).toEqual({ exclude: "cassé" });
   });
   it("pas de remise en stock si le remboursement échoue", async () => {
     const db = mk("RECEIVED");

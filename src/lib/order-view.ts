@@ -36,7 +36,6 @@ export function parcelTimeline(sub: SubIn, ret: RetIn, now = new Date()): Timeli
     { key: "preparing", label: { fr: "En préparation", en: "Preparing" }, at: null, reached: shipped || st === "PREPARING" },
     { key: "shipped", label: { fr: "Expédiée", en: "Shipped" }, at: iso(sub.shippedAt), reached: shipped },
     { key: "delivered", label: { fr: "Livrée", en: "Delivered" }, at: iso(sub.deliveredAt), reached: delivered },
-    { key: "closed", label: { fr: "Clôturée", en: "Closed" }, at: null, reached: closed },
   );
   if (ret) {
     const refused = ret.status === "REFUSED";
@@ -50,5 +49,6 @@ export function parcelTimeline(sub: SubIn, ret: RetIn, now = new Date()): Timeli
       );
     }
   }
+  steps.push({ key: "closed", label: { fr: "Clôturée", en: "Closed" }, at: null, reached: closed });
   return steps;
 }

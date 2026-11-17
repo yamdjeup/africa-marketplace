@@ -26,15 +26,39 @@ export function useIsSupplier(token: string | null) {
   return ok;
 }
 
-type Detail = { id: string; number: string; status: string; statusLabel: Lbl; createdAt: string; acceptBy: string | null; subtotalCents: number; carrier: string | null; trackingNumber: string | null; reason: string | null; return?: { status: string; label: Lbl; reason: string; createdAt: string; photoIds?: string[]; condition?: string | null; conditionNote?: string | null; receivedAt?: string | null; decideBy?: string | null } | null; items: { id: string; name: string; size: string | null; quantity: number; unitPriceCents: number }[]; shipTo: { fullName: string; address: string; postalCode: string; city: string; country: string; phone: string | null } };
+type Detail = { id: string; number: string; status: string; statusLabel: Lbl; createdAt: string; acceptBy: string | null; subtotalCents: number; carrier: string | null; trackingNumber: string | null; reason: string | null; return?: { status: string; label: Lbl; reason: string; createdAt: string; photoIds?: string[]; condition?: string | null; conditionNote?: string | null; receivedAt?: string | null; decideBy?: string | null; decision?: string | null; decisionNote?: string | null } | null; items: { id: string; name: string; size: string | null; quantity: number; unitPriceCents: number }[]; shipTo: { fullName: string; address: string; postalCode: string; city: string; country: string; phone: string | null } };
 const CARRIERS = ["UPS", "DHL", "Colissimo"];
 const ERRS: Record<string, [string, string]> = {
   state: ["Cette commande a changé d'état (déjà traitée ou expirée).", "This order changed state (already handled or expired)."],
   reason: ["Merci d'indiquer un motif.", "Please give a reason."],
   tracking: ["Transporteur et numéro de suivi obligatoires.", "Carrier and tracking number are required."],
   stock: ["Stock insuffisant pour confirmer l'expédition.", "Not enough stock to confirm shipping."],
+  reason2: ["Un motif est obligatoire pour refuser le retour.", "A reason is required to refuse the return."],
   note: ["Un commentaire est obligatoire si le colis est endommagé.", "A comment is required when the parcel is damaged."],
 };
+
+function Select({ value, options, onChange, label }: { value: string; options: { v: string; fr: string; en: string }[]; onChange: (v: string) => void; label: string }) {
+  const [open, setOpen] = useState(false);
+  const cur = options.find((o) => o.v === value) ?? options[0];
+  return (
+    <View>
+      <Text style={st.mut}>{label}</Text>
+      <Pressable onPress={() => setOpen(!open)} accessibilityRole="button" style={[st.input, { flexDirection: "row", alignItems: "center", justifyContent: "space-between" }]}>
+        <Text style={{ color: "#221812", flexShrink: 1 }}>{tr(cur.fr, cur.en)}</Text><Text style={{ color: "#221812" }}>{open ? "▲" : "▼"}</Text>
+      </Pressable>
+      {open ? <View style={{ borderWidth: 1, borderColor: "#ded6c9", backgroundColor: "#fff" }}>
+        {options.map((o) => (
+          <Pressable key={o.v} onPress={() => { onChange(o.v); setOpen(false); }} style={{ minHeight: 48, justifyContent: "center", paddingHorizontal: 12, backgroundColor: o.v === value ? "#faf6ee" : "#fff" }}>
+            <Text style={{ color: "#221812", fontWeight: o.v === value ? "700" : "400" }}>{tr(o.fr, o.en)}</Text>
+          </Pressable>
+        ))}
+      </View> : null}
+    </View>
+  );
+}
+
+const CONDITIONS = [{ v: "OK", fr: "Conforme (remise en vente)", en: "As expected (back on sale)" }, { v: "DAMAGED", fr: "Endommagé / exclure du stock", en: "Damaged / exclude from stock" }];
+const DECISIONS = [{ v: "ACCEPTED", fr: "Accepter le retour", en: "Accept the return" }, { v: "REFUSED", fr: "Refuser le retour", en: "Refuse the return" }];
 
 function OrderDetail({ token, id, onBack }: { token: string; id: string; onBack: () => void }) {
   const [d, setD] = useState<Detail | null>(null);
@@ -44,7 +68,9 @@ function OrderDetail({ token, id, onBack }: { token: string; id: string; onBack:
   const [carrier, setCarrier] = useState("UPS");
   const [other, setOther] = useState("");
   const [tracking, setTracking] = useState("");
-  const [damaged, setDamaged] = useState(false);
+  const [condition, setCondition] = useState("OK");
+  const [decision, setDecision] = useState("ACCEPTED");
+  const [dnote, setDnote] = useState("");
   const [note, setNote] = useState("");
   const load = () => authed<Detail>(token, "GET", `/api/v1/supplier/orders/${id}`).then((r) => r.ok && setD(r.data));
   useEffect(() => { load(); }, [id]);
@@ -65,18 +91,27 @@ function OrderDetail({ token, id, onBack }: { token: string; id: string; onBack:
       <Pressable onPress={onBack} hitSlop={12} style={{ height: 44, justifyContent: "center" }} accessibilityLabel={tr("Retour", "Back")}><Text style={{ fontSize: 28 }}>←</Text></Pressable>
       <Text style={st.h2}>{tr("Commande", "Order")} {d.number}</Text>
       <Text style={st.mut}>{tr(d.statusLabel.fr, d.statusLabel.en)}</Text>
-      {d.return ? <View style={{ marginTop: 10, padding: 10, borderWidth: 1, borderColor: "#ded6c9", borderRadius: 6 }}><Text style={{ fontWeight: "600", color: "#221812" }}>{tr(d.return.label.fr, d.return.label.en)}</Text><Text style={st.mut}>{tr("Motif du client", "Customer reason")} : {d.return.reason}</Text><Text style={st.mut}>{tr("Le retour est arbitré par E póm ta’.", "E póm ta’ handles the return decision.")}</Text>
+      {d.return ? <View style={{ marginTop: 10, padding: 10, borderWidth: 1, borderColor: "#ded6c9", borderRadius: 6 }}><Text style={{ fontWeight: "600", color: "#221812" }}>{tr(d.return.label.fr, d.return.label.en)}</Text><Text style={st.mut}>{tr("Motif du client", "Customer reason")} : {d.return.reason}</Text><Text style={st.mut}>{tr("L’administration rembourse après votre décision et arbitre les litiges.", "The administration refunds after your decision and arbitrates disputes.")}</Text>
         {d.return.photoIds?.length ? <Text style={st.mut}>{d.return.photoIds.length} {tr("photo(s) jointe(s) — à consulter dans l’espace créateur du site.", "photo(s) attached — view them in the creator portal on the website.")}</Text> : null}
         {d.return.status === "ACCEPTED" ? (
           <View style={{ marginTop: 8, gap: 8 }}>
             <Text style={{ fontWeight: "600", color: "#221812" }}>{tr("Colis en route vers vous", "Parcel on its way to you")}</Text>
             <Text style={st.mut}>{tr("À réception, contrôlez-le et décidez sous 6 jours calendaires.", "On arrival, check it and decide within 6 calendar days.")}</Text>
-            {btn(damaged ? tr("État : endommagé / exclure du stock", "Condition: damaged / exclude from stock") : tr("État : conforme (remise en vente)", "Condition: as expected (back on sale)"), () => setDamaged(!damaged), true)}
+            <Select label={tr("État du colis reçu", "Condition of the parcel")} value={condition} options={CONDITIONS} onChange={setCondition} />
             <TextInput value={note} onChangeText={setNote} placeholder={tr("Commentaire (obligatoire si endommagé)", "Comment (required if damaged)")} placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={st.input} />
-            {btn(tr("Confirmer la réception", "Confirm receipt"), () => act({ action: "return_check", condition: damaged ? "DAMAGED" : "OK", note }))}
+            {btn(tr("Confirmer la réception", "Confirm receipt"), () => act({ action: "return_check", condition, note }))}
           </View>
         ) : null}
-        {d.return.receivedAt ? <Text style={st.mut}>{tr("Réception confirmée", "Receipt confirmed")} : {d.return.condition === "DAMAGED" ? tr("endommagé", "damaged") : tr("conforme", "as expected")}{d.return.conditionNote ? ` — ${d.return.conditionNote}` : ""}{d.return.decideBy ? ` · ${tr("décision avant le", "decision before")} ${new Date(d.return.decideBy).toLocaleDateString()}` : ""}</Text> : null}
+        {d.return.status === "RECEIVED" && !d.return.decision ? (
+          <View style={{ marginTop: 8, gap: 8 }}>
+            <Text style={{ fontWeight: "600", color: "#221812" }}>{tr("Votre décision sur ce retour", "Your decision on this return")}</Text>
+            <Select label={tr("Décision", "Decision")} value={decision} options={DECISIONS} onChange={setDecision} />
+            <TextInput value={dnote} onChangeText={setDnote} placeholder={tr("Motif (obligatoire si refus)", "Reason (required if refused)")} placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={st.input} />
+            {btn(tr("Valider ma décision", "Confirm my decision"), () => act({ action: "return_decide", decision, note: dnote }))}
+          </View>
+        ) : null}
+        {d.return.decision ? <Text style={{ marginTop: 6, fontWeight: "600", color: "#221812" }}>{d.return.decision === "ACCEPTED" ? tr("Retour accepté par vous", "Return accepted by you") : tr("Retour refusé par vous", "Return refused by you")}{d.return.decisionNote ? ` : ${d.return.decisionNote}` : ""}</Text> : null}
+        {d.return.receivedAt ? <Text style={st.mut}>{tr("Réception confirmée", "Receipt confirmed")} : {d.return.condition === "DAMAGED" ? tr("endommagé", "damaged") : tr("conforme", "as expected")}{d.return.conditionNote ? ` — ${d.return.conditionNote}` : ""}{d.return.decideBy && !d.return.decision ? ` · ${tr("décision avant le", "decision before")} ${new Date(d.return.decideBy).toLocaleDateString()}` : ""}</Text> : null}
         </View> : null}
       {msg ? <Text style={{ color: "#b42318", marginTop: 8 }}>{msg}</Text> : null}
       <Text style={st.h3}>{tr("Articles", "Items")}</Text>
@@ -289,8 +324,53 @@ function ProfilePane({ token }: { token: string }) {
   );
 }
 
+type RetRow = { id: string; subOrderId: string; number: string; reason: string; createdAt: string; stage: string; decideBy: string | null };
+const RET_TABS = [{ v: "todo", fr: "À traiter", en: "To handle" }, { v: "accepted", fr: "Acceptés", en: "Accepted" }, { v: "refused", fr: "Refusés", en: "Refused" }, { v: "all", fr: "Tous", en: "All" }];
+const PERIODS = [{ v: "all", fr: "Toutes les dates", en: "All dates" }, { v: "today", fr: "Aujourd’hui", en: "Today" }, { v: "custom", fr: "Plage personnalisée", en: "Custom range" }];
+const STAGES: Record<string, [string, string]> = { incoming: ["Colis en route vers vous", "Parcel on its way to you"], decide: ["Décision à prendre", "Decision needed"], accepted: ["Accepté", "Accepted"], refused: ["Refusé", "Refused"], refunded: ["Remboursé", "Refunded"] };
+
+function ReturnsPane({ token, onOpen }: { token: string; onOpen: (id: string) => void }) {
+  const [tab, setTab] = useState("todo");
+  const [period, setPeriod] = useState("all");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [data, setData] = useState<{ items: RetRow[]; counts: Record<string, number> } | null>(null);
+  useEffect(() => {
+    setData(null);
+    const qs = `st=${tab}&d=${period}${period === "custom" ? `&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}` : ""}`;
+    authed<{ items: RetRow[]; counts: Record<string, number> }>(token, "GET", `/api/v1/supplier/returns?${qs}`).then((r) => setData(r.ok ? r.data : { items: [], counts: {} }));
+  }, [token, tab, period, from, to]);
+  return (
+    <View>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginVertical: 12 }}>
+        {RET_TABS.map((t) => (
+          <Pressable key={t.v} onPress={() => setTab(t.v)} style={[st.chip, tab === t.v && st.chipOn]}>
+            <Text style={{ color: tab === t.v ? "#fff" : "#221812" }}>{tr(t.fr, t.en)}{data?.counts[t.v] ? ` (${data.counts[t.v]})` : ""}</Text>
+          </Pressable>
+        ))}
+      </View>
+      <Select label={tr("Période", "Period")} value={period} options={PERIODS} onChange={setPeriod} />
+      {period === "custom" ? (
+        <View style={{ flexDirection: "row", gap: 8, marginTop: 8 }}>
+          <TextInput value={from} onChangeText={setFrom} placeholder={tr("Du (AAAA-MM-JJ)", "From (YYYY-MM-DD)")} placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={[st.input, { flex: 1 }]} />
+          <TextInput value={to} onChangeText={setTo} placeholder={tr("Au (AAAA-MM-JJ)", "To (YYYY-MM-DD)")} placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={[st.input, { flex: 1 }]} />
+        </View>
+      ) : null}
+      <View style={{ marginTop: 12 }}>
+        {!data ? <ActivityIndicator /> : data.items.length === 0 ? <Text style={st.mut}>{tr("Aucun retour.", "No returns.")}</Text> : data.items.map((x) => (
+          <Pressable key={x.id} onPress={() => onOpen(x.subOrderId)} style={st.row}>
+            <Text style={{ fontWeight: "600", color: "#221812" }}>{x.number} · {tr(...(STAGES[x.stage] ?? [x.stage, x.stage]))}</Text>
+            <Text style={st.mut}>{new Date(x.createdAt).toLocaleDateString()} · {x.reason}</Text>
+            {x.stage === "decide" && x.decideBy ? <Text style={{ color: "#92400e", fontSize: 12 }}>{tr("Décision avant le ", "Decide before ")}{new Date(x.decideBy).toLocaleDateString()}</Text> : null}
+          </Pressable>
+        ))}
+      </View>
+    </View>
+  );
+}
+
 export function SupplierScreen({ token, onBack }: { token: string; onBack: () => void }) {
-  const [section, setSection] = useState<"dash" | "orders" | "works" | "profile">("dash");
+  const [section, setSection] = useState<"dash" | "orders" | "returns" | "works" | "profile">("dash");
   const [openId, setOpenId] = useState<string | null>(null);
   const [tab, setTab] = useState("todo");
   const [subs, setSubs] = useState<Sub[] | null>(null);
@@ -307,10 +387,12 @@ export function SupplierScreen({ token, onBack }: { token: string; onBack: () =>
         <Pressable onPress={() => setSection("profile")} style={[st.chip, section === "profile" && st.chipOn]}><Text style={{ color: section === "profile" ? "#fff" : "#221812" }}>{tr("Profil", "Profile")}</Text></Pressable>
         <Pressable onPress={() => setSection("dash")} style={[st.chip, section === "dash" && st.chipOn]}><Text style={{ color: section === "dash" ? "#fff" : "#221812" }}>{tr("Tableau de bord", "Dashboard")}</Text></Pressable>
         <Pressable onPress={() => setSection("orders")} style={[st.chip, section === "orders" && st.chipOn]}><Text style={{ color: section === "orders" ? "#fff" : "#221812" }}>{tr("Commandes", "Orders")}</Text></Pressable>
+        <Pressable onPress={() => setSection("returns")} style={[st.chip, section === "returns" && st.chipOn]}><Text style={{ color: section === "returns" ? "#fff" : "#221812" }}>{tr("Retours", "Returns")}</Text></Pressable>
         <Pressable onPress={() => setSection("works")} style={[st.chip, section === "works" && st.chipOn]}><Text style={{ color: section === "works" ? "#fff" : "#221812" }}>{tr("Œuvres et stocks", "Works and stock")}</Text></Pressable>
       </ScrollView>
       {section === "dash" ? <DashboardPane token={token} /> : null}
       {section === "profile" ? <ProfilePane token={token} /> : null}
+      {section === "returns" ? <ReturnsPane token={token} onOpen={setOpenId} /> : null}
       {section === "works" ? <ProductsPane token={token} /> : null}
       {section === "orders" ? <>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginVertical: 12 }}>

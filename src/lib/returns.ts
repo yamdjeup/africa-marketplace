@@ -112,6 +112,18 @@ export async function markReturnReceivedByPartner(db: PrismaClient, subOrderId: 
   return n.count === 1 ? ("ok" as const) : ("state" as const);
 }
 
+export type PartnerDecision = "ACCEPTED" | "REFUSED";
+
+/** Après contrôle, le créateur accepte (remboursement visible par l'administration) ou refuse (motif ≥3 car., litige arbitrable). Une seule décision, uniquement depuis « reçu », sur son propre colis. */
+export async function partnerDecideReturn(db: PrismaClient, subOrderId: string, supplierId: string, decision: PartnerDecision, note: string, now = new Date()) {
+  const text = note.trim().slice(0, 500);
+  if (decision === "REFUSED" && text.length < 3) return "note" as const;
+  const ret = await db.returnRequest.findFirst({ where: { subOrderId, status: "RECEIVED", partnerDecision: null, subOrder: { supplierId } }, select: { id: true } });
+  if (!ret) return "state" as const;
+  const n = await db.returnRequest.updateMany({ where: { id: ret.id, status: "RECEIVED", partnerDecision: null }, data: { partnerDecision: decision, partnerDecisionNote: text || null, partnerDecidedAt: now } });
+  return n.count === 1 ? ("ok" as const) : ("state" as const);
+}
+
 /** Date limite indicative de décision du créateur : 6 jours calendaires après réception. */
 export function partnerCheckDeadline(receivedAt: Date) { return new Date(receivedAt.getTime() + PARTNER_CHECK_DAYS * 86400000); }
 

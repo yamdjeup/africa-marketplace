@@ -10,7 +10,7 @@ import { RETURN_LABELS, partnerCheckDeadline, type ReturnStatus } from "@/lib/re
 import { getPortalContext } from "@/lib/supplier";
 import { tr } from "@/lib/tr";
 import { parsePhotoIds } from "@/lib/return-photos";
-import { acceptOrderAction, deliverOrderAction, prepareOrderAction, refuseOrderAction, returnCheckAction, shipOrderAction } from "../../../commandes-actions";
+import { acceptOrderAction, deliverOrderAction, prepareOrderAction, refuseOrderAction, returnCheckAction, returnDecideAction, shipOrderAction } from "../../../commandes-actions";
 
 export const metadata = { title: "Commande", robots: { index: false } };
 
@@ -124,7 +124,7 @@ export default async function PartnerOrder({ params, searchParams }: { params: P
           {!ro && <form action={deliverOrderAction}>{hidden}<button className={btn} type="submit">{tr(locale, "Marquer livrée", "Mark as delivered")}</button></form>}
         </section>
       )}
-      {ret && <p className="rounded-md border p-3 text-sm"><strong>{RETURN_LABELS[ret.status as ReturnStatus]?.[locale === "en" ? "en" : "fr"] ?? ret.status}</strong> · {tr(locale, "Motif du client : ", "Customer reason: ")}{ret.reason}<br />{parsePhotoIds(ret.photoIds).length > 0 && <span className="flex flex-wrap gap-2 pt-1">{parsePhotoIds(ret.photoIds).map((pid, i) => <a key={pid} href={`/api/media/${pid}`} target="_blank" rel="noreferrer" className="underline">{tr(locale, "Photo", "Photo")} {i + 1}</a>)}</span>}<span className="text-muted-foreground">{tr(locale, "Le retour est arbitré par E póm ta’.", "E póm ta’ handles the return decision.")}</span></p>}
+      {ret && <p className="rounded-md border p-3 text-sm"><strong>{RETURN_LABELS[ret.status as ReturnStatus]?.[locale === "en" ? "en" : "fr"] ?? ret.status}</strong> · {tr(locale, "Motif du client : ", "Customer reason: ")}{ret.reason}<br />{parsePhotoIds(ret.photoIds).length > 0 && <span className="flex flex-wrap gap-2 pt-1">{parsePhotoIds(ret.photoIds).map((pid, i) => <a key={pid} href={`/api/media/${pid}`} target="_blank" rel="noreferrer" className="underline">{tr(locale, "Photo", "Photo")} {i + 1}</a>)}</span>}<span className="text-muted-foreground">{tr(locale, "L'administration rembourse après votre décision et arbitre les litiges.", "The administration refunds after your decision and arbitrates disputes.")}</span></p>}
       {ret?.status === "ACCEPTED" && (
         <section className="space-y-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm">
           <p><strong>{tr(locale, "Colis en route vers vous", "Parcel on its way to you")}</strong> — {tr(locale, "le client vous renvoie ce colis. À réception, contrôlez-le et décidez sous 6 jours calendaires.", "the customer is sending this parcel back to you. On arrival, check it and decide within 6 calendar days.")}</p>
@@ -143,7 +143,24 @@ export default async function PartnerOrder({ params, searchParams }: { params: P
           )}
         </section>
       )}
-      {ret?.status === "RECEIVED" && ret.partnerReceivedAt && <p className="rounded-md border p-3 text-sm">{tr(locale, "Réception confirmée le ", "Receipt confirmed on ")}{fmt.format(ret.partnerReceivedAt)} — {ret.condition === "DAMAGED" ? tr(locale, "endommagé", "damaged") : tr(locale, "conforme", "as expected")}{ret.conditionNote ? ` : ${ret.conditionNote}` : ""}. {tr(locale, "Décision attendue avant le ", "Decision expected before ")}{fmt.format(partnerCheckDeadline(ret.partnerReceivedAt))}.</p>}
+      {ret?.status === "RECEIVED" && ret.partnerReceivedAt && <p className="rounded-md border p-3 text-sm">{tr(locale, "Réception confirmée le ", "Receipt confirmed on ")}{fmt.format(ret.partnerReceivedAt)} — {ret.condition === "DAMAGED" ? tr(locale, "endommagé", "damaged") : tr(locale, "conforme", "as expected")}{ret.conditionNote ? ` : ${ret.conditionNote}` : ""}. {!ret.partnerDecision && <>{tr(locale, "Décision attendue avant le ", "Decision expected before ")}{fmt.format(partnerCheckDeadline(ret.partnerReceivedAt))}{tr(locale, " : acceptez ou refusez le retour ci-dessous.", ": accept or refuse the return below.")}</>}</p>}
+      {ret?.status === "RECEIVED" && !ret.partnerDecision && !ro && (
+        <section className="space-y-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm">
+          <p><strong>{tr(locale, "Votre décision sur ce retour", "Your decision on this return")}</strong> — {tr(locale, "Accepté : l'administration est invitée à rembourser le client. Refusé : motif obligatoire ; l'administration arbitre le litige.", "Accepted: the administration is asked to refund the customer. Refused: a reason is required; the administration arbitrates the dispute.")}</p>
+          <form action={returnDecideAction} className="grid gap-3 sm:grid-cols-2">
+            {hidden}
+            <label className="block">{tr(locale, "Décision", "Decision")}
+              <select name="decision" required className={inputCls} defaultValue="ACCEPTED">
+                <option value="ACCEPTED">{tr(locale, "Accepter le retour", "Accept the return")}</option>
+                <option value="REFUSED">{tr(locale, "Refuser le retour", "Refuse the return")}</option>
+              </select>
+            </label>
+            <label className="block">{tr(locale, "Motif (obligatoire si refus)", "Reason (required if refused)")}<input name="note" maxLength={500} className={inputCls} /></label>
+            <div className="sm:col-span-2"><button className={btn} type="submit">{tr(locale, "Valider ma décision", "Confirm my decision")}</button></div>
+          </form>
+        </section>
+      )}
+      {ret?.partnerDecision && <p className="rounded-md border p-3 text-sm"><strong>{ret.partnerDecision === "ACCEPTED" ? tr(locale, "Retour accepté par vous", "Return accepted by you") : tr(locale, "Retour refusé par vous", "Return refused by you")}</strong>{ret.partnerDecisionNote ? ` : ${ret.partnerDecisionNote}` : ""} — {ret.partnerDecision === "ACCEPTED" ? tr(locale, "remboursement à effectuer par l'administration.", "refund to be made by the administration.") : tr(locale, "litige arbitré par l'administration.", "dispute arbitrated by the administration.")}</p>}
       {sub.reason && ["REFUSED", "EXPIRED", "CANCELLED"].includes(sub.status) && <p className="text-sm text-muted-foreground">{tr(locale, "Motif : ", "Reason: ")}{sub.reason}</p>}
     </>
   );

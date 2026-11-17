@@ -8,7 +8,7 @@ import { db } from "@/lib/db";
 import { notifySubOrder } from "@/lib/order-notify";
 import { settleSubRefund } from "@/lib/refund";
 import { acceptSub, deliverSub, prepareSub, refuseSub, shipSub } from "@/lib/suborders";
-import { markReturnReceivedByPartner } from "@/lib/returns";
+import { markReturnReceivedByPartner, partnerDecideReturn } from "@/lib/returns";
 import { sendReturnMail } from "@/lib/return-email";
 import { getPortalContext } from "@/lib/supplier";
 
@@ -39,6 +39,14 @@ export async function returnCheckAction(f: FormData) {
   if (r !== "ok") redirect(back("?error=state"));
   await sendReturnMail(id, "received");
   done(back("?ok=returnchecked"));
+}
+
+export async function returnDecideAction(f: FormData) {
+  const { id, supplierId, back } = await ctxOf(f);
+  const r = await partnerDecideReturn(db, id, supplierId, s(f, "decision") === "REFUSED" ? "REFUSED" : "ACCEPTED", s(f, "note", 500));
+  if (r === "note") redirect(back("?error=reason"));
+  if (r !== "ok") redirect(back("?error=state"));
+  done(back("?ok=returndecided"));
 }
 
 export async function acceptOrderAction(f: FormData) {

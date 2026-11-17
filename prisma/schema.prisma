@@ -390,6 +390,10 @@ model ReturnRequest {
   partnerReceivedAt DateTime?
   condition   String?
   conditionNote String?
+  /// Décision du créateur après contrôle : ACCEPTED (remboursement à faire par l'administration) ou REFUSED (motif obligatoire, litige arbitrable)
+  partnerDecision String?
+  partnerDecisionNote String?
+  partnerDecidedAt DateTime?
   status      String    @default("REQUESTED")
   adminNote   String    @default("")
   refundId    String?

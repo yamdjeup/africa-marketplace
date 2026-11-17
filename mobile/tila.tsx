@@ -2,7 +2,7 @@ import { getLang, tr, lazy } from "./region";
 import { useEffect, useMemo, useRef, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ActivityIndicator, Animated, BackHandler, Image, KeyboardAvoidingView, PanResponder, Platform, useWindowDimensions, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Animated, BackHandler, Image, KeyboardAvoidingView, PanResponder, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { authed } from "./api";
 import { API_URL } from "./config";
 
@@ -27,22 +27,24 @@ const AVATAR = `${API_URL}/tila-avatar.jpeg`;
 
 export function TilaButton({ onOpenSlug }: { onOpenSlug: (slug: string) => void }) {
   const insets = useSafeAreaInsets();
-  const { width: W, height: H } = useWindowDimensions();
+  const [box, setBox] = useState({ w: 0, h: 0 });
+  const W = box.w, H = box.h;
   const [size, setSize] = useState({ w: 150, h: 52 });
   const pos = useRef(new Animated.ValueXY({ x: -1, y: -1 })).current;
   const cur = useRef({ x: -1, y: -1 });
   const start = useRef({ x: 0, y: 0 });
   const bounds = useRef({ minY: 0, maxY: 0, maxX: 0 });
-  bounds.current = { minY: insets.top + 56, maxY: Math.max(insets.top + 56, H - 64 - Math.max(insets.bottom, Platform.OS === "android" ? 16 : 0) - size.h), maxX: Math.max(0, W - size.w - 12) };
+  bounds.current = { minY: 60, maxY: Math.max(60, H - 64 - Math.max(insets.bottom, Platform.OS === "android" ? 16 : 0) - size.h), maxX: Math.max(0, W - size.w - 12) };
   const clampY = (y: number) => Math.min(Math.max(y, bounds.current.minY), bounds.current.maxY);
   const place = (x: number, y: number) => { cur.current = { x, y }; pos.setValue({ x, y }); };
   useEffect(() => {
+    if (!W || !H) return;
     AsyncStorage.getItem("tila.pos").then((v) => {
       try { const p = v ? JSON.parse(v) : null; if (p && typeof p.y === "number") return place(p.side === "left" ? 12 : bounds.current.maxX, clampY(p.y)); } catch {}
       place(bounds.current.maxX, bounds.current.maxY);
     }).catch(() => place(bounds.current.maxX, bounds.current.maxY));
-  }, []);
-  useEffect(() => { if (cur.current.x >= 0) place(cur.current.x > W / 2 - size.w / 2 ? bounds.current.maxX : 12, clampY(cur.current.y)); }, [W, H, size.w, size.h]);
+  }, [W > 0 && H > 0]);
+  useEffect(() => { if (W && H && cur.current.x >= 0) place(cur.current.x > W / 2 - size.w / 2 ? bounds.current.maxX : 12, clampY(cur.current.y)); }, [W, H, size.w, size.h]);
   const pan = useMemo(() => PanResponder.create({
     onStartShouldSetPanResponder: () => true,
     onMoveShouldSetPanResponder: (_e, g) => Math.abs(g.dx) > 8 || Math.abs(g.dy) > 8,
@@ -88,14 +90,14 @@ export function TilaButton({ onOpenSlug }: { onOpenSlug: (slug: string) => void 
 
   return (
     <>
-      <>
+      <View pointerEvents="box-none" style={StyleSheet.absoluteFill} onLayout={(e) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
         <Animated.View {...pan.panHandlers} onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })} accessibilityRole="button" accessibilityLabel={T.open} style={[st.fab, { left: pos.x, top: pos.y }]}>
           <Image source={{ uri: AVATAR }} style={st.fabImg} />
           <View><Text style={st.fabName}>{T.name}</Text><Text style={st.fabBadge}>{T.badge}</Text></View>
         </Animated.View>
-      </>
+      </View>
       {open && (
-        <View style={[StyleSheet.absoluteFill, { zIndex: 1000, elevation: 20, backgroundColor: "#faf6ee", paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+        <View style={[StyleSheet.absoluteFill, { zIndex: 1000, elevation: 20, backgroundColor: "#faf6ee" }]}>
           <View style={{ flex: 1 }}>
             <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "padding"}>
               <View style={st.head}>

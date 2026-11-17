@@ -38,7 +38,7 @@ export async function notifySubOrder(event: SubEvent, subOrderId: string) {
       await safeSend(partnerTo, subject, [
         `Bonjour ${shop},`,
         `${event === "NEW" ? "Nouvelle commande" : "Rappel : commande en attente de votre réponse"} ${sub.number} — ${list} — ${eur(sub.subtotalCents)}.`,
-        `Merci de l'accepter ou de la refuser avant le ${new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeStyle: "short" }).format(sub.acceptBy)} ; sans réponse, elle est annulée et le client prévenu.`,
+        `Merci de l'accepter ou de la refuser avant le ${new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", dateStyle: "long", timeStyle: "short" }).format(sub.acceptBy)} ; sans réponse, elle est annulée et le client prévenu.`,
         url,
       ]);
       return;

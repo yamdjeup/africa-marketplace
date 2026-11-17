@@ -45,6 +45,7 @@ export default async function CatalogPage({
     technique: first(sp.technique),
     country: first(sp.country),
     size: first(sp.size),
+    inStock: first(sp.inStock) === "1" || first(sp.inStock) === "true" || undefined,
     min: num(first(sp.min)),
     max: num(first(sp.max)),
     sort: sortRaw === "price-asc" || sortRaw === "price-desc" || sortRaw === "pick" ? sortRaw : "new",

@@ -82,7 +82,7 @@ export const PAGES: Record<string, { fr: string[]; en: string[] }> = {
       "Pièces sur mesure. Les créations réalisées sur mesure ou personnalisées à votre demande ne sont ni reprises ni échangées, sauf défaut.",
       "Droit de rétractation. Conformément au Code de la consommation, vous disposez de 14 jours à compter de la réception pour vous rétracter sans justifier de motif, sauf pour les créations personnalisées.",
       "Comment faire. Écrivez-nous via la page Contact en indiquant votre numéro de commande et l'article concerné ; nous vous indiquons la marche à suivre pour le retour.",
-      "Remboursement. Une fois le retour reçu et vérifié, vous êtes remboursé sous environ 14 jours, sur le moyen de paiement utilisé à la commande. Les frais de livraison initiaux ne sont pas remboursés, sauf article défectueux ou non conforme.",
+      "Remboursement. Une fois le retour reçu et vérifié, vous êtes remboursé sous environ 14 jours, sur le moyen de paiement utilisé à la commande. Les frais de livraison ne sont jamais remboursés pour un retour, sauf article défectueux ou non conforme.",
       "Article défectueux ou non conforme. Contactez-nous rapidement avec des photos ; nous trouvons une solution avec le partenaire.",
     ],
     en: [
@@ -92,7 +92,7 @@ export const PAGES: Record<string, { fr: string[]; en: string[] }> = {
       "Made-to-measure pieces. Creations made to measure or personalised at your request cannot be returned or exchanged, except if defective.",
       "Right of withdrawal. In accordance with consumer law, you have 14 days from receipt to withdraw without giving a reason, except for personalised creations.",
       "How to proceed. Write to us via the Contact page with your order number and the item concerned; we tell you how to send it back.",
-      "Refund. Once the return is received and checked, you are refunded within about 14 days, to the payment method used for the order. Original delivery fees are not refunded, unless the item is defective or not as described.",
+      "Refund. Once the return is received and checked, you are refunded within about 14 days, to the payment method used for the order. Delivery fees are never refunded for a return, unless the item is defective or not as described.",
       "Defective or non-conforming item. Contact us quickly with photos; we find a solution with the partner.",
     ],
   },

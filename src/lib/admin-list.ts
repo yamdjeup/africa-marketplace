@@ -67,7 +67,7 @@ export function subOrdersWhere(q: ListQuery, supplierIds: string[] = []) {
   return and.length ? { AND: and } : {};
 }
 
-export const RETURN_FILTERS = ["REQUESTED", "ACCEPTED", "REFUNDED", "REFUSED", "all"] as const;
+export const RETURN_FILTERS = ["REQUESTED", "ACCEPTED", "RECEIVED", "REFUNDED", "REFUSED", "all"] as const;
 export function returnsWhere(q: ListQuery) {
   const and: object[] = [];
   if (q.st !== "all") and.push({ status: q.st });

@@ -72,7 +72,7 @@ export default async function EditWorkPage({ params, searchParams }: Props) {
               <thead><tr className="border-b text-xs uppercase text-muted-foreground"><th className="py-2 pr-3">Date</th><th className="pr-3">Type</th><th className="pr-3">Qté</th><th className="pr-3">{tr(locale, "Motif", "Reason")}</th><th>{tr(locale, "Auteur", "Author")}</th></tr></thead>
               <tbody>{moves.map((m) => (
                 <tr key={m.id} className="border-b">
-                  <td className="py-2 pr-3 whitespace-nowrap">{m.createdAt.toLocaleString(fr ? "fr-FR" : "en-GB")}</td>
+                  <td className="py-2 pr-3 whitespace-nowrap">{m.createdAt.toLocaleString(fr ? "fr-FR" : "en-GB", { timeZone: "Europe/Paris" })}</td>
                   <td className="pr-3">{MOVEMENT_LABELS[m.type as keyof typeof MOVEMENT_LABELS]?.[fr ? "fr" : "en"] ?? m.type}{m.variantId && vlabel.get(m.variantId) ? ` (${vlabel.get(m.variantId)})` : ""}</td>
                   <td className="pr-3">{m.quantity > 0 ? `+${m.quantity}` : m.quantity}</td>
                   <td className="pr-3">{m.reason}</td><td>{m.authorLabel}</td>

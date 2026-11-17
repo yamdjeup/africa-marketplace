@@ -16,6 +16,7 @@ import { MIRROR_CATEGORIES, MIRROR_ITEMS } from "@/data/mirror-items";
 const ROOM_CATEGORIES = ["peinture", "sculpture", "photographie", "textile-decoration"];
 import { ruleFor } from "@/lib/category-rules";
 import { getProduct, getRelatedProducts } from "@/lib/catalog";
+import { showHoldNotice } from "@/lib/hold-notice";
 import { auth } from "@/auth";
 import { isAdminEmail } from "@/lib/supplier";
 import { formatEur, getDict, type Locale } from "@/lib/i18n";
@@ -60,7 +61,7 @@ export default async function ProductPage({ params }: Props) {
   const raw = await db.product.findUnique({ where: { slug: p.slug }, select: { reserved: true } });
   const ownKey = sUser?.id && sUser.email ? buyerKeyOf(sUser.id, sUser.email) : null;
   const ownHold = ownKey ? (await db.checkoutHold.findMany({ where: { buyerKey: ownKey, status: "HELD" }, select: { payload: true } })).some((h) => JSON.stringify(h.payload).includes(`"slug":"${p.slug}"`)) : false;
-  const urgent = (raw?.reserved ?? 0) > 0 && !ownHold;
+  const urgent = showHoldNotice({ soldOut, reserved: raw?.reserved ?? 0, ownHold });
 
   return (
     <div className="space-y-12">

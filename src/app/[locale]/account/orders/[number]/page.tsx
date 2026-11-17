@@ -30,7 +30,7 @@ export default async function OrderDetailPage({ params }: Props) {
   const allCancelled = hasSubs && subStatuses.every((s) => ["CANCELLED", "REFUSED", "EXPIRED"].includes(s.status));
   const t = getDict(locale).account.orders;
   const status = hasSubs ? simulatedStatus(order.createdAt) : "CONFIRMED";
-  const date = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "fr-FR", { dateStyle: "long", timeStyle: "short" }).format(order.createdAt);
+  const date = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "fr-FR", { timeZone: "Europe/Paris", dateStyle: "long", timeStyle: "short" }).format(order.createdAt);
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">

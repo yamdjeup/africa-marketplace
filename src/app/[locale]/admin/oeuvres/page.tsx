@@ -165,7 +165,7 @@ export default async function AdminWorks({ params, searchParams }: Props) {
                           {(p.edition || p.authorAttestedAt || p.signatureFileId) && (
                             <span className="mt-1 block text-xs font-normal text-muted-foreground">
                               {p.edition && `${p.edition} · `}
-                              {p.authorAttestedAt && `${tr(locale, "Attestation", "Attestation")} ${p.authorAttestedAt.toLocaleDateString(fr ? "fr-FR" : "en-GB")} · `}
+                              {p.authorAttestedAt && `${tr(locale, "Attestation", "Attestation")} ${p.authorAttestedAt.toLocaleDateString(fr ? "fr-FR" : "en-GB", { timeZone: "Europe/Paris" })} · `}
                               {p.signatureFileId && <a className="underline" href={`/api/media/${p.signatureFileId}`} target="_blank" rel="noreferrer">{tr(locale, "signature", "signature")}</a>}
                             </span>
                           )}

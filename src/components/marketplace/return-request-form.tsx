@@ -5,6 +5,7 @@ import { tr } from "@/lib/tr";
 export function ReturnRequestForm({ id, locale }: { id: string; locale: "fr" | "en" }) {
   return (
     <form action={requestReturnAction} className="flex flex-wrap items-end gap-2 pt-1">
+      <p className="w-full text-xs text-muted-foreground">{tr(locale, "Les frais de livraison ne sont pas remboursés.", "Delivery fees are not refunded.")}</p>
       <input type="hidden" name="id" value={id} />
       <label className="text-xs">
         {tr(locale, "Motif du retour", "Reason for return")}

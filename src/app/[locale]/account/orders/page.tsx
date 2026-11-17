@@ -26,7 +26,7 @@ export default async function OrdersPage({ params }: Props) {
     orderBy: { createdAt: "desc" },
   });
   const t = getDict(locale).account.orders;
-  const fmt = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "fr-FR", { dateStyle: "medium", timeStyle: "short" });
+  const fmt = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "fr-FR", { timeZone: "Europe/Paris", dateStyle: "medium", timeStyle: "short" });
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">

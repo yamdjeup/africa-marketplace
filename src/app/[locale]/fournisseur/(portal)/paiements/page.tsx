@@ -32,7 +32,7 @@ export default async function PartnerPayments({ params, searchParams }: { params
   const subs = await db.subOrder.findMany({ where: { id: { in: entries.map((e) => e.subOrderId) } }, select: { id: true, number: true } });
   const num = new Map(subs.map((s) => [s.id, s.number]));
   const eur = (c: number) => new Intl.NumberFormat(locale === "en" ? "en-GB" : "fr-FR", { style: "currency", currency: "EUR" }).format(c / 100);
-  const fmt = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "fr-FR", { dateStyle: "medium" });
+  const fmt = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "fr-FR", { timeZone: "Europe/Paris", dateStyle: "medium" });
   const cards: [string, string, number][] = [
     [tr(locale, "En attente", "Pending"), tr(locale, "Livré, délai de retour en cours", "Delivered, return window running"), bal.pending],
     [tr(locale, "Disponible", "Available"), tr(locale, "Prêt à être versé", "Ready to be paid out"), bal.available],

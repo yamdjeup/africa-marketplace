@@ -9,6 +9,7 @@ import { ensureCreator } from "@/lib/partner-creator";
 import { isAdminEmail, VIEW_AS_COOKIE, getPortalContext } from "@/lib/supplier";
 import { emailAdminNewApplication, emailApplicantReceived } from "@/lib/supplier-email";
 import { partnerNameTaken } from "@/lib/partner-name";
+import { submitPartnerApplication } from "@/lib/partner-application";
 import { changeLog, changedFields, validateContact } from "@/lib/partner-profile";
 
 const s = (f: FormData, k: string, max = 2000) => String(f.get(k) ?? "").trim().slice(0, max);
@@ -27,26 +28,12 @@ export async function submitApplication(formData: FormData) {
     portfolioUrl: s(formData, "portfolioUrl", 300),
     about: s(formData, "about", 3000),
   };
-  const userId = session.user.id;
-  const urlOk = !data.portfolioUrl || /^https?:\/\/\S+\.\S+/.test(data.portfolioUrl);
-  if (!data.name || !data.country || !data.craftType || data.about.length < 20 || !urlOk) redirect(`${base}?error=invalid`);
-  if (await db.supplier.findUnique({ where: { userId } })) redirect(`/${locale}/fournisseur/tableau-de-bord`);
-  if (await partnerNameTaken(data.name)) redirect(`${base}?error=name`);
-  const user = await db.user.findUnique({ where: { id: userId } });
-  if (!user) redirect(`/${locale}/login`);
-  const open = await db.supplierApplication.findFirst({ where: { userId, status: { in: ["PENDING", "NEEDS_INFO"] } }, orderBy: { createdAt: "desc" } });
-  if (open?.status === "PENDING") redirect(`${base}?error=pending`);
-  const pending = await db.applicationFile.count({ where: { userId, applicationId: null } });
-  const attached = open ? await db.applicationFile.count({ where: { applicationId: open.id } }) : 0;
-  if (!data.portfolioUrl && pending + attached === 0) redirect(`${base}?error=proof`);
-  if (!open && (await db.supplierApplication.count({ where: { userId, createdAt: { gt: new Date(Date.now() - 24 * 3600_000) } } })) >= 3) redirect(`${base}?error=rate`);
-  const saved = open
-    ? await db.supplierApplication.update({ where: { id: open.id }, data: { ...data, status: "PENDING", locale } })
-    : await db.supplierApplication.create({ data: { ...data, userId, email: user.email, locale } });
-  await db.applicationFile.updateMany({ where: { userId, applicationId: null }, data: { applicationId: saved.id } });
-  const mail = { ...data, email: user.email, locale };
-  await emailAdminNewApplication(mail);
-  await emailApplicantReceived(mail);
+  const r = await submitPartnerApplication(db, session.user.id, data, locale, { nameTaken: (n) => partnerNameTaken(n), notify: async (mail) => { await emailAdminNewApplication(mail); await emailApplicantReceived(mail); } });
+  if (!r.ok) {
+    if (r.error === "partner") redirect(`/${locale}/fournisseur/tableau-de-bord`);
+    if (r.error === "user") redirect(`/${locale}/login`);
+    redirect(`${base}?error=${r.error}`);
+  }
   redirect(`${base}?sent=1`);
 }
 

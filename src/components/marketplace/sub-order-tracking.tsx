@@ -15,7 +15,7 @@ export async function SubOrderTracking({ orderId, locale, canCancel = false }: {
   if (subs.length === 0) return null;
   const shops = await db.supplier.findMany({ where: { id: { in: subs.map((s) => s.supplierId) } } });
   const items = await db.orderItem.findMany({ where: { subOrderId: { in: subs.map((s) => s.id) } } });
-  const fmt = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "fr-FR", { dateStyle: "long" });
+  const fmt = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "fr-FR", { timeZone: "Europe/Paris", dateStyle: "long" });
   const returns = await db.returnRequest.findMany({ where: { subOrderId: { in: subs.map((s) => s.id) } } });
   return (
     <section aria-labelledby="by-shop" className="space-y-3">

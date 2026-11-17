@@ -29,7 +29,7 @@ export default async function PartnerOrders({ params, searchParams }: { params: 
   ]);
   const tabs = [{ value: "todo", label: tr(locale, "À traiter", "To handle"), count: nTodo }, { value: "PENDING", label: tr(locale, "À accepter", "To accept"), count: nPending }, { value: "ship", label: tr(locale, "À expédier", "To ship") }, { value: "SHIPPED", label: tr(locale, "Expédiées", "Shipped") }, { value: "done", label: tr(locale, "Clôturées", "Closed") }, { value: "all", label: tr(locale, "Toutes", "All") }];
   const base = `/${locale}/fournisseur/commandes`;
-  const fmt = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "fr-FR", { dateStyle: "medium", timeStyle: "short" });
+  const fmt = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "fr-FR", { timeZone: "Europe/Paris", dateStyle: "medium", timeStyle: "short" });
   return (
     <>
       <h1 className="font-heading text-3xl text-primary">{tr(locale, "Commandes", "Orders")}</h1>

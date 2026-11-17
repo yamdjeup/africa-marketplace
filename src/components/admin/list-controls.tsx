@@ -28,7 +28,7 @@ export function ListFilters({ locale, path, q, tabs, defaultStatus, sorts }: { l
       <nav className="flex flex-wrap gap-2" aria-label={tr(locale, "Filtrer par statut", "Filter by status")}>
         {tabs.map((t) => (
           <Link key={t.value} href={listHref(path, q, { st: t.value, p: "1" }, defaultStatus)} aria-current={q.st === t.value ? "page" : undefined} className={`inline-flex min-h-11 items-center rounded-md border px-3 text-sm ${q.st === t.value ? "bg-primary text-primary-foreground" : ""}`}>
-            {t.label}{t.count !== undefined ? ` (${t.count})` : ""}
+            {t.label}{t.count ? <span className="ml-2 rounded-full bg-accent px-2 py-0.5 text-xs font-semibold text-accent-foreground">{t.count}</span> : null}
           </Link>
         ))}
       </nav>

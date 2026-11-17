@@ -92,6 +92,7 @@ describe("pastilles de compteur", () => {
     };
     expect(await adminCounts(db as never)).toEqual({ applications: 2, creations: 3, orders: 1, returns: 4, payouts: 2 });
     expect(db.product.count).toHaveBeenCalledWith({ where: { status: "SUBMITTED" } });
+    expect(db.returnRequest.count).toHaveBeenCalledWith({ where: { status: { in: ["REQUESTED", "ACCEPTED", "RECEIVED"] } } });
   });
   it("partenaire : colis à accepter/expédier et créations refusées", async () => {
     const db = { subOrder: { count: vi.fn().mockResolvedValue(5) }, product: { count: vi.fn().mockResolvedValue(1) } };

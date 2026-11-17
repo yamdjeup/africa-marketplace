@@ -146,13 +146,16 @@ export async function partnerCounts(db: PrismaClient, supplierId: string) {
   return { orders, works };
 }
 
+/** Retours qui exigent une action admin : ? traiter, ? recevoir, ? rembourser. */
+export const RETURN_TODO = ["REQUESTED", "ACCEPTED", "RECEIVED"];
+
 /** Compteurs des pastilles de l'administration (5 comptages indexés, aucune lecture de lignes). */
 export async function adminCounts(db: PrismaClient, now = new Date()) {
   const [applications, creations, orders, returns, payoutGroups] = await Promise.all([
     db.supplierApplication.count({ where: { status: "PENDING" } }),
     db.product.count({ where: { status: "SUBMITTED" } }),
     db.subOrder.count({ where: { AND: [TODO_WHERE, NOT_ARCHIVED] } }),
-    db.returnRequest.count({ where: { status: "REQUESTED" } }),
+    db.returnRequest.count({ where: { status: { in: RETURN_TODO } } }),
     db.ledgerEntry.groupBy({ by: ["supplierId"], where: { payoutId: null, reversedAt: null, availableAt: { lte: now } } }),
   ]);
   return { applications, creations, orders, returns, payouts: payoutGroups.length };

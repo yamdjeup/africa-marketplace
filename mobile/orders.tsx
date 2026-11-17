@@ -1,6 +1,6 @@
 import { tr, lazy, getLang } from "./region";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Alert, Image, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { authed } from "./api";
 import { API_URL } from "./config";
 import * as ImagePicker from "expo-image-picker";
@@ -12,12 +12,14 @@ type Order = {
   createdAt: string;
   totalCents: number;
   address: { fullName: string; street: string; postalCode: string; city: string; country: string; line1: string; houseNumber: string; box: string; line2: string; phone: string }; canEditAddress: boolean;
-  items: { slug: string; name: string; size: string | null; quantity: number; unitPriceCents: number }[];
+  shippingCents: number; bucket: "active" | "history";
+  items: { slug: string; name: string; size: string | null; quantity: number; unitPriceCents: number; image: string | null }[];
   parcels: Parcel[];
 };
 type Parcel = {
   id: string; number: string; status: string; statusLabel: string; shop: { name: string; country: string } | null;
-  items: { name: string; size: string | null; quantity: number }[];
+  items: { name: string; size: string | null; quantity: number; unitPriceCents: number; image: string | null }[];
+  timeline: { key: string; label: { fr: string; en: string }; at: string | null; reached: boolean }[];
   carrier: string; trackingNumber: string; trackingUrl: string | null; shippedAt: string | null; deliveredAt: string | null;
   reason: string | null; subtotalCents: number; refundStatus: string; canCancel: boolean; returnStatus: string | null; canReturn: boolean; shippedNotice: boolean;
 };
@@ -64,10 +66,15 @@ function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: numbe
   };
   return (
     <View style={{ marginTop: 10, gap: 3 }}>
-      <Text style={s.bold}>{tr(`Colis ${i + 1} sur ${n}`, `Parcel ${i + 1} of ${n}`)}</Text>
-      {p.shop && <Text style={s.mut}>{tr("Vendu et expédié par", "Sold and shipped by")} {p.shop.name} ({p.shop.country})</Text>}
+      <Text style={s.bold}>{n > 1 ? tr(`Colis ${i + 1} sur ${n} — `, `Parcel ${i + 1} of ${n} — `) : ""}{p.shop ? tr(`Colis expédié par ${p.shop.name} (${p.shop.country})`, `Parcel shipped by ${p.shop.name} (${p.shop.country})`) : tr("Colis", "Parcel")}</Text>
+      <Timeline steps={p.timeline} />
       <Text style={s.bold}>{STATUS[p.status] ?? p.statusLabel}</Text>
-      {p.items.map((it, k) => <Text key={k}>{it.quantity} × {it.name}{it.size ? ` (${it.size})` : ""}</Text>)}
+      {p.items.map((it, k) => (
+        <View key={k} style={{ flexDirection: "row", gap: 12, marginTop: 8 }}>
+          {it.image ? <Image source={{ uri: it.image }} style={{ width: 72, height: 72, backgroundColor: "#f2eadd" }} /> : <View style={{ width: 72, height: 72, backgroundColor: "#f2eadd" }} />}
+          <View style={{ flex: 1 }}><Text style={s.bold}>{it.name}</Text>{it.size ? <Text style={s.mut}>{tr("Taille", "Size")} {it.size}</Text> : null}<Text style={s.mut}>{tr("Qté", "Qty")} {it.quantity}</Text><Text style={s.bold}>{eur(it.unitPriceCents * it.quantity)}</Text></View>
+        </View>
+      ))}
       {p.status === "PENDING" && <Text style={s.mut}>{tr("En attente de la réponse de la boutique (48 h maximum).", "Waiting for the shop's reply (48 h maximum).")}</Text>}
       {p.shippedAt && <Text style={s.mut}>{tr("Expédiée le", "Shipped on")} {date(p.shippedAt)}{p.carrier ? ` · ${p.carrier}` : ""}{p.trackingNumber ? ` · ${p.trackingNumber}` : ""}</Text>}
       {p.trackingUrl && <Pressable onPress={() => Linking.openURL(p.trackingUrl!)}><Text style={s.link}>{tr("Suivre mon colis", "Track my parcel")}</Text></Pressable>}
@@ -90,6 +97,7 @@ function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: numbe
         </View>
       )}
       {!!msg && <Text style={{ color: "#a33" }}>{msg}</Text>}
+      {!p.canReturn && !p.returnStatus && p.status === "DELIVERED" && <ReturnInfo />}
       <Text style={[s.mut, { fontSize: 12 }]}>{tr("E póm ta’ est l’intermédiaire ; la boutique est le vendeur.", "E póm ta’ is the intermediary; the shop is the seller.")}</Text>
     </View>
   );
@@ -125,25 +133,115 @@ function EditAddress({ o, token, reload }: { o: Order; token: string; reload: ()
     </View>
   );
 }
+const lang = () => (getLang() === "en" ? "en-GB" : "fr-FR");
+const dt = (d: string) => new Date(d).toLocaleString(lang(), { timeZone: "Europe/Paris", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+const dShort = (d: string) => new Date(d).toLocaleDateString(lang(), { timeZone: "Europe/Paris", day: "2-digit", month: "2-digit", year: "2-digit" });
+
+// Barre de progression horizontale : étapes atteintes en noir avec leur horodatage (heure de Paris), les autres grisées sans date.
+function Timeline({ steps }: { steps: Parcel["timeline"] }) {
+  return (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 10 }}>
+      {steps.map((st, k) => (
+        <View key={st.key} style={{ width: 104, alignItems: "center" }}>
+          <View style={{ flexDirection: "row", alignItems: "center", width: "100%" }}>
+            <View style={{ flex: 1, height: 1, backgroundColor: k > 0 && st.reached ? "#221812" : "#ded6c9", opacity: k === 0 ? 0 : 1 }} />
+            <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: st.reached ? "#221812" : "#fff", borderWidth: 1, borderColor: st.reached ? "#221812" : "#ded6c9" }} />
+            <View style={{ flex: 1, height: 1, backgroundColor: steps[k + 1]?.reached ? "#221812" : "#ded6c9", opacity: k === steps.length - 1 ? 0 : 1 }} />
+          </View>
+          <Text style={{ marginTop: 6, fontSize: 12, fontWeight: st.reached ? "700" : "400", color: st.reached ? "#221812" : "#9a8f84", textAlign: "center" }}>{tr(st.label.fr, st.label.en)}</Text>
+          {st.reached && st.at ? <Text style={{ fontSize: 11, color: "#6b5d52", textAlign: "center" }}>{dt(st.at)}</Text> : null}
+        </View>
+      ))}
+    </ScrollView>
+  );
+}
+
+function ReturnInfo() {
+  const [open, setOpen] = useState(true);
+  return (
+    <View style={{ borderTopWidth: 1, borderTopColor: "#ded6c9", marginTop: 10, paddingTop: 10 }}>
+      <Pressable onPress={() => setOpen(!open)} style={{ flexDirection: "row", justifyContent: "space-between" }}><Text style={s.bold}>{tr("INFORMATIONS DE RETOUR", "RETURN INFORMATION")}</Text><Text>{open ? "⌃" : "⌄"}</Text></Pressable>
+      {open && (
+        <View style={{ gap: 6, marginTop: 6 }}>
+          <Text style={s.mut}>{tr("Le délai de retour pour cet article est dépassé ou il n’est pas éligible à un retour.", "The return period for this item has expired or it is not eligible for a return.")}</Text>
+          <Pressable onPress={() => Linking.openURL(`${API_URL}/${getLang()}/support/returns`)}><Text style={s.link}>{tr("Lire la politique de retour", "Read the returns policy")}</Text></Pressable>
+        </View>
+      )}
+    </View>
+  );
+}
+
+function OrderDetailScreen({ o, token, reload, onBack }: { o: Order; token: string; reload: () => void; onBack: () => void }) {
+  const [open, setOpen] = useState(true);
+  const count = o.items.reduce((n, i) => n + i.quantity, 0);
+  const sub = o.totalCents - o.shippingCents;
+  const row = (l: string, v: string, b?: boolean) => <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 4 }}><Text style={b ? s.bold : undefined}>{l}</Text><Text style={b ? s.bold : undefined}>{v}</Text></View>;
+  return (
+    <ScrollView contentContainerStyle={{ paddingBottom: 32 }} keyboardShouldPersistTaps="handled">
+      <Pressable onPress={onBack} hitSlop={8} style={{ padding: 16 }}><Text style={s.link}>← {tr("Mes commandes", "My orders")}</Text></Pressable>
+      <View style={{ backgroundColor: "#f2eadd", padding: 16 }}>
+        {row(tr("Réf.", "Ref."), o.number)}
+        {row(tr("Date", "Date"), dt(o.createdAt))}
+        {row(tr("Articles", "Items"), String(count))}
+        {row(tr("Total", "Total"), eur(o.totalCents), true)}
+      </View>
+      <View style={{ padding: 16 }}>
+        {o.parcels.map((p, k) => <ParcelView key={p.id} p={p} i={k} n={o.parcels.length} token={token} reload={reload} />)}
+        <Pressable onPress={() => setOpen(!open)} style={{ marginTop: 16, flexDirection: "row", justifyContent: "space-between" }}><Text style={s.bold}>{tr("RÉCAPITULATIF", "SUMMARY")}</Text><Text>{open ? "⌃" : "⌄"}</Text></Pressable>
+        {open && (
+          <View style={{ backgroundColor: "#f2eadd", padding: 16, marginTop: 8 }}>
+            <Text style={s.bold}>{tr("Référence de commande", "Order reference")}</Text><Text>{o.number}</Text>
+            <Text style={[s.bold, { marginTop: 10 }]}>{tr("Date de transaction", "Transaction date")}</Text><Text>{dt(o.createdAt)}</Text>
+            <Text style={[s.bold, { marginTop: 10 }]}>{tr("Adresse de livraison", "Delivery address")}</Text><Text>{o.address.fullName}</Text><Text>{o.address.street}, {o.address.postalCode} {o.address.city}, {o.address.country}</Text>
+            <EditAddress o={o} token={token} reload={reload} />
+            <Text style={[s.bold, { marginTop: 10 }]}>{tr("Résumé", "Summary")}</Text>
+            {row(`${tr("Sous-total", "Subtotal")} (${count})`, eur(sub))}
+            {row(tr("Livraison", "Shipping"), eur(o.shippingCents))}
+            {row(tr("Total", "Total"), eur(o.totalCents), true)}
+          </View>
+        )}
+        <Text style={[s.h2, { marginTop: 24, marginBottom: 6 }]}>{tr("Nous sommes là pour vous aider", "We’re here to help")}</Text>
+        <Text style={s.mut}>{tr("Contactez notre service client.", "Get in touch with our customer service team.")}</Text>
+        <Pressable onPress={() => Linking.openURL(`${API_URL}/${getLang()}/support`)} style={{ borderWidth: 1, borderColor: "#221812", padding: 14, alignItems: "center", marginTop: 10 }}><Text style={s.bold}>{tr("Nous contacter", "Contact us")}</Text></Pressable>
+      </View>
+    </ScrollView>
+  );
+}
+
 export function OrdersScreen({ token, onBack }: { token: string; onBack: () => void }) {
   const [orders, setOrders] = useState<Order[] | null>(null);
+  const [tab, setTab] = useState<"active" | "history">("active");
+  const [sel, setSel] = useState<string | null>(null);
   const load = () => authed<{ orders: Order[] }>(token, "GET", "/api/v1/orders").then((r) => setOrders(r.ok ? r.data.orders : []));
   useEffect(() => { load(); }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
+  const cur = orders?.find((o) => o.number === sel);
+  if (cur) return <OrderDetailScreen o={cur} token={token} reload={load} onBack={() => setSel(null)} />;
+  const list = (orders ?? []).filter((o) => o.bucket === tab);
   return (
     <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
       <Pressable onPress={onBack} hitSlop={8} style={{ marginBottom: 8 }}><Text style={s.link}>← {tr("Mon compte", "My account")}</Text></Pressable>
       <Text style={s.h2}>{tr("Mes commandes", "My orders")}</Text>
-      {orders === null && <ActivityIndicator />}
-      {orders?.length === 0 && <Text style={s.mut}>{tr("Vous n’avez pas encore de commande.", "You have no orders yet.")}</Text>}
-      {orders?.map((o) => (
-        <View key={o.number} style={s.card}>
-          <Text style={s.bold}>{tr("Commande", "Order")} {o.number}</Text>
-          <Text style={s.mut}>{new Date(o.createdAt).toLocaleDateString("fr-FR")} · {eur(o.totalCents)}</Text>
-          {o.items.map((i, k) => <Text key={k}>{i.quantity} × {i.name}{i.size ? ` (${i.size})` : ""} — {eur(i.unitPriceCents)}</Text>)}
-          <Text style={[s.mut, { marginTop: 6 }]}>{tr("Livraison", "Delivery")} : {o.address.fullName}, {o.address.street}, {o.address.postalCode} {o.address.city}</Text>
-          <EditAddress o={o} token={token} reload={load} />
-          {o.parcels.map((p, k) => <ParcelView key={p.id} p={p} i={k} n={o.parcels.length} token={token} reload={load} />)}
-        </View>
+      <View style={{ flexDirection: "row", gap: 20, marginBottom: 12 }}>
+        {(["active", "history"] as const).map((v) => (
+          <Pressable key={v} onPress={() => setTab(v)} style={{ paddingBottom: 4, borderBottomWidth: 2, borderBottomColor: tab === v ? "#221812" : "transparent" }}>
+            <Text style={{ fontWeight: tab === v ? "700" : "400", color: "#221812" }}>{v === "active" ? tr("COMMANDES ACTIVES", "ACTIVE ORDERS") : tr("HISTORIQUE", "ORDER HISTORY")}</Text>
+          </Pressable>
+        ))}
+      </View>
+      {orders === null && [0, 1, 2].map((k) => <View key={k} style={{ height: 64, backgroundColor: "#f2eadd", marginBottom: 12 }} />)}
+      {orders !== null && list.length === 0 && <Text style={s.mut}>{orders.length === 0 ? tr("Vous n’avez pas encore de commande.", "You have no orders yet.") : tab === "active" ? tr("Aucune commande active.", "No active orders.") : tr("Aucune commande dans l’historique.", "No orders in your history.")}</Text>}
+      {list.map((o) => (
+        <Pressable key={o.number} onPress={() => setSel(o.number)} style={s.card} accessibilityRole="button">
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+            <View><Text style={s.mut}>{tr("Date de commande", "Order date")}</Text><Text>{dShort(o.createdAt)}</Text></View>
+            <View><Text style={s.mut}>{tr("Référence", "Reference")}</Text><Text>{o.number}</Text></View>
+            <Text style={{ fontSize: 22 }}>›</Text>
+          </View>
+          <View style={{ flexDirection: "row", gap: 8, marginTop: 10, alignItems: "center" }}>
+            {o.items.slice(0, 4).map((i, k) => (i.image ? <Image key={k} source={{ uri: i.image }} style={{ width: 56, height: 56, backgroundColor: "#f2eadd" }} /> : <View key={k} style={{ width: 56, height: 56, backgroundColor: "#f2eadd" }} />))}
+            {o.items.length > 4 && <Text style={s.mut}>+{o.items.length - 4}</Text>}
+          </View>
+        </Pressable>
       ))}
     </ScrollView>
   );

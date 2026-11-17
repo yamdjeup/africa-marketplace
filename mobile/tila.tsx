@@ -81,19 +81,19 @@ export function TilaButton({ onOpenSlug }: { onOpenSlug: (slug: string) => void 
     setBusy(true);
     const r = await authed<{ reply?: string; products?: Card[]; error?: string }>(null, "POST", "/api/tila", { locale: getLang(), messages: next.slice(-10).map(({ role, content }) => ({ role, content })) });
     setBusy(false);
-    if (r.status === 0) setError(tr("Connexion impossible : v?rifiez votre r?seau et r?essayez.", "Connection failed: check your network and try again."));
+    if (r.status === 0) setError(tr("Connexion impossible : vérifiez votre réseau et réessayez.", "Connection failed: check your network and try again."));
     else if (!r.ok || !r.data?.reply) setError(T.errors[r.data?.error ?? "unavailable"] ?? T.errors.unavailable);
     else setMsgs([...next, { role: "assistant", content: r.data.reply, products: r.data.products ?? [] }]);
   }
 
   return (
     <>
-      {(
+      <>
         <Animated.View {...pan.panHandlers} onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })} accessibilityRole="button" accessibilityLabel={T.open} style={[st.fab, { left: pos.x, top: pos.y }]}>
           <Image source={{ uri: AVATAR }} style={st.fabImg} />
           <View><Text style={st.fabName}>{T.name}</Text><Text style={st.fabBadge}>{T.badge}</Text></View>
         </Animated.View>
-      ) : null}
+      </>
       {open && (
         <View style={[StyleSheet.absoluteFill, { zIndex: 1000, elevation: 20, backgroundColor: "#faf6ee", paddingTop: insets.top, paddingBottom: insets.bottom }]}>
           <View style={{ flex: 1 }}>

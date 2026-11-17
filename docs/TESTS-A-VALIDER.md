@@ -80,6 +80,7 @@ DerniÃ¨re exÃ©cution (11/11/2026, lot admin + e-mails de retour) : Vitest 62
 | A-T71 | Toutes les dates/heures du site (commandes, partenaire, e-mails) en Europe/Paris : 23:51 UTC = 00:51 le lendemain ; aucun formateur sans timeZone | Automatise (tests/unit/paris-timezone.test.ts) |
 | A-T72 | Retours : état « Colis reçu » (uniquement depuis « accepté »), remboursement depuis « reçu » au sous-total sans port, remise en stock +quantité seulement si case cochée et remboursement réussi | Automatise (tests/unit/returns.test.ts, Prisma simulé) |
 | A-T73 | E-mails de retour : partenaire (demande, accord, refus, reçu, remboursé) FR/EN ; e-mail client « reçu » avec mention « frais de livraison non remboursés » | Automatise (tests/unit/admin-list.test.ts) |
+| A-T79 | Mes commandes (app) : classement actives/historique, étapes horodatées sans date inventée, étapes retour/clôture | Automatise (tests/unit/order-view.test.ts) |
 | A-T78 | Retour : le créateur confirme la réception (Conforme / Endommagé, commentaire obligatoire si endommagé), uniquement sur son colis accepté, délai 6 jours | Automatise (tests/unit/return-partner-check.test.ts) |
 | A-T77 | Photos de retour : max 5, 5 Mo, types image, liste d'identifiants (tests/unit/return-photos.test.ts) | Automatise |
 | A-T76 | Retour remboursé : liste Remettre en vente / Exclure du stock, motif obligatoire (serveur), mouvement 0 unité avec motif, rien avant remboursement si motif vide | Automatise (tests/unit/returns.test.ts) |

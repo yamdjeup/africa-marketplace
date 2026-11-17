@@ -122,6 +122,7 @@ function GoogleButton({ auth, onError }: { auth: Auth; onError: (m: string | nul
 
 import { RegionRow, tr, lazy } from "./region";
 import { ProfileScreen } from "./profile";
+import { PartnerApplyScreen } from "./partner-apply";
 
 export function AccountScreen({ auth, onOpenSite, more }: { auth: Auth; onOpenSite: (path: string) => void; more?: React.ReactNode }) {
   const [mode, setMode] = useState<"login" | "register" | "forgot">("login");
@@ -136,6 +137,7 @@ export function AccountScreen({ auth, onOpenSite, more }: { auth: Auth; onOpenSi
   const [profile, setProfile] = useState(false);
   const [support, setSupport] = useState(false);
   const [space, setSpace] = useState(false);
+  const [apply, setApply] = useState(false);
   const isSupplier = useIsSupplier(auth.accessToken ?? null);
 
   if (!auth.ready) return <ActivityIndicator style={{ marginTop: 40 }} />;
@@ -144,6 +146,7 @@ export function AccountScreen({ auth, onOpenSite, more }: { auth: Auth; onOpenSi
   if (auth.user && profile && auth.accessToken) return <ProfileScreen token={auth.accessToken} onBack={() => setProfile(false)} />;
   if (auth.user && alerts && auth.accessToken) return <AlertsScreen token={auth.accessToken} onBack={() => setAlerts(false)} />;
   if (auth.user && space && isSupplier && auth.accessToken) return <SupplierScreen token={auth.accessToken} onBack={() => setSpace(false)} />;
+  if (auth.user && apply && auth.accessToken) return <PartnerApplyScreen token={auth.accessToken} onBack={() => setApply(false)} />;
   if (auth.user && orders && auth.accessToken) return <OrdersScreen token={auth.accessToken} onBack={() => setOrders(false)} />;
 
   if (auth.user) {
@@ -159,6 +162,7 @@ export function AccountScreen({ auth, onOpenSite, more }: { auth: Auth; onOpenSi
         <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => setOrders(true)}><Text style={s.ctaText}>{tr("Mes commandes", "My orders")}</Text></Pressable>
         <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => setAddresses(true)}><Text style={s.ctaText}>{tr("Mes adresses", "My addresses")}</Text></Pressable>
         <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => setAlerts(true)}><Text style={s.ctaText}>{tr("Recevoir des alertes", "Get alerts")}</Text></Pressable>
+        {!isSupplier ? <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => setApply(true)}><Text style={s.ctaText}>{tr("Devenir partenaire", "Become a partner")}</Text></Pressable> : null}
         <Pressable style={[s.cta, { marginTop: 12 }]} onPress={() => setSupport(true)}><Text style={s.ctaText}>{tr("Besoin d’aide ?", "Need help?")}</Text></Pressable>
         <Pressable style={[s.cta, s.ghost, { marginTop: 12 }]} onPress={auth.logout}><Text style={[s.ctaText, { color: "#221812" }]}>{tr("Se déconnecter", "Sign out")}</Text></Pressable>
                 {more}

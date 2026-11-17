@@ -20,7 +20,7 @@ import { SupportScreen } from "./support";
 import { StripeProvider } from "@stripe/stripe-react-native";
 
 type Product = { slug: string; name: string; description: string; story: string; creatorName: string; priceCents: number; images: string[]; material: string | null; technique: string | null; origin: string | null; dimensions: string | null; categorySlug: string; url: string; stock: number; soldOut?: boolean; isNew?: boolean; isExample?: boolean; edition?: string | null; sizes?: string[]; sizeStock?: Record<string, number> | null; sizeLabel?: string };
-type Extra = { categoryLabel: string; materials: string[]; dimensionsText: string | null; careInstructions: string | null; hasCertificate: boolean; roomPreview?: boolean; mirrorTryOn?: boolean; attestedAt: string | null; signatureUrl: string | null; related: Product[] };
+type Extra = { heldByOther?: boolean; categoryLabel: string; materials: string[]; dimensionsText: string | null; careInstructions: string | null; hasCertificate: boolean; roomPreview?: boolean; mirrorTryOn?: boolean; attestedAt: string | null; signatureUrl: string | null; related: Product[] };
 type Home = { site?: Site; categories: { slug: string; label: string }[]; news: Product[]; latest: Product[]; creators: { slug: string; name: string; specialty: string; image: string }[]; byCategory: { slug: string; label: string; items: Product[] }[] };
 type List = { items: Product[]; total: number; page: number; pages: number };
 type Tab = "home" | "shop" | "favs" | "me";
@@ -124,6 +124,7 @@ function DetailBody({ p, onClose, fav, onFav, onAdd, inCart, onOpenCart, token, 
             <Text style={[s.price, { fontSize: 18 }]}>{eur(p.priceCents)}</Text>
             <ApproxPrice cents={p.priceCents} />
             <Text style={[s.meta, { color: p.stock === 0 ? "#b42318" : "#1e7546" }]}>{p.stock === 0 ? tr("Épuisée", "Sold out") : p.stock <= 1 ? tr("Pièce unique", "Unique piece") : p.stock <= 3 ? tr(`Plus que ${p.stock}`, `Only ${p.stock} left`) : tr("En stock", "In stock")}</Text>
+            {x?.heldByOther ? <Text style={[s.meta, { color: "#8a5a00" }]}>{tr("Réservée par un autre client : elle peut redevenir disponible si son paiement n’aboutit pas.", "Reserved by another customer: it may become available again if their payment is not completed.")}</Text> : null}
             <Text style={s.body}>{p.description}</Text>
             {[p.edition && !(p.stock > 0 && p.stock <= 1 && unique) && tr(`Édition : ${p.edition}`, `Edition: ${p.edition}`), p.material && tr(`Matière : ${p.material}`, `Material: ${p.material}`), p.technique && tr(`Technique : ${p.technique}`, `Technique: ${p.technique}`), !p.material && !p.technique && x?.materials?.length ? tr(`Matières : ${x.materials.join(", ")}`, `Materials: ${x.materials.join(", ")}`) : null, p.origin && tr(`Origine : ${p.origin}`, `Origin: ${p.origin}`), (x ? x.dimensionsText : p.dimensions) && tr(`Dimensions : ${x ? x.dimensionsText : p.dimensions}`, `Dimensions: ${x ? x.dimensionsText : p.dimensions}`)].filter(Boolean).map((l) => <Text key={l as string} style={s.meta}>{l}</Text>)}
             {x?.attestedAt ? (

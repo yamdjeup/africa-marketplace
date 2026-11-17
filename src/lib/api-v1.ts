@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { CREATOR_VIDEOS } from "@/lib/creator-videos";
 import { MIRROR_CATEGORIES, MIRROR_ITEMS } from "@/data/mirror-items";
 import { CREATOR_VIDEO_SHOWCASE } from "@/data/creator-videos";
+import { showHoldNotice } from "@/lib/hold-notice";
 import { getDict } from "@/lib/i18n";
 import { getCategories, getCategoryShowcase, getFeaturedProducts, getHeroProduct, getCreatorWithProducts, getCreators, getFilterOptions, getProduct, getRelatedProducts, searchProducts, type CatalogParams, type ProductView } from "@/lib/catalog";
 
@@ -81,10 +82,13 @@ export async function oneProduct(slug: string, locale: MobileLocale, origin: str
   const [p, more] = await Promise.all([getProduct(slug, locale), getRelatedProducts(slug, locale, 4)]);
   if (!p) return null;
   const v = p.product;
+  const soldOut = v.stock <= 0 || (v.variants.length > 0 && v.variants.every((x) => x.available <= 0));
+  const raw = soldOut ? await db.product.findUnique({ where: { slug }, select: { reserved: true } }) : null;
   const rule = ruleFor(v.categorySlug);
   const cm = [v.widthCm, v.heightCm, v.depthCm].filter((x): x is number => x != null).join(" × ");
   return {
     ...toMobileProduct(v, origin, locale),
+    heldByOther: showHoldNotice({ soldOut, reserved: raw?.reserved ?? 0, ownHold: false }),
     categoryLabel: p.categoryLabel,
     materials: v.materials,
     dimensionsText: rule.dimensions ? (cm ? `${cm} cm` : v.dimensions) : null,

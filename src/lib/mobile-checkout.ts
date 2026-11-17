@@ -180,6 +180,7 @@ export async function listOrders(userId: string) {
         refundStatus: s.refundStatus,
         canCancel: ["PENDING", "ACCEPTED", "PREPARING"].includes(s.status),
         returnStatus: retLabel,
+        returnStatusEn: ret ? RETURN_LABELS[ret.status as ReturnStatus]?.en ?? ret.status : null,
         canReturn: !ret && returnEligibility(s, false) === "ok",
         shippedNotice: showShippedNotice(s.status, !!ret),
       };

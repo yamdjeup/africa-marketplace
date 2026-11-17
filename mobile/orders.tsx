@@ -21,7 +21,7 @@ type Parcel = {
   items: { name: string; size: string | null; quantity: number; unitPriceCents: number; image: string | null }[];
   timeline: { key: string; label: { fr: string; en: string }; at: string | null; reached: boolean }[];
   carrier: string; trackingNumber: string; trackingUrl: string | null; shippedAt: string | null; deliveredAt: string | null;
-  reason: string | null; subtotalCents: number; refundStatus: string; canCancel: boolean; returnStatus: string | null; canReturn: boolean; shippedNotice: boolean;
+  reason: string | null; subtotalCents: number; refundStatus: string; canCancel: boolean; returnStatus: string | null; returnStatusEn?: string | null; canReturn: boolean; shippedNotice: boolean;
 };
 
 function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: number; token: string; reload: () => void }) {
@@ -86,7 +86,7 @@ function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: numbe
         </Text>
       )}
       {p.canCancel && <Pressable disabled={busy} onPress={cancel}><Text style={s.link}>{tr("Annuler ma commande", "Cancel my order")}</Text></Pressable>}
-      {p.returnStatus && <Text style={s.bold}>{RET[p.returnStatus] ?? p.returnStatus}</Text>}
+      {p.returnStatus && <Text style={s.bold}>{RET[p.returnStatus] ?? tr(p.returnStatus, p.returnStatusEn ?? p.returnStatus)}</Text>}
       {p.canReturn && (
         <View style={{ gap: 6, marginTop: 4 }}>
           <Text style={s.mut}>{tr("Les frais de livraison ne sont pas remboursés.", "Delivery fees are not refunded.")}</Text>

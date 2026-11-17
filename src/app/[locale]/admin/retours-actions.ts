@@ -7,7 +7,7 @@ import { db } from "@/lib/db";
 import { refundSubOrder } from "@/lib/refund";
 import { sendPartnerReturnMail, sendReturnMail } from "@/lib/return-email";
 import { flushRestockSafe } from "@/lib/restock-flush";
-import { decideReturn, markReturnReceived, markReturnRefundedManually, refundReturn } from "@/lib/returns";
+import { decideReturn, markReturnReceived, markReturnRefundedManually, parseStockChoice, refundReturn } from "@/lib/returns";
 import { isAdminEmail } from "@/lib/supplier";
 
 const path = "/fr/admin/retours";
@@ -50,11 +50,12 @@ export async function refundReturnAction(f: FormData) {
   await admin();
   const id = String(f.get("id") ?? "");
   const manual = f.get("manual") === "1";
-  const restock = f.get("restock") === "1";
+  const restock = parseStockChoice(f);
+  if (restock === null) redirect(`${path}?error=stock`);
   const r = manual ? await markReturnRefundedManually(db, id, new Date(), restock) : await refundReturn(db, id, refundSubOrder, new Date(), restock);
   if (!r) redirect(`${path}?error=state`);
   if (!r.done) redirect(`${path}?error=refund`);
-  if (restock) await flushRestockSafe();
+  if (restock === true) await flushRestockSafe();
   await notifyCustomer(id, "refunded");
   revalidatePath(path);
   redirect(`${path}?ok=refunded`);

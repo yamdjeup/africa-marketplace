@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import type { Locale } from "@/lib/i18n";
 import { RETURN_LABELS, type ReturnStatus } from "@/lib/returns";
 import { tr } from "@/lib/tr";
+import { StockChoice } from "@/components/admin/stock-choice";
 import { decideReturnAction, markReceivedAction, refundReturnAction } from "../retours-actions";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +24,7 @@ export default async function ReturnsAdmin({ params, searchParams }: { params: P
   const eur = (c: number) => new Intl.NumberFormat(locale === "en" ? "en-GB" : "fr-FR", { style: "currency", currency: "EUR" }).format(c / 100);
   const fmt = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "fr-FR", { timeZone: "Europe/Paris", dateStyle: "medium" });
   const ok: Record<string, [string, string]> = { received: ["Colis reçu enregistré, client prévenu.", "Parcel received recorded, customer notified."], accepted: ["Retour accepté, client prévenu.", "Return accepted, customer notified."], refused: ["Retour refusé, client prévenu.", "Return refused, customer notified."], refunded: ["Remboursement enregistré, client prévenu.", "Refund recorded, customer notified."] };
-  const err: Record<string, [string, string]> = { state: ["Cette demande a déjà été traitée.", "This request has already been handled."], refund: ["Remboursement Stripe non effectué (voir la note). Vous pouvez le marquer comme fait manuellement.", "Stripe refund not completed (see note). You can mark it as done manually."] };
+  const err: Record<string, [string, string]> = { state: ["Cette demande a déjà été traitée.", "This request has already been handled."], stock: ["Choisissez la sortie du colis ; « Exclure du stock » exige un motif.", "Choose the parcel outcome; “Exclude from stock” requires a reason."], refund: ["Remboursement Stripe non effectué (voir la note). Vous pouvez le marquer comme fait manuellement.", "Stripe refund not completed (see note). You can mark it as done manually."] };
   return (
     <>
       <h1 className="font-heading text-3xl text-primary">{tr(locale, "Retours et litiges", "Returns and disputes")}</h1>
@@ -55,7 +56,7 @@ export default async function ReturnsAdmin({ params, searchParams }: { params: P
                   {r.status === "ACCEPTED" && <form action={markReceivedAction}><input type="hidden" name="id" value={r.id} /><button className={buttonVariants({ className: "min-h-11" })}>{tr(locale, "Colis reçu", "Parcel received")}</button></form>}
                   <form action={refundReturnAction} className="flex flex-wrap items-center gap-2">
                     <input type="hidden" name="id" value={r.id} />
-                    <label className="flex items-center gap-2 text-xs"><input type="checkbox" name="restock" value="1" />{tr(locale, "Remettre en vente (stock +1 par unité)", "Put back on sale (stock +1 per unit)")}</label>
+                    <StockChoice en={locale === "en"} />
                     <button className={buttonVariants({ className: "min-h-11" })}>{tr(locale, "Rembourser (Stripe)", "Refund (Stripe)")}</button>
                     <button name="manual" value="1" className={buttonVariants({ variant: "outline", className: "min-h-11" })}>{tr(locale, "Marquer remboursé (manuel)", "Mark refunded (manual)")}</button>
                   </form>

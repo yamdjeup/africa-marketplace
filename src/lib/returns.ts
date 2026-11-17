@@ -46,7 +46,19 @@ export async function decideReturn(db: PrismaClient, id: string, decision: "ACCE
 type RefundFn = (o: { paymentIntentId: string | null; amountCents: number; subOrderId: string }) => Promise<{ status: string; refundId?: string; note?: string }>;
 
 /** Rembourse un retour accepté. Échec ou absence de paiement Stripe : reste « accepté » avec une note (à reprendre par l'administrateur). */
-export async function refundReturn(db: PrismaClient, id: string, refund: RefundFn, now = new Date(), restock = false) {
+/** Sort du colis remboursé : remise en vente (stock +1 par unité) ou exclusion du stock (motif obligatoire, aucun changement de stock). */
+export type StockChoice = boolean | { exclude: string };
+
+export function parseStockChoice(f: FormData): StockChoice | null {
+  const v = String(f.get("stock") ?? "");
+  if (v === "restock") return true;
+  if (v !== "exclude") return null;
+  const comment = String(f.get("excludeReason") ?? "").trim().slice(0, 300);
+  return comment ? { exclude: comment } : null;
+}
+
+export async function refundReturn(db: PrismaClient, id: string, refund: RefundFn, now = new Date(), restock: StockChoice = false) {
+  if (typeof restock === "object" && !restock.exclude.trim()) return null;
   const ret = await db.returnRequest.findUnique({ where: { id }, include: { subOrder: { include: { order: { select: { stripePaymentIntentId: true, number: true } } } } } });
   if (!ret || (ret.status !== "ACCEPTED" && ret.status !== "RECEIVED")) return null;
   const r = await refund({ paymentIntentId: ret.subOrder.order.stripePaymentIntentId, amountCents: ret.subOrder.subtotalCents, subOrderId: ret.subOrderId });
@@ -57,7 +69,10 @@ export async function refundReturn(db: PrismaClient, id: string, refund: RefundF
   }
   const claimed = await db.returnRequest.updateMany({ where: { id, status: { in: ["ACCEPTED", "RECEIVED"] } }, data: { status: "REFUNDED", refundId: r.refundId ?? null, refundNote: null, refundedAt: now } });
   if (claimed.count === 1) {
-    if (restock) {
+    if (typeof restock === "object") {
+      const items = await db.orderItem.findMany({ where: { subOrderId: ret.subOrderId } });
+      for (const it of items) await db.stockMovement.create({ data: { productSlug: it.productSlug, variantId: null, type: "ADJUST", quantity: 0, reason: `Retour remboursé, exclu du stock : ${ret.subOrder.number} — ${restock.exclude.trim()}`, authorId: null, authorLabel: "administration", orderNumber: ret.subOrder.order.number } });
+    } else if (restock) {
       const items = await db.orderItem.findMany({ where: { subOrderId: ret.subOrderId } });
       for (const it of items) await returnStock(db, { slug: it.productSlug, label: it.size }, it.quantity, `Retour remboursé : ${ret.subOrder.number}`, { label: "administration" }, ret.subOrder.order.number);
     }
@@ -68,7 +83,7 @@ export async function refundReturn(db: PrismaClient, id: string, refund: RefundF
 }
 
 /** Marque comme remboursé un retour traité hors Stripe (virement manuel). */
-export async function markReturnRefundedManually(db: PrismaClient, id: string, now = new Date(), restock = false) {
+export async function markReturnRefundedManually(db: PrismaClient, id: string, now = new Date(), restock: StockChoice = false) {
   const ret = await db.returnRequest.findUnique({ where: { id } });
   if (!ret || (ret.status !== "ACCEPTED" && ret.status !== "RECEIVED")) return null;
   return refundReturn(db, id, async () => ({ status: "DONE", refundId: "manuel" }), now, restock);

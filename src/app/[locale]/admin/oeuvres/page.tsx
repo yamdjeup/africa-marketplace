@@ -79,7 +79,7 @@ export default async function AdminWorks({ params, searchParams }: Props) {
         <nav aria-label={tr(locale, "Filtrer par statut", "Filter by status")} className="flex flex-wrap gap-2">
           {counts.map(([k, n]) => (
             <Link key={k} href={href({ f: k, p: undefined, sort: undefined, dir: undefined })} aria-current={k === tab ? "page" : undefined} className={`inline-flex min-h-11 items-center rounded-md border px-3 text-sm ${k === tab ? "bg-primary text-primary-foreground" : ""}`}>
-              {tr(locale, ...TAB_LABEL[k])}{k === "pending" ? (nPendingAll > 0 ? <span className="ml-2 rounded-full bg-accent px-2 py-0.5 text-xs font-semibold text-accent-foreground">{nPendingAll}</span> : null) : ` (${n})`}
+              {tr(locale, ...TAB_LABEL[k])}{k === "pending" ? (nPendingAll > 0 ? <span className="ml-2 rounded-full bg-accent px-2 py-0.5 text-xs font-semibold text-accent-foreground">{nPendingAll}</span> : null) : null}
             </Link>
           ))}
         </nav>

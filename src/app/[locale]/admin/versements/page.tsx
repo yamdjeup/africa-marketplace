@@ -33,7 +33,8 @@ export default async function PayoutsAdmin({ params, searchParams }: { params: P
   const names = new Map(nameRows.map((x) => [x.id, x.displayName]));
   const path = `/${locale}/admin/versements`;
   const nToPay = (await db.ledgerEntry.groupBy({ by: ["supplierId"], where: ledgerWhere("topay", now) })).length;
-  const tabs = [{ value: "topay", label: tr(locale, "À payer", "To pay"), count: nToPay }, { value: "pending", label: tr(locale, "En attente (délai de retour)", "Pending (return window)") }, { value: "all", label: tr(locale, "Tous les partenaires", "All partners") }];
+  const nPending = (await db.ledgerEntry.groupBy({ by: ["supplierId"], where: ledgerWhere("pending", now) })).length;
+  const tabs = [{ value: "topay", label: tr(locale, "À payer", "To pay"), count: nToPay }, { value: "pending", label: tr(locale, "En attente (délai de retour)", "Pending (return window)"), count: nPending }, { value: "all", label: tr(locale, "Tous les partenaires", "All partners") }];
   const eur = (c: number) => new Intl.NumberFormat(locale === "en" ? "en-GB" : "fr-FR", { style: "currency", currency: "EUR" }).format(c / 100);
   const fmt = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "fr-FR", { timeZone: "Europe/Paris", dateStyle: "medium", timeStyle: "short" });
   const msg: Record<string, [string, string]> = {

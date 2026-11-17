@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import type { Locale } from "@/lib/i18n";
 import { runSubOrderSweep } from "@/lib/order-notify";
 import { subLabel } from "@/lib/suborders";
+import { RETURN_LABELS, type ReturnStatus } from "@/lib/returns";
 import { getPortalContext } from "@/lib/supplier";
 import { tr } from "@/lib/tr";
 import { acceptOrderAction, deliverOrderAction, prepareOrderAction, refuseOrderAction, shipOrderAction } from "../../../commandes-actions";
@@ -38,6 +39,7 @@ export default async function PartnerOrder({ params, searchParams }: { params: P
   if (!sub) notFound();
   const items = await db.orderItem.findMany({ where: { subOrderId: sub.id } });
   const st = subLabel(sub.status);
+  const ret = await db.returnRequest.findFirst({ where: { subOrderId: sub.id } });
   const o = sub.order;
   const fmt = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "fr-FR", { timeZone: "Europe/Paris", dateStyle: "long", timeStyle: "short" });
   const eur = (c: number) => new Intl.NumberFormat(locale === "en" ? "en-GB" : "fr-FR", { style: "currency", currency: "EUR" }).format(c / 100);
@@ -119,6 +121,7 @@ export default async function PartnerOrder({ params, searchParams }: { params: P
           {!ro && <form action={deliverOrderAction}>{hidden}<button className={btn} type="submit">{tr(locale, "Marquer livrée", "Mark as delivered")}</button></form>}
         </section>
       )}
+      {ret && <p className="rounded-md border p-3 text-sm"><strong>{RETURN_LABELS[ret.status as ReturnStatus]?.[locale === "en" ? "en" : "fr"] ?? ret.status}</strong> · {tr(locale, "Motif du client : ", "Customer reason: ")}{ret.reason}<br /><span className="text-muted-foreground">{tr(locale, "Le retour est arbitré par E póm ta’.", "E póm ta’ handles the return decision.")}</span></p>}
       {sub.reason && ["REFUSED", "EXPIRED", "CANCELLED"].includes(sub.status) && <p className="text-sm text-muted-foreground">{tr(locale, "Motif : ", "Reason: ")}{sub.reason}</p>}
     </>
   );

@@ -26,7 +26,7 @@ export function useIsSupplier(token: string | null) {
   return ok;
 }
 
-type Detail = { id: string; number: string; status: string; statusLabel: Lbl; createdAt: string; acceptBy: string | null; subtotalCents: number; carrier: string | null; trackingNumber: string | null; reason: string | null; items: { id: string; name: string; size: string | null; quantity: number; unitPriceCents: number }[]; shipTo: { fullName: string; address: string; postalCode: string; city: string; country: string; phone: string | null } };
+type Detail = { id: string; number: string; status: string; statusLabel: Lbl; createdAt: string; acceptBy: string | null; subtotalCents: number; carrier: string | null; trackingNumber: string | null; reason: string | null; return?: { status: string; label: Lbl; reason: string; createdAt: string } | null; items: { id: string; name: string; size: string | null; quantity: number; unitPriceCents: number }[]; shipTo: { fullName: string; address: string; postalCode: string; city: string; country: string; phone: string | null } };
 const CARRIERS = ["UPS", "DHL", "Colissimo"];
 const ERRS: Record<string, [string, string]> = {
   state: ["Cette commande a changé d'état (déjà traitée ou expirée).", "This order changed state (already handled or expired)."],
@@ -62,6 +62,7 @@ function OrderDetail({ token, id, onBack }: { token: string; id: string; onBack:
       <Pressable onPress={onBack} hitSlop={12} style={{ height: 44, justifyContent: "center" }} accessibilityLabel={tr("Retour", "Back")}><Text style={{ fontSize: 28 }}>←</Text></Pressable>
       <Text style={st.h2}>{tr("Commande", "Order")} {d.number}</Text>
       <Text style={st.mut}>{tr(d.statusLabel.fr, d.statusLabel.en)}</Text>
+      {d.return ? <View style={{ marginTop: 10, padding: 10, borderWidth: 1, borderColor: "#ded6c9", borderRadius: 6 }}><Text style={{ fontWeight: "600", color: "#221812" }}>{tr(d.return.label.fr, d.return.label.en)}</Text><Text style={st.mut}>{tr("Motif du client", "Customer reason")} : {d.return.reason}</Text><Text style={st.mut}>{tr("Le retour est arbitré par E póm ta’.", "E póm ta’ handles the return decision.")}</Text></View> : null}
       {msg ? <Text style={{ color: "#b42318", marginTop: 8 }}>{msg}</Text> : null}
       <Text style={st.h3}>{tr("Articles", "Items")}</Text>
       {d.items.map((i) => <Text key={i.id} style={{ color: "#221812", marginTop: 4 }}>{i.quantity} × {i.name}{i.size ? ` (${i.size})` : ""} — {eur(i.unitPriceCents * i.quantity)}</Text>)}

@@ -6,8 +6,11 @@ import { partnerRecipient } from "@/lib/partner-recipient";
 
 export type ReturnMailKind = "requested" | "accepted" | "received" | "refused" | "refunded";
 
+export type CustomerReturnMailKind = ReturnMailKind | "decided_accepted" | "decided_refused";
+
 export type ReturnMailInput = {
-  kind: ReturnMailKind;
+  kind: CustomerReturnMailKind;
+  damaged?: boolean;
   locale: "fr" | "en";
   subNumber: string;
   orderNumber?: string;
@@ -23,12 +26,14 @@ export function buildReturnEmail(o: ReturnMailInput): { subject: string; lines: 
   const money = (c: number) => new Intl.NumberFormat(fr ? "fr-FR" : "en-GB", { style: "currency", currency: "EUR" }).format(c / 100);
   const T = {
     requested: { subject: fr ? "demande de retour reçue" : "return request received", title: fr ? "Votre demande de retour est reçue" : "Your return request is received", p: fr ? [`Nous avons bien reçu votre demande de retour du colis **${o.subNumber}**. Notre équipe l'examine et revient vers vous rapidement.`] : [`We have received your return request for parcel **${o.subNumber}**. Our team is reviewing it and will get back to you shortly.`] },
-    accepted: { subject: fr ? "retour accepté" : "return accepted", title: fr ? "Votre retour est accepté" : "Your return is accepted", p: fr ? [`Votre demande de retour du colis **${o.subNumber}** est acceptée. Vous serez remboursé de **${money(o.amountCents)}** après réception et contrôle du colis. **Renvoyez le colis directement au créateur** : ${o.shipTo ? `adresse : **${o.shipTo}**` : "son adresse vous sera communiquée par notre équipe"}. Les frais d'envoi du retour sont à votre charge, sauf article endommagé ou non conforme. Les frais de livraison initiaux ne sont pas remboursés.`] : [`Your return request for parcel **${o.subNumber}** is accepted. You will be refunded **${money(o.amountCents)}** once the parcel is received and checked. **Please send the parcel directly to the creator**: ${o.shipTo ? `address: **${o.shipTo}**` : "our team will send you the address"}. Return shipping is at your expense, unless the item is damaged or not as described. Original delivery fees are not refunded.`] },
+    accepted: { subject: fr ? "retour accepté" : "return accepted", title: fr ? "Votre retour est accepté" : "Your return is accepted", p: fr ? [`Votre demande de retour du colis **${o.subNumber}** est acceptée. Vous serez remboursé de **${money(o.amountCents)}** après réception et contrôle du colis. **Renvoyez le colis directement au créateur** : ${o.shipTo ? `adresse : ${o.shipTo}` : "son adresse vous sera communiquée par notre équipe"}. Les frais d'envoi du retour sont à votre charge, sauf article endommagé ou non conforme. Les frais de livraison initiaux ne sont pas remboursés.`] : [`Your return request for parcel **${o.subNumber}** is accepted. You will be refunded **${money(o.amountCents)}** once the parcel is received and checked. **Please send the parcel directly to the creator**: ${o.shipTo ? `address: ${o.shipTo}` : "our team will send you the address"}. Return shipping is at your expense, unless the item is damaged or not as described. Original delivery fees are not refunded.`] },
     refused: { subject: fr ? "retour non accepté" : "return not accepted", title: fr ? "Votre demande de retour n'a pas pu être acceptée" : "Your return request could not be accepted", p: fr ? [`Votre demande de retour du colis **${o.subNumber}** n'a pas pu être acceptée.`] : [`Your return request for parcel **${o.subNumber}** could not be accepted.`] },
-    received: { subject: fr ? "retour réceptionné" : "return received", title: fr ? "Nous avons reçu votre retour" : "We have received your return", p: fr ? [`Nous avons bien reçu le colis retourné **${o.subNumber}**. Il est en cours de contrôle ; le remboursement de **${money(o.amountCents)}** suit après vérification. Les frais de livraison ne sont pas remboursés.`] : [`We have received the returned parcel **${o.subNumber}**. It is being checked; the refund of **${money(o.amountCents)}** follows after verification. Delivery fees are not refunded.`] },
+    received: { subject: fr ? "retour réceptionné" : "return received", title: fr ? "Nous avons reçu votre retour" : "We have received your return", p: fr ? [`Nous avons bien reçu le colis retourné **${o.subNumber}**. ${o.damaged ? "Il est en cours de contrôle : le créateur nous indique qu'il est endommagé ou non conforme. Nous revenons vers vous après examen ; aucun remboursement n'est confirmé à ce stade." : `Il est en cours de contrôle ; le remboursement de **${money(o.amountCents)}** suit après vérification. Les frais de livraison ne sont pas remboursés.`}`] : [`We have received the returned parcel **${o.subNumber}**. ${o.damaged ? "It is being checked: the creator reports it as damaged or not as described. We will get back to you after review; no refund is confirmed at this stage." : `It is being checked; the refund of **${money(o.amountCents)}** follows after verification. Delivery fees are not refunded.`}`] },
+    decided_accepted: { subject: fr ? "retour validé, remboursement en cours" : "return approved, refund in progress", title: fr ? "Votre remboursement est en cours" : "Your refund is in progress", p: fr ? [`Le créateur a validé le retour du colis **${o.subNumber}**. Votre remboursement de **${money(o.amountCents)}** est en cours de traitement ; vous recevrez un e-mail de confirmation dès qu'il sera effectué.`] : [`The creator has approved the return of parcel **${o.subNumber}**. Your refund of **${money(o.amountCents)}** is being processed; you will receive a confirmation e-mail once it is done.`] },
+    decided_refused: { subject: fr ? "retour non validé" : "return not approved", title: fr ? "Votre retour n'a pas été validé" : "Your return was not approved", p: fr ? [`Après contrôle, le créateur n'a pas validé le retour du colis **${o.subNumber}**. Notre équipe examine la situation et revient vers vous.`] : [`After checking, the creator did not approve the return of parcel **${o.subNumber}**. Our team is reviewing the situation and will get back to you.`] },
     refunded: { subject: fr ? "retour remboursé" : "return refunded", title: fr ? "Votre retour est remboursé" : "Your return is refunded", p: fr ? [`Votre retour du colis **${o.subNumber}** est remboursé : **${money(o.amountCents)}** sur votre moyen de paiement sous 5 à 10 jours ouvrés.`] : [`Your return for parcel **${o.subNumber}** is refunded: **${money(o.amountCents)}** to your payment method within 5 to 10 business days.`] },
   }[o.kind];
-  const paragraphs = [...T.p, ...(o.kind === "refused" && o.note?.trim() ? [`${fr ? "Motif" : "Reason"} : ${o.note.trim()}`] : [])];
+  const paragraphs = [...T.p, ...((o.kind === "refused" || o.kind === "decided_refused") && o.note?.trim() ? [`${fr ? "Motif" : "Reason"} : ${o.note.trim()}`] : [])];
   const html = renderEmailHtml({
     locale: o.locale,
     title: T.title,
@@ -95,14 +100,15 @@ export async function sendPartnerReturnMail(subOrderId: string, kind: ReturnMail
 }
 
 /** Charge le colis et envoie l'e-mail au client ; n'échoue jamais. */
-export async function sendReturnMail(subOrderId: string, kind: ReturnMailKind, note?: string, to?: string) {
+export async function sendReturnMail(subOrderId: string, kind: CustomerReturnMailKind, note?: string, to?: string) {
   try {
     const sub = await db.subOrder.findUnique({ where: { id: subOrderId }, include: { order: { select: { email: true, number: true, locale: true } } } });
     if (!sub) return;
     const items = await db.orderItem.findMany({ where: { subOrderId } });
     const prods = await db.product.findMany({ where: { slug: { in: items.map((i) => i.productSlug) } }, select: { slug: true, images: true } });
     const img = new Map(prods.map((p) => [p.slug, absoluteImageUrl(p.images)]));
-    const mail = buildReturnEmail({ kind, locale: sub.order.locale === "en" ? "en" : "fr", subNumber: sub.number, orderNumber: sub.order.number, note, amountCents: sub.subtotalCents, shipTo: (await db.supplier.findUnique({ where: { id: sub.supplierId }, select: { displayName: true, address: true } }).then((s) => (s?.address ? `${s.displayName}, ${s.address}` : undefined), () => undefined)), items: items.map((i) => ({ name: i.name, quantity: i.quantity, size: i.size, unitPriceCents: i.unitPriceCents, image: img.get(i.productSlug) })) });
+    const damaged = kind === "received" ? (await db.returnRequest.findFirst({ where: { subOrderId }, select: { condition: true } }).catch(() => null))?.condition === "DAMAGED" : false;
+    const mail = buildReturnEmail({ kind, damaged, locale: sub.order.locale === "en" ? "en" : "fr", subNumber: sub.number, orderNumber: sub.order.number, note, amountCents: sub.subtotalCents, shipTo: (await db.supplier.findUnique({ where: { id: sub.supplierId }, select: { displayName: true, address: true } }).then((s) => (s?.address ? `${s.displayName}, ${s.address}` : undefined), () => undefined)), items: items.map((i) => ({ name: i.name, quantity: i.quantity, size: i.size, unitPriceCents: i.unitPriceCents, image: img.get(i.productSlug) })) });
     await safeSend(to ?? sub.order.email, mail.subject, mail.lines, mail.html);
   } catch {
     // l'e-mail ne doit jamais bloquer l'action

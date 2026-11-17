@@ -31,7 +31,7 @@ export default async function PortalLayout({ children, params }: { children: Rea
         )}
       </div>
       <div className="grid gap-6 md:grid-cols-[13rem_1fr]">
-        <PortalNav locale={locale} counts={{ "/commandes": pc.orders, "/oeuvres": pc.works }} />
+        <PortalNav locale={locale} counts={{ "/commandes": pc.orders, "/retours": pc.returns, "/oeuvres": pc.works }} />
         <div className="min-w-0 space-y-6">{children}</div>
       </div>
     </div>

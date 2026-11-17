@@ -125,6 +125,19 @@ export function partnerSubOrdersWhere(q: ListQuery, supplierId: string) {
   return { AND: and };
 }
 
+export const PARTNER_RETURN_FILTERS = ["todo", "accepted", "refused", "all"] as const;
+/** Retours vus du créateur (déjà acceptés par l'administration). À traiter = colis à recevoir ou décision à prendre. */
+export function partnerReturnsWhere(q: ListQuery, supplierId: string) {
+  const and: object[] = [{ subOrder: { supplierId } }, { status: { in: ["ACCEPTED", "RECEIVED", "REFUNDED"] } }];
+  if (q.st === "todo") and.push({ OR: [{ status: "ACCEPTED" }, { status: "RECEIVED", partnerDecision: null }] });
+  else if (q.st === "accepted") and.push({ partnerDecision: "ACCEPTED" });
+  else if (q.st === "refused") and.push({ partnerDecision: "REFUSED" });
+  if (q.q) and.push({ OR: [{ reason: has(q.q) }, { subOrder: { number: has(q.q) } }] });
+  const r = dateRange(q);
+  if (r) and.push({ createdAt: r });
+  return { AND: and };
+}
+
 export const PARTNER_SALE_FILTERS = ["pending", "available", "paid", "all"] as const;
 export function partnerLedgerWhere(q: ListQuery, supplierId: string, now: Date, subOrderIds?: string[]) {
   const and: object[] = [{ supplierId }];
@@ -143,7 +156,7 @@ export async function partnerCounts(db: PrismaClient, supplierId: string) {
     db.subOrder.count({ where: { supplierId, status: { in: ["PENDING", "ACCEPTED", "PREPARING"] }, ...NOT_ARCHIVED } }),
     db.product.count({ where: { supplierId, status: "REJECTED" } }),
   ]);
-  return { orders, works };
+  return { orders, works, returns: await db.returnRequest.count({ where: partnerReturnsWhere({ st: "todo" } as ListQuery, supplierId) }) };
 }
 
 /** Retours qui exigent une action admin : ? traiter, ? recevoir, ? rembourser. */

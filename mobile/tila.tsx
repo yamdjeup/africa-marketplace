@@ -33,6 +33,7 @@ export function TilaButton({ onOpenSlug }: { onOpenSlug: (slug: string) => void 
   const pos = useRef(new Animated.ValueXY({ x: -1, y: -1 })).current;
   const cur = useRef({ x: -1, y: -1 });
   const start = useRef({ x: 0, y: 0 });
+  const moved = useRef(false);
   const bounds = useRef({ minY: 0, maxY: 0, maxX: 0 });
   bounds.current = { minY: 60, maxY: Math.max(60, H - 64 - Math.max(insets.bottom, Platform.OS === "android" ? 16 : 0) - size.h), maxX: Math.max(0, W - size.w - 12) };
   const clampY = (y: number) => Math.min(Math.max(y, bounds.current.minY), bounds.current.maxY);
@@ -47,11 +48,12 @@ export function TilaButton({ onOpenSlug }: { onOpenSlug: (slug: string) => void 
   useEffect(() => { if (W && H && cur.current.x >= 0) place(cur.current.x > W / 2 - size.w / 2 ? bounds.current.maxX : 12, clampY(cur.current.y)); }, [W, H, size.w, size.h]);
   const pan = useMemo(() => PanResponder.create({
     onStartShouldSetPanResponder: () => true,
-    onMoveShouldSetPanResponder: (_e, g) => Math.abs(g.dx) > 8 || Math.abs(g.dy) > 8,
-    onPanResponderGrant: () => { start.current = { ...cur.current }; },
-    onPanResponderMove: (_e, g) => { if (Math.abs(g.dx) > 8 || Math.abs(g.dy) > 8) pos.setValue({ x: Math.min(Math.max(start.current.x + g.dx, 12), bounds.current.maxX), y: clampY(start.current.y + g.dy) }); },
+    onMoveShouldSetPanResponder: () => false,
+    onPanResponderTerminationRequest: () => false,
+    onPanResponderGrant: () => { pos.stopAnimation((v) => { cur.current = { x: v.x, y: v.y }; start.current = { x: v.x, y: v.y }; }); moved.current = false; },
+    onPanResponderMove: (_e, g) => { if (Math.abs(g.dx) > 8 || Math.abs(g.dy) > 8) moved.current = true; pos.setValue({ x: Math.min(Math.max(start.current.x + g.dx, 12), bounds.current.maxX), y: clampY(start.current.y + g.dy) }); },
     onPanResponderRelease: (_e, g) => {
-      if (Math.abs(g.dx) <= 8 && Math.abs(g.dy) <= 8) return setOpen(true);
+      if (!moved.current) { pos.setValue({ x: start.current.x, y: start.current.y }); return setOpen(true); }
       const nx = Math.min(Math.max(start.current.x + g.dx, 12), bounds.current.maxX);
       const side = nx + size.w / 2 < W / 2 ? "left" : "right";
       const x = side === "left" ? 12 : bounds.current.maxX;

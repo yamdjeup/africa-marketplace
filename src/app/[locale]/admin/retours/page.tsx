@@ -54,6 +54,7 @@ export default async function ReturnsAdmin({ params, searchParams }: { params: P
                   <button name="decision" value="REFUSED" className={buttonVariants({ variant: "outline", className: "min-h-11" })}>{tr(locale, "Refuser", "Refuse")}</button>
                 </form>
               )}
+              {r.partnerDecision && <p className={`rounded-md border p-2 ${r.partnerDecision === "REFUSED" ? "border-red-300 bg-red-50" : ""}`}>{r.partnerDecision === "ACCEPTED" ? tr(locale, "Le créateur a ACCEPTÉ le retour : remboursement à effectuer.", "The creator ACCEPTED the return: refund to be made.") : tr(locale, "Le créateur a REFUSÉ le retour (litige à arbitrer) : ", "The creator REFUSED the return (dispute to arbitrate): ")}{r.partnerDecisionNote ? ` ${r.partnerDecisionNote}` : ""}</p>}
               {(r.status === "ACCEPTED" || r.status === "RECEIVED") && (
                 <div className="space-y-2">
                   {r.status === "ACCEPTED" && <form action={markReceivedAction}><input type="hidden" name="id" value={r.id} /><button className={buttonVariants({ className: "min-h-11" })}>{tr(locale, "Colis reçu (à la place du créateur)", "Parcel received (on behalf of creator)")}</button></form>}

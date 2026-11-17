@@ -26,6 +26,7 @@ describe("Mes commandes : actives / historique", () => {
     const ret = { status: "REFUNDED", createdAt: d("10T08:00"), decidedAt: d("11T08:00"), partnerReceivedAt: null, refundedAt: d("14T08:00") };
     const t = parcelTimeline({ ...base, status: "DELIVERED", shippedAt: d("02T08:00"), deliveredAt: d("05T08:00") }, ret);
     expect(t.find((s) => s.key === "closed")?.reached).toBe(true);
+    expect(t[t.length - 1].key).toBe("closed");
     expect(t.find((s) => s.key === "ret-received")).toMatchObject({ reached: true, at: null });
     expect(t.find((s) => s.key === "ret-refunded")?.at).toBe(d("14T08:00").toISOString());
   });

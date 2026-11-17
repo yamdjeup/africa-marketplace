@@ -52,7 +52,7 @@ export default async function ReturnsAdmin({ params, searchParams }: { params: P
               )}
               {(r.status === "ACCEPTED" || r.status === "RECEIVED") && (
                 <div className="space-y-2">
-                  {r.status === "ACCEPTED" && <form action={markReceivedAction}><input type="hidden" name="id" value={r.id} /><button className={buttonVariants({ variant: "outline", className: "min-h-11" })}>{tr(locale, "Colis reçu", "Parcel received")}</button></form>}
+                  {r.status === "ACCEPTED" && <form action={markReceivedAction}><input type="hidden" name="id" value={r.id} /><button className={buttonVariants({ className: "min-h-11" })}>{tr(locale, "Colis reçu", "Parcel received")}</button></form>}
                   <form action={refundReturnAction} className="flex flex-wrap items-center gap-2">
                     <input type="hidden" name="id" value={r.id} />
                     <label className="flex items-center gap-2 text-xs"><input type="checkbox" name="restock" value="1" />{tr(locale, "Remettre en vente (stock +1 par unité)", "Put back on sale (stock +1 per unit)")}</label>

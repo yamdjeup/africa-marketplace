@@ -26,13 +26,14 @@ export function useIsSupplier(token: string | null) {
   return ok;
 }
 
-type Detail = { id: string; number: string; status: string; statusLabel: Lbl; createdAt: string; acceptBy: string | null; subtotalCents: number; carrier: string | null; trackingNumber: string | null; reason: string | null; return?: { status: string; label: Lbl; reason: string; createdAt: string } | null; items: { id: string; name: string; size: string | null; quantity: number; unitPriceCents: number }[]; shipTo: { fullName: string; address: string; postalCode: string; city: string; country: string; phone: string | null } };
+type Detail = { id: string; number: string; status: string; statusLabel: Lbl; createdAt: string; acceptBy: string | null; subtotalCents: number; carrier: string | null; trackingNumber: string | null; reason: string | null; return?: { status: string; label: Lbl; reason: string; createdAt: string; photoIds?: string[]; condition?: string | null; conditionNote?: string | null; receivedAt?: string | null; decideBy?: string | null } | null; items: { id: string; name: string; size: string | null; quantity: number; unitPriceCents: number }[]; shipTo: { fullName: string; address: string; postalCode: string; city: string; country: string; phone: string | null } };
 const CARRIERS = ["UPS", "DHL", "Colissimo"];
 const ERRS: Record<string, [string, string]> = {
   state: ["Cette commande a changé d'état (déjà traitée ou expirée).", "This order changed state (already handled or expired)."],
   reason: ["Merci d'indiquer un motif.", "Please give a reason."],
   tracking: ["Transporteur et numéro de suivi obligatoires.", "Carrier and tracking number are required."],
   stock: ["Stock insuffisant pour confirmer l'expédition.", "Not enough stock to confirm shipping."],
+  note: ["Un commentaire est obligatoire si le colis est endommagé.", "A comment is required when the parcel is damaged."],
 };
 
 function OrderDetail({ token, id, onBack }: { token: string; id: string; onBack: () => void }) {
@@ -43,6 +44,8 @@ function OrderDetail({ token, id, onBack }: { token: string; id: string; onBack:
   const [carrier, setCarrier] = useState("UPS");
   const [other, setOther] = useState("");
   const [tracking, setTracking] = useState("");
+  const [damaged, setDamaged] = useState(false);
+  const [note, setNote] = useState("");
   const load = () => authed<Detail>(token, "GET", `/api/v1/supplier/orders/${id}`).then((r) => r.ok && setD(r.data));
   useEffect(() => { load(); }, [id]);
   const act = async (body: Record<string, string>) => {
@@ -62,7 +65,19 @@ function OrderDetail({ token, id, onBack }: { token: string; id: string; onBack:
       <Pressable onPress={onBack} hitSlop={12} style={{ height: 44, justifyContent: "center" }} accessibilityLabel={tr("Retour", "Back")}><Text style={{ fontSize: 28 }}>←</Text></Pressable>
       <Text style={st.h2}>{tr("Commande", "Order")} {d.number}</Text>
       <Text style={st.mut}>{tr(d.statusLabel.fr, d.statusLabel.en)}</Text>
-      {d.return ? <View style={{ marginTop: 10, padding: 10, borderWidth: 1, borderColor: "#ded6c9", borderRadius: 6 }}><Text style={{ fontWeight: "600", color: "#221812" }}>{tr(d.return.label.fr, d.return.label.en)}</Text><Text style={st.mut}>{tr("Motif du client", "Customer reason")} : {d.return.reason}</Text><Text style={st.mut}>{tr("Le retour est arbitré par E póm ta’.", "E póm ta’ handles the return decision.")}</Text></View> : null}
+      {d.return ? <View style={{ marginTop: 10, padding: 10, borderWidth: 1, borderColor: "#ded6c9", borderRadius: 6 }}><Text style={{ fontWeight: "600", color: "#221812" }}>{tr(d.return.label.fr, d.return.label.en)}</Text><Text style={st.mut}>{tr("Motif du client", "Customer reason")} : {d.return.reason}</Text><Text style={st.mut}>{tr("Le retour est arbitré par E póm ta’.", "E póm ta’ handles the return decision.")}</Text>
+        {d.return.photoIds?.length ? <Text style={st.mut}>{d.return.photoIds.length} {tr("photo(s) jointe(s) — à consulter dans l’espace créateur du site.", "photo(s) attached — view them in the creator portal on the website.")}</Text> : null}
+        {d.return.status === "ACCEPTED" ? (
+          <View style={{ marginTop: 8, gap: 8 }}>
+            <Text style={{ fontWeight: "600", color: "#221812" }}>{tr("Colis en route vers vous", "Parcel on its way to you")}</Text>
+            <Text style={st.mut}>{tr("À réception, contrôlez-le et décidez sous 6 jours calendaires.", "On arrival, check it and decide within 6 calendar days.")}</Text>
+            {btn(damaged ? tr("État : endommagé / exclure du stock", "Condition: damaged / exclude from stock") : tr("État : conforme (remise en vente)", "Condition: as expected (back on sale)"), () => setDamaged(!damaged), true)}
+            <TextInput value={note} onChangeText={setNote} placeholder={tr("Commentaire (obligatoire si endommagé)", "Comment (required if damaged)")} placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={st.input} />
+            {btn(tr("Confirmer la réception", "Confirm receipt"), () => act({ action: "return_check", condition: damaged ? "DAMAGED" : "OK", note }))}
+          </View>
+        ) : null}
+        {d.return.receivedAt ? <Text style={st.mut}>{tr("Réception confirmée", "Receipt confirmed")} : {d.return.condition === "DAMAGED" ? tr("endommagé", "damaged") : tr("conforme", "as expected")}{d.return.conditionNote ? ` — ${d.return.conditionNote}` : ""}{d.return.decideBy ? ` · ${tr("décision avant le", "decision before")} ${new Date(d.return.decideBy).toLocaleDateString()}` : ""}</Text> : null}
+        </View> : null}
       {msg ? <Text style={{ color: "#b42318", marginTop: 8 }}>{msg}</Text> : null}
       <Text style={st.h3}>{tr("Articles", "Items")}</Text>
       {d.items.map((i) => <Text key={i.id} style={{ color: "#221812", marginTop: 4 }}>{i.quantity} × {i.name}{i.size ? ` (${i.size})` : ""} — {eur(i.unitPriceCents * i.quantity)}</Text>)}

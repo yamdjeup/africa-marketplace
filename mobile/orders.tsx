@@ -2,6 +2,9 @@ import { tr, lazy, getLang } from "./region";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { authed } from "./api";
+import { API_URL } from "./config";
+import * as ImagePicker from "expo-image-picker";
+import * as ImageManipulator from "expo-image-manipulator";
 import { AddressFields, EMPTY_FORM, type AddressForm } from "./addresses";
 
 type Order = {
@@ -21,6 +24,7 @@ type Parcel = {
 
 function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: number; token: string; reload: () => void }) {
   const [reason, setReason] = useState("");
+  const [photos, setPhotos] = useState<string[]>([]);
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
   const date = (d: string) => new Date(d).toLocaleDateString(getLang() === "en" ? "en-GB" : "fr-FR");
@@ -30,9 +34,31 @@ function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: numbe
       { text: tr("Garder ma commande", "Keep my order"), style: "cancel" },
       { text: tr("Annuler le colis", "Cancel the parcel"), style: "destructive", onPress: async () => { setBusy(true); const r = await authed(token, "POST", "/api/v1/orders/cancel", { id: p.id }); setBusy(false); if (r.ok) reload(); else setMsg(tr("Annulation impossible : le colis a déjà été pris en charge.", "Cancellation is not possible: the parcel has already been picked up.")); } },
     ]);
+  const pick = async () => {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) return;
+    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], allowsMultipleSelection: true, selectionLimit: 5 - photos.length, quality: 1 });
+    if (res.canceled) return;
+    setBusy(true);
+    const ids: string[] = [];
+    for (const a of res.assets.slice(0, 5 - photos.length)) {
+      const out = await ImageManipulator.manipulateAsync(a.uri, [{ resize: { width: 1600 } }], { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG });
+      const form = new FormData();
+      form.append("file", { uri: out.uri, name: "photo.jpg", type: "image/jpeg" } as unknown as Blob);
+      try {
+        const up = await fetch(`${API_URL}/api/v1/orders/return/photo`, { method: "POST", headers: { authorization: `Bearer ${token}` }, body: form });
+        const data = (await up.json().catch(() => ({}))) as { id?: string };
+        if (up.ok && data.id) ids.push(data.id);
+      } catch {
+        // photo ignorée
+      }
+    }
+    setBusy(false);
+    setPhotos((x) => [...x, ...ids]);
+  };
   const ask = async () => {
     setBusy(true);
-    const r = await authed<{ error?: string }>(token, "POST", "/api/v1/orders/return", { id: p.id, reason });
+    const r = await authed<{ error?: string }>(token, "POST", "/api/v1/orders/return", { id: p.id, reason, photos });
     setBusy(false);
     if (r.ok) reload(); else setMsg(r.data?.error === "reason" ? tr("Merci d’indiquer le motif du retour (3 caractères minimum).", "Please give the reason for the return (3 characters minimum).") : tr("Retour impossible pour ce colis.", "A return is not possible for this parcel."));
   };
@@ -59,6 +85,7 @@ function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: numbe
           <Text style={s.mut}>{tr("Les frais de livraison ne sont pas remboursés.", "Delivery fees are not refunded.")}</Text>
           <Text style={s.bold}>{tr("Motif du retour", "Return reason")}</Text>
           <TextInput value={reason} onChangeText={setReason} multiline maxLength={1000} style={s.input} placeholderTextColor="#6b5d52" selectionColor="#1c3060" />
+          <Pressable disabled={busy || photos.length >= 5} onPress={pick}><Text style={s.link}>{tr(`Ajouter des photos (${photos.length}/5, facultatif)`, `Add photos (${photos.length}/5, optional)`)}</Text></Pressable>
           <Pressable disabled={busy} onPress={ask}><Text style={s.link}>{tr("Demander un retour", "Request a return")}</Text></Pressable>
         </View>
       )}

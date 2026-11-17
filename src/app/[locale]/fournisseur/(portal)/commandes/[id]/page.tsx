@@ -6,11 +6,11 @@ import { db } from "@/lib/db";
 import type { Locale } from "@/lib/i18n";
 import { runSubOrderSweep } from "@/lib/order-notify";
 import { subLabel } from "@/lib/suborders";
-import { RETURN_LABELS, type ReturnStatus } from "@/lib/returns";
+import { RETURN_LABELS, partnerCheckDeadline, type ReturnStatus } from "@/lib/returns";
 import { getPortalContext } from "@/lib/supplier";
 import { tr } from "@/lib/tr";
 import { parsePhotoIds } from "@/lib/return-photos";
-import { acceptOrderAction, deliverOrderAction, prepareOrderAction, refuseOrderAction, shipOrderAction } from "../../../commandes-actions";
+import { acceptOrderAction, deliverOrderAction, prepareOrderAction, refuseOrderAction, returnCheckAction, shipOrderAction } from "../../../commandes-actions";
 
 export const metadata = { title: "Commande", robots: { index: false } };
 
@@ -19,6 +19,7 @@ const ERR: Record<string, [string, string]> = {
   reason: ["Merci d'indiquer un motif.", "Please give a reason."],
   tracking: ["Transporteur et numéro de suivi obligatoires.", "Carrier and tracking number are required."],
   stock: ["Stock insuffisant pour confirmer l'expédition.", "Not enough stock to confirm shipping."],
+  note: ["Un commentaire est obligatoire si le colis est endommagé.", "A comment is required when the parcel is damaged."],
   readonly: ["Lecture seule en mode « voir comme ».", "Read-only in “view as” mode."],
 };
 const OK: Record<string, [string, string]> = {
@@ -27,6 +28,7 @@ const OK: Record<string, [string, string]> = {
   preparing: ["Marquée en préparation ; client prévenu par e-mail.", "Marked as preparing; customer notified by e-mail."],
   shipped: ["Expédiée ; stock confirmé, client prévenu.", "Shipped; stock confirmed, customer notified."],
   delivered: ["Marquée livrée.", "Marked as delivered."],
+  returnchecked: ["Réception enregistrée ; E póm ta’ rembourse le client.", "Receipt recorded; E póm ta’ will refund the customer."],
 };
 
 export default async function PartnerOrder({ params, searchParams }: { params: Promise<{ locale: Locale; id: string }>; searchParams: Promise<{ ok?: string; error?: string }> }) {
@@ -123,6 +125,25 @@ export default async function PartnerOrder({ params, searchParams }: { params: P
         </section>
       )}
       {ret && <p className="rounded-md border p-3 text-sm"><strong>{RETURN_LABELS[ret.status as ReturnStatus]?.[locale === "en" ? "en" : "fr"] ?? ret.status}</strong> · {tr(locale, "Motif du client : ", "Customer reason: ")}{ret.reason}<br />{parsePhotoIds(ret.photoIds).length > 0 && <span className="flex flex-wrap gap-2 pt-1">{parsePhotoIds(ret.photoIds).map((pid, i) => <a key={pid} href={`/api/media/${pid}`} target="_blank" rel="noreferrer" className="underline">{tr(locale, "Photo", "Photo")} {i + 1}</a>)}</span>}<span className="text-muted-foreground">{tr(locale, "Le retour est arbitré par E póm ta’.", "E póm ta’ handles the return decision.")}</span></p>}
+      {ret?.status === "ACCEPTED" && (
+        <section className="space-y-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm">
+          <p><strong>{tr(locale, "Colis en route vers vous", "Parcel on its way to you")}</strong> — {tr(locale, "le client vous renvoie ce colis. À réception, contrôlez-le et décidez sous 6 jours calendaires.", "the customer is sending this parcel back to you. On arrival, check it and decide within 6 calendar days.")}</p>
+          {!ro && (
+            <form action={returnCheckAction} className="grid gap-3 sm:grid-cols-2">
+              {hidden}
+              <label className="block">{tr(locale, "État du colis reçu", "Condition of the parcel")}
+                <select name="condition" required className={inputCls} defaultValue="OK">
+                  <option value="OK">{tr(locale, "Conforme (remise en vente)", "As expected (back on sale)")}</option>
+                  <option value="DAMAGED">{tr(locale, "Endommagé / exclure du stock", "Damaged / exclude from stock")}</option>
+                </select>
+              </label>
+              <label className="block">{tr(locale, "Commentaire (obligatoire si endommagé)", "Comment (required if damaged)")}<input name="note" maxLength={300} className={inputCls} /></label>
+              <div className="sm:col-span-2"><button className={btn} type="submit">{tr(locale, "Confirmer la réception", "Confirm receipt")}</button></div>
+            </form>
+          )}
+        </section>
+      )}
+      {ret?.status === "RECEIVED" && ret.partnerReceivedAt && <p className="rounded-md border p-3 text-sm">{tr(locale, "Réception confirmée le ", "Receipt confirmed on ")}{fmt.format(ret.partnerReceivedAt)} — {ret.condition === "DAMAGED" ? tr(locale, "endommagé", "damaged") : tr(locale, "conforme", "as expected")}{ret.conditionNote ? ` : ${ret.conditionNote}` : ""}. {tr(locale, "Décision attendue avant le ", "Decision expected before ")}{fmt.format(partnerCheckDeadline(ret.partnerReceivedAt))}.</p>}
       {sub.reason && ["REFUSED", "EXPIRED", "CANCELLED"].includes(sub.status) && <p className="text-sm text-muted-foreground">{tr(locale, "Motif : ", "Reason: ")}{sub.reason}</p>}
     </>
   );

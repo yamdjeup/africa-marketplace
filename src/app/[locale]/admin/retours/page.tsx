@@ -43,6 +43,7 @@ export default async function ReturnsAdmin({ params, searchParams }: { params: P
               </div>
               <p>{tr(locale, "Motif du client : ", "Customer reason: ")}{r.reason}</p>
               {parsePhotoIds(r.photoIds).length > 0 && <span className="flex flex-wrap gap-2 pt-1">{parsePhotoIds(r.photoIds).map((pid, i) => <a key={pid} href={`/api/media/${pid}`} target="_blank" rel="noreferrer" className="underline">{tr(locale, "Photo", "Photo")} {i + 1}</a>)}</span>}
+              {r.condition && <p className="rounded-md border p-2">{tr(locale, "Contrôle du créateur : ", "Creator check: ")}<strong>{r.condition === "OK" ? tr(locale, "Conforme", "As expected") : tr(locale, "Endommagé / non conforme", "Damaged / not as expected")}</strong>{r.conditionNote ? ` — ${r.conditionNote}` : ""}{r.partnerReceivedAt ? ` (${fmt.format(r.partnerReceivedAt)})` : ""}</p>}
               {r.adminNote && <p className="text-muted-foreground">{tr(locale, "Note : ", "Note: ")}{r.adminNote}</p>}
               {r.refundNote && <p className="text-destructive">{r.refundNote}</p>}
               {r.status === "REQUESTED" && (
@@ -55,10 +56,10 @@ export default async function ReturnsAdmin({ params, searchParams }: { params: P
               )}
               {(r.status === "ACCEPTED" || r.status === "RECEIVED") && (
                 <div className="space-y-2">
-                  {r.status === "ACCEPTED" && <form action={markReceivedAction}><input type="hidden" name="id" value={r.id} /><button className={buttonVariants({ className: "min-h-11" })}>{tr(locale, "Colis reçu", "Parcel received")}</button></form>}
+                  {r.status === "ACCEPTED" && <form action={markReceivedAction}><input type="hidden" name="id" value={r.id} /><button className={buttonVariants({ className: "min-h-11" })}>{tr(locale, "Colis reçu (à la place du créateur)", "Parcel received (on behalf of creator)")}</button></form>}
                   <form action={refundReturnAction} className="flex flex-wrap items-center gap-2">
                     <input type="hidden" name="id" value={r.id} />
-                    <StockChoice en={locale === "en"} />
+                    <StockChoice en={locale === "en"} defaultChoice={r.condition === "OK" ? "restock" : r.condition === "DAMAGED" ? "exclude" : ""} defaultReason={r.conditionNote ?? ""} />
                     <button className={buttonVariants({ className: "min-h-11" })}>{tr(locale, "Rembourser (Stripe)", "Refund (Stripe)")}</button>
                     <button name="manual" value="1" className={buttonVariants({ variant: "outline", className: "min-h-11" })}>{tr(locale, "Marquer remboursé (manuel)", "Mark refunded (manual)")}</button>
                   </form>

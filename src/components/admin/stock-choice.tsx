@@ -4,8 +4,8 @@ import { useState } from "react";
 import { inputCls } from "@/components/fournisseur/parts";
 
 /** Sort d'un colis rembours\u00e9 : liste obligatoire ; le motif devient obligatoire si \u00ab exclure du stock \u00bb. */
-export function StockChoice({ en }: { en: boolean }) {
-  const [v, setV] = useState("");
+export function StockChoice({ en, defaultChoice = "", defaultReason = "" }: { en: boolean; defaultChoice?: "" | "restock" | "exclude"; defaultReason?: string }) {
+  const [v, setV] = useState<string>(defaultChoice);
   const t = (fr: string, e: string) => (en ? e : fr);
   return (
     <>
@@ -18,7 +18,7 @@ export function StockChoice({ en }: { en: boolean }) {
       </label>
       {v === "exclude" && (
         <label className="text-xs">{t("Motif de l'exclusion (obligatoire)", "Exclusion reason (required)")}
-          <input name="excludeReason" required maxLength={300} placeholder={t("ex. article endommag\u00e9", "e.g. damaged item")} className={`${inputCls} w-64`} />
+          <input name="excludeReason" required defaultValue={defaultReason} maxLength={300} placeholder={t("ex. article endommag\u00e9", "e.g. damaged item")} className={`${inputCls} w-64`} />
         </label>
       )}
     </>

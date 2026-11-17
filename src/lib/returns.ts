@@ -98,4 +98,21 @@ export async function markReturnReceived(db: PrismaClient, id: string) {
   return n.count === 1;
 }
 
+export const PARTNER_CHECK_DAYS = 6;
+
+export type PartnerCondition = "OK" | "DAMAGED";
+
+/** Le créateur confirme la réception du colis retour et son état ; « endommagé » exige un commentaire (≥3 car.). Uniquement depuis « accepté », sur son propre colis. */
+export async function markReturnReceivedByPartner(db: PrismaClient, subOrderId: string, supplierId: string, condition: PartnerCondition, note: string, now = new Date()) {
+  const text = note.trim();
+  if (condition === "DAMAGED" && text.length < 3) return "note" as const;
+  const ret = await db.returnRequest.findFirst({ where: { subOrderId, status: "ACCEPTED", subOrder: { supplierId } }, select: { id: true } });
+  if (!ret) return "state" as const;
+  const n = await db.returnRequest.updateMany({ where: { id: ret.id, status: "ACCEPTED" }, data: { status: "RECEIVED", partnerReceivedAt: now, condition, conditionNote: text || null } });
+  return n.count === 1 ? ("ok" as const) : ("state" as const);
+}
+
+/** Date limite indicative de décision du créateur : 6 jours calendaires après réception. */
+export function partnerCheckDeadline(receivedAt: Date) { return new Date(receivedAt.getTime() + PARTNER_CHECK_DAYS * 86400000); }
+
 export function showShippedNotice(status: string, hasReturn: boolean) { return !hasReturn && ["SHIPPED", "DELIVERED"].includes(status); }

@@ -26,8 +26,8 @@ export async function cancelParcelForUser(userId: string, email: string | null |
 }
 
 // Demande de retour d'un colis livré (30 jours) : propriétaire vérifié côté serveur, e-mails comme sur le site.
-export async function requestReturnForUser(userId: string, email: string | null | undefined, id: string, reason: string) {
-  const r = await requestReturn(db, userId, id, reason);
+export async function requestReturnForUser(userId: string, email: string | null | undefined, id: string, reason: string, photoIds: string[] = []) {
+  const r = await requestReturn(db, userId, id, reason, new Date(), photoIds);
   if (r.ok) {
     const sub = await db.subOrder.findUnique({ where: { id }, select: { number: true } });
     const admins = (process.env.ADMIN_EMAILS ?? "").split(",").map((s) => s.trim()).filter(Boolean);

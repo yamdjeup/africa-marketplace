@@ -385,6 +385,7 @@ model ReturnRequest {
   subOrder    SubOrder  @relation(fields: [subOrderId], references: [id], onDelete: Cascade)
   userId      String
   reason      String
+  photoIds    String    @default("")
   status      String    @default("REQUESTED")
   adminNote   String    @default("")
   refundId    String?

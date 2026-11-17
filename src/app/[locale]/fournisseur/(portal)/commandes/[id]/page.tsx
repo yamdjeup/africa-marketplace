@@ -9,6 +9,7 @@ import { subLabel } from "@/lib/suborders";
 import { RETURN_LABELS, type ReturnStatus } from "@/lib/returns";
 import { getPortalContext } from "@/lib/supplier";
 import { tr } from "@/lib/tr";
+import { parsePhotoIds } from "@/lib/return-photos";
 import { acceptOrderAction, deliverOrderAction, prepareOrderAction, refuseOrderAction, shipOrderAction } from "../../../commandes-actions";
 
 export const metadata = { title: "Commande", robots: { index: false } };
@@ -121,7 +122,7 @@ export default async function PartnerOrder({ params, searchParams }: { params: P
           {!ro && <form action={deliverOrderAction}>{hidden}<button className={btn} type="submit">{tr(locale, "Marquer livrée", "Mark as delivered")}</button></form>}
         </section>
       )}
-      {ret && <p className="rounded-md border p-3 text-sm"><strong>{RETURN_LABELS[ret.status as ReturnStatus]?.[locale === "en" ? "en" : "fr"] ?? ret.status}</strong> · {tr(locale, "Motif du client : ", "Customer reason: ")}{ret.reason}<br /><span className="text-muted-foreground">{tr(locale, "Le retour est arbitré par E póm ta’.", "E póm ta’ handles the return decision.")}</span></p>}
+      {ret && <p className="rounded-md border p-3 text-sm"><strong>{RETURN_LABELS[ret.status as ReturnStatus]?.[locale === "en" ? "en" : "fr"] ?? ret.status}</strong> · {tr(locale, "Motif du client : ", "Customer reason: ")}{ret.reason}<br />{parsePhotoIds(ret.photoIds).length > 0 && <span className="flex flex-wrap gap-2 pt-1">{parsePhotoIds(ret.photoIds).map((pid, i) => <a key={pid} href={`/api/media/${pid}`} target="_blank" rel="noreferrer" className="underline">{tr(locale, "Photo", "Photo")} {i + 1}</a>)}</span>}<span className="text-muted-foreground">{tr(locale, "Le retour est arbitré par E póm ta’.", "E póm ta’ handles the return decision.")}</span></p>}
       {sub.reason && ["REFUSED", "EXPIRED", "CANCELLED"].includes(sub.status) && <p className="text-sm text-muted-foreground">{tr(locale, "Motif : ", "Reason: ")}{sub.reason}</p>}
     </>
   );

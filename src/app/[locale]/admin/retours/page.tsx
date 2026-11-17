@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import type { Locale } from "@/lib/i18n";
 import { RETURN_LABELS, type ReturnStatus } from "@/lib/returns";
 import { tr } from "@/lib/tr";
+import { parsePhotoIds } from "@/lib/return-photos";
 import { StockChoice } from "@/components/admin/stock-choice";
 import { decideReturnAction, markReceivedAction, refundReturnAction } from "../retours-actions";
 
@@ -41,6 +42,7 @@ export default async function ReturnsAdmin({ params, searchParams }: { params: P
                 <span className="text-muted-foreground">{fmt.format(r.createdAt)} · {RETURN_LABELS[r.status as ReturnStatus]?.[locale === "en" ? "en" : "fr"] ?? r.status}</span>
               </div>
               <p>{tr(locale, "Motif du client : ", "Customer reason: ")}{r.reason}</p>
+              {parsePhotoIds(r.photoIds).length > 0 && <span className="flex flex-wrap gap-2 pt-1">{parsePhotoIds(r.photoIds).map((pid, i) => <a key={pid} href={`/api/media/${pid}`} target="_blank" rel="noreferrer" className="underline">{tr(locale, "Photo", "Photo")} {i + 1}</a>)}</span>}
               {r.adminNote && <p className="text-muted-foreground">{tr(locale, "Note : ", "Note: ")}{r.adminNote}</p>}
               {r.refundNote && <p className="text-destructive">{r.refundNote}</p>}
               {r.status === "REQUESTED" && (

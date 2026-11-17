@@ -22,18 +22,21 @@ export function returnEligibility(sub: { status: string; deliveredAt: Date | nul
   return "ok";
 }
 
-export type RequestResult = { ok: true; id: string } | { ok: false; error: Eligibility | "forbidden" | "reason" };
+export type RequestResult = { ok: true; id: string } | { ok: false; error: Eligibility | "forbidden" | "reason" | "photos" };
 
 /** Demande de retour : propriétaire vérifié, colis livré, dans les 30 jours, une seule demande par colis. */
-export async function requestReturn(db: PrismaClient, userId: string, subOrderId: string, reason: string, now = new Date()): Promise<RequestResult> {
+export async function requestReturn(db: PrismaClient, userId: string, subOrderId: string, reason: string, now = new Date(), photoIds: string[] = []): Promise<RequestResult> {
   const text = reason.trim().slice(0, 1000);
   if (text.length < 3) return { ok: false, error: "reason" };
+  const ids = [...new Set(photoIds)];
+  if (ids.length > 5) return { ok: false, error: "photos" };
   const sub = await db.subOrder.findUnique({ where: { id: subOrderId }, include: { order: { select: { userId: true } } } });
   if (!sub || sub.order.userId !== userId) return { ok: false, error: "forbidden" };
   const existing = await db.returnRequest.count({ where: { subOrderId } });
   const eligibility = returnEligibility(sub, existing > 0, now);
   if (eligibility !== "ok") return { ok: false, error: eligibility };
-  const created = await db.returnRequest.create({ data: { subOrderId, userId, reason: text } });
+  if (ids.length && (await db.mediaFile.count({ where: { id: { in: ids }, ownerUserId: userId, isPrivate: true } })) !== ids.length) return { ok: false, error: "photos" };
+  const created = await db.returnRequest.create({ data: { subOrderId, userId, reason: text, photoIds: ids.join(",") } });
   return { ok: true, id: created.id };
 }
 

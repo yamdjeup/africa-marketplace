@@ -99,7 +99,7 @@ export function partnersWhere(q: ListQuery) {
 
 
 /** Versements : « à payer » = gains disponibles non versés ; « en attente » = encore dans le délai de retour ; « tous ». */
-export const PAYOUT_FILTERS = ["topay", "pending", "all"] as const;
+export const PAYOUT_FILTERS = ["topay", "pending", "done", "all"] as const;
 export function ledgerWhere(st: string, now: Date) {
   const open = { payoutId: null, reversedAt: null };
   if (st === "topay") return { ...open, availableAt: { lte: now } };

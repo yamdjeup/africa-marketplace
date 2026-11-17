@@ -4,7 +4,7 @@ vi.mock("@/lib/db", () => ({ db: {} }));
 vi.mock("@/lib/supplier-email", () => ({ safeSend: vi.fn() }));
 
 import { adminCounts, applicationsWhere, dateRange, has, ledgerWhere, pageArgs, pageCount, parseList, partnerCounts, partnerLedgerWhere, partnerSubOrdersWhere, returnsWhere, subOrdersWhere } from "@/lib/admin-list";
-import { buildReturnEmail } from "@/lib/return-email";
+import { buildPartnerReturnEmail, buildReturnEmail } from "@/lib/return-email";
 
 const ST = ["todo", "open", "all"] as const;
 const parse = (sp: Record<string, string>) => parseList(sp, ST, "todo", ["createdAt"], "createdAt");
@@ -115,5 +115,22 @@ describe("e-mails de retour : gabarit commun", () => {
   it("refusé : le motif est affiché ; remboursé : montant en €", () => {
     expect(buildReturnEmail({ ...base, kind: "refused", locale: "fr", note: "Hors délai" }).html).toContain("Hors délai");
     expect(buildReturnEmail({ ...base, kind: "refunded", locale: "fr" }).html).toMatch(/2\D000,00\D€/);
+  });
+});
+
+describe("e-mails de retour : partenaire et « colis reçu »", () => {
+  const items = [{ name: "Bague", quantity: 1, size: null, unitPriceCents: 5000 }];
+  for (const kind of ["requested", "accepted", "received", "refused", "refunded"] as const) {
+    for (const locale of ["fr", "en"] as const) {
+      it(`partenaire ${kind} ${locale}`, () => {
+        const m = buildPartnerReturnEmail({ kind, locale, partnerName: "Atelier", subNumber: "AM-1-A", amountCents: 5000, reason: "Taille", items });
+        expect(m.html).toContain("AM-1-A");
+        expect(m.html).toContain(locale === "fr" ? "Bonjour Atelier" : "Hello Atelier");
+      });
+    }
+  }
+  it("client « reçu » mentionne l'absence de remboursement du port", () => {
+    expect(buildReturnEmail({ kind: "received", locale: "fr", subNumber: "AM-1-A", amountCents: 5000, items }).html).toContain("frais de livraison ne sont pas remboursés");
+    expect(buildReturnEmail({ kind: "received", locale: "en", subNumber: "AM-1-A", amountCents: 5000, items }).html).toContain("Delivery fees are not refunded");
   });
 });

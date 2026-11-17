@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { notifySubOrder } from "@/lib/order-notify";
 import { partnerRecipient } from "@/lib/partner-recipient";
 import { settleSubRefund } from "@/lib/refund";
-import { sendReturnMail } from "@/lib/return-email";
+import { sendPartnerReturnMail, sendReturnMail } from "@/lib/return-email";
 import { requestReturn } from "@/lib/returns";
 import { cancelSub } from "@/lib/suborders";
 import { safeSend } from "@/lib/supplier-email";
@@ -33,6 +33,7 @@ export async function requestReturnForUser(userId: string, email: string | null 
     const admins = (process.env.ADMIN_EMAILS ?? "").split(",").map((s) => s.trim()).filter(Boolean);
     for (const a of admins) await safeSend(a, `E póm ta’ — retour demandé ${sub?.number ?? ""}`, [`Un client demande le retour du colis ${sub?.number ?? ""}. À traiter dans l'administration (Retours).`]);
     await sendReturnMail(id, "requested", undefined, email ?? undefined);
+    await sendPartnerReturnMail(id, "requested");
   }
   return r;
 }

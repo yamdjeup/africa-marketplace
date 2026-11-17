@@ -1,12 +1,14 @@
 import type { PrismaClient } from "@prisma/client";
+import { returnStock } from "./stock";
 
 // Retours : le client demande, l'administrateur arbitre (accepter / refuser), puis le remboursement est enregistré.
 export const RETURN_DAYS = 30;
-export type ReturnStatus = "REQUESTED" | "ACCEPTED" | "REFUSED" | "REFUNDED";
+export type ReturnStatus = "REQUESTED" | "ACCEPTED" | "RECEIVED" | "REFUSED" | "REFUNDED";
 
 export const RETURN_LABELS: Record<ReturnStatus, { fr: string; en: string }> = {
   REQUESTED: { fr: "Retour demandé", en: "Return requested" },
   ACCEPTED: { fr: "Retour accepté", en: "Return accepted" },
+  RECEIVED: { fr: "Colis reçu", en: "Parcel received" },
   REFUSED: { fr: "Retour refusé", en: "Return refused" },
   REFUNDED: { fr: "Remboursé", en: "Refunded" },
 };
@@ -44,17 +46,21 @@ export async function decideReturn(db: PrismaClient, id: string, decision: "ACCE
 type RefundFn = (o: { paymentIntentId: string | null; amountCents: number; subOrderId: string }) => Promise<{ status: string; refundId?: string; note?: string }>;
 
 /** Rembourse un retour accepté. Échec ou absence de paiement Stripe : reste « accepté » avec une note (à reprendre par l'administrateur). */
-export async function refundReturn(db: PrismaClient, id: string, refund: RefundFn, now = new Date()) {
-  const ret = await db.returnRequest.findUnique({ where: { id }, include: { subOrder: { include: { order: { select: { stripePaymentIntentId: true } } } } } });
-  if (!ret || ret.status !== "ACCEPTED") return null;
+export async function refundReturn(db: PrismaClient, id: string, refund: RefundFn, now = new Date(), restock = false) {
+  const ret = await db.returnRequest.findUnique({ where: { id }, include: { subOrder: { include: { order: { select: { stripePaymentIntentId: true, number: true } } } } } });
+  if (!ret || (ret.status !== "ACCEPTED" && ret.status !== "RECEIVED")) return null;
   const r = await refund({ paymentIntentId: ret.subOrder.order.stripePaymentIntentId, amountCents: ret.subOrder.subtotalCents, subOrderId: ret.subOrderId });
   if (r.status !== "DONE") {
     const note = r.status === "MANUAL" ? "Aucun paiement Stripe enregistré : remboursement à faire manuellement." : r.note ?? "échec";
     await db.returnRequest.update({ where: { id }, data: { refundNote: note } });
     return { done: false as const, note };
   }
-  const claimed = await db.returnRequest.updateMany({ where: { id, status: "ACCEPTED" }, data: { status: "REFUNDED", refundId: r.refundId ?? null, refundNote: null, refundedAt: now } });
+  const claimed = await db.returnRequest.updateMany({ where: { id, status: { in: ["ACCEPTED", "RECEIVED"] } }, data: { status: "REFUNDED", refundId: r.refundId ?? null, refundNote: null, refundedAt: now } });
   if (claimed.count === 1) {
+    if (restock) {
+      const items = await db.orderItem.findMany({ where: { subOrderId: ret.subOrderId } });
+      for (const it of items) await returnStock(db, { slug: it.productSlug, label: it.size }, it.quantity, `Retour remboursé : ${ret.subOrder.number}`, { label: "administration" }, ret.subOrder.order.number);
+    }
     await db.subOrder.update({ where: { id: ret.subOrderId }, data: { refundStatus: "DONE", refundId: r.refundId ?? null } });
     await db.ledgerEntry.updateMany({ where: { subOrderId: ret.subOrderId, payoutId: null, reversedAt: null }, data: { reversedAt: now } });
   }
@@ -62,10 +68,16 @@ export async function refundReturn(db: PrismaClient, id: string, refund: RefundF
 }
 
 /** Marque comme remboursé un retour traité hors Stripe (virement manuel). */
-export async function markReturnRefundedManually(db: PrismaClient, id: string, now = new Date()) {
+export async function markReturnRefundedManually(db: PrismaClient, id: string, now = new Date(), restock = false) {
   const ret = await db.returnRequest.findUnique({ where: { id } });
-  if (!ret || ret.status !== "ACCEPTED") return null;
-  return refundReturn(db, id, async () => ({ status: "DONE", refundId: "manuel" }), now);
+  if (!ret || (ret.status !== "ACCEPTED" && ret.status !== "RECEIVED")) return null;
+  return refundReturn(db, id, async () => ({ status: "DONE", refundId: "manuel" }), now, restock);
+}
+
+/** Colis retour reçu par l'administration (anti-course : uniquement depuis « accepté »). */
+export async function markReturnReceived(db: PrismaClient, id: string) {
+  const n = await db.returnRequest.updateMany({ where: { id, status: "ACCEPTED" }, data: { status: "RECEIVED" } });
+  return n.count === 1;
 }
 
 export function showShippedNotice(status: string, hasReturn: boolean) { return !hasReturn && ["SHIPPED", "DELIVERED"].includes(status); }

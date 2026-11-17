@@ -56,6 +56,7 @@ function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: numbe
       {p.returnStatus && <Text style={s.bold}>{RET[p.returnStatus] ?? p.returnStatus}</Text>}
       {p.canReturn && (
         <View style={{ gap: 6, marginTop: 4 }}>
+          <Text style={s.mut}>{tr("Les frais de livraison ne sont pas remboursés.", "Delivery fees are not refunded.")}</Text>
           <Text style={s.bold}>{tr("Motif du retour", "Return reason")}</Text>
           <TextInput value={reason} onChangeText={setReason} multiline maxLength={1000} style={s.input} placeholderTextColor="#6b5d52" selectionColor="#1c3060" />
           <Pressable disabled={busy} onPress={ask}><Text style={s.link}>{tr("Demander un retour", "Request a return")}</Text></Pressable>
@@ -68,7 +69,7 @@ function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: numbe
 }
 
 const eur = (c: number) => `${(c / 100).toFixed(2).replace(".", ",")} €`;
-const RET: Record<string, string> = lazy(() => ({ "Retour demand?": tr("Retour demand?", "Return requested"), "Retour accept?": tr("Retour accept?", "Return accepted"), "Retour refus?": tr("Retour refus?", "Return refused"), "Rembours?": tr("Rembours?", "Refunded") }));
+const RET: Record<string, string> = lazy(() => ({ "Colis reçu": tr("Colis reçu", "Parcel received"), "Retour demand?": tr("Retour demand?", "Return requested"), "Retour accept?": tr("Retour accept?", "Return accepted"), "Retour refus?": tr("Retour refus?", "Return refused"), "Rembours?": tr("Rembours?", "Refunded") }));
 const STATUS: Record<string, string> = lazy(() => ({ PENDING: tr("En attente de confirmation", "Awaiting confirmation"), ACCEPTED: tr("Confirmée", "Confirmed"), SHIPPED: tr("Expédiée", "Shipped"), DELIVERED: tr("Livrée", "Delivered"), CANCELLED: tr("Annulée", "Cancelled"), REFUSED: tr("Annulée", "Cancelled"), EXPIRED: tr("Annulée", "Cancelled") }));
 
 const ADDR_ERR: Record<string, string> = lazy(() => ({ required: tr("Veuillez renseigner les champs obligatoires.", "Please fill in the required fields."), postal: tr("Ce code postal ne semble pas valide pour ce pays.", "This postcode does not seem valid for this country."), locked: tr("L'adresse ne peut plus être modifiée : la commande est déjà en cours d'expédition.", "The address can no longer be changed: the order is already being shipped."), not_found: tr("Commande introuvable.", "Order not found.") }));

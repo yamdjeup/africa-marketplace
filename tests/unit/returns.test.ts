@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { decideReturn, refundReturn, requestReturn, returnEligibility } from "@/lib/returns";
+import { decideReturn, markReturnReceived, refundReturn, requestReturn, returnEligibility } from "@/lib/returns";
 
 const now = new Date("2026-11-20T12:00:00Z");
 const days = (n: number) => new Date(now.getTime() - n * 86_400_000);
@@ -45,5 +45,44 @@ describe("refundReturn", () => {
     const r = await refundReturn(db as never, "r1", async () => ({ status: "FAILED", note: "carte" }), now);
     expect(r).toEqual({ done: false, note: "carte" });
     expect(db.ledgerEntry.updateMany).not.toHaveBeenCalled();
+  });
+});
+
+describe("retour : colis reçu, remise en vente, frais de port", () => {
+  const sub = { number: "AM-1-A", subtotalCents: 5000, order: { stripePaymentIntentId: "pi_1", number: "AM-1" } };
+  const mk = (status: string) => ({
+    returnRequest: { findUnique: vi.fn().mockResolvedValue({ id: "r1", status, subOrderId: "s1", subOrder: sub }), update: vi.fn(), updateMany: vi.fn().mockResolvedValue({ count: 1 }) },
+    subOrder: { update: vi.fn() },
+    ledgerEntry: { updateMany: vi.fn() },
+    orderItem: { findMany: vi.fn().mockResolvedValue([{ productSlug: "p1", size: null, quantity: 2 }]) },
+    productVariant: { findMany: vi.fn().mockResolvedValue([]) },
+    stockMovement: { create: vi.fn() },
+    $executeRaw: vi.fn().mockResolvedValue(1),
+  });
+  it("markReturnReceived : uniquement depuis « accepté »", async () => {
+    const db = mk("ACCEPTED");
+    expect(await markReturnReceived(db as never, "r1")).toBe(true);
+    expect(db.returnRequest.updateMany.mock.calls[0][0].where).toEqual({ id: "r1", status: "ACCEPTED" });
+    db.returnRequest.updateMany.mockResolvedValue({ count: 0 });
+    expect(await markReturnReceived(db as never, "r1")).toBe(false);
+  });
+  it("rembourse depuis « reçu » au sous-total seul (sans port)", async () => {
+    const db = mk("RECEIVED");
+    const refund = vi.fn().mockResolvedValue({ status: "DONE", refundId: "re_1" });
+    expect((await refundReturn(db as never, "r1", refund, now))?.done).toBe(true);
+    expect(refund.mock.calls[0][0].amountCents).toBe(5000);
+  });
+  it("remet en stock (+quantité) seulement si la case est cochée", async () => {
+    const off = mk("RECEIVED");
+    await refundReturn(off as never, "r1", async () => ({ status: "DONE", refundId: "re_1" }), now, false);
+    expect(off.stockMovement.create).not.toHaveBeenCalled();
+    const on = mk("RECEIVED");
+    await refundReturn(on as never, "r1", async () => ({ status: "DONE", refundId: "re_1" }), now, true);
+    expect(on.stockMovement.create.mock.calls[0][0].data).toMatchObject({ productSlug: "p1", type: "RETURN", quantity: 2 });
+  });
+  it("pas de remise en stock si le remboursement échoue", async () => {
+    const db = mk("RECEIVED");
+    await refundReturn(db as never, "r1", async () => ({ status: "FAILED", note: "x" }), now, true);
+    expect(db.stockMovement.create).not.toHaveBeenCalled();
   });
 });

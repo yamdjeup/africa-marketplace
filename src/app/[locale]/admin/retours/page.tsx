@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import type { Locale } from "@/lib/i18n";
 import { RETURN_LABELS, type ReturnStatus } from "@/lib/returns";
 import { tr } from "@/lib/tr";
-import { decideReturnAction, refundReturnAction } from "../retours-actions";
+import { decideReturnAction, markReceivedAction, refundReturnAction } from "../retours-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -19,10 +19,10 @@ export default async function ReturnsAdmin({ params, searchParams }: { params: P
   q.page = Math.min(q.page, pageCount(total));
   const [list, nReq] = await Promise.all([db.returnRequest.findMany({ where, orderBy: { createdAt: q.asc ? "asc" : "desc" }, ...pageArgs(q.page), include: { subOrder: { select: { number: true, subtotalCents: true } } } }), db.returnRequest.count({ where: { status: "REQUESTED" } })]);
   const path = `/${locale}/admin/retours`;
-  const tabs = [{ value: "REQUESTED", label: tr(locale, "À traiter", "To handle"), count: nReq }, { value: "ACCEPTED", label: tr(locale, "Acceptés (à rembourser)", "Accepted (to refund)") }, { value: "REFUNDED", label: tr(locale, "Remboursés", "Refunded") }, { value: "REFUSED", label: tr(locale, "Refusés", "Refused") }, { value: "all", label: tr(locale, "Tous", "All") }];
+  const tabs = [{ value: "REQUESTED", label: tr(locale, "À traiter", "To handle"), count: nReq }, { value: "ACCEPTED", label: tr(locale, "Acceptés (à recevoir)", "Accepted (to receive)") }, { value: "RECEIVED", label: tr(locale, "Reçus (à rembourser)", "Received (to refund)") }, { value: "REFUNDED", label: tr(locale, "Remboursés", "Refunded") }, { value: "REFUSED", label: tr(locale, "Refusés", "Refused") }, { value: "all", label: tr(locale, "Tous", "All") }];
   const eur = (c: number) => new Intl.NumberFormat(locale === "en" ? "en-GB" : "fr-FR", { style: "currency", currency: "EUR" }).format(c / 100);
   const fmt = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "fr-FR", { timeZone: "Europe/Paris", dateStyle: "medium" });
-  const ok: Record<string, [string, string]> = { accepted: ["Retour accepté, client prévenu.", "Return accepted, customer notified."], refused: ["Retour refusé, client prévenu.", "Return refused, customer notified."], refunded: ["Remboursement enregistré, client prévenu.", "Refund recorded, customer notified."] };
+  const ok: Record<string, [string, string]> = { received: ["Colis reçu enregistré, client prévenu.", "Parcel received recorded, customer notified."], accepted: ["Retour accepté, client prévenu.", "Return accepted, customer notified."], refused: ["Retour refusé, client prévenu.", "Return refused, customer notified."], refunded: ["Remboursement enregistré, client prévenu.", "Refund recorded, customer notified."] };
   const err: Record<string, [string, string]> = { state: ["Cette demande a déjà été traitée.", "This request has already been handled."], refund: ["Remboursement Stripe non effectué (voir la note). Vous pouvez le marquer comme fait manuellement.", "Stripe refund not completed (see note). You can mark it as done manually."] };
   return (
     <>
@@ -50,10 +50,16 @@ export default async function ReturnsAdmin({ params, searchParams }: { params: P
                   <button name="decision" value="REFUSED" className={buttonVariants({ variant: "outline", className: "min-h-11" })}>{tr(locale, "Refuser", "Refuse")}</button>
                 </form>
               )}
-              {r.status === "ACCEPTED" && (
-                <div className="flex flex-wrap gap-2">
-                  <form action={refundReturnAction}><input type="hidden" name="id" value={r.id} /><button className={buttonVariants({ className: "min-h-11" })}>{tr(locale, "Rembourser (Stripe)", "Refund (Stripe)")}</button></form>
-                  <form action={refundReturnAction}><input type="hidden" name="id" value={r.id} /><input type="hidden" name="manual" value="1" /><button className={buttonVariants({ variant: "outline", className: "min-h-11" })}>{tr(locale, "Marquer remboursé (manuel)", "Mark refunded (manual)")}</button></form>
+              {(r.status === "ACCEPTED" || r.status === "RECEIVED") && (
+                <div className="space-y-2">
+                  {r.status === "ACCEPTED" && <form action={markReceivedAction}><input type="hidden" name="id" value={r.id} /><button className={buttonVariants({ variant: "outline", className: "min-h-11" })}>{tr(locale, "Colis reçu", "Parcel received")}</button></form>}
+                  <form action={refundReturnAction} className="flex flex-wrap items-center gap-2">
+                    <input type="hidden" name="id" value={r.id} />
+                    <label className="flex items-center gap-2 text-xs"><input type="checkbox" name="restock" value="1" />{tr(locale, "Remettre en vente (stock +1 par unité)", "Put back on sale (stock +1 per unit)")}</label>
+                    <button className={buttonVariants({ className: "min-h-11" })}>{tr(locale, "Rembourser (Stripe)", "Refund (Stripe)")}</button>
+                    <button name="manual" value="1" className={buttonVariants({ variant: "outline", className: "min-h-11" })}>{tr(locale, "Marquer remboursé (manuel)", "Mark refunded (manual)")}</button>
+                  </form>
+                  <p className="text-xs text-muted-foreground">{tr(locale, "Les frais de livraison ne sont pas remboursés.", "Delivery fees are not refunded.")}</p>
                 </div>
               )}
             </li>

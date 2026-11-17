@@ -1,8 +1,8 @@
 import { getLang, tr, lazy } from "./region";
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ActivityIndicator, Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
-import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { ActivityIndicator, Animated, BackHandler, Image, KeyboardAvoidingView, PanResponder, Platform, useWindowDimensions, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { authed } from "./api";
 import { API_URL } from "./config";
 
@@ -27,12 +27,49 @@ const AVATAR = `${API_URL}/tila-avatar.jpeg`;
 
 export function TilaButton({ onOpenSlug }: { onOpenSlug: (slug: string) => void }) {
   const insets = useSafeAreaInsets();
+  const { width: W, height: H } = useWindowDimensions();
+  const [size, setSize] = useState({ w: 150, h: 52 });
+  const pos = useRef(new Animated.ValueXY({ x: -1, y: -1 })).current;
+  const cur = useRef({ x: -1, y: -1 });
+  const start = useRef({ x: 0, y: 0 });
+  const bounds = useRef({ minY: 0, maxY: 0, maxX: 0 });
+  bounds.current = { minY: insets.top + 56, maxY: Math.max(insets.top + 56, H - 64 - Math.max(insets.bottom, Platform.OS === "android" ? 16 : 0) - size.h), maxX: Math.max(0, W - size.w - 12) };
+  const clampY = (y: number) => Math.min(Math.max(y, bounds.current.minY), bounds.current.maxY);
+  const place = (x: number, y: number) => { cur.current = { x, y }; pos.setValue({ x, y }); };
+  useEffect(() => {
+    AsyncStorage.getItem("tila.pos").then((v) => {
+      try { const p = v ? JSON.parse(v) : null; if (p && typeof p.y === "number") return place(p.side === "left" ? 12 : bounds.current.maxX, clampY(p.y)); } catch {}
+      place(bounds.current.maxX, bounds.current.maxY);
+    }).catch(() => place(bounds.current.maxX, bounds.current.maxY));
+  }, []);
+  useEffect(() => { if (cur.current.x >= 0) place(cur.current.x > W / 2 - size.w / 2 ? bounds.current.maxX : 12, clampY(cur.current.y)); }, [W, H, size.w, size.h]);
+  const pan = useMemo(() => PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: (_e, g) => Math.abs(g.dx) > 8 || Math.abs(g.dy) > 8,
+    onPanResponderGrant: () => { start.current = { ...cur.current }; },
+    onPanResponderMove: (_e, g) => { if (Math.abs(g.dx) > 8 || Math.abs(g.dy) > 8) pos.setValue({ x: Math.min(Math.max(start.current.x + g.dx, 12), bounds.current.maxX), y: clampY(start.current.y + g.dy) }); },
+    onPanResponderRelease: (_e, g) => {
+      if (Math.abs(g.dx) <= 8 && Math.abs(g.dy) <= 8) return setOpen(true);
+      const nx = Math.min(Math.max(start.current.x + g.dx, 12), bounds.current.maxX);
+      const side = nx + size.w / 2 < W / 2 ? "left" : "right";
+      const x = side === "left" ? 12 : bounds.current.maxX;
+      const y = clampY(start.current.y + g.dy);
+      cur.current = { x, y };
+      Animated.spring(pos, { toValue: { x, y }, useNativeDriver: false, bounciness: 4 }).start();
+      AsyncStorage.setItem("tila.pos", JSON.stringify({ side, y })).catch(() => {});
+    },
+  }), [W, H, size.w, size.h, insets.top, insets.bottom]);
   const [open, setOpen] = useState(false);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const scroller = useRef<ScrollView>(null);
+  useEffect(() => {
+    if (!open) return;
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => { setOpen(false); return true; });
+    return () => sub.remove();
+  }, [open]);
 
   async function send() {
     const content = text.trim();
@@ -44,19 +81,22 @@ export function TilaButton({ onOpenSlug }: { onOpenSlug: (slug: string) => void 
     setBusy(true);
     const r = await authed<{ reply?: string; products?: Card[]; error?: string }>(null, "POST", "/api/tila", { locale: getLang(), messages: next.slice(-10).map(({ role, content }) => ({ role, content })) });
     setBusy(false);
-    if (!r.ok || !r.data.reply) setError(T.errors[r.data.error ?? "unavailable"] ?? T.errors.unavailable);
+    if (r.status === 0) setError(tr("Connexion impossible : v?rifiez votre r?seau et r?essayez.", "Connection failed: check your network and try again."));
+    else if (!r.ok || !r.data?.reply) setError(T.errors[r.data?.error ?? "unavailable"] ?? T.errors.unavailable);
     else setMsgs([...next, { role: "assistant", content: r.data.reply, products: r.data.products ?? [] }]);
   }
 
   return (
     <>
-      <Pressable onPress={() => setOpen(true)} accessibilityLabel={T.open} style={[st.fab, { bottom: 64 + Math.max(insets.bottom, Platform.OS === "android" ? 16 : 0) }]}>
-        <Image source={{ uri: AVATAR }} style={st.fabImg} />
-        <View><Text style={st.fabName}>{T.name}</Text><Text style={st.fabBadge}>{T.badge}</Text></View>
-      </Pressable>
+      {(
+        <Animated.View {...pan.panHandlers} onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })} accessibilityRole="button" accessibilityLabel={T.open} style={[st.fab, { left: pos.x, top: pos.y }]}>
+          <Image source={{ uri: AVATAR }} style={st.fabImg} />
+          <View><Text style={st.fabName}>{T.name}</Text><Text style={st.fabBadge}>{T.badge}</Text></View>
+        </Animated.View>
+      ) : null}
       {open && (
-        <Modal animationType="slide" onRequestClose={() => setOpen(false)}>
-          <SafeAreaProvider><SafeAreaView style={{ flex: 1, backgroundColor: "#faf6ee" }}>
+        <View style={[StyleSheet.absoluteFill, { zIndex: 1000, elevation: 20, backgroundColor: "#faf6ee", paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+          <View style={{ flex: 1 }}>
             <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "padding"}>
               <View style={st.head}>
                 <Image source={{ uri: AVATAR }} style={st.headImg} />
@@ -86,15 +126,15 @@ export function TilaButton({ onOpenSlug }: { onOpenSlug: (slug: string) => void 
               </View>
               <Text style={st.notice}>{T.notice}</Text>
             </KeyboardAvoidingView>
-          </SafeAreaView></SafeAreaProvider>
-        </Modal>
+          </View>
+        </View>
       )}
     </>
   );
 }
 
 const st = StyleSheet.create({
-  fab: { position: "absolute", right: 12, bottom: 72, flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "#1c3060", borderRadius: 40, paddingVertical: 4, paddingLeft: 4, paddingRight: 14, elevation: 6 },
+  fab: { position: "absolute", zIndex: 900, flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "#1c3060", borderRadius: 40, paddingVertical: 4, paddingLeft: 4, paddingRight: 14, elevation: 6 },
   fabImg: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: "#f59e0b" },
   fabName: { color: "#fff", fontWeight: "600", fontSize: 14 },
   fabBadge: { color: "#fff", opacity: 0.8, fontSize: 11 },

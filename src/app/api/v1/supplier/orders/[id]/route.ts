@@ -35,6 +35,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     carrier: sub.carrier,
     trackingNumber: sub.trackingNumber ? cleanTrackingNumber(sub.trackingNumber) : null,
     reason: sub.reason,
+    reasonNote: sub.reasonNote,
     return: ret ? { status: ret.status as string, label: returnLabel(ret), reason: ret.reason, createdAt: ret.createdAt.toISOString(), photoIds: ret.photoIds ? ret.photoIds.split(",") : [], condition: ret.condition, conditionNote: ret.conditionNote, receivedAt: ret.partnerReceivedAt ? ret.partnerReceivedAt.toISOString() : null, decision: ret.partnerDecision, decisionNote: ret.partnerDecisionNote, decideBy: ret.partnerReceivedAt ? partnerCheckDeadline(ret.partnerReceivedAt).toISOString() : null } : null,
     items: items.map((i) => ({ id: i.id, name: i.name, size: i.size, quantity: i.quantity, unitPriceCents: i.unitPriceCents })),
     shipTo: { fullName: o.fullName, address: o.address, postalCode: o.postalCode, city: o.city, country: o.country, phone: o.phone },

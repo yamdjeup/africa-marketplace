@@ -25,7 +25,7 @@ export async function cancelParcelForUser(userId: string, email: string | null |
   return true;
 }
 
-// Demande de retour d'un colis livré (30 jours) : propriétaire vérifié côté serveur, e-mails comme sur le site.
+// Demande de retour d'un colis livré (14 jours) : propriétaire vérifié côté serveur, e-mails comme sur le site.
 export async function requestReturnForUser(userId: string, email: string | null | undefined, id: string, reason: string, photoIds: string[] = []) {
   const r = await requestReturn(db, userId, id, reason, new Date(), photoIds);
   if (r.ok) {

@@ -76,7 +76,7 @@ export async function acceptSub(db: PrismaClient, id: string, supplierId: string
   return n.count === 1 ? db.subOrder.findUnique({ where: { id } }) : null;
 }
 
-/** Colis clôturés (retour remboursé/refusé, ou 30 jours après livraison sans retour) dont l'e-mail « clôturée » n'est pas encore parti ; chaque colis n'est réclamé qu'une fois. */
+/** Colis clôturés (retour remboursé/refusé, ou 14 jours après livraison sans retour) dont l'e-mail « clôturée » n'est pas encore parti ; chaque colis n'est réclamé qu'une fois. */
 export async function sweepClosed(db: PrismaClient, now = new Date()) {
   const cutoff = new Date(now.getTime() - RETURN_DAYS * 24 * HOUR);
   const cands = await db.subOrder.findMany({

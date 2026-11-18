@@ -6,7 +6,7 @@ const days = (n: number) => new Date(now.getTime() - n * 86_400_000);
 
 describe("returnEligibility", () => {
   it("accepte un colis livré il y a 10 jours", () => expect(returnEligibility({ status: "DELIVERED", deliveredAt: days(10) }, false, now)).toBe("ok"));
-  it("refuse au-delà de 30 jours", () => expect(returnEligibility({ status: "DELIVERED", deliveredAt: days(31) }, false, now)).toBe("expired"));
+  it("refuse au-delà de 14 jours", () => expect(returnEligibility({ status: "DELIVERED", deliveredAt: days(15) }, false, now)).toBe("expired"));
   it("refuse un colis non livré", () => expect(returnEligibility({ status: "SHIPPED", deliveredAt: null }, false, now)).toBe("not_delivered"));
   it("refuse une seconde demande", () => expect(returnEligibility({ status: "DELIVERED", deliveredAt: days(1) }, true, now)).toBe("exists"));
 });

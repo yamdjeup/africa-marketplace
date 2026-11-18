@@ -61,7 +61,7 @@ export async function SubOrderTracking({ orderId, locale, canCancel = false }: {
               if (!canCancel || returnEligibility(s, false) !== "ok") return null;
               return <ReturnRequestForm id={s.id} locale={locale} />;
             })()}
-            {canCancel && showShippedNotice(s.status, returns.some((r) => r.subOrderId === s.id)) && <p className="text-xs text-muted-foreground">{tr(locale, "Ce colis est expédié : il ne peut plus être annulé. Vous pouvez le retourner sous 30 jours après la livraison (voir Retours et remboursements).", "This parcel has shipped and can no longer be cancelled. You can return it within 30 days of delivery (see Returns and refunds).")}</p>}
+            {canCancel && showShippedNotice(s.status, returns.some((r) => r.subOrderId === s.id)) && <p className="text-xs text-muted-foreground">{tr(locale, "Ce colis est expédié : il ne peut plus être annulé. Vous pouvez le retourner sous 14 jours après la livraison (voir Retours et remboursements).", "This parcel has shipped and can no longer be cancelled. You can return it within 14 days of delivery (see Returns and refunds).")}</p>}
           </div>
         );
       })}

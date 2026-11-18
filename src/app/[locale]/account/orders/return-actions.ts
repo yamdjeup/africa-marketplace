@@ -5,7 +5,7 @@ import { auth } from "@/auth";
 import { storeReturnPhotos } from "@/lib/return-photos";
 import { confirmReturnShippedForUser, requestReturnForUser } from "@/lib/customer-orders";
 
-// Demande de retour d'un colis livré (30 jours) : logique partagée avec l'API mobile (lib/customer-orders.ts).
+// Demande de retour d'un colis livré (14 jours) : logique partagée avec l'API mobile (lib/customer-orders.ts).
 export async function requestReturnAction(formData: FormData) {
   const session = await auth();
   const userId = session?.user?.id;

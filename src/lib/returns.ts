@@ -2,7 +2,7 @@ import type { PrismaClient } from "@prisma/client";
 import { returnStock } from "./stock";
 
 // Retours : le client demande, l'administrateur arbitre (accepter / refuser), puis le remboursement est enregistré.
-export const RETURN_DAYS = 30;
+export const RETURN_DAYS = 14;
 export type ReturnStatus = "REQUESTED" | "ACCEPTED" | "RECEIVED" | "REFUSED" | "REFUNDED";
 
 export const RETURN_LABELS: Record<ReturnStatus, { fr: string; en: string }> = {
@@ -30,7 +30,7 @@ export function returnEligibility(sub: { status: string; deliveredAt: Date | nul
 
 export type RequestResult = { ok: true; id: string } | { ok: false; error: Eligibility | "forbidden" | "reason" | "photos" };
 
-/** Demande de retour : propriétaire vérifié, colis livré, dans les 30 jours, une seule demande par colis. */
+/** Demande de retour : propriétaire vérifié, colis livré, dans les 14 jours, une seule demande par colis. */
 export async function requestReturn(db: PrismaClient, userId: string, subOrderId: string, reason: string, now = new Date(), photoIds: string[] = []): Promise<RequestResult> {
   const text = reason.trim().slice(0, 1000);
   if (text.length < 3) return { ok: false, error: "reason" };

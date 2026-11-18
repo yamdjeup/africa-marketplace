@@ -58,7 +58,7 @@ export function buildReturnEmail(o: ReturnMailInput): { subject: string; lines: 
     },
     address: o.kind === "accepted" && o.shipTo ? { title: fr ? "Adresse de retour" : "Return address", lines: o.shipTo.split(", ").filter(Boolean) } : undefined,
   });
-  return { subject: T.title, lines: [...paragraphs, ...(o.kind === "accepted" && o.shipTo ? [o.shipTo] : [])], html };
+  return { subject: fr ? `${T.title} — commande ${n}` : `${T.title} — order ${n}`, lines: [...paragraphs, ...(o.kind === "accepted" && o.shipTo ? [o.shipTo] : [])], html };
 }
 
 /** E-mail au partenaire (créateur) : demande, accord, refus, réception, remboursement d'un retour de son colis. Même gabarit. */

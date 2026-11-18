@@ -99,3 +99,16 @@ describe("e-mail client « commande expirée » et salutation sans prénom", () 
     expect((send.mock.calls[0] as unknown as [string, string, string[]])[2][0]).toBe("Hello,");
   });
 });
+
+describe("objets des e-mails client : n° de colis toujours présent", () => {
+  beforeEach(() => { send.mockClear(); reasonId = null; fullName = "Awa"; });
+  for (const ev of ["ACCEPTED", "PREPARING", "REFUSED", "EXPIRED", "CANCELLED", "CLOSED"] as const) {
+    for (const loc of ["fr", "en"] as const) {
+      it(`${ev} ${loc}`, async () => {
+        locale = loc;
+        await notifySubOrder(ev, "s1");
+        expect((send.mock.calls[0] as unknown as [string, string])[1]).toContain("AM-X-1");
+      });
+    }
+  }
+});

@@ -100,8 +100,8 @@ export async function notifySubOrder(event: SubEvent, subOrderId: string) {
     const blocks = m[1].split("\n\n").map((x) => x.trim()).filter(Boolean);
     const n = sub.number;
     const subjects: Partial<Record<SubEvent, string>> = fr
-      ? { ACCEPTED: `Votre commande ${n} est confirmée`, PREPARING: `Votre commande ${n} est en préparation`, SHIPPED: `Votre commande ${n} est en route`, DELIVERED: `Votre commande ${n} est arrivée` }
-      : { ACCEPTED: `Your order ${n} is confirmed`, PREPARING: `Your order ${n} is being prepared`, SHIPPED: `Your order ${n} is on its way`, DELIVERED: `Your order ${n} has arrived` };
+      ? { ACCEPTED: `Votre commande ${n} est confirmée`, PREPARING: `Votre commande ${n} est en préparation`, SHIPPED: `Votre commande ${n} est en route`, DELIVERED: `Votre commande ${n} est arrivée`, REFUSED: `Votre commande ${n} n'a pas pu être confirmée`, EXPIRED: `Votre commande ${n} n'a pas pu être confirmée`, CANCELLED: `Votre commande ${n} est annulée`, CLOSED: `Votre commande ${n} est clôturée` }
+      : { ACCEPTED: `Your order ${n} is confirmed`, PREPARING: `Your order ${n} is being prepared`, SHIPPED: `Your order ${n} is on its way`, DELIVERED: `Your order ${n} has arrived`, REFUSED: `Your order ${n} could not be confirmed`, EXPIRED: `Your order ${n} could not be confirmed`, CANCELLED: `Your order ${n} is cancelled`, CLOSED: `Your order ${n} is closed` };
     const subject = subjects[event] ?? m[0];
     const loc = fr ? "fr" : "en";
     const link = o.userId ? `${base}/${loc}/account/orders/${o.number}` : `${base}/${loc}/checkout/confirmation/${o.number}?t=${o.editToken ?? ""}`;

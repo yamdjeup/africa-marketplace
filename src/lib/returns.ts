@@ -1,5 +1,6 @@
 import type { PrismaClient } from "@prisma/client";
 import { returnStock } from "./stock";
+import { registerTracking } from "./tracking-provider";
 
 // Retours : le client demande, l'administrateur arbitre (accepter / refuser), puis le remboursement est enregistré.
 export const RETURN_DAYS = 14;
@@ -52,6 +53,7 @@ export async function markReturnShipped(db: PrismaClient, userId: string, subOrd
   const t = tracking.replace(/[\s,;]+/g, "").slice(0, 60);
   if (c.length < 2 || t.length < 3) return "invalid" as const;
   const n = await db.returnRequest.updateMany({ where: { subOrderId, userId, status: "ACCEPTED", returnShippedAt: null }, data: { returnCarrier: c, returnTracking: t, returnShippedAt: now } });
+  if (n.count === 1) await registerTracking(c, t);
   return n.count === 1 ? ("ok" as const) : ("state" as const);
 }
 

@@ -53,6 +53,7 @@ export async function createSubOrders(db: Db, order: { id: string; number: strin
 }
 
 import { flushRestockSafe } from "./restock-flush";
+import { registerTracking } from "./tracking-provider";
 
 async function loadItems(db: Db, subOrderId: string) {
   return db.orderItem.findMany({ where: { subOrderId } });
@@ -104,6 +105,12 @@ export async function prepareSub(db: PrismaClient, id: string, supplierId: strin
 
 /** Expédition : le stock réservé devient une sortie définitive. */
 export async function shipSub(db: PrismaClient, id: string, supplierId: string | null, carrier: string, trackingNumber: string, actor: Actor) {
+  const shipped = await shipSubTx(db, id, supplierId, carrier, trackingNumber, actor);
+  if (shipped) await registerTracking(carrier, trackingNumber);
+  return shipped;
+}
+
+async function shipSubTx(db: PrismaClient, id: string, supplierId: string | null, carrier: string, trackingNumber: string, actor: Actor) {
   return db.$transaction(async (tx) => {
     const n = await tx.subOrder.updateMany({ where: guard(id, supplierId, ["ACCEPTED", "PREPARING"]), data: { status: "SHIPPED", carrier, trackingNumber, shippedAt: new Date() } });
     if (n.count !== 1) return null;

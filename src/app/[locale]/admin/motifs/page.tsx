@@ -20,7 +20,7 @@ export default async function AdminReasons({ params, searchParams }: { params: P
   const errors: Record<string, [string, string]> = {
     invalid: ["Les quatre textes sont obligatoires (3 caractères minimum).", "All four texts are required (3 characters minimum)."],
     none: ["Sélectionnez au moins une ligne.", "Select at least one row."],
-    used: ["Suppression impossible : une commande ou un retour utilise déjà ce motif. Désactivez-le à la place.", "Cannot delete: an order or return already uses this reason. Disable it instead."],
+    used: ["Suppression impossible : une commande ou un retour utilise déjà ce motif.", "Cannot delete: an order or return already uses this reason."],
   };
   const err = sp.error ? errors[sp.error] : null;
   return (

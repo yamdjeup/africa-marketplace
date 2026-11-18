@@ -375,6 +375,10 @@ model SubOrder {
   decidedAt      DateTime?
   reason         String    @default("")
   reasonId       String?
+  /// Précision libre du créateur sur son refus : visible uniquement par l'administration
+  reasonNote     String?
+  /// E-mail « commande clôturée » envoyé
+  closedMailSentAt DateTime?
   carrier        String    @default("")
   trackingNumber String    @default("")
   /// Remboursement à l'annulation : "" (aucun) | REQUESTED | DONE | FAILED | MANUAL (à traiter par l'admin)
@@ -407,6 +411,10 @@ model ReturnRequest {
   partnerDecision String?
   partnerDecisionNote String?
   partnerReasonId String?
+  /// Expédition du retour confirmée par le client
+  returnCarrier   String?
+  returnTracking  String?
+  returnShippedAt DateTime?
   partnerDecidedAt DateTime?
   status      String    @default("REQUESTED")
   adminNote   String    @default("")

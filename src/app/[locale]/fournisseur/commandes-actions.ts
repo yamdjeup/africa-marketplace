@@ -67,7 +67,7 @@ export async function refuseOrderAction(f: FormData) {
   const rr = await findActiveReason(db, "ORDER", s(f, "reasonId", 60));
   if (!rr) redirect(back("?error=reason"));
   const note = s(f, "note", 500);
-  const sub = await refuseSub(db, id, supplierId, note ? `${rr.fr} — ${note}` : rr.fr, actor, rr.id);
+  const sub = await refuseSub(db, id, supplierId, rr.fr, actor, rr.id, note || null);
   if (!sub) redirect(back("?error=state"));
   await settleSubRefund(id);
   await notifySubOrder("REFUSED", id);

@@ -121,6 +121,12 @@ Secrets du dépôt (Settings > Secrets and variables > Actions) :
 ### OVH (domaine)
 Pas de variable. Offre Standard ; epomta.com expire le 10/11/2027 (renouvellement automatique) ; contact du domaine validé le 12/11/2026 ; **aucun moyen de paiement enregistré** ; service Emails lié. Enregistrements DNS : A/CNAME vers Vercel, enregistrements SPF/DKIM de Resend. Compte OVH : yamdjeup@gmail.com (réf. pn1604783-ovh).
 
+### 3 bis. 17TRACK (suivi transporteurs) et capture Stripe
+
+- Compte 17TRACK créé le 18/11/2026 (essai gratuit, sans société) : e-mail `contact@epomta.com`, nom Epomta, site epomta.com, volume déclaré ≤ 10 000 colis/mois, exigence « API de suivi en temps réel », transporteurs réglementés « Aucun besoin ». Mot de passe et clé : jamais dans ce fichier ni dans le dépôt.
+- Variable à créer dans Vercel (simu, preprod, prod) : `TRACK17_API_KEY` (clé API 17TRACK). Absente : mode manuel dégradé (le créateur marque livré / retour reçu). Quota gratuit visible au tableau de bord : 200 suivis de colis et 10 suivis fret aérien (AirWayBill). Clé API pas encore récupérée ; webhook pas encore configuré (à faire après déploiement, avec l'URL de l'endpoint).
+- `PAYMENT_CAPTURE_ON_CONFIRM` = `1` : autorisation Stripe à la commande, encaissement à la confirmation du créateur (24 h) ; absente ou autre valeur : ancien flux (48 h).
+
 ## 4. Secrets à régénérer
 
 - **Clé Stripe `sk_test_…`** (`STRIPE_SECRET_KEY`, `TEST_STRIPE_SECRET_KEY`) : à régénérer si elle a été exposée (Stripe > Roll key), puis mettre à jour Vercel et GitHub.

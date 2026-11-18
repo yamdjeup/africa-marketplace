@@ -1,5 +1,7 @@
 import { sendEmail } from "@/lib/email";
 import { absoluteImageUrl, renderEmailHtml } from "@/lib/email-layout";
+import { db } from "@/lib/db";
+import { captureOnConfirm, creatorWindowHours } from "@/lib/payment-mode";
 
 export type OrderEmailInput = {
   to: string;
@@ -8,6 +10,8 @@ export type OrderEmailInput = {
   fullName: string;
   items: { name: string; quantity: number; size?: string | null; unitPriceCents: number; image?: string }[];
   totalCents: number;
+  /** Boutiques (créateurs) auxquelles la commande est transmise. */
+  shops?: string[];
   shipping?: { lines: string[]; phone: string; editUrl?: string };
 };
 
@@ -15,12 +19,15 @@ export function buildOrderEmail(o: OrderEmailInput) {
   const fr = o.locale === "fr";
   const money = (cents: number) =>
     new Intl.NumberFormat(fr ? "fr-FR" : "en-GB", { style: "currency", currency: "EUR" }).format(cents / 100);
+  const hold = captureOnConfirm();
+  const hours = creatorWindowHours();
+  const shops = (o.shops?.length ? o.shops.join(fr ? " et " : " and ") : fr ? "le créateur" : "the creator");
   const t = fr
     ? {
-        subject: `E póm ta’ — confirmation de la commande ${o.number}`,
+        subject: "Votre commande est transmise",
         hello: `Bonjour ${o.fullName},`,
-        intro: "Merci pour votre commande sur E póm ta’.",
-        notice: "Votre paiement par carte a bien été enregistré.",
+        intro: `Votre commande a été transmise à ${shops}, qui dispose de ${hours} heures pour ${hold ? "la confirmer" : "l'accepter"}.`,
+        notice: hold ? `Votre carte ne sera débitée qu'à cette confirmation, que nous vous notifierons par e-mail. Un montant de ${money(o.totalCents)} peut apparaître « en attente » sur votre relevé : il s'agit d'une simple réservation, qui ne devient un paiement qu'à la confirmation.` : "Votre paiement par carte a bien été enregistré.",
         num: "Numéro de commande",
         works: "Créations",
         total: "Total",
@@ -31,10 +38,10 @@ export function buildOrderEmail(o: OrderEmailInput) {
         bye: "Merci de votre confiance.",
       }
     : {
-        subject: `E póm ta’ — order ${o.number} confirmation`,
+        subject: "Your order has been sent",
         hello: `Hello ${o.fullName},`,
-        intro: "Thank you for your order on E póm ta’.",
-        notice: "Your card payment has been recorded.",
+        intro: `Your order has been sent to ${shops}, who has up to ${hours} hours to ${hold ? "confirm it" : "accept it"}.`,
+        notice: hold ? `Your card will only be charged once the order is confirmed, and we will notify you by email. An amount of ${money(o.totalCents)} may appear as "pending" on your statement: it is a simple reservation, which only becomes a payment on confirmation.` : "Your card payment has been recorded.",
         num: "Order number",
         works: "Creations",
         total: "Total",
@@ -52,23 +59,29 @@ export function buildOrderEmail(o: OrderEmailInput) {
   const text = [t.hello, "", t.intro, t.notice, "", `${t.num} : ${o.number}`, `${t.works} :`, ...lines.map((l) => `- ${l}`), "", `${t.total} : ${money(o.totalCents)}`, ...shipText, "", t.bye].join("\n");
   const html = renderEmailHtml({
     locale: o.locale,
-    title: fr ? "Votre commande est bien reçue" : "Your order has been received",
+    title: fr ? "Votre commande est transmise" : "Your order has been sent",
     orderNumber: o.number,
-    paragraphs: [t.hello, t.intro],
+    paragraphs: [t.hello, t.intro, t.notice],
     cta: ship?.editUrl ? { label: t.edit, url: ship.editUrl } : undefined,
     summary: {
       items: o.items.map((i) => ({ name: i.name, detail: `× ${i.quantity}${i.size ? ` · ${i.size}` : ""}`, priceLabel: money(i.unitPriceCents * i.quantity), image: i.image ? absoluteImageUrl(i.image) : undefined })),
             rows: [{ label: t.total, value: money(o.totalCents), bold: true }],
     },
     address: ship ? { title: t.shipTo, lines: [...ship.lines, `${t.phone} : ${ship.phone}`] } : undefined,
-    notice: `**${t.notice}** ${ship ? t.mistake : ""} ${t.bye}`,
+    notice: `${t.notice} ${ship ? t.mistake : ""} ${t.bye}`,
   });
   return { subject: t.subject, text, html };
 }
 
 // Ne lève jamais : une commande ne doit pas échouer à cause de l'e-mail.
 export async function sendOrderEmail(o: OrderEmailInput): Promise<void> {
-  await sendEmail({ to: o.to, ...buildOrderEmail(o) });
+  let shops = o.shops;
+  if (!shops) {
+    shops = await db.subOrder.findMany({ where: { order: { number: o.number } }, select: { supplierId: true } })
+      .then((subs) => db.supplier.findMany({ where: { id: { in: subs.map((s) => s.supplierId) } }, select: { displayName: true } }))
+      .then((r) => r.map((s) => s.displayName), () => []);
+  }
+  await sendEmail({ to: o.to, ...buildOrderEmail({ ...o, shops }) });
 }
 
 /** Paiement reçu mais article épuisé entre-temps : aucune commande créée, remboursement intégral. */

@@ -13,6 +13,12 @@ export const RETURN_LABELS: Record<ReturnStatus, { fr: string; en: string }> = {
   REFUNDED: { fr: "Remboursé", en: "Refunded" },
 };
 
+/** Libellé du retour : « accepté » devient « Retour expédié » une fois l'expédition confirmée par le client. */
+export function returnLabel(ret: { status: string; returnShippedAt?: Date | null }): { fr: string; en: string } {
+  if (ret.status === "ACCEPTED" && ret.returnShippedAt) return { fr: "Retour expédié", en: "Return shipped" };
+  return RETURN_LABELS[ret.status as ReturnStatus] ?? { fr: ret.status, en: ret.status };
+}
+
 export type Eligibility = "ok" | "not_delivered" | "expired" | "exists";
 
 export function returnEligibility(sub: { status: string; deliveredAt: Date | null }, hasRequest: boolean, now = new Date()): Eligibility {
@@ -38,6 +44,15 @@ export async function requestReturn(db: PrismaClient, userId: string, subOrderId
   if (ids.length && (await db.mediaFile.count({ where: { id: { in: ids }, ownerUserId: userId, isPrivate: true } })) !== ids.length) return { ok: false, error: "photos" };
   const created = await db.returnRequest.create({ data: { subOrderId, userId, reason: text, photoIds: ids.join(",") } });
   return { ok: true, id: created.id };
+}
+
+/** Le client confirme l'expédition du retour (transporteur + numéro). Uniquement sur son retour accepté, une seule fois. */
+export async function markReturnShipped(db: PrismaClient, userId: string, subOrderId: string, carrier: string, tracking: string, now = new Date()) {
+  const c = carrier.trim().slice(0, 60);
+  const t = tracking.replace(/[\s,;]+/g, "").slice(0, 60);
+  if (c.length < 2 || t.length < 3) return "invalid" as const;
+  const n = await db.returnRequest.updateMany({ where: { subOrderId, userId, status: "ACCEPTED", returnShippedAt: null }, data: { returnCarrier: c, returnTracking: t, returnShippedAt: now } });
+  return n.count === 1 ? ("ok" as const) : ("state" as const);
 }
 
 /** Décision de l'administrateur (anti-course : uniquement depuis « demandé »). */

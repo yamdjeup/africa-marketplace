@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { Pill } from "@/components/fournisseur/parts";
 import { CancelSubOrderButton } from "@/components/marketplace/cancel-sub-order-button";
+import { ReturnShippedForm } from "@/components/marketplace/return-shipped-form";
 import { ReturnRequestForm } from "@/components/marketplace/return-request-form";
 import { db } from "@/lib/db";
-import { RETURN_LABELS, returnEligibility, showShippedNotice, type ReturnStatus } from "@/lib/returns";
+import { returnEligibility, returnLabel, showShippedNotice } from "@/lib/returns";
 import type { Locale } from "@/lib/i18n";
 import { subLabel } from "@/lib/suborders";
 import { carrierLabel, cleanTrackingNumber, trackingUrl } from "@/lib/tracking";
@@ -56,7 +57,7 @@ export async function SubOrderTracking({ orderId, locale, canCancel = false }: {
             {canCancel && ["PENDING", "ACCEPTED", "PREPARING"].includes(s.status) && <CancelSubOrderButton id={s.id} locale={locale} />}
             {(() => {
               const ret = returns.find((r) => r.subOrderId === s.id);
-              if (ret) return <p className="text-xs font-medium">{tr(locale, RETURN_LABELS[ret.status as ReturnStatus]?.fr ?? ret.status, RETURN_LABELS[ret.status as ReturnStatus]?.en ?? ret.status)}</p>;
+              if (ret) return (<><p className="text-xs font-medium">{tr(locale, returnLabel(ret).fr, returnLabel(ret).en)}</p>{ret.status === "ACCEPTED" && !ret.returnShippedAt && <ReturnShippedForm id={s.id} locale={locale} />}</>);
               if (!canCancel || returnEligibility(s, false) !== "ok") return null;
               return <ReturnRequestForm id={s.id} locale={locale} />;
             })()}

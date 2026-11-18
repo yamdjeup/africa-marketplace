@@ -64,6 +64,7 @@ export default async function AdminOrderDetail({ params }: { params: Promise<{ l
         <p>{tr(locale, "Téléphone", "Phone")} : {o.phone ? <a className="underline" href={`tel:${o.phone}`}>{formatPhone(o.phone)}</a> : "—"}</p>
         <p>{tr(locale, "Suivi", "Tracking")} : {sub.trackingNumber ? `${sub.carrier} ${cleanTrackingNumber(sub.trackingNumber)}` : "—"}</p>
         {sub.reason && <p>{tr(locale, "Motif", "Reason")} : {sub.reason}</p>}
+        {sub.reasonNote && <p>{tr(locale, "Précision du créateur (admin uniquement)", "Creator's details (admin only)")} : {sub.reasonNote}</p>}
       </section>
 
       <section className="space-y-1 rounded-lg border p-4 text-sm">

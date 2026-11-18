@@ -30,7 +30,7 @@ describe("décision du créateur sur un retour", () => {
   });
   it("e-mails client : texte selon l'état et décision du créateur", () => {
     const b = (kind: never, extra = {}) => buildReturnEmail({ kind, locale: "fr", subNumber: "S1", amountCents: 5500, items: [], ...extra }).lines.join(" ");
-    expect(b("received" as never)).toContain("remboursement");
+    expect(b("received" as never)).toContain("contrôle");
     expect(b("received" as never, { damaged: true })).not.toContain("suit après vérification");
     expect(b("decided_accepted" as never)).toContain("en cours");
     expect(b("decided_refused" as never, { note: "rayures" })).toContain("rayures");

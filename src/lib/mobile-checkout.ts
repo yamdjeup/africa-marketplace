@@ -3,7 +3,7 @@ import { isAddressEditable } from "@/lib/order-edit";
 import { checkAddress, formatStreet, readAddress } from "@/lib/address";
 import { buyerKeyOf, createHold, releaseBuyerHolds, releaseHold, attachSession, StockError, stockReason, type HoldPayload } from "@/lib/checkout-hold";
 import { db } from "@/lib/db";
-import { RETURN_LABELS, returnEligibility, showShippedNotice, type ReturnStatus } from "@/lib/returns";
+import { returnEligibility, returnLabel, showShippedNotice } from "@/lib/returns";
 import { subLabel } from "@/lib/suborders";
 import { absoluteImageUrl } from "@/lib/email-layout";
 import { orderBucket, parcelTimeline } from "@/lib/order-view";
@@ -161,7 +161,7 @@ export async function listOrders(userId: string) {
     parcels: o.subOrders.map((s) => {
       const shop = shops.find((x) => x.id === s.supplierId);
       const ret = returns.find((r) => r.subOrderId === s.id);
-      const retLabel = ret ? RETURN_LABELS[ret.status as ReturnStatus]?.fr ?? ret.status : null;
+      const retLabel = ret ? returnLabel(ret).fr : null;
       return {
         id: s.id,
         number: s.number,
@@ -180,7 +180,9 @@ export async function listOrders(userId: string) {
         refundStatus: s.refundStatus,
         canCancel: ["PENDING", "ACCEPTED", "PREPARING"].includes(s.status),
         returnStatus: retLabel,
-        returnStatusEn: ret ? RETURN_LABELS[ret.status as ReturnStatus]?.en ?? ret.status : null,
+        returnStatusEn: ret ? returnLabel(ret).en : null,
+        canShipReturn: !!ret && ret.status === "ACCEPTED" && !ret.returnShippedAt,
+        returnShipTo: ret && ret.status === "ACCEPTED" && !ret.returnShippedAt && shop ? shop.displayName : null,
         canReturn: !ret && returnEligibility(s, false) === "ok",
         shippedNotice: showShippedNotice(s.status, !!ret),
       };

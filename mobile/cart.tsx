@@ -105,7 +105,7 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
     return (
       <View style={{ flex: 1, backgroundColor: "#faf6ee", padding: 24, justifyContent: "center" }}>
         <Text style={s.h2}>{tr("Merci pour votre commande", "Thank you for your order")}</Text>
-        <Text style={s.mut}>{tr(`Commande ${done}. Vous pouvez la suivre dans Moi › Mes commandes.`, `Order ${done}. You can track it in Me › My orders.`)}</Text>
+        <Text style={s.mut}>{tr(`Commande ${done}. Votre commande est transmise au créateur. Suivez-la dans votre espace personnel, Moi › Mes commandes.`, `Order ${done}. Your order has been sent to the creator. Follow it in your personal space, Me › My orders.`)}</Text>
         {snap && (
           <View style={{ marginTop: 16, gap: 4 }}>
             <Text style={s.bold}>{tr("Votre commande", "Your order")}</Text>

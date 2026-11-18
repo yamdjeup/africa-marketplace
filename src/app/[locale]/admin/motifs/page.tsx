@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import type { Locale } from "@/lib/i18n";
 import { listReasons, type ReasonKind } from "@/lib/refusal-reasons";
 import { tr } from "@/lib/tr";
+import { DraftForm } from "./draft-form";
 import { addReasonAction, deleteReasonsAction, moveReasonAction, saveReasonsAction, toggleReasonsAction } from "../motifs-actions";
 
 export const metadata = { title: "Motifs de refus", robots: { index: false } };
@@ -32,11 +33,11 @@ export default async function AdminReasons({ params, searchParams }: { params: P
       {groups.map((g, gi) => (
         <section key={g.kind} className="space-y-3">
           <h2 className="text-xl font-semibold">{g.title}</h2>
-          <form className="space-y-2">
+          <DraftForm id={g.kind} requireSelection noSelectionMessage={tr(locale, "Sélectionnez au moins une ligne.", "Select at least one row.")} className="space-y-2">
             <div className="flex flex-wrap gap-2">
-              <button className={btn} type="submit" formAction={saveReasonsAction}>{tr(locale, "Enregistrer", "Save")}</button>
-              <button className={btn} type="submit" formAction={toggleReasonsAction}>{tr(locale, "Désactiver / réactiver", "Disable / enable")}</button>
-              <button className={btn} type="submit" formAction={deleteReasonsAction}>{tr(locale, "Supprimer", "Delete")}</button>
+              <button className={btn} type="submit" formAction={saveReasonsAction} data-needs-selection="" data-clears-draft="">{tr(locale, "Enregistrer", "Save")}</button>
+              <button className={btn} type="submit" formAction={toggleReasonsAction} data-needs-selection="">{tr(locale, "Désactiver / réactiver", "Disable / enable")}</button>
+              <button className={btn} type="submit" formAction={deleteReasonsAction} data-needs-selection="">{tr(locale, "Supprimer", "Delete")}</button>
             </div>
             <div className="overflow-x-auto rounded-lg border">
               <table className="w-full text-left">
@@ -65,15 +66,15 @@ export default async function AdminReasons({ params, searchParams }: { params: P
                 </tbody>
               </table>
             </div>
-          </form>
-          <form action={addReasonAction} className="grid gap-2 rounded-lg border border-dashed p-3 sm:grid-cols-2">
+          </DraftForm>
+          <DraftForm id={g.kind+"-add"} action={addReasonAction} className="grid gap-2 rounded-lg border border-dashed p-3 sm:grid-cols-2">
             <input type="hidden" name="kind" value={g.kind} />
             <label className="block text-sm">Code FR<input name="fr" required minLength={3} maxLength={200} className={cell} /></label>
             <label className="block text-sm">Code EN<input name="en" required minLength={3} maxLength={200} className={cell} /></label>
             <label className="block text-sm">Mail FR<input name="mailFr" required minLength={3} maxLength={300} className={cell} /></label>
             <label className="block text-sm">Mail EN<input name="mailEn" required minLength={3} maxLength={300} className={cell} /></label>
-            <div className="sm:col-span-2"><button className={btn} type="submit">{tr(locale, "Ajouter un motif", "Add a reason")}</button></div>
-          </form>
+            <div className="sm:col-span-2"><button className={btn} type="submit" data-clears-draft="">{tr(locale, "Ajouter un motif", "Add a reason")}</button></div>
+          </DraftForm>
         </section>
       ))}
     </>

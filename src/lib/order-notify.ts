@@ -88,7 +88,7 @@ export async function notifySubOrder(event: SubEvent, subOrderId: string) {
     const msgs: Record<string, [string, string]> = {
       ACCEPTED: [fr ? "Votre commande est confirmée" : "Your order is confirmed", fr ? `${shop} a confirmé votre commande et prépare votre pièce avec soin.${hold && sub.capturedCents > 0 ? ` Votre carte est débitée de ${amt}.` : ""} Nous vous avertirons dès son départ.` : `${shop} has confirmed your order and is carefully preparing your piece.${hold && sub.capturedCents > 0 ? ` Your card is charged ${amt}.` : ""} We will let you know as soon as it leaves.`],
       PREPARING: [fr ? "Votre pièce est en préparation" : "Your piece is being prepared", fr ? `${shop} prépare votre commande avec soin. Vous serez averti dès son expédition.` : `${shop} is carefully preparing your order. You will be notified as soon as it ships.`],
-      REFUSED: [fr ? "Votre commande n'a pas pu être confirmée" : "Your order could not be confirmed", fr ? `Nous sommes désolés de vous informer que votre commande ne peut pas être honorée.${why}${noCharge}${invite}` : `We are sorry to inform you that your order cannot be fulfilled.${why}${noCharge}${invite}`],
+      REFUSED: [fr ? "Votre commande n'a pas pu être confirmée" : "Your order could not be confirmed", fr ? `Nous sommes désolés de vous informer que votre commande ne peut pas être honorée.\n\n${why.trim()}\n\n${(noCharge + invite).trim()}` : `We are sorry to inform you that your order cannot be fulfilled.\n\n${why.trim()}\n\n${(noCharge + invite).trim()}`],
       EXPIRED: [fr ? "Votre commande n'a pas pu être confirmée" : "Your order could not be confirmed", fr ? `${shop} n'a pas pu confirmer votre commande dans le délai de ${hours} heures.${noCharge}${invite}` : `${shop} was unable to confirm your order within ${hours} hours.${noCharge}${invite}`],
       CANCELLED: [fr ? "Votre commande est annulée" : "Your order is cancelled", fr ? `Votre commande est annulée. Motif : ${sub.reason || "non précisé"}.${refundFr}` : `Your order is cancelled. Reason: ${sub.reason || "not specified"}.${refundEn}`],
       SHIPPED: [fr ? "Votre pièce est en route" : "Your piece is on its way", fr ? `Bonne nouvelle, votre pièce est en route.${shipInfo.length ? ` Elle est confiée à ${shipInfo.join(", ")}.` : ""}` : `Good news, your piece is on its way.${shipInfo.length ? ` It has been handed to ${shipInfo.join(", ")}.` : ""}`],
@@ -97,6 +97,7 @@ export async function notifySubOrder(event: SubEvent, subOrderId: string) {
     };
     const m = msgs[event];
     if (!m || !o.email) return;
+    const blocks = m[1].split("\n\n").map((x) => x.trim()).filter(Boolean);
     const n = sub.number;
     const subjects: Partial<Record<SubEvent, string>> = fr
       ? { ACCEPTED: `Votre commande ${n} est confirmée`, PREPARING: `Votre commande ${n} est en préparation`, SHIPPED: `Votre commande ${n} est en route`, DELIVERED: `Votre commande ${n} est arrivée` }
@@ -118,14 +119,14 @@ export async function notifySubOrder(event: SubEvent, subOrderId: string) {
       title: m[0],
       orderNumber: sub.number,
       accountUrl: o.userId ? link : undefined,
-      paragraphs: [hello, ...(parcelNote ? [`**${parcelNote}**`] : []), m[1]],
+      paragraphs: [hello, ...(parcelNote ? [`**${parcelNote}**`] : []), ...blocks],
       cta: event === "DELIVERED" || event === "CLOSED" ? { label: fr ? "Voir ma commande" : "View my order", url: link } : { label: fr ? "Suivre ma commande" : "Track my order", url: link },
       trackLink: trackUrl && (event === "SHIPPED" || event === "DELIVERED") ? { label: fr ? "Suivre mon colis" : "Track my parcel", url: trackUrl } : undefined,
       summary: { items: items.map((i) => ({ name: i.name, detail: `× ${i.quantity}${i.size ? ` · ${i.size}` : ""}`, priceLabel: eur(i.unitPriceCents * i.quantity, fr), image: imgOf.get(i.productSlug), url: `${siteUrl()}/${loc}/produits/${i.productSlug}` })), rows: [{ label: fr ? "Sous-total" : "Subtotal", value: eur(sub.subtotalCents, fr), bold: true }] },
       notice: sold,
       address: event === "SHIPPED" || event === "DELIVERED" ? { title: fr ? "Adresse de livraison" : "Delivery address", lines: [o.fullName, o.address, `${o.postalCode} ${o.city}`.trim(), o.country, ...(o.phone ? [`${fr ? "Téléphone" : "Phone"} : ${o.phone}`] : [])] } : undefined,
     });
-    await safeSend(o.email, subject, [hello, ...(parcelNote ? [parcelNote] : []), m[1], list, sold, link, ...(trackUrl && (event === "SHIPPED" || event === "DELIVERED") ? [`${fr ? "Suivre mon colis" : "Track my parcel"} : ${trackUrl}`] : [])], html);
+    await safeSend(o.email, subject, [hello, ...(parcelNote ? [parcelNote] : []), ...blocks, list, sold, link, ...(trackUrl && (event === "SHIPPED" || event === "DELIVERED") ? [`${fr ? "Suivre mon colis" : "Track my parcel"} : ${trackUrl}`] : [])], html);
   } catch (e) {
     console.warn("[order-notify]", (e as Error).message);
   }

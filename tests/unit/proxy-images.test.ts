@@ -9,6 +9,10 @@ describe("mur d'accès : images des e-mails", () => {
     expect(re.test("/images/artworks/taylor-3.jpg")).toBe(true);
     expect(re.test("/images/examples/marjon-lunettes-cristaux.webp")).toBe(true);
   });
+  it("laisse le webhook 17TRACK atteindre la route (signature v?rifi?e par la route)", () => {
+    expect(re.test("/api/webhooks/17track")).toBe(true);
+    expect(re.test("/api/webhooks/autre")).toBe(false);
+  });
   it("ne rouvre pas le reste du site", () => {
     for (const p of ["/fr", "/fr/catalogue", "/images/other/x.jpg", "/images/artworks/../x.jpg", "/api/orders"]) expect(re.test(p)).toBe(false);
   });

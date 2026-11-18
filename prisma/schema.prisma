@@ -346,6 +346,18 @@ model Order {
 }
 
 /// Sous-commande par partenaire (le vendeur est la boutique). status : PENDING | ACCEPTED | PREPARING | SHIPPED | DELIVERED | REFUSED | EXPIRED | CANCELLED.
+/// Motifs de refus à liste fixe, éditables par l'administration (jamais supprimés, seulement désactivés)
+model RefusalReason {
+  id       String  @id @default(cuid())
+  kind     String // ORDER (refus de commande) | RETURN (refus de retour)
+  fr       String
+  en       String
+  position Int     @default(0)
+  active   Boolean @default(true)
+
+  @@index([kind, active, position])
+}
+
 model SubOrder {
   id             String    @id @default(cuid())
   orderId        String
@@ -362,6 +374,7 @@ model SubOrder {
   prepReminderSentAt DateTime?
   decidedAt      DateTime?
   reason         String    @default("")
+  reasonId       String?
   carrier        String    @default("")
   trackingNumber String    @default("")
   /// Remboursement à l'annulation : "" (aucun) | REQUESTED | DONE | FAILED | MANUAL (à traiter par l'admin)
@@ -393,6 +406,7 @@ model ReturnRequest {
   /// Décision du créateur après contrôle : ACCEPTED (remboursement à faire par l'administration) ou REFUSED (motif obligatoire, litige arbitrable)
   partnerDecision String?
   partnerDecisionNote String?
+  partnerReasonId String?
   partnerDecidedAt DateTime?
   status      String    @default("REQUESTED")
   adminNote   String    @default("")

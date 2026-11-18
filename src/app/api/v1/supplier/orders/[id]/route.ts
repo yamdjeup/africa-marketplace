@@ -7,6 +7,7 @@ import { supplierFromRequest } from "@/lib/mobile-supplier";
 import { subLabel } from "@/lib/suborders";
 import { cleanTrackingNumber } from "@/lib/tracking";
 import { sendReturnMail } from "@/lib/return-email";
+import { findActiveReason } from "@/lib/refusal-reasons";
 import { RETURN_LABELS, markReturnReceivedByPartner, partnerDecideReturn, partnerCheckDeadline, type ReturnStatus } from "@/lib/returns";
 
 export const dynamic = "force-dynamic";
@@ -54,9 +55,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       break;
     }
     case "refuse": {
-      const reason = str(b.reason, 500);
-      if (reason.length < 3) return NextResponse.json({ error: "reason" }, { status: 400 });
-      if (!(await refuseSub(db, id, sup.id, reason, actor))) return state();
+      const rr = await findActiveReason(db, "ORDER", b.reasonId);
+      if (!rr) return NextResponse.json({ error: "reason" }, { status: 400 });
+      const note = str(b.note, 500);
+      if (!(await refuseSub(db, id, sup.id, note ? `${rr.fr} — ${note}` : rr.fr, actor, rr.id))) return state();
       await settleSubRefund(id);
       await notifySubOrder("REFUSED", id);
       break;
@@ -93,10 +95,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       break;
     }
     case "return_decide": {
-      const r = await partnerDecideReturn(db, id, sup.id, b.decision === "REFUSED" ? "REFUSED" : "ACCEPTED", str(b.note, 500));
+      const refused = b.decision === "REFUSED";
+      const rr = refused ? await findActiveReason(db, "RETURN", b.reasonId) : null;
+      const r = await partnerDecideReturn(db, id, sup.id, refused ? "REFUSED" : "ACCEPTED", str(b.note, 500), new Date(), rr?.id ?? null);
       if (r === "note") return NextResponse.json({ error: "reason" }, { status: 400 });
       if (r !== "ok") return state();
-      await sendReturnMail(id, b.decision === "REFUSED" ? "decided_refused" : "decided_accepted", str(b.note, 500));
+      await sendReturnMail(id, b.decision === "REFUSED" ? "decided_refused" : "decided_accepted");
       break;
     }
     default:

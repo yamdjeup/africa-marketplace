@@ -12,7 +12,7 @@ function fakeDb(found: boolean, count = 1) {
 describe("décision du créateur sur un retour", () => {
   it("exige un motif pour refuser, sans rien écrire", async () => {
     const { db, updateMany, findFirst } = fakeDb(true);
-    expect(await partnerDecideReturn(db, "s1", "sup", "REFUSED", " a ")).toBe("note");
+    expect(await partnerDecideReturn(db, "s1", "sup", "REFUSED", "")).toBe("note");
     expect(updateMany).not.toHaveBeenCalled();
     expect(findFirst).not.toHaveBeenCalled();
   });
@@ -24,7 +24,7 @@ describe("décision du créateur sur un retour", () => {
   it("enregistre la décision ; course perdue = état", async () => {
     const ok = fakeDb(true);
     const now = new Date("2026-11-20T10:00:00Z");
-    expect(await partnerDecideReturn(ok.db, "s1", "sup", "REFUSED", "rayures", now)).toBe("ok");
+    expect(await partnerDecideReturn(ok.db, "s1", "sup", "REFUSED", "rayures", now, "rsn_return_worn")).toBe("ok");
     expect(ok.updateMany.mock.calls[0][0].data).toMatchObject({ partnerDecision: "REFUSED", partnerDecisionNote: "rayures", partnerDecidedAt: now });
     expect(await partnerDecideReturn(fakeDb(true, 0).db, "s1", "sup", "ACCEPTED", "")).toBe("state");
   });

@@ -58,9 +58,9 @@ async function loadItems(db: Db, subOrderId: string) {
 const guard = (id: string, supplierId: string | null, from: SubStatus[]) => ({ id, status: { in: from }, ...(supplierId ? { supplierId } : {}) });
 
 /** Annule une sous-commande et libère le stock réservé (refus, expiration, annulation). */
-async function closeAndRelease(db: PrismaClient, id: string, supplierId: string | null, from: SubStatus[], to: "REFUSED" | "EXPIRED" | "CANCELLED", reason: string, actor: Actor) {
+async function closeAndRelease(db: PrismaClient, id: string, supplierId: string | null, from: SubStatus[], to: "REFUSED" | "EXPIRED" | "CANCELLED", reason: string, actor: Actor, reasonId: string | null = null) {
   const res = await db.$transaction(async (tx) => {
-    const n = await tx.subOrder.updateMany({ where: guard(id, supplierId, from), data: { status: to, reason, decidedAt: new Date() } });
+    const n = await tx.subOrder.updateMany({ where: guard(id, supplierId, from), data: { status: to, reason, reasonId, decidedAt: new Date() } });
     if (n.count !== 1) return null;
     const sub = await tx.subOrder.findUniqueOrThrow({ where: { id } });
     for (const it of await loadItems(tx, id)) await releaseStock(tx, { slug: it.productSlug, label: it.size }, it.quantity, reason || to, actor, sub.number);
@@ -75,7 +75,7 @@ export async function acceptSub(db: PrismaClient, id: string, supplierId: string
   return n.count === 1 ? db.subOrder.findUnique({ where: { id } }) : null;
 }
 
-export const refuseSub = (db: PrismaClient, id: string, supplierId: string | null, reason: string, actor: Actor) => closeAndRelease(db, id, supplierId, ["PENDING"], "REFUSED", reason, actor);
+export const refuseSub = (db: PrismaClient, id: string, supplierId: string | null, reason: string, actor: Actor, reasonId: string | null = null) => closeAndRelease(db, id, supplierId, ["PENDING"], "REFUSED", reason, actor, reasonId);
 export const cancelSub = (db: PrismaClient, id: string, reason: string, actor: Actor) => closeAndRelease(db, id, null, ["PENDING", "ACCEPTED", "PREPARING"], "CANCELLED", reason, actor);
 
 export async function prepareSub(db: PrismaClient, id: string, supplierId: string | null) {

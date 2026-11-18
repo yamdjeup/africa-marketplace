@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { absoluteImageUrl, renderEmailHtml } from "@/lib/email-layout";
 import { siteUrl } from "@/lib/alerts-core";
 import { safeSend } from "@/lib/supplier-email";
+import { reasonLabel } from "@/lib/refusal-reasons";
 import { partnerRecipient } from "@/lib/partner-recipient";
 
 export type ReturnMailKind = "requested" | "accepted" | "received" | "refused" | "refunded";
@@ -107,6 +108,8 @@ export async function sendReturnMail(subOrderId: string, kind: CustomerReturnMai
     const items = await db.orderItem.findMany({ where: { subOrderId } });
     const prods = await db.product.findMany({ where: { slug: { in: items.map((i) => i.productSlug) } }, select: { slug: true, images: true } });
     const img = new Map(prods.map((p) => [p.slug, absoluteImageUrl(p.images)]));
+    const retRow = kind === "decided_refused" ? await db.returnRequest.findFirst({ where: { subOrderId }, select: { partnerReasonId: true } }) : null;
+    if (kind === "decided_refused") note = (await reasonLabel(db, retRow?.partnerReasonId, sub.order.locale === "en" ? "en" : "fr")) ?? undefined;
     const damaged = kind === "received" ? (await db.returnRequest.findFirst({ where: { subOrderId }, select: { condition: true } }).catch(() => null))?.condition === "DAMAGED" : false;
     const mail = buildReturnEmail({ kind, damaged, locale: sub.order.locale === "en" ? "en" : "fr", subNumber: sub.number, orderNumber: sub.order.number, note, amountCents: sub.subtotalCents, shipTo: (await db.supplier.findUnique({ where: { id: sub.supplierId }, select: { displayName: true, address: true } }).then((s) => (s?.address ? `${s.displayName}, ${s.address}` : undefined), () => undefined)), items: items.map((i) => ({ name: i.name, quantity: i.quantity, size: i.size, unitPriceCents: i.unitPriceCents, image: img.get(i.productSlug) })) });
     await safeSend(to ?? sub.order.email, mail.subject, mail.lines, mail.html);

@@ -173,6 +173,20 @@ Redirect URI Google (et Facebook/Apple) ; endpoint webhook Stripe `https://epomt
 ## 8. Sécurité
 
 Statut : `[x]` fait, `[ ]` à faire. Seuls les points confirmés par le propriétaire sont cochés.
+
+### 3 ter. Séquence OTA (app Android, canal preview, runtime 1.0.0)
+
+`mobile/app.json` est commité avec : slug `afrique-marketplace`, owner `epomta-app`, `extra.eas.projectId` `6b0ae666-4795-4bfc-b96f-060673117e1f`, `updates.url` correspondante, package `com.epomta.app`. **Ne jamais** faire `git checkout -- mobile/app.json` ni changer le slug : `node scripts/check-mobile-config.mjs` échoue si l'un de ces champs change.
+
+Dans cmd, depuis la racine du dépôt (une commande par ligne ; seul `EXPO_TOKEN` est un secret, à ne jamais commiter) :
+
+1. `set EXPO_TOKEN=<votre jeton>`
+2. `set EXPO_PUBLIC_API_URL=https://simu.epomta.com`
+3. `set EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID=<valeur de mobile/eas.json>` et `set EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=<valeur de mobile/eas.json>` (identifiants publics)
+4. `set EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY=<pk_test de mobile/eas.json>`
+5. `node scripts/check-mobile-config.mjs` (doit afficher « Config mobile OK »)
+6. `cd mobile`
+7. `npx eas-cli update --channel preview --platform android --message "<message>"`
 
 ### Comptes
 - [ ] Resend : passer de Free à Pro (20 $/mois) avant l'ouverture

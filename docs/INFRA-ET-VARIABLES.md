@@ -125,7 +125,7 @@ Pas de variable. Offre Standard ; epomta.com expire le 10/11/2027 (renouvellemen
 
 - Compte 17TRACK créé le 18/11/2026 (essai gratuit, sans société) : e-mail `contact@epomta.com`, nom Epomta, site epomta.com, volume déclaré ≤ 10 000 colis/mois, exigence « API de suivi en temps réel », transporteurs réglementés « Aucun besoin ». Mot de passe et clé : jamais dans ce fichier ni dans le dépôt.
 - Variable à créer dans Vercel (simu, preprod, prod) : `TRACK17_API_KEY` (clé API 17TRACK). Absente : mode manuel dégradé (le créateur marque livré / retour reçu). Quota gratuit visible au tableau de bord : 200 suivis de colis et 10 suivis fret aérien (AirWayBill). Clé API pas encore récupérée ; webhook pas encore configuré (à faire après déploiement, avec l'URL de l'endpoint).
-- `PAYMENT_CAPTURE_ON_CONFIRM` = `1` : autorisation Stripe à la commande, encaissement à la confirmation du créateur (24 h) ; absente ou autre valeur : ancien flux (48 h).
+- `PAYMENT_CAPTURE_ON_CONFIRM` = `1` : autorisation Stripe à la commande, encaissement à la confirmation du créateur (24 h) ; absente ou autre valeur : ancien flux (48 h). Fen?tre d'autorisation carte Stripe : environ 7 jours par d?faut (couvre les 24 h). Le cron Vercel est quotidien : pour la pr?cision des relances/expiration, appeler `/api/orders/sweep` toutes les heures via un cron externe (en-t?te `Authorization: Bearer CRON_SECRET`).
 
 ## 4. Secrets à régénérer
 

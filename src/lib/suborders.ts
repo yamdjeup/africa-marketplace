@@ -1,6 +1,8 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
 import { recordDelivery } from "./ledger";
 import { RETURN_DAYS } from "./returns";
+import { captureOnConfirm, creatorWindowHours } from "./payment-mode";
+import { CREATOR_REMINDER_HOURS } from "./payment-capture";
 import { confirmSale, releaseStock, type Actor, type Db } from "./stock";
 
 // Sous-commandes par partenaire : le vendeur est la boutique (partenaire), E póm ta' est l'intermédiaire.
@@ -41,7 +43,7 @@ export async function createSubOrders(db: Db, order: { id: string; number: strin
         supplierId,
         number: `${order.number}-${i++}`,
         subtotalCents: ls.reduce((n, l) => n + l.quantity * l.unitPriceCents, 0),
-        acceptBy: new Date(now.getTime() + ACCEPT_HOURS * HOUR),
+        acceptBy: new Date(now.getTime() + creatorWindowHours() * HOUR),
       },
     });
     await db.orderItem.updateMany({ where: { orderId: order.id, productSlug: { in: ls.map((l) => l.slug) } }, data: { subOrderId: sub.id } });
@@ -129,10 +131,19 @@ export async function sweepSubOrders(db: PrismaClient, now = new Date()) {
   const pending = await db.subOrder.findMany({ where: { status: "PENDING" } });
   const out = { reminded: [] as typeof pending, escalated: [] as typeof pending, expired: [] as typeof pending };
   for (const s of pending) {
-    const age = now.getTime() - (s.acceptBy.getTime() - ACCEPT_HOURS * HOUR);
-    if (age >= ACCEPT_HOURS * HOUR) {
-      const closed = await closeAndRelease(db, s.id, null, ["PENDING"], "EXPIRED", "Sans réponse du partenaire sous 48 h", { label: "système" });
+    const windowH = captureOnConfirm() ? 24 : ACCEPT_HOURS;
+    const age = now.getTime() - (s.acceptBy.getTime() - windowH * HOUR);
+    if (age >= windowH * HOUR) {
+      const closed = await closeAndRelease(db, s.id, null, ["PENDING"], "EXPIRED", `Sans réponse du partenaire sous ${windowH} h`, { label: "système" });
       if (closed) out.expired.push(closed);
+      continue;
+    }
+    if (captureOnConfirm()) {
+      const due = CREATOR_REMINDER_HOURS.filter((h) => age >= h * HOUR).length;
+      if (due > s.reminderCount) {
+        const n = await db.subOrder.updateMany({ where: { id: s.id, reminderCount: s.reminderCount, status: "PENDING" }, data: { reminderCount: due, reminderSentAt: now } });
+        if (n.count === 1) out.reminded.push(s);
+      }
       continue;
     }
     if (age >= ESCALATE_AFTER_HOURS * HOUR && !s.escalatedAt) {

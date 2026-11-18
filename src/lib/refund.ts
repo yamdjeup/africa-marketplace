@@ -1,5 +1,6 @@
 import "server-only";
 import { db } from "@/lib/db";
+import { settleOrderPayment } from "@/lib/payment-capture";
 
 export type RefundResult = { status: "DONE" | "FAILED" | "MANUAL"; refundId?: string; note?: string };
 
@@ -32,13 +33,20 @@ export async function refundSubOrder(opts: { paymentIntentId: string | null; amo
  * Si le paiement n'est pas encore confirmé, le colis reste « AWAITING » : le webhook relance ce remboursement.
  */
 export async function settleSubRefund(subOrderId: string) {
-  const sub = await db.subOrder.findUnique({ where: { id: subOrderId }, include: { order: { select: { stripePaymentIntentId: true, paymentPending: true } } } });
+  const sub = await db.subOrder.findUnique({ where: { id: subOrderId }, include: { order: { select: { id: true, stripePaymentIntentId: true, paymentPending: true, captureStatus: true } } } });
   if (!sub || !["CANCELLED", "REFUSED", "EXPIRED"].includes(sub.status) || ["DONE"].includes(sub.refundStatus)) return;
   if (sub.order.paymentPending && !sub.order.stripePaymentIntentId) {
     await db.subOrder.update({ where: { id: subOrderId }, data: { refundStatus: "AWAITING", refundNote: "Paiement non confirmé : remboursement à faire dès confirmation." } });
     return;
   }
-  const r = await refundSubOrder({ paymentIntentId: sub.order.stripePaymentIntentId, amountCents: sub.subtotalCents, subOrderId });
+  const cs = sub.order.captureStatus;
+  if (cs && (cs !== "CAPTURED" || sub.capturedCents === 0)) {
+    // Autorisation seule : rien n'a été débité, il n'y a rien à rembourser.
+    await db.subOrder.update({ where: { id: subOrderId }, data: { refundStatus: "DONE", refundNote: "Aucun débit : autorisation non encaissée" } });
+    if (cs === "AUTHORIZED") await settleOrderPayment(db, sub.order.id);
+    return;
+  }
+  const r = await refundSubOrder({ paymentIntentId: sub.order.stripePaymentIntentId, amountCents: cs === "CAPTURED" ? sub.capturedCents : sub.subtotalCents, subOrderId });
   await db.subOrder.update({ where: { id: subOrderId }, data: { refundStatus: r.status, refundId: r.refundId ?? null, refundNote: r.note ?? null } });
 }
 

@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { notifySubOrder } from "@/lib/order-notify";
+import { confirmSubOrder } from "@/lib/confirm-sub";
 import { settleSubRefund } from "@/lib/refund";
 import { acceptSub, deliverSub, prepareSub, refuseSub, shipSub } from "@/lib/suborders";
 import { findActiveReason } from "@/lib/refusal-reasons";
@@ -56,9 +57,7 @@ export async function returnDecideAction(f: FormData) {
 
 export async function acceptOrderAction(f: FormData) {
   const { id, supplierId, back } = await ctxOf(f);
-  const sub = await acceptSub(db, id, supplierId);
-  if (!sub) redirect(back("?error=state"));
-  await notifySubOrder("ACCEPTED", id);
+  if (!(await confirmSubOrder(db, id, supplierId))) redirect(back("?error=state"));
   done(back("?ok=accepted"));
 }
 

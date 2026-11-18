@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { notifySubOrder } from "@/lib/order-notify";
+import { confirmSubOrder } from "@/lib/confirm-sub";
 import { settleSubRefund } from "@/lib/refund";
 import { acceptSub, deliverSub, prepareSub, refuseSub, shipSub } from "@/lib/suborders";
 import { supplierFromRequest } from "@/lib/mobile-supplier";
@@ -50,8 +51,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const state = () => NextResponse.json({ error: "state" }, { status: 409 });
   switch (b.action) {
     case "accept": {
-      if (!(await acceptSub(db, id, sup.id))) return state();
-      await notifySubOrder("ACCEPTED", id);
+      if (!(await confirmSubOrder(db, id, sup.id))) return state();
       break;
     }
     case "refuse": {

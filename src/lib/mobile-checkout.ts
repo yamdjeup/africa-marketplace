@@ -10,6 +10,7 @@ import { orderBucket, parcelTimeline } from "@/lib/order-view";
 import { carrierLabel, cleanTrackingNumber, trackingUrl } from "@/lib/tracking";
 import { saveAddress } from "@/lib/mobile-account";
 import { confirmPaidOrder, stripeEnabled } from "@/lib/stripe-checkout";
+import { captureOnConfirm } from "@/lib/payment-mode";
 
 type MobileUser = { id: string; email: string };
 export type CartInput = { slug: string; size: string | null; quantity: number }[];
@@ -100,6 +101,7 @@ export async function createMobilePayment(userIn: MobileUser | null, input: PayI
   }
 
   const params = new URLSearchParams({ amount: String(totalCents), currency: "eur", "automatic_payment_methods[enabled]": "true", receipt_email: email, "metadata[orderNumber]": number, "metadata[source]": "mobile" });
+  if (captureOnConfirm()) params.set("capture_method", "manual");
   const res = await stripeFetch("payment_intents", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded", "Idempotency-Key": `mobile-pi-${number}` }, body: params }).catch(() => null);
   const pi = res && res.ok ? ((await res.json().catch(() => null)) as { id?: string; client_secret?: string } | null) : null;
   if (!pi?.id || !pi.client_secret) {
@@ -124,7 +126,7 @@ export async function confirmMobilePayment(user: MobileUser | null, number: stri
   const res = await stripeFetch(`payment_intents/${encodeURIComponent(hold.stripeSessionId)}`, { method: "GET" }).catch(() => null);
   const pi = res && res.ok ? ((await res.json().catch(() => null)) as { id?: string; status?: string; amount_received?: number; metadata?: { orderNumber?: string } } | null) : null;
   if (!pi || pi.metadata?.orderNumber !== number) return { status: "unknown" };
-  if (pi.status === "succeeded") {
+  if (pi.status === "succeeded" || (captureOnConfirm() && pi.status === "requires_capture")) {
     await confirmPaidOrder(number, pi.id ?? null, pi.amount_received);
     const made = await db.order.findUnique({ where: { number }, select: { id: true } });
     return { status: made ? "paid" : "failed" };

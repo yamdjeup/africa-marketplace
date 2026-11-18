@@ -5,6 +5,7 @@ import { sendOrderEmail, sendStockRefundEmail } from "@/lib/order-email";
 import { consumeHold } from "@/lib/checkout-hold";
 import { refundPayment, settleSubRefund } from "@/lib/refund";
 import { notifySubOrder, runSubOrderSweep } from "@/lib/order-notify";
+import { captureOnConfirm } from "@/lib/payment-mode";
 
 export const stripeEnabled = () => Boolean(process.env.STRIPE_SECRET_KEY);
 
@@ -26,6 +27,7 @@ export async function createCheckoutSession(order: { number: string; email: stri
   params.set("expires_at", String(Math.floor(Date.now() / 1000) + Math.max(30, holdMinutes) * 60 + 30));
   params.set("metadata[orderNumber]", order.number);
   params.set("payment_intent_data[metadata][orderNumber]", order.number);
+  if (captureOnConfirm()) params.set("payment_intent_data[capture_method]", "manual");
   items.forEach((it, i) => {
     params.set(`line_items[${i}][quantity]`, String(it.quantity));
     params.set(`line_items[${i}][price_data][currency]`, "eur");
@@ -75,11 +77,16 @@ export async function confirmPaidOrder(number: string, paymentIntentId: string |
   if (r.status === "unknown") return confirmLegacyOrder(number, paymentIntentId);
   if (r.status === "already") return false;
   if (r.status === "nostock") {
+    if (captureOnConfirm() && paymentIntentId && process.env.STRIPE_SECRET_KEY) {
+      await fetch(`https://api.stripe.com/v1/payment_intents/${encodeURIComponent(paymentIntentId)}/cancel`, { method: "POST", headers: { Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`, "Idempotency-Key": `cancel-nostock-${number}` } }).catch(() => undefined);
+      return false;
+    }
     const total = amountCents ?? r.payload.totalCents;
     await refundPayment({ paymentIntentId, amountCents: total, number });
     await sendStockRefundEmail({ to: r.payload.email, locale: r.payload.locale === "en" ? "en" : "fr", fullName: r.payload.fullName, item: r.item, amountCents: total, number });
     return false;
   }
+  if (captureOnConfirm()) await db.order.updateMany({ where: { number, captureStatus: null }, data: { captureStatus: "AUTHORIZED" } });
   return announceOrder(number);
 }
 

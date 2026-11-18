@@ -39,17 +39,18 @@ const ERRS: Record<string, [string, string]> = {
 
 function Select({ value, options, onChange, label }: { value: string; options: { v: string; fr: string; en: string }[]; onChange: (v: string) => void; label: string }) {
   const [open, setOpen] = useState(false);
-  const cur = options.find((o) => o.v === value) ?? options[0];
+  const list = Array.isArray(options) ? options.filter((o) => o && typeof o.v === "string") : [];
+  const cur = list.find((o) => o.v === value) ?? list[0];
   return (
     <View>
       <Text style={st.mut}>{label}</Text>
       <Pressable onPress={() => setOpen(!open)} accessibilityRole="button" style={[st.input, { flexDirection: "row", alignItems: "center", justifyContent: "space-between" }]}>
-        <Text style={{ color: "#221812", flexShrink: 1 }}>{tr(cur.fr, cur.en)}</Text><Text style={{ color: "#221812" }}>{open ? "▲" : "▼"}</Text>
+        <Text style={{ color: "#221812", flexShrink: 1 }}>{cur ? tr(cur.fr ?? cur.en ?? "", cur.en ?? cur.fr ?? "") : "…"}</Text><Text style={{ color: "#221812" }}>{open ? "▲" : "▼"}</Text>
       </Pressable>
-      {open ? <View style={{ borderWidth: 1, borderColor: "#ded6c9", backgroundColor: "#fff" }}>
-        {options.map((o) => (
+      {open && list.length ? <View style={{ borderWidth: 1, borderColor: "#ded6c9", backgroundColor: "#fff" }}>
+        {list.map((o) => (
           <Pressable key={o.v} onPress={() => { onChange(o.v); setOpen(false); }} style={{ minHeight: 48, justifyContent: "center", paddingHorizontal: 12, backgroundColor: o.v === value ? "#faf6ee" : "#fff" }}>
-            <Text style={{ color: "#221812", fontWeight: o.v === value ? "700" : "400" }}>{tr(o.fr, o.en)}</Text>
+            <Text style={{ color: "#221812", fontWeight: o.v === value ? "700" : "400" }}>{tr(o.fr ?? o.en ?? "", o.en ?? o.fr ?? "")}</Text>
           </Pressable>
         ))}
       </View> : null}
@@ -80,7 +81,7 @@ function OrderDetail({ token, id, onBack }: { token: string; id: string; onBack:
   useEffect(() => { load(); }, [id]);
   useEffect(() => {
     const get = (kind: string, set: (v: { v: string; fr: string; en: string }[]) => void) =>
-      authed<{ reasons: { id: string; fr: string; en: string }[] }>(token, "GET", `/api/v1/supplier/reasons?kind=${kind}`).then((r) => r.ok && set(r.data.reasons.map((x) => ({ v: x.id, fr: x.fr, en: x.en }))));
+      authed<{ reasons: { id: string; fr: string; en: string }[] }>(token, "GET", `/api/v1/supplier/reasons?kind=${kind}`).then((r) => r.ok && set((Array.isArray(r.data?.reasons) ? r.data.reasons : []).map((x) => ({ v: x.id, fr: x.fr ?? x.en ?? "", en: x.en ?? x.fr ?? "" }))));
     get("ORDER", setOrderReasons); get("RETURN", setReturnReasons);
   }, [token]);
   const act = async (body: Record<string, string>) => {

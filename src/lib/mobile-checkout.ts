@@ -10,7 +10,7 @@ import { orderBucket, parcelTimeline } from "@/lib/order-view";
 import { carrierLabel, cleanTrackingNumber, trackingUrl } from "@/lib/tracking";
 import { saveAddress } from "@/lib/mobile-account";
 import { confirmPaidOrder, stripeEnabled } from "@/lib/stripe-checkout";
-import { captureOnConfirm } from "@/lib/payment-mode";
+import { captureOnConfirm, creatorWindowHours } from "@/lib/payment-mode";
 
 type MobileUser = { id: string; email: string };
 export type CartInput = { slug: string; size: string | null; quantity: number }[];
@@ -169,6 +169,7 @@ export async function listOrders(userId: string) {
         number: s.number,
         status: s.status,
         statusLabel: subLabel(s.status).fr,
+        confirmHours: creatorWindowHours(),
         shop: shop ? { name: shop.displayName, country: shop.country } : null,
         items: o.items.filter((i) => i.subOrderId === s.id).map((i) => ({ slug: i.productSlug, name: i.name, size: i.size, quantity: i.quantity, unitPriceCents: i.unitPriceCents, image: img.get(i.productSlug) ?? null })),
         timeline: parcelTimeline(s, ret ?? null),

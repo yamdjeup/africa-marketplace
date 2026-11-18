@@ -2,6 +2,7 @@ import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { Stat } from "@/components/fournisseur/parts";
 import { db } from "@/lib/db";
+import { creatorWindowHours } from "@/lib/payment-mode";
 import { runSubOrderSweep } from "@/lib/order-notify";
 import { getPortalContext } from "@/lib/supplier";
 import { tr } from "@/lib/tr";
@@ -22,7 +23,7 @@ export default async function Dashboard({ params }: { params: Promise<{ locale: 
     <>
       <h1 className="font-heading text-3xl text-primary">{tr(locale, `Bonjour, ${supplier.displayName}`, `Hello, ${supplier.displayName}`)}</h1>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
-        <Stat label={tr(locale, "Commandes à accepter", "Orders to accept")} value={String(n("PENDING"))} hint={tr(locale, "Réponse sous 48 h", "Reply within 48 h")} />
+        <Stat label={tr(locale, "Commandes à accepter", "Orders to accept")} value={String(n("PENDING"))} hint={tr(locale, `Réponse sous ${creatorWindowHours()} h`, `Reply within ${creatorWindowHours()} h`)} />
         <Stat label={tr(locale, "À préparer / expédier", "To prepare / ship")} value={String(n("ACCEPTED") + n("PREPARING"))} />
         <Stat label={tr(locale, "En livraison", "In transit")} value={String(n("SHIPPED"))} />        <Stat label={tr(locale, "Pays", "Country")} value={supplier.country} />
         <Stat label={tr(locale, "Spécialité", "Craft")} value={supplier.craftType} />

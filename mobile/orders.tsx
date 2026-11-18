@@ -17,7 +17,7 @@ type Order = {
   parcels: Parcel[];
 };
 type Parcel = {
-  id: string; number: string; status: string; statusLabel: string; shop: { name: string; country: string } | null;
+  id: string; number: string; status: string; statusLabel: string; confirmHours?: number; shop: { name: string; country: string } | null;
   items: { name: string; size: string | null; quantity: number; unitPriceCents: number; image: string | null }[];
   timeline: { key: string; label: { fr: string; en: string }; at: string | null; reached: boolean }[];
   carrier: string; trackingNumber: string; trackingUrl: string | null; shippedAt: string | null; deliveredAt: string | null;
@@ -83,7 +83,7 @@ function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: numbe
           <View style={{ flex: 1 }}><Text style={s.bold}>{it.name}</Text>{it.size ? <Text style={s.mut}>{tr("Taille", "Size")} {it.size}</Text> : null}<Text style={s.mut}>{tr("Qté", "Qty")} {it.quantity}</Text><Text style={s.bold}>{eur(it.unitPriceCents * it.quantity)}</Text></View>
         </View>
       ))}
-      {p.status === "PENDING" && <Text style={s.mut}>{tr("En attente de la réponse de la boutique (48 h maximum).", "Waiting for the shop's reply (48 h maximum).")}</Text>}
+      {p.status === "PENDING" && <Text style={s.mut}>{tr(`En attente de la réponse de la boutique (${p.confirmHours ?? 24} h maximum).`, `Waiting for the shop's reply (${p.confirmHours ?? 24} h maximum).`)}</Text>}
       {p.shippedAt && <Text style={s.mut}>{tr("Expédiée le", "Shipped on")} {date(p.shippedAt)}{p.carrier ? ` · ${p.carrier}` : ""}{p.trackingNumber ? ` · ${p.trackingNumber}` : ""}</Text>}
       {p.trackingUrl && <Pressable onPress={() => Linking.openURL(p.trackingUrl!)}><Text style={s.link}>{tr("Suivre mon colis", "Track my parcel")}</Text></Pressable>}
       {p.deliveredAt && <Text style={s.mut}>{tr("Livrée le", "Delivered on")} {date(p.deliveredAt)}</Text>}

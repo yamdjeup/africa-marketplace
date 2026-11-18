@@ -49,7 +49,7 @@ export async function notifySubOrder(event: SubEvent, subOrderId: string) {
     if (event === "PARTNER_CANCELLED" || event === "PARTNER_EXPIRED") {
       const partnerTo = partnerRecipient(supplier, owner?.email);
       if (!partnerTo) return;
-      const e = buildPartnerCancelEmail({ shop, number: sub.number, reason: sub.reason ?? "", kind: event === "PARTNER_EXPIRED" ? "EXPIRED" : "ADMIN", url: `${base}/fr/fournisseur/commandes/${sub.id}`, amount: eur(sub.subtotalCents) });
+      const e = buildPartnerCancelEmail({ shop, number: sub.number, reason: sub.reason ?? "", kind: event === "PARTNER_EXPIRED" ? "EXPIRED" : "ADMIN", url: `${base}/fr/fournisseur/commandes/${sub.id}`, amount: eur(sub.subtotalCents), hours: creatorWindowHours() });
       await safeSend(partnerTo, e.subject, e.lines, e.html);
       return;
     }

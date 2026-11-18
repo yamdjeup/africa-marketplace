@@ -1,3 +1,4 @@
+import { siteUrl } from "@/lib/alerts-core";
 import { sendEmail } from "@/lib/email";
 import { absoluteImageUrl, renderEmailHtml } from "@/lib/email-layout";
 import { db } from "@/lib/db";
@@ -27,6 +28,7 @@ export function buildOrderEmail(o: OrderEmailInput) {
         subject: "Votre commande est transmise",
         hello: `Bonjour ${o.fullName},`,
         intro: `Votre commande a été transmise à ${shops}, qui dispose de ${hours} heures pour ${hold ? "la confirmer" : "l'accepter"}.`,
+        view: "Voir ma commande",
         notice: hold ? `Votre carte ne sera débitée qu'à cette confirmation, que nous vous notifierons par e-mail. Un montant de ${money(o.totalCents)} peut apparaître « en attente » sur votre relevé : il s'agit d'une simple réservation, qui ne devient un paiement qu'à la confirmation.` : "Votre paiement par carte a bien été enregistré.",
         num: "Numéro de commande",
         works: "Créations",
@@ -41,6 +43,7 @@ export function buildOrderEmail(o: OrderEmailInput) {
         subject: "Your order has been sent",
         hello: `Hello ${o.fullName},`,
         intro: `Your order has been sent to ${shops}, who has up to ${hours} hours to ${hold ? "confirm it" : "accept it"}.`,
+        view: "View my order",
         notice: hold ? `Your card will only be charged once the order is confirmed, and we will notify you by email. An amount of ${money(o.totalCents)} may appear as "pending" on your statement: it is a simple reservation, which only becomes a payment on confirmation.` : "Your card payment has been recorded.",
         num: "Order number",
         works: "Creations",
@@ -51,18 +54,19 @@ export function buildOrderEmail(o: OrderEmailInput) {
         edit: "Edit address",
         bye: "Thank you for your trust.",
       };
+  const orderUrl = `${siteUrl()}/${o.locale}/account/orders/${o.number}`;
   const lines = o.items.map((i) => `${i.name}${i.size ? ` (${i.size})` : ""} × ${i.quantity} — ${money(i.unitPriceCents * i.quantity)}`);
   const ship = o.shipping;
   const shipText = ship
     ? ["", `${t.shipTo} :`, ...ship.lines, `${t.phone} : ${ship.phone}`, t.mistake, ...(ship.editUrl ? [`${t.edit} : ${ship.editUrl}`] : [])]
     : [];
-  const text = [t.hello, "", t.intro, t.notice, "", `${t.num} : ${o.number}`, `${t.works} :`, ...lines.map((l) => `- ${l}`), "", `${t.total} : ${money(o.totalCents)}`, ...shipText, "", t.bye].join("\n");
+  const text = [t.hello, "", t.intro, "", `${t.num} : ${o.number}`, `${t.view} : ${orderUrl}`, `${t.works} :`, ...lines.map((l) => `- ${l}`), "", `${t.total} : ${money(o.totalCents)}`, ...shipText, "", t.bye].join("\n");
   const html = renderEmailHtml({
     locale: o.locale,
     title: fr ? "Votre commande est transmise" : "Your order has been sent",
     orderNumber: o.number,
-    paragraphs: [t.hello, t.intro, t.notice],
-    cta: ship?.editUrl ? { label: t.edit, url: ship.editUrl } : undefined,
+    paragraphs: [t.hello, t.intro],
+    cta: { label: t.view, url: orderUrl },
     summary: {
       items: o.items.map((i) => ({ name: i.name, detail: `× ${i.quantity}${i.size ? ` · ${i.size}` : ""}`, priceLabel: money(i.unitPriceCents * i.quantity), image: i.image ? absoluteImageUrl(i.image) : undefined })),
             rows: [{ label: t.total, value: money(o.totalCents), bold: true }],

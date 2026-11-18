@@ -2,6 +2,7 @@ import { Component, useCallback, useEffect, useState, type ReactNode } from "rea
 import { useFonts, PlayfairDisplay_600SemiBold } from "@expo-google-fonts/playfair-display";
 import { Inter_400Regular } from "@expo-google-fonts/inter";
 import { ActivityIndicator, Alert, FlatList, Dimensions, Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StatusBar as RNStatusBar, StyleSheet, Text, View } from "react-native";
+import { KeyboardSafe } from "./keyboard";
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Badges } from "./badges";
 import { StatusBar } from "expo-status-bar";
@@ -317,6 +318,7 @@ function Main() {
   return (
     <StripeProvider publishableKey={process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""} urlScheme="epomta">
     <SafeAreaView style={{ flex: 1, backgroundColor: "#faf6ee" }}>
+      <KeyboardSafe>
       <StatusBar style="dark" />
       <View style={{ flexDirection: "row", height: 4 }}>{["#e9a93a", "#1c3060", "#1e7546", "#bd5833"].map((c) => <View key={c} style={{ flex: 1, backgroundColor: c }} />)}</View>
       <View style={s.header}><Text style={s.logo}>E póm ta’</Text><Pressable onPress={() => setCartOpen(true)} hitSlop={10} style={s.cartBtn} accessibilityLabel={tr("Panier", "Cart")}><Text style={s.cartText}>{tr("Panier", "Cart")}{cartCount ? ` (${cartCount})` : ""}</Text></Pressable></View>
@@ -348,7 +350,7 @@ function Main() {
         ))}
       </View>
       </View>
-      {supportSlug && <Modal animationType="slide" onRequestClose={() => setSupportSlug(null)}><SafeAreaProvider><SafeAreaView style={{ flex: 1, backgroundColor: "#faf6ee" }}><SupportScreen initialSlug={supportSlug} onBack={() => setSupportSlug(null)} /></SafeAreaView></SafeAreaProvider></Modal>}
+      {supportSlug && <Modal animationType="slide" onRequestClose={() => setSupportSlug(null)}><SafeAreaProvider><SafeAreaView style={{ flex: 1, backgroundColor: "#faf6ee" }}><KeyboardSafe><SupportScreen initialSlug={supportSlug} onBack={() => setSupportSlug(null)} /></KeyboardSafe></SafeAreaView></SafeAreaProvider></Modal>}
       {creator && <CreatorScreen slug={creator} onClose={() => setCreator(null)} onOpenSlug={(slug) => { get<Product>(`/api/v1/products/${slug}?locale=fr`).then(setOpen).catch(() => {}); }} />}
       {!open && !cartOpen && !creator && <TilaButton onOpenSlug={(slug) => { get<Product>(`/api/v1/products/${slug}?locale=fr`).then(setOpen).catch(() => {}); }} />}
       {open && <Detail key={open.slug} token={auth.accessToken} onNeedLogin={() => { setOpen(null); setTab("me"); }} p={open} onClose={() => setOpen(null)} fav={favs.includes(open.slug)} onFav={() => toggle(open)} onAdd={(size, qty) => addToCart(open, size, qty)} inCart={(size) => cart.some((l) => l.slug === open.slug && (l.size ?? null) === size)} onOpenCart={() => setCartOpen(true)} onOpenRelated={(q) => setOpen(q)} />}
@@ -359,6 +361,7 @@ function Main() {
           </KeyboardAvoidingView></SafeAreaView></SafeAreaProvider>
         </Modal>
       )}
+      </KeyboardSafe>
     </SafeAreaView>
     </StripeProvider>
   );

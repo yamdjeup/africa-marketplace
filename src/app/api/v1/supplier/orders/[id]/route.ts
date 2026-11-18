@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { notifySubOrder } from "@/lib/order-notify";
+import { confirmSubOrder } from "@/lib/confirm-sub";
 import { settleSubRefund } from "@/lib/refund";
 import { acceptSub, deliverSub, prepareSub, refuseSub, shipSub } from "@/lib/suborders";
 import { supplierFromRequest } from "@/lib/mobile-supplier";
 import { subLabel } from "@/lib/suborders";
 import { cleanTrackingNumber } from "@/lib/tracking";
 import { sendReturnMail } from "@/lib/return-email";
-import { RETURN_LABELS, markReturnReceivedByPartner, partnerDecideReturn, partnerCheckDeadline, type ReturnStatus } from "@/lib/returns";
+import { findActiveReason } from "@/lib/refusal-reasons";
+import { returnLabel, markReturnReceivedByPartner, partnerDecideReturn, partnerCheckDeadline } from "@/lib/returns";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +35,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     carrier: sub.carrier,
     trackingNumber: sub.trackingNumber ? cleanTrackingNumber(sub.trackingNumber) : null,
     reason: sub.reason,
-    return: ret ? { status: ret.status as string, label: RETURN_LABELS[ret.status as ReturnStatus] ?? { fr: ret.status, en: ret.status }, reason: ret.reason, createdAt: ret.createdAt.toISOString(), photoIds: ret.photoIds ? ret.photoIds.split(",") : [], condition: ret.condition, conditionNote: ret.conditionNote, receivedAt: ret.partnerReceivedAt ? ret.partnerReceivedAt.toISOString() : null, decision: ret.partnerDecision, decisionNote: ret.partnerDecisionNote, decideBy: ret.partnerReceivedAt ? partnerCheckDeadline(ret.partnerReceivedAt).toISOString() : null } : null,
+    return: ret ? { status: ret.status as string, label: returnLabel(ret), reason: ret.reason, createdAt: ret.createdAt.toISOString(), photoIds: ret.photoIds ? ret.photoIds.split(",") : [], condition: ret.condition, conditionNote: ret.conditionNote, receivedAt: ret.partnerReceivedAt ? ret.partnerReceivedAt.toISOString() : null, decision: ret.partnerDecision, decisionNote: ret.partnerDecisionNote, decideBy: ret.partnerReceivedAt ? partnerCheckDeadline(ret.partnerReceivedAt).toISOString() : null } : null,
     items: items.map((i) => ({ id: i.id, name: i.name, size: i.size, quantity: i.quantity, unitPriceCents: i.unitPriceCents })),
     shipTo: { fullName: o.fullName, address: o.address, postalCode: o.postalCode, city: o.city, country: o.country, phone: o.phone },
   });
@@ -49,14 +51,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const state = () => NextResponse.json({ error: "state" }, { status: 409 });
   switch (b.action) {
     case "accept": {
-      if (!(await acceptSub(db, id, sup.id))) return state();
-      await notifySubOrder("ACCEPTED", id);
+      if (!(await confirmSubOrder(db, id, sup.id))) return state();
       break;
     }
     case "refuse": {
-      const reason = str(b.reason, 500);
-      if (reason.length < 3) return NextResponse.json({ error: "reason" }, { status: 400 });
-      if (!(await refuseSub(db, id, sup.id, reason, actor))) return state();
+      const rr = await findActiveReason(db, "ORDER", b.reasonId);
+      if (!rr) return NextResponse.json({ error: "reason" }, { status: 400 });
+      const note = str(b.note, 500);
+      if (!(await refuseSub(db, id, sup.id, rr.fr, actor, rr.id, note || null))) return state();
       await settleSubRefund(id);
       await notifySubOrder("REFUSED", id);
       break;
@@ -93,10 +95,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       break;
     }
     case "return_decide": {
-      const r = await partnerDecideReturn(db, id, sup.id, b.decision === "REFUSED" ? "REFUSED" : "ACCEPTED", str(b.note, 500));
+      const refused = b.decision === "REFUSED";
+      const rr = refused ? await findActiveReason(db, "RETURN", b.reasonId) : null;
+      const r = await partnerDecideReturn(db, id, sup.id, refused ? "REFUSED" : "ACCEPTED", str(b.note, 500), new Date(), rr?.id ?? null);
       if (r === "note") return NextResponse.json({ error: "reason" }, { status: 400 });
       if (r !== "ok") return state();
-      await sendReturnMail(id, b.decision === "REFUSED" ? "decided_refused" : "decided_accepted", str(b.note, 500));
+      await sendReturnMail(id, b.decision === "REFUSED" ? "decided_refused" : "decided_accepted");
       break;
     }
     default:

@@ -1,6 +1,6 @@
 import type { PrismaClient } from "@prisma/client";
 import { PARTNER_RETURN_FILTERS, pageArgs, pageCount, parseList, partnerReturnsWhere, type ListParams } from "@/lib/admin-list";
-import { RETURN_LABELS, partnerCheckDeadline, type ReturnStatus } from "@/lib/returns";
+import { returnLabel, partnerCheckDeadline } from "@/lib/returns";
 
 export type PartnerReturnRow = {
   id: string; subOrderId: string; number: string; status: string; label: { fr: string; en: string }; reason: string; createdAt: string;
@@ -21,7 +21,7 @@ export async function partnerReturnList(db: PrismaClient, supplierId: string, sp
   ]);
   const items: PartnerReturnRow[] = rows.map((r) => ({
     id: r.id, subOrderId: r.subOrderId, number: r.subOrder.number, status: r.status,
-    label: RETURN_LABELS[r.status as ReturnStatus] ?? { fr: r.status, en: r.status },
+    label: returnLabel(r),
     reason: r.reason, createdAt: r.createdAt.toISOString(), condition: r.condition, conditionNote: r.conditionNote,
     receivedAt: r.partnerReceivedAt ? r.partnerReceivedAt.toISOString() : null,
     decideBy: r.partnerReceivedAt ? partnerCheckDeadline(r.partnerReceivedAt).toISOString() : null,

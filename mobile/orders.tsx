@@ -21,7 +21,7 @@ type Parcel = {
   items: { name: string; size: string | null; quantity: number; unitPriceCents: number; image: string | null }[];
   timeline: { key: string; label: { fr: string; en: string }; at: string | null; reached: boolean }[];
   carrier: string; trackingNumber: string; trackingUrl: string | null; shippedAt: string | null; deliveredAt: string | null;
-  reason: string | null; subtotalCents: number; refundStatus: string; canCancel: boolean; returnStatus: string | null; returnStatusEn?: string | null; canReturn: boolean; shippedNotice: boolean;
+  reason: string | null; subtotalCents: number; refundStatus: string; canCancel: boolean; returnStatus: string | null; returnStatusEn?: string | null; canReturn: boolean; shippedNotice: boolean; canShipReturn?: boolean; returnShipTo?: string | null;
 };
 
 function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: number; token: string; reload: () => void }) {
@@ -29,6 +29,8 @@ function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: numbe
   const [photos, setPhotos] = useState<string[]>([]);
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
+  const [rCarrier, setRCarrier] = useState("");
+  const [rTracking, setRTracking] = useState("");
   const date = (d: string) => new Date(d).toLocaleDateString(getLang() === "en" ? "en-GB" : "fr-FR");
   const refunded = ["DONE", "AWAITING", "REQUESTED"].includes(p.refundStatus);
   const cancel = () =>
@@ -64,6 +66,12 @@ function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: numbe
     setBusy(false);
     if (r.ok) { setMsg(""); reload(); } else setMsg(r.data?.error === "reason" ? tr("Merci d’indiquer le motif du retour (3 caractères minimum).", "Please give the reason for the return (3 characters minimum).") : tr("Retour impossible pour ce colis.", "A return is not possible for this parcel."));
   };
+  const shipReturn = async () => {
+    setBusy(true); setMsg("");
+    const r = await authed<{ error?: string }>(token, "POST", "/api/v1/orders/return-shipped", { id: p.id, carrier: rCarrier, tracking: rTracking });
+    setBusy(false);
+    if (r.ok) reload(); else setMsg(r.data?.error === "invalid" ? tr("Merci d’indiquer le transporteur et le numéro de suivi.", "Please enter the carrier and the tracking number.") : tr("Action impossible pour ce retour.", "This action is not possible for this return."));
+  };
   return (
     <View style={{ marginTop: 10, gap: 3 }}>
       <Text style={s.bold}>{n > 1 ? tr(`Colis ${i + 1} sur ${n} — `, `Parcel ${i + 1} of ${n} — `) : ""}{p.shop ? tr(`Colis expédié par ${p.shop.name} (${p.shop.country})`, `Parcel shipped by ${p.shop.name} (${p.shop.country})`) : tr("Colis", "Parcel")}</Text>
@@ -87,6 +95,16 @@ function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: numbe
       )}
       {p.canCancel && <Pressable disabled={busy} onPress={cancel}><Text style={s.link}>{tr("Annuler ma commande", "Cancel my order")}</Text></Pressable>}
       {p.returnStatus && <Text style={s.bold}>{RET[p.returnStatus] ?? tr(p.returnStatus, p.returnStatusEn ?? p.returnStatus)}</Text>}
+      {p.canShipReturn && (
+        <View style={{ gap: 6, marginTop: 4 }}>
+          <Text style={s.mut}>{tr("Renvoyez la pièce au créateur, puis confirmez l’expédition.", "Send the piece back to the creator, then confirm the shipment.")}</Text>
+          <Text style={s.bold}>{tr("Transporteur", "Carrier")}</Text>
+          <TextInput value={rCarrier} onChangeText={setRCarrier} maxLength={60} style={s.input} placeholderTextColor="#6b5d52" selectionColor="#1c3060" />
+          <Text style={s.bold}>{tr("Numéro de suivi", "Tracking number")}</Text>
+          <TextInput value={rTracking} onChangeText={setRTracking} maxLength={60} autoCapitalize="characters" style={s.input} placeholderTextColor="#6b5d52" selectionColor="#1c3060" />
+          <Pressable disabled={busy} onPress={shipReturn}><Text style={s.link}>{tr("Confirmer l’expédition du retour", "Confirm return shipment")}</Text></Pressable>
+        </View>
+      )}
       {p.canReturn && (
         <View style={{ gap: 6, marginTop: 4 }}>
           <Text style={s.mut}>{tr("Les frais de livraison ne sont pas remboursés.", "Delivery fees are not refunded.")}</Text>
@@ -104,7 +122,7 @@ function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: numbe
 }
 
 const eur = (c: number) => `${(c / 100).toFixed(2).replace(".", ",")} €`;
-const RET: Record<string, string> = lazy(() => ({ "Colis reçu": tr("Colis reçu", "Parcel received"), "Retour demandé": tr("Retour demandé", "Return requested"), "Retour accepté": tr("Retour accepté", "Return accepted"), "Retour refusé": tr("Retour refusé", "Return refused"), "Remboursé": tr("Remboursé", "Refunded") }));
+const RET: Record<string, string> = lazy(() => ({ "Colis reçu": tr("Colis reçu", "Parcel received"), "Retour demandé": tr("Retour demandé", "Return requested"), "Retour accepté": tr("Retour accepté", "Return accepted"), "Retour expédié": tr("Retour expédié", "Return shipped"), "Retour refusé": tr("Retour refusé", "Return refused"), "Remboursé": tr("Remboursé", "Refunded") }));
 const STATUS: Record<string, string> = lazy(() => ({ PENDING: tr("En attente de confirmation", "Awaiting confirmation"), ACCEPTED: tr("Confirmée", "Confirmed"), SHIPPED: tr("Expédiée", "Shipped"), DELIVERED: tr("Livrée", "Delivered"), CANCELLED: tr("Annulée", "Cancelled"), REFUSED: tr("Annulée", "Cancelled"), EXPIRED: tr("Annulée", "Cancelled") }));
 
 const ADDR_ERR: Record<string, string> = lazy(() => ({ required: tr("Veuillez renseigner les champs obligatoires.", "Please fill in the required fields."), postal: tr("Ce code postal ne semble pas valide pour ce pays.", "This postcode does not seem valid for this country."), locked: tr("L'adresse ne peut plus être modifiée : la commande est déjà en cours d'expédition.", "The address can no longer be changed: the order is already being shipped."), not_found: tr("Commande introuvable.", "Order not found.") }));

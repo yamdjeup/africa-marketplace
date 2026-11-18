@@ -6,7 +6,8 @@ import { db } from "@/lib/db";
 import type { Locale } from "@/lib/i18n";
 import { runSubOrderSweep } from "@/lib/order-notify";
 import { subLabel } from "@/lib/suborders";
-import { RETURN_LABELS, partnerCheckDeadline, type ReturnStatus } from "@/lib/returns";
+import { returnLabel, partnerCheckDeadline } from "@/lib/returns";
+import { listReasons } from "@/lib/refusal-reasons";
 import { getPortalContext } from "@/lib/supplier";
 import { tr } from "@/lib/tr";
 import { parsePhotoIds } from "@/lib/return-photos";
@@ -43,6 +44,7 @@ export default async function PartnerOrder({ params, searchParams }: { params: P
   const items = await db.orderItem.findMany({ where: { subOrderId: sub.id } });
   const st = subLabel(sub.status);
   const ret = await db.returnRequest.findFirst({ where: { subOrderId: sub.id } });
+  const [orderReasons, returnReasons] = await Promise.all([listReasons(db, "ORDER"), listReasons(db, "RETURN")]);
   const o = sub.order;
   const fmt = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "fr-FR", { timeZone: "Europe/Paris", dateStyle: "long", timeStyle: "short" });
   const eur = (c: number) => new Intl.NumberFormat(locale === "en" ? "en-GB" : "fr-FR", { style: "currency", currency: "EUR" }).format(c / 100);
@@ -92,7 +94,13 @@ export default async function PartnerOrder({ params, searchParams }: { params: P
               <form action={acceptOrderAction}>{hidden}<button className={btn} type="submit">{tr(locale, "Accepter la commande", "Accept order")}</button></form>
               <form action={refuseOrderAction} className="space-y-2">
                 {hidden}
-                <label className="block text-sm">{tr(locale, "Motif du refus", "Reason for declining")}<input name="reason" required minLength={3} className={inputCls} /></label>
+                <label className="block text-sm">{tr(locale, "Motif du refus", "Reason for declining")}
+                  <select name="reasonId" required defaultValue="" className={inputCls}>
+                    <option value="" disabled>{tr(locale, "Choisir un motif", "Choose a reason")}</option>
+                    {orderReasons.map((r) => <option key={r.id} value={r.id}>{locale === "en" ? r.en : r.fr}</option>)}
+                  </select>
+                </label>
+                <label className="block text-sm">{tr(locale, "Précision (facultative, visible uniquement par l'administration)", "Details (optional, visible to the administration only)")}<input name="note" maxLength={500} className={inputCls} /></label>
                 <button className="inline-flex min-h-11 items-center rounded-md border border-destructive px-4 text-sm text-destructive" type="submit">{tr(locale, "Refuser", "Decline")}</button>
               </form>
             </div>
@@ -124,7 +132,7 @@ export default async function PartnerOrder({ params, searchParams }: { params: P
           {!ro && <form action={deliverOrderAction}>{hidden}<button className={btn} type="submit">{tr(locale, "Marquer livrée", "Mark as delivered")}</button></form>}
         </section>
       )}
-      {ret && <p className="rounded-md border p-3 text-sm"><strong>{RETURN_LABELS[ret.status as ReturnStatus]?.[locale === "en" ? "en" : "fr"] ?? ret.status}</strong> · {tr(locale, "Motif du client : ", "Customer reason: ")}{ret.reason}<br />{parsePhotoIds(ret.photoIds).length > 0 && <span className="flex flex-wrap gap-2 pt-1">{parsePhotoIds(ret.photoIds).map((pid, i) => <a key={pid} href={`/api/media/${pid}`} target="_blank" rel="noreferrer" className="underline">{tr(locale, "Photo", "Photo")} {i + 1}</a>)}</span>}<span className="text-muted-foreground">{tr(locale, "L'administration rembourse après votre décision et arbitre les litiges.", "The administration refunds after your decision and arbitrates disputes.")}</span></p>}
+      {ret && <p className="rounded-md border p-3 text-sm"><strong>{returnLabel(ret)[locale === "en" ? "en" : "fr"]}</strong> · {tr(locale, "Motif du client : ", "Customer reason: ")}{ret.reason}<br />{parsePhotoIds(ret.photoIds).length > 0 && <span className="flex flex-wrap gap-2 pt-1">{parsePhotoIds(ret.photoIds).map((pid, i) => <a key={pid} href={`/api/media/${pid}`} target="_blank" rel="noreferrer" className="underline">{tr(locale, "Photo", "Photo")} {i + 1}</a>)}</span>}<span className="text-muted-foreground">{tr(locale, "L'administration rembourse après votre décision et arbitre les litiges.", "The administration refunds after your decision and arbitrates disputes.")}</span></p>}
       {ret?.status === "ACCEPTED" && (
         <section className="space-y-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm">
           <p><strong>{tr(locale, "Colis en route vers vous", "Parcel on its way to you")}</strong> — {tr(locale, "le client vous renvoie ce colis. À réception, contrôlez-le et décidez sous 6 jours calendaires.", "the customer is sending this parcel back to you. On arrival, check it and decide within 6 calendar days.")}</p>
@@ -155,7 +163,13 @@ export default async function PartnerOrder({ params, searchParams }: { params: P
                 <option value="REFUSED">{tr(locale, "Refuser le retour", "Refuse the return")}</option>
               </select>
             </label>
-            <label className="block">{tr(locale, "Motif (obligatoire si refus)", "Reason (required if refused)")}<input name="note" maxLength={500} className={inputCls} /></label>
+            <label className="block">{tr(locale, "Motif du refus (obligatoire si refus)", "Reason for refusal (required if refused)")}
+              <select name="reasonId" defaultValue="" className={inputCls}>
+                <option value="">{tr(locale, "—", "—")}</option>
+                {returnReasons.map((r) => <option key={r.id} value={r.id}>{locale === "en" ? r.en : r.fr}</option>)}
+              </select>
+            </label>
+            <label className="block">{tr(locale, "Précision (facultative, visible uniquement par l'administration)", "Details (optional, visible to the administration only)")}<input name="note" maxLength={500} className={inputCls} /></label>
             <div className="sm:col-span-2"><button className={btn} type="submit">{tr(locale, "Valider ma décision", "Confirm my decision")}</button></div>
           </form>
         </section>

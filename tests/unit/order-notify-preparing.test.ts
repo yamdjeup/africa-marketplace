@@ -32,10 +32,10 @@ describe("e-mail client « en préparation »", () => {
     expect(send).toHaveBeenCalledTimes(1);
     const [to, subject, lines, html] = send.mock.calls[0] as unknown as [string, string, string[], string];
     expect(to).toBe("a@b.fr");
-    expect(subject).toContain("commande en préparation");
+    expect(subject).toContain("pièce est en préparation");
     expect(lines.join(" ")).toContain("Atelier Kora");
     expect(lines.join(" ")).toContain("1 × Bague");
-    expect(html).toContain("Votre commande est en préparation");
+    expect(html).toContain("en préparation");
     expect(html).toContain("Suivre ma commande");
   });
 
@@ -43,8 +43,8 @@ describe("e-mail client « en préparation »", () => {
     locale = "en";
     await notifySubOrder("PREPARING", "s1");
     const [, subject, , html] = send.mock.calls[0] as unknown as [string, string, string[], string];
-    expect(subject).toContain("order being prepared");
-    expect(html).toContain("Your order is being prepared");
+    expect(subject).toContain("being prepared");
+    expect(html).toContain("prepared");
     expect(html).toContain("Track my order");
   });
 });

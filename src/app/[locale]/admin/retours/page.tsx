@@ -4,7 +4,7 @@ import { ListFilters, Pager } from "@/components/admin/list-controls";
 import { RETURN_FILTERS, pageArgs, pageCount, parseList, returnsWhere, type ListParams } from "@/lib/admin-list";
 import { db } from "@/lib/db";
 import type { Locale } from "@/lib/i18n";
-import { RETURN_LABELS, type ReturnStatus } from "@/lib/returns";
+import { returnLabel } from "@/lib/returns";
 import { tr } from "@/lib/tr";
 import { parsePhotoIds } from "@/lib/return-photos";
 import { StockChoice } from "@/components/admin/stock-choice";
@@ -39,7 +39,7 @@ export default async function ReturnsAdmin({ params, searchParams }: { params: P
             <li key={r.id} className="space-y-2 p-3 text-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <strong>{r.subOrder.number} · {eur(r.subOrder.subtotalCents)}</strong>
-                <span className="text-muted-foreground">{fmt.format(r.createdAt)} · {RETURN_LABELS[r.status as ReturnStatus]?.[locale === "en" ? "en" : "fr"] ?? r.status}</span>
+                <span className="text-muted-foreground">{fmt.format(r.createdAt)} · {returnLabel(r)[locale === "en" ? "en" : "fr"]}</span>
               </div>
               <p>{tr(locale, "Motif du client : ", "Customer reason: ")}{r.reason}</p>
               {parsePhotoIds(r.photoIds).length > 0 && <span className="flex flex-wrap gap-2 pt-1">{parsePhotoIds(r.photoIds).map((pid, i) => <a key={pid} href={`/api/media/${pid}`} target="_blank" rel="noreferrer" className="underline">{tr(locale, "Photo", "Photo")} {i + 1}</a>)}</span>}

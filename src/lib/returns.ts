@@ -1,8 +1,9 @@
 import type { PrismaClient } from "@prisma/client";
 import { returnStock } from "./stock";
+import { registerTracking } from "./tracking-provider";
 
 // Retours : le client demande, l'administrateur arbitre (accepter / refuser), puis le remboursement est enregistré.
-export const RETURN_DAYS = 30;
+export const RETURN_DAYS = 14;
 export type ReturnStatus = "REQUESTED" | "ACCEPTED" | "RECEIVED" | "REFUSED" | "REFUNDED";
 
 export const RETURN_LABELS: Record<ReturnStatus, { fr: string; en: string }> = {
@@ -12,6 +13,12 @@ export const RETURN_LABELS: Record<ReturnStatus, { fr: string; en: string }> = {
   REFUSED: { fr: "Retour refusé", en: "Return refused" },
   REFUNDED: { fr: "Remboursé", en: "Refunded" },
 };
+
+/** Libellé du retour : « accepté » devient « Retour expédié » une fois l'expédition confirmée par le client. */
+export function returnLabel(ret: { status: string; returnShippedAt?: Date | null }): { fr: string; en: string } {
+  if (ret.status === "ACCEPTED" && ret.returnShippedAt) return { fr: "Retour expédié", en: "Return shipped" };
+  return RETURN_LABELS[ret.status as ReturnStatus] ?? { fr: ret.status, en: ret.status };
+}
 
 export type Eligibility = "ok" | "not_delivered" | "expired" | "exists";
 
@@ -24,7 +31,7 @@ export function returnEligibility(sub: { status: string; deliveredAt: Date | nul
 
 export type RequestResult = { ok: true; id: string } | { ok: false; error: Eligibility | "forbidden" | "reason" | "photos" };
 
-/** Demande de retour : propriétaire vérifié, colis livré, dans les 30 jours, une seule demande par colis. */
+/** Demande de retour : propriétaire vérifié, colis livré, dans les 14 jours, une seule demande par colis. */
 export async function requestReturn(db: PrismaClient, userId: string, subOrderId: string, reason: string, now = new Date(), photoIds: string[] = []): Promise<RequestResult> {
   const text = reason.trim().slice(0, 1000);
   if (text.length < 3) return { ok: false, error: "reason" };
@@ -38,6 +45,16 @@ export async function requestReturn(db: PrismaClient, userId: string, subOrderId
   if (ids.length && (await db.mediaFile.count({ where: { id: { in: ids }, ownerUserId: userId, isPrivate: true } })) !== ids.length) return { ok: false, error: "photos" };
   const created = await db.returnRequest.create({ data: { subOrderId, userId, reason: text, photoIds: ids.join(",") } });
   return { ok: true, id: created.id };
+}
+
+/** Le client confirme l'expédition du retour (transporteur + numéro). Uniquement sur son retour accepté, une seule fois. */
+export async function markReturnShipped(db: PrismaClient, userId: string, subOrderId: string, carrier: string, tracking: string, now = new Date()) {
+  const c = carrier.trim().slice(0, 60);
+  const t = tracking.replace(/[\s,;]+/g, "").slice(0, 60);
+  if (c.length < 2 || t.length < 3) return "invalid" as const;
+  const n = await db.returnRequest.updateMany({ where: { subOrderId, userId, status: "ACCEPTED", returnShippedAt: null }, data: { returnCarrier: c, returnTracking: t, returnShippedAt: now } });
+  if (n.count === 1) await registerTracking(c, t);
+  return n.count === 1 ? ("ok" as const) : ("state" as const);
 }
 
 /** Décision de l'administrateur (anti-course : uniquement depuis « demandé »). */
@@ -115,12 +132,12 @@ export async function markReturnReceivedByPartner(db: PrismaClient, subOrderId: 
 export type PartnerDecision = "ACCEPTED" | "REFUSED";
 
 /** Après contrôle, le créateur accepte (remboursement visible par l'administration) ou refuse (motif ≥3 car., litige arbitrable). Une seule décision, uniquement depuis « reçu », sur son propre colis. */
-export async function partnerDecideReturn(db: PrismaClient, subOrderId: string, supplierId: string, decision: PartnerDecision, note: string, now = new Date()) {
+export async function partnerDecideReturn(db: PrismaClient, subOrderId: string, supplierId: string, decision: PartnerDecision, note: string, now = new Date(), reasonId: string | null = null) {
   const text = note.trim().slice(0, 500);
-  if (decision === "REFUSED" && text.length < 3) return "note" as const;
+  if (decision === "REFUSED" && !reasonId) return "note" as const;
   const ret = await db.returnRequest.findFirst({ where: { subOrderId, status: "RECEIVED", partnerDecision: null, subOrder: { supplierId } }, select: { id: true } });
   if (!ret) return "state" as const;
-  const n = await db.returnRequest.updateMany({ where: { id: ret.id, status: "RECEIVED", partnerDecision: null }, data: { partnerDecision: decision, partnerDecisionNote: text || null, partnerDecidedAt: now } });
+  const n = await db.returnRequest.updateMany({ where: { id: ret.id, status: "RECEIVED", partnerDecision: null }, data: { partnerDecision: decision, partnerDecisionNote: text || null, partnerDecidedAt: now, partnerReasonId: decision === "REFUSED" ? reasonId : null } });
   return n.count === 1 ? ("ok" as const) : ("state" as const);
 }
 

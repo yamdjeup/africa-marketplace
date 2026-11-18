@@ -5,7 +5,7 @@ import { userFromRequest } from "@/lib/mobile-auth";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-// Demande de retour (30 jours après livraison, une seule par colis) : même logique que requestReturnAction du site.
+// Demande de retour (14 jours après livraison, une seule par colis) : même logique que requestReturnAction du site.
 export async function POST(req: Request) {
   const user = await userFromRequest(req);
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });

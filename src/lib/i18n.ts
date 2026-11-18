@@ -426,7 +426,7 @@ const fr = {
   confirmation: {
     title: "Merci pour votre commande !",
     reference: "Référence de commande",
-    text: "Commande enregistrée. Un e-mail de confirmation vous a été envoyé.",
+    text: "Votre commande est transmise au créateur. Suivez-la dans votre espace personnel, Mon compte › Mes commandes.",
     total: "Total",
     items: "Articles",
     to: "Livraison à",
@@ -975,7 +975,7 @@ const en: Dict = {
   confirmation: {
     title: "Thank you for your order!",
     reference: "Order reference",
-    text: "Order recorded. A confirmation email has been sent to you.",
+    text: "Your order has been sent to the creator. Follow it in your personal space, My account › My orders.",
     total: "Total",
     items: "Items",
     to: "Delivery to",

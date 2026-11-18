@@ -1,5 +1,8 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
 import { recordDelivery } from "./ledger";
+import { RETURN_DAYS } from "./returns";
+import { captureOnConfirm, creatorWindowHours } from "./payment-mode";
+import { CREATOR_REMINDER_HOURS } from "./payment-capture";
 import { confirmSale, releaseStock, type Actor, type Db } from "./stock";
 
 // Sous-commandes par partenaire : le vendeur est la boutique (partenaire), E póm ta' est l'intermédiaire.
@@ -13,12 +16,12 @@ export type SubStatus = "PENDING" | "ACCEPTED" | "PREPARING" | "SHIPPED" | "DELI
 
 export const SUB_LABELS: Record<SubStatus, { fr: string; en: string; cls: string }> = {
   PENDING: { fr: "À accepter", en: "To accept", cls: "bg-amber-100 text-amber-900" },
-  ACCEPTED: { fr: "Acceptée", en: "Accepted", cls: "bg-sky-100 text-sky-900" },
+  ACCEPTED: { fr: "Confirmée", en: "Confirmed", cls: "bg-sky-100 text-sky-900" },
   PREPARING: { fr: "En préparation", en: "Preparing", cls: "bg-sky-100 text-sky-900" },
   SHIPPED: { fr: "Expédiée", en: "Shipped", cls: "bg-emerald-100 text-emerald-900" },
   DELIVERED: { fr: "Livrée", en: "Delivered", cls: "bg-emerald-100 text-emerald-900" },
   REFUSED: { fr: "Refusée par la boutique", en: "Declined by the shop", cls: "bg-red-100 text-red-900" },
-  EXPIRED: { fr: "Expirée (sans réponse sous 48 h)", en: "Expired (no reply within 48 h)", cls: "bg-red-100 text-red-900" },
+  EXPIRED: { fr: "Expirée (sans réponse dans le délai)", en: "Expired (no reply within the time limit)", cls: "bg-red-100 text-red-900" },
   CANCELLED: { fr: "Annulée", en: "Cancelled", cls: "bg-red-100 text-red-900" },
 };
 
@@ -40,7 +43,7 @@ export async function createSubOrders(db: Db, order: { id: string; number: strin
         supplierId,
         number: `${order.number}-${i++}`,
         subtotalCents: ls.reduce((n, l) => n + l.quantity * l.unitPriceCents, 0),
-        acceptBy: new Date(now.getTime() + ACCEPT_HOURS * HOUR),
+        acceptBy: new Date(now.getTime() + creatorWindowHours() * HOUR),
       },
     });
     await db.orderItem.updateMany({ where: { orderId: order.id, productSlug: { in: ls.map((l) => l.slug) } }, data: { subOrderId: sub.id } });
@@ -50,6 +53,7 @@ export async function createSubOrders(db: Db, order: { id: string; number: strin
 }
 
 import { flushRestockSafe } from "./restock-flush";
+import { registerTracking } from "./tracking-provider";
 
 async function loadItems(db: Db, subOrderId: string) {
   return db.orderItem.findMany({ where: { subOrderId } });
@@ -58,9 +62,9 @@ async function loadItems(db: Db, subOrderId: string) {
 const guard = (id: string, supplierId: string | null, from: SubStatus[]) => ({ id, status: { in: from }, ...(supplierId ? { supplierId } : {}) });
 
 /** Annule une sous-commande et libère le stock réservé (refus, expiration, annulation). */
-async function closeAndRelease(db: PrismaClient, id: string, supplierId: string | null, from: SubStatus[], to: "REFUSED" | "EXPIRED" | "CANCELLED", reason: string, actor: Actor) {
+async function closeAndRelease(db: PrismaClient, id: string, supplierId: string | null, from: SubStatus[], to: "REFUSED" | "EXPIRED" | "CANCELLED", reason: string, actor: Actor, reasonId: string | null = null, reasonNote: string | null = null) {
   const res = await db.$transaction(async (tx) => {
-    const n = await tx.subOrder.updateMany({ where: guard(id, supplierId, from), data: { status: to, reason, decidedAt: new Date() } });
+    const n = await tx.subOrder.updateMany({ where: guard(id, supplierId, from), data: { status: to, reason, reasonId, reasonNote, decidedAt: new Date() } });
     if (n.count !== 1) return null;
     const sub = await tx.subOrder.findUniqueOrThrow({ where: { id } });
     for (const it of await loadItems(tx, id)) await releaseStock(tx, { slug: it.productSlug, label: it.size }, it.quantity, reason || to, actor, sub.number);
@@ -75,7 +79,23 @@ export async function acceptSub(db: PrismaClient, id: string, supplierId: string
   return n.count === 1 ? db.subOrder.findUnique({ where: { id } }) : null;
 }
 
-export const refuseSub = (db: PrismaClient, id: string, supplierId: string | null, reason: string, actor: Actor) => closeAndRelease(db, id, supplierId, ["PENDING"], "REFUSED", reason, actor);
+/** Colis clôturés (retour remboursé/refusé, ou 14 jours après livraison sans retour) dont l'e-mail « clôturée » n'est pas encore parti ; chaque colis n'est réclamé qu'une fois. */
+export async function sweepClosed(db: PrismaClient, now = new Date()) {
+  const cutoff = new Date(now.getTime() - RETURN_DAYS * 24 * HOUR);
+  const cands = await db.subOrder.findMany({
+    where: { status: "DELIVERED", closedMailSentAt: null, OR: [{ deliveredAt: { lte: cutoff }, returns: { none: {} } }, { returns: { some: { status: { in: ["REFUNDED", "REFUSED"] } } } }] },
+    select: { id: true },
+    take: 50,
+  });
+  const out: { id: string }[] = [];
+  for (const c of cands) {
+    const n = await db.subOrder.updateMany({ where: { id: c.id, closedMailSentAt: null }, data: { closedMailSentAt: now } });
+    if (n.count === 1) out.push(c);
+  }
+  return out;
+}
+
+export const refuseSub = (db: PrismaClient, id: string, supplierId: string | null, reason: string, actor: Actor, reasonId: string | null = null, reasonNote: string | null = null) => closeAndRelease(db, id, supplierId, ["PENDING"], "REFUSED", reason, actor, reasonId, reasonNote);
 export const cancelSub = (db: PrismaClient, id: string, reason: string, actor: Actor) => closeAndRelease(db, id, null, ["PENDING", "ACCEPTED", "PREPARING"], "CANCELLED", reason, actor);
 
 export async function prepareSub(db: PrismaClient, id: string, supplierId: string | null) {
@@ -85,6 +105,12 @@ export async function prepareSub(db: PrismaClient, id: string, supplierId: strin
 
 /** Expédition : le stock réservé devient une sortie définitive. */
 export async function shipSub(db: PrismaClient, id: string, supplierId: string | null, carrier: string, trackingNumber: string, actor: Actor) {
+  const shipped = await shipSubTx(db, id, supplierId, carrier, trackingNumber, actor);
+  if (shipped) await registerTracking(carrier, trackingNumber);
+  return shipped;
+}
+
+async function shipSubTx(db: PrismaClient, id: string, supplierId: string | null, carrier: string, trackingNumber: string, actor: Actor) {
   return db.$transaction(async (tx) => {
     const n = await tx.subOrder.updateMany({ where: guard(id, supplierId, ["ACCEPTED", "PREPARING"]), data: { status: "SHIPPED", carrier, trackingNumber, shippedAt: new Date() } });
     if (n.count !== 1) return null;
@@ -112,10 +138,19 @@ export async function sweepSubOrders(db: PrismaClient, now = new Date()) {
   const pending = await db.subOrder.findMany({ where: { status: "PENDING" } });
   const out = { reminded: [] as typeof pending, escalated: [] as typeof pending, expired: [] as typeof pending };
   for (const s of pending) {
-    const age = now.getTime() - (s.acceptBy.getTime() - ACCEPT_HOURS * HOUR);
-    if (age >= ACCEPT_HOURS * HOUR) {
-      const closed = await closeAndRelease(db, s.id, null, ["PENDING"], "EXPIRED", "Sans réponse du partenaire sous 48 h", { label: "système" });
+    const windowH = captureOnConfirm() ? 24 : ACCEPT_HOURS;
+    const age = now.getTime() - (s.acceptBy.getTime() - windowH * HOUR);
+    if (age >= windowH * HOUR) {
+      const closed = await closeAndRelease(db, s.id, null, ["PENDING"], "EXPIRED", `Sans réponse du partenaire sous ${windowH} h`, { label: "système" });
       if (closed) out.expired.push(closed);
+      continue;
+    }
+    if (captureOnConfirm()) {
+      const due = CREATOR_REMINDER_HOURS.filter((h) => age >= h * HOUR).length;
+      if (due > s.reminderCount) {
+        const n = await db.subOrder.updateMany({ where: { id: s.id, reminderCount: s.reminderCount, status: "PENDING" }, data: { reminderCount: due, reminderSentAt: now } });
+        if (n.count === 1) out.reminded.push(s);
+      }
       continue;
     }
     if (age >= ESCALATE_AFTER_HOURS * HOUR && !s.escalatedAt) {

@@ -121,6 +121,13 @@ Secrets du dépôt (Settings > Secrets and variables > Actions) :
 ### OVH (domaine)
 Pas de variable. Offre Standard ; epomta.com expire le 10/11/2027 (renouvellement automatique) ; contact du domaine validé le 12/11/2026 ; **aucun moyen de paiement enregistré** ; service Emails lié. Enregistrements DNS : A/CNAME vers Vercel, enregistrements SPF/DKIM de Resend. Compte OVH : yamdjeup@gmail.com (réf. pn1604783-ovh).
 
+### 3 bis. 17TRACK (suivi transporteurs) et capture Stripe
+
+- Compte 17TRACK créé le 18/11/2026 (essai gratuit, sans société) : e-mail `contact@epomta.com`, nom Epomta, site epomta.com, volume déclaré ≤ 10 000 colis/mois, exigence « API de suivi en temps réel », transporteurs réglementés « Aucun besoin ». Mot de passe et clé : jamais dans ce fichier ni dans le dépôt.
+- Variable à créer dans Vercel (simu, preprod, prod) : `TRACK17_API_KEY` (clé API 17TRACK). Absente : mode manuel dégradé (le créateur marque livré / retour reçu). Quota gratuit visible au tableau de bord : 200 suivis de colis et 10 suivis fret aérien (AirWayBill). clé API récupérée dans api.17track.net > Settings (non stockée ici) ; à coller dans Vercel ; webhook pas encore configuré (à faire après déploiement, avec l'URL de l'endpoint).
+- Intégration (API V2.4, doc officielle) : enregistrement `POST https://api.17track.net/track/v2.4/register` (en-tête `17token`) à l'expédition du colis et à l'expédition du retour ; webhook `POST https://epomta.com/api/webhooks/17track` (colis V2.4, à saisir dans api.17track.net > Settings après déploiement). Signature vérifiée : en-tête `sign` = SHA-256 hex de « corps + / + clé API ». Statut `Delivered` : colis passé « Livré » (+ mail) ou retour passé « Reçu ». Limites officielles : 3 requêtes/s ; 1 quota par numéro suivi ; suivi stoppé 15 jours après livraison ou 30 jours sans événement ; 200 suivis gratuits uniques (comptes créés après le 07/01/2026), tarifs ultérieurs à vérifier au tableau de bord. Adaptateur remplaçable : `src/lib/tracking-provider.ts`.
+- `PAYMENT_CAPTURE_ON_CONFIRM` = `1` : autorisation Stripe à la commande, encaissement à la confirmation du créateur (24 h) ; absente ou autre valeur : ancien flux (48 h). Fen?tre d'autorisation carte Stripe : environ 7 jours par d?faut (couvre les 24 h). Le cron Vercel est quotidien : pour la pr?cision des relances/expiration, appeler `/api/orders/sweep` toutes les heures via un cron externe (en-t?te `Authorization: Bearer CRON_SECRET`).
+
 ## 4. Secrets à régénérer
 
 - **Clé Stripe `sk_test_…`** (`STRIPE_SECRET_KEY`, `TEST_STRIPE_SECRET_KEY`) : à régénérer si elle a été exposée (Stripe > Roll key), puis mettre à jour Vercel et GitHub.

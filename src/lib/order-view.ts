@@ -4,7 +4,7 @@ type L = { fr: string; en: string };
 export type TimelineStep = { key: string; label: L; at: string | null; reached: boolean };
 
 type SubIn = { status: string; createdAt: Date; decidedAt: Date | null; shippedAt: Date | null; deliveredAt: Date | null };
-type RetIn = { status: string; createdAt: Date; decidedAt: Date | null; partnerReceivedAt: Date | null; refundedAt: Date | null } | null;
+type RetIn = { status: string; createdAt: Date; decidedAt: Date | null; partnerReceivedAt: Date | null; refundedAt: Date | null; returnShippedAt?: Date | null } | null;
 
 const iso = (d: Date | null | undefined) => (d ? d.toISOString() : null);
 const ENDED = ["CANCELLED", "REFUSED", "EXPIRED"];
@@ -44,6 +44,7 @@ export function parcelTimeline(sub: SubIn, ret: RetIn, now = new Date()): Timeli
     else {
       steps.push(
         { key: "ret-accepted", label: { fr: "Retour accepté", en: "Return accepted" }, at: iso(ret.decidedAt), reached: ret.status !== "REQUESTED" },
+        { key: "ret-shipped", label: { fr: "Retour expédié", en: "Return shipped" }, at: iso(ret.returnShippedAt), reached: !!ret.returnShippedAt || ret.status === "RECEIVED" || ret.status === "REFUNDED" },
         { key: "ret-received", label: { fr: "Colis réceptionné", en: "Parcel received" }, at: iso(ret.partnerReceivedAt), reached: ret.status === "RECEIVED" || ret.status === "REFUNDED" },
         { key: "ret-refunded", label: { fr: "Remboursé", en: "Refunded" }, at: iso(ret.refundedAt), reached: ret.status === "REFUNDED" },
       );

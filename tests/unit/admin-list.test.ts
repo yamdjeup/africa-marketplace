@@ -141,7 +141,7 @@ describe("e-mails de retour : partenaire et « colis reçu »", () => {
     }
   }
   it("client « reçu » mentionne l'absence de remboursement du port", () => {
-    expect(buildReturnEmail({ kind: "received", locale: "fr", subNumber: "AM-1-A", amountCents: 5000, items }).html).toContain("frais de livraison ne sont pas remboursés");
-    expect(buildReturnEmail({ kind: "received", locale: "en", subNumber: "AM-1-A", amountCents: 5000, items }).html).toContain("Delivery fees are not refunded");
+    expect(buildReturnEmail({ kind: "refunded", locale: "fr", subNumber: "AM-1-A", amountCents: 5000, items }).html).toContain("livraison initiaux ne sont pas remboursés");
+    expect(buildReturnEmail({ kind: "refunded", locale: "en", subNumber: "AM-1-A", amountCents: 5000, items }).html).toContain("initial delivery fees are not refunded");
   });
 });

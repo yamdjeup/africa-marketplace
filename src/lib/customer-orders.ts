@@ -3,7 +3,7 @@ import { notifySubOrder } from "@/lib/order-notify";
 import { partnerRecipient } from "@/lib/partner-recipient";
 import { settleSubRefund } from "@/lib/refund";
 import { sendPartnerReturnMail, sendReturnMail } from "@/lib/return-email";
-import { requestReturn } from "@/lib/returns";
+import { markReturnShipped, requestReturn } from "@/lib/returns";
 import { cancelSub } from "@/lib/suborders";
 import { safeSend } from "@/lib/supplier-email";
 
@@ -25,7 +25,7 @@ export async function cancelParcelForUser(userId: string, email: string | null |
   return true;
 }
 
-// Demande de retour d'un colis livré (30 jours) : propriétaire vérifié côté serveur, e-mails comme sur le site.
+// Demande de retour d'un colis livré (14 jours) : propriétaire vérifié côté serveur, e-mails comme sur le site.
 export async function requestReturnForUser(userId: string, email: string | null | undefined, id: string, reason: string, photoIds: string[] = []) {
   const r = await requestReturn(db, userId, id, reason, new Date(), photoIds);
   if (r.ok) {
@@ -34,6 +34,16 @@ export async function requestReturnForUser(userId: string, email: string | null 
     for (const a of admins) await safeSend(a, `E póm ta’ — retour demandé ${sub?.number ?? ""}`, [`Un client demande le retour du colis ${sub?.number ?? ""}. À traiter dans l'administration (Retours).`]);
     await sendReturnMail(id, "requested", undefined, email ?? undefined);
     await sendPartnerReturnMail(id, "requested");
+  }
+  return r;
+}
+
+// Le client confirme l'expédition de son retour (transporteur + numéro) : e-mail client et prévenance du créateur.
+export async function confirmReturnShippedForUser(userId: string, email: string | null | undefined, id: string, carrier: string, tracking: string) {
+  const r = await markReturnShipped(db, userId, id, carrier, tracking);
+  if (r === "ok") {
+    await sendReturnMail(id, "shipped", undefined, email ?? undefined);
+    await sendPartnerReturnMail(id, "shipped");
   }
   return r;
 }

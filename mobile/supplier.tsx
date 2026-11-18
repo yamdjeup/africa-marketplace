@@ -65,6 +65,10 @@ function OrderDetail({ token, id, onBack }: { token: string; id: string; onBack:
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [reason, setReason] = useState("");
+  const [orderReasons, setOrderReasons] = useState<{ v: string; fr: string; en: string }[]>([]);
+  const [returnReasons, setReturnReasons] = useState<{ v: string; fr: string; en: string }[]>([]);
+  const [rsnOrder, setRsnOrder] = useState("");
+  const [rsnReturn, setRsnReturn] = useState("");
   const [carrier, setCarrier] = useState("UPS");
   const [other, setOther] = useState("");
   const [tracking, setTracking] = useState("");
@@ -74,6 +78,11 @@ function OrderDetail({ token, id, onBack }: { token: string; id: string; onBack:
   const [note, setNote] = useState("");
   const load = () => authed<Detail>(token, "GET", `/api/v1/supplier/orders/${id}`).then((r) => r.ok && setD(r.data));
   useEffect(() => { load(); }, [id]);
+  useEffect(() => {
+    const get = (kind: string, set: (v: { v: string; fr: string; en: string }[]) => void) =>
+      authed<{ reasons: { id: string; fr: string; en: string }[] }>(token, "GET", `/api/v1/supplier/reasons?kind=${kind}`).then((r) => r.ok && set(r.data.reasons.map((x) => ({ v: x.id, fr: x.fr, en: x.en }))));
+    get("ORDER", setOrderReasons); get("RETURN", setReturnReasons);
+  }, [token]);
   const act = async (body: Record<string, string>) => {
     setBusy(true); setMsg(null);
     const r = await authed<{ error?: string }>(token, "POST", `/api/v1/supplier/orders/${id}`, body);
@@ -106,8 +115,9 @@ function OrderDetail({ token, id, onBack }: { token: string; id: string; onBack:
           <View style={{ marginTop: 8, gap: 8 }}>
             <Text style={{ fontWeight: "600", color: "#221812" }}>{tr("Votre décision sur ce retour", "Your decision on this return")}</Text>
             <Select label={tr("Décision", "Decision")} value={decision} options={DECISIONS} onChange={setDecision} />
-            <TextInput value={dnote} onChangeText={setDnote} placeholder={tr("Motif (obligatoire si refus)", "Reason (required if refused)")} placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={st.input} />
-            {btn(tr("Valider ma décision", "Confirm my decision"), () => act({ action: "return_decide", decision, note: dnote }))}
+            {decision === "REFUSED" ? <Select label={tr("Motif du refus", "Reason for refusal")} value={rsnReturn} options={returnReasons} onChange={setRsnReturn} /> : null}
+            <TextInput value={dnote} onChangeText={setDnote} placeholder={tr("Précision facultative (administration uniquement)", "Optional details (administration only)")} placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={st.input} />
+            {btn(tr("Valider ma décision", "Confirm my decision"), () => act({ action: "return_decide", decision, note: dnote, reasonId: rsnReturn }))}
           </View>
         ) : null}
         {d.return.decision ? <Text style={{ marginTop: 6, fontWeight: "600", color: "#221812" }}>{d.return.decision === "ACCEPTED" ? tr("Retour accepté par vous", "Return accepted by you") : tr("Retour refusé par vous", "Return refused by you")}{d.return.decisionNote ? ` : ${d.return.decisionNote}` : ""}</Text> : null}
@@ -125,8 +135,9 @@ function OrderDetail({ token, id, onBack }: { token: string; id: string; onBack:
         <View style={{ marginTop: 16, gap: 10 }}>
           {d.acceptBy ? <Text style={{ color: "#92400e" }}>{tr("À accepter avant le ", "Accept before ")}{new Date(d.acceptBy).toLocaleString()}</Text> : null}
           {btn(tr("Accepter la commande", "Accept order"), () => act({ action: "accept" }))}
-          <TextInput value={reason} onChangeText={setReason} placeholder={tr("Motif du refus", "Reason for declining")} placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={st.input} />
-          {btn(tr("Refuser", "Decline"), () => act({ action: "refuse", reason }), true)}
+          <Select label={tr("Motif du refus", "Reason for declining")} value={rsnOrder} options={orderReasons} onChange={setRsnOrder} />
+          <TextInput value={reason} onChangeText={setReason} placeholder={tr("Précision facultative (administration uniquement)", "Optional details (administration only)")} placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={st.input} />
+          {btn(tr("Refuser", "Decline"), () => act({ action: "refuse", reasonId: rsnOrder, note: reason }), true)}
         </View>
       ) : null}
       {d.status === "ACCEPTED" || d.status === "PREPARING" ? (

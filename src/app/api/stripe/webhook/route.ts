@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { releaseHold } from "@/lib/checkout-hold";
+import { captureOnConfirm } from "@/lib/payment-mode";
 import { connectState } from "@/lib/stripe-connect";
 import { confirmPaidOrder, verifyStripeSignature } from "@/lib/stripe-checkout";
 
@@ -18,7 +19,7 @@ export async function POST(req: Request) {
     type: string;
     data: { object: { id?: string; details_submitted?: boolean; payouts_enabled?: boolean; capabilities?: { transfers?: string }; requirements?: { currently_due?: string[] }; client_reference_id?: string; payment_intent?: string | null; payment_status?: string; amount_total?: number | null } };
   };
-  if (event.type === "checkout.session.completed" && event.data.object.payment_status === "paid") {
+  if (event.type === "checkout.session.completed" && (event.data.object.payment_status === "paid" || (captureOnConfirm() && !!event.data.object.payment_intent))) {
     const number = event.data.object.client_reference_id;
     if (number) await confirmPaidOrder(number, event.data.object.payment_intent ?? null, event.data.object.amount_total ?? undefined);
   }

@@ -329,6 +329,8 @@ model Order {
   editToken  String?
   /// Identifiant du paiement Stripe (pi_…) lorsqu'un paiement Stripe est enregistré ; null sinon
   stripePaymentIntentId String?
+  // Autorisation Stripe à capture manuelle (drapeau PAYMENT_CAPTURE_ON_CONFIRM) : null = ancien flux ; AUTHORIZED, PROCESSING, CAPTURED, CANCELLED, FAILED
+  captureStatus         String?
   /// Session Stripe Checkout ; renseignée tant que le paiement n'est pas confirmé
   stripeSessionId String?
   /// Vrai entre la création de la commande et la confirmation du paiement par Stripe
@@ -346,6 +348,18 @@ model Order {
 }
 
 /// Sous-commande par partenaire (le vendeur est la boutique). status : PENDING | ACCEPTED | PREPARING | SHIPPED | DELIVERED | REFUSED | EXPIRED | CANCELLED.
+/// Motifs de refus à liste fixe, éditables par l'administration (jamais supprimés, seulement désactivés)
+model RefusalReason {
+  id       String  @id @default(cuid())
+  kind     String // ORDER (refus de commande) | RETURN (refus de retour)
+  fr       String
+  en       String
+  position Int     @default(0)
+  active   Boolean @default(true)
+
+  @@index([kind, active, position])
+}
+
 model SubOrder {
   id             String    @id @default(cuid())
   orderId        String
@@ -362,6 +376,13 @@ model SubOrder {
   prepReminderSentAt DateTime?
   decidedAt      DateTime?
   reason         String    @default("")
+  reasonId       String?
+  /// Précision libre du créateur sur son refus : visible uniquement par l'administration
+  reasonNote     String?
+  /// E-mail « commande clôturée » envoyé
+  closedMailSentAt DateTime?
+  capturedCents    Int       @default(0)
+  reminderCount    Int       @default(0)
   carrier        String    @default("")
   trackingNumber String    @default("")
   /// Remboursement à l'annulation : "" (aucun) | REQUESTED | DONE | FAILED | MANUAL (à traiter par l'admin)
@@ -393,6 +414,11 @@ model ReturnRequest {
   /// Décision du créateur après contrôle : ACCEPTED (remboursement à faire par l'administration) ou REFUSED (motif obligatoire, litige arbitrable)
   partnerDecision String?
   partnerDecisionNote String?
+  partnerReasonId String?
+  /// Expédition du retour confirmée par le client
+  returnCarrier   String?
+  returnTracking  String?
+  returnShippedAt DateTime?
   partnerDecidedAt DateTime?
   status      String    @default("REQUESTED")
   adminNote   String    @default("")

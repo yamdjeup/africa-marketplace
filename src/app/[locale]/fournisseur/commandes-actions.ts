@@ -6,8 +6,10 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { notifySubOrder } from "@/lib/order-notify";
+import { confirmSubOrder } from "@/lib/confirm-sub";
 import { settleSubRefund } from "@/lib/refund";
 import { acceptSub, deliverSub, prepareSub, refuseSub, shipSub } from "@/lib/suborders";
+import { findActiveReason } from "@/lib/refusal-reasons";
 import { markReturnReceivedByPartner, partnerDecideReturn } from "@/lib/returns";
 import { sendReturnMail } from "@/lib/return-email";
 import { getPortalContext } from "@/lib/supplier";
@@ -43,27 +45,28 @@ export async function returnCheckAction(f: FormData) {
 
 export async function returnDecideAction(f: FormData) {
   const { id, supplierId, back } = await ctxOf(f);
-  const r = await partnerDecideReturn(db, id, supplierId, s(f, "decision") === "REFUSED" ? "REFUSED" : "ACCEPTED", s(f, "note", 500));
+  const refused = s(f, "decision") === "REFUSED";
+  const rr = refused ? await findActiveReason(db, "RETURN", s(f, "reasonId", 60)) : null;
+  const r = await partnerDecideReturn(db, id, supplierId, refused ? "REFUSED" : "ACCEPTED", s(f, "note", 500), new Date(), rr?.id ?? null);
   if (r === "note") redirect(back("?error=reason"));
   if (r !== "ok") redirect(back("?error=state"));
   const decision = s(f, "decision") === "REFUSED" ? "REFUSED" : "ACCEPTED";
-  await sendReturnMail(id, decision === "REFUSED" ? "decided_refused" : "decided_accepted", s(f, "note", 500));
+  await sendReturnMail(id, decision === "REFUSED" ? "decided_refused" : "decided_accepted");
   done(back("?ok=returndecided"));
 }
 
 export async function acceptOrderAction(f: FormData) {
   const { id, supplierId, back } = await ctxOf(f);
-  const sub = await acceptSub(db, id, supplierId);
-  if (!sub) redirect(back("?error=state"));
-  await notifySubOrder("ACCEPTED", id);
+  if (!(await confirmSubOrder(db, id, supplierId))) redirect(back("?error=state"));
   done(back("?ok=accepted"));
 }
 
 export async function refuseOrderAction(f: FormData) {
   const { id, supplierId, back, actor } = await ctxOf(f);
-  const reason = s(f, "reason");
-  if (reason.length < 3) redirect(back("?error=reason"));
-  const sub = await refuseSub(db, id, supplierId, reason, actor);
+  const rr = await findActiveReason(db, "ORDER", s(f, "reasonId", 60));
+  if (!rr) redirect(back("?error=reason"));
+  const note = s(f, "note", 500);
+  const sub = await refuseSub(db, id, supplierId, rr.fr, actor, rr.id, note || null);
   if (!sub) redirect(back("?error=state"));
   await settleSubRefund(id);
   await notifySubOrder("REFUSED", id);

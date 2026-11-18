@@ -33,7 +33,8 @@ export function parcelTimeline(sub: SubIn, ret: RetIn, now = new Date()): Timeli
   const shipped = delivered || st === "SHIPPED";
   const closed = delivered && (ret?.status === "REFUNDED" || ret?.status === "REFUSED" || (!ret && !!sub.deliveredAt && now.getTime() - sub.deliveredAt.getTime() > RETURN_DAYS * 86_400_000));
   steps.push(
-    { key: "preparing", label: { fr: "En préparation", en: "Preparing" }, at: null, reached: shipped || st === "PREPARING" },
+    { key: "confirmed", label: { fr: "Confirmée", en: "Confirmed" }, at: iso(sub.decidedAt), reached: shipped || st === "ACCEPTED" || st === "PREPARING" },
+    { key: "preparing", label: { fr: "En préparation", en: "Preparing" }, at: iso(sub.decidedAt), reached: shipped || st === "PREPARING" },
     { key: "shipped", label: { fr: "Expédiée", en: "Shipped" }, at: iso(sub.shippedAt), reached: shipped },
     { key: "delivered", label: { fr: "Livrée", en: "Delivered" }, at: iso(sub.deliveredAt), reached: delivered },
   );

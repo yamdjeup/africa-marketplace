@@ -348,12 +348,15 @@ model Order {
 }
 
 /// Sous-commande par partenaire (le vendeur est la boutique). status : PENDING | ACCEPTED | PREPARING | SHIPPED | DELIVERED | REFUSED | EXPIRED | CANCELLED.
-/// Motifs de refus à liste fixe, éditables par l'administration (jamais supprimés, seulement désactivés)
+/// Motifs de refus à liste fixe, éditables par l'administration (désactivation = futures commandes seulement ; suppression refusée si déjà utilisé)
 model RefusalReason {
   id       String  @id @default(cuid())
   kind     String // ORDER (refus de commande) | RETURN (refus de retour)
   fr       String
   en       String
+  /// Phrase insérée dans l'e-mail client (fr/en = libellé de la liste déroulante du créateur)
+  mailFr   String  @default("")
+  mailEn   String  @default("")
   position Int     @default(0)
   active   Boolean @default(true)
 

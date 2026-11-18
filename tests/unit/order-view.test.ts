@@ -18,7 +18,9 @@ describe("Mes commandes : actives / historique", () => {
   it("horodate seulement les étapes atteintes ; rien d'inventé", () => {
     const t = parcelTimeline({ ...base, status: "SHIPPED", shippedAt: d("02T08:30") }, null);
     expect(t.find((s) => s.key === "ordered")).toMatchObject({ reached: true, at: base.createdAt.toISOString() });
-    expect(t.find((s) => s.key === "preparing")).toMatchObject({ reached: true, at: null });
+    expect(t.map((s) => s.key).slice(0, 3)).toEqual(["ordered", "confirmed", "preparing"]);
+    expect(t.find((s) => s.key === "confirmed")).toMatchObject({ reached: true, at: base.decidedAt.toISOString() });
+    expect(t.find((s) => s.key === "preparing")).toMatchObject({ reached: true, at: base.decidedAt.toISOString() });
     expect(t.find((s) => s.key === "shipped")).toMatchObject({ reached: true, at: d("02T08:30").toISOString() });
     expect(t.find((s) => s.key === "delivered")).toMatchObject({ reached: false });
   });

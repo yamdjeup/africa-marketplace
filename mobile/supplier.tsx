@@ -26,7 +26,7 @@ export function useIsSupplier(token: string | null) {
   return ok;
 }
 
-type Detail = { id: string; number: string; status: string; statusLabel: Lbl; createdAt: string; acceptBy: string | null; subtotalCents: number; carrier: string | null; trackingNumber: string | null; reason: string | null; return?: { status: string; label: Lbl; reason: string; createdAt: string; photoIds?: string[]; condition?: string | null; conditionNote?: string | null; receivedAt?: string | null; decideBy?: string | null; decision?: string | null; decisionNote?: string | null } | null; items: { id: string; name: string; size: string | null; quantity: number; unitPriceCents: number }[]; shipTo: { fullName: string; address: string; postalCode: string; city: string; country: string; phone: string | null } };
+type Detail = { id: string; number: string; status: string; statusLabel: Lbl; createdAt: string; acceptBy: string | null; subtotalCents: number; carrier: string | null; trackingNumber: string | null; reason: string | null; reasonNote?: string | null; return?: { status: string; label: Lbl; reason: string; createdAt: string; photoIds?: string[]; condition?: string | null; conditionNote?: string | null; receivedAt?: string | null; decideBy?: string | null; decision?: string | null; decisionNote?: string | null } | null; items: { id: string; name: string; size: string | null; quantity: number; unitPriceCents: number }[]; shipTo: { fullName: string; address: string; postalCode: string; city: string; country: string; phone: string | null } };
 const CARRIERS = ["UPS", "DHL", "Colissimo"];
 const ERRS: Record<string, [string, string]> = {
   state: ["Cette commande a changé d'état (déjà traitée ou expirée).", "This order changed state (already handled or expired)."],
@@ -160,6 +160,7 @@ function OrderDetail({ token, id, onBack }: { token: string; id: string; onBack:
         </View>
       ) : null}
       {d.reason && ["REFUSED", "EXPIRED", "CANCELLED"].includes(d.status) ? <Text style={st.mut}>{tr("Motif : ", "Reason: ")}{d.reason}</Text> : null}
+      {d.reasonNote && d.status === "REFUSED" ? <Text style={st.mut}>{tr("Précision (administration uniquement) : ", "Details (administration only): ")}{d.reasonNote}</Text> : null}
     </ScrollView>
   );
 }

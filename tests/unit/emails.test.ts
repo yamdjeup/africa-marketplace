@@ -27,6 +27,17 @@ describe("e-mails transactionnels", () => {
       expect(imgs.length).toBeGreaterThan(0);
       for (const src of imgs) expect(src).toMatch(/^https:\/\//);
     });
+    it(`transmise ${locale} : bouton Voir ma commande, pas de bouton adresse`, () => {
+      const m = buildOrderEmail({
+        to: "c@test.example", locale, number: "AM-T1", fullName: "Ada Test",
+        items: [{ name: "Robe", quantity: 1, unitPriceCents: 120000 }], totalCents: 120000,
+        shipping: { lines: ["1 rue Test"], phone: "", editUrl: "https://epomta.com/e" },
+      });
+      expect(m.subject).toContain("AM-T1");
+      expect(m.html).toContain(locale === "fr" ? "Voir ma commande" : "View my order");
+      expect(m.html).toContain("/account/orders/AM-T1");
+      expect(m.html).not.toMatch(/>\s*(Modifier l'adresse|Edit address)\s*</);
+    });
     it(`mise en page ${locale} : pas de mention interdite`, () => {
       const html = renderEmailHtml({
         locale, title: locale === "fr" ? "Votre commande est en route" : "Your order is on its way", orderNumber: "AM-T1",

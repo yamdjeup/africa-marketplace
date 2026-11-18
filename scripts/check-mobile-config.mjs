@@ -8,7 +8,9 @@ const eas = read("eas.json");
 const errors = [];
 const need = (ok, msg) => { if (!ok) errors.push(msg); };
 
-need(app.slug === "epomta", `slug attendu « epomta », trouvé « ${app.slug} »`);
+need(app.slug === "afrique-marketplace", `slug attendu ? afrique-marketplace ? (celui du projet EAS), trouv? ? ${app.slug} ? : ne jamais faire git checkout -- mobile/app.json`);
+need(app.owner === "epomta-app", "owner doit ?tre epomta-app");
+need(app.extra?.eas?.projectId === "6b0ae666-4795-4bfc-b96f-060673117e1f", "extra.eas.projectId doit ?tre 6b0ae666-4795-4bfc-b96f-060673117e1f");
 need(app.android?.package === "com.epomta.app", "android.package doit être com.epomta.app");
 need(app.android?.googleServicesFile, "android.googleServicesFile manquant");
 need(app.runtimeVersion?.policy === "appVersion", "runtimeVersion.policy doit être appVersion");

@@ -1,11 +1,13 @@
 {
   "expo": {
     "name": "Epomta",
-    "slug": "epomta",
+    "slug": "afrique-marketplace",
+    "owner": "epomta-app",
     "scheme": "epomta",
     "version": "1.0.0",
     "runtimeVersion": { "policy": "appVersion" },
-    "updates": { "enabled": true, "checkAutomatically": "ON_LOAD", "fallbackToCacheTimeout": 0 },
+    "extra": { "eas": { "projectId": "6b0ae666-4795-4bfc-b96f-060673117e1f" } },
+    "updates": { "url": "https://u.expo.dev/6b0ae666-4795-4bfc-b96f-060673117e1f", "enabled": true, "checkAutomatically": "ON_LOAD", "fallbackToCacheTimeout": 0 },
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "icon": "./assets/icon-1024.png",

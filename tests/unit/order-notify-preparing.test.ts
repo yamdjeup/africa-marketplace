@@ -9,10 +9,11 @@ vi.mock("@/lib/refund", () => ({ settleSubRefund: async () => undefined }));
 
 let locale = "fr";
 let reasonId: string | null = null;
+let fullName = "Awa";
 vi.mock("@/lib/db", () => ({
   db: {
     subOrder: {
-      findUnique: async () => ({ id: "s1", number: "AM-X-1", orderId: "o1", supplierId: "p1", subtotalCents: 5000, carrier: null, trackingNumber: null, reason: null, reasonId, refundStatus: null, order: { id: "o1", number: "AM-X", locale, email: "a@b.fr", fullName: "Awa", userId: "u1", editToken: null } }),
+      findUnique: async () => ({ id: "s1", number: "AM-X-1", orderId: "o1", supplierId: "p1", subtotalCents: 5000, carrier: null, trackingNumber: null, reason: null, reasonId, refundStatus: null, order: { id: "o1", number: "AM-X", locale, email: "a@b.fr", get fullName() { return fullName; }, userId: "u1", editToken: null } }),
       findMany: async () => [{ id: "s1" }],
     },
     supplier: { findUnique: async () => ({ id: "p1", displayName: "Atelier Kora", country: "Sénégal", userId: null }) },
@@ -67,4 +68,34 @@ describe("e-mail client « commande refusée » : structure en paragraphes", () 
       for (const p of [intro, motif, last]) expect(html).toContain(p);
     });
   }
+});
+
+describe("e-mail client « commande expirée » et salutation sans prénom", () => {
+  beforeEach(() => { send.mockClear(); reasonId = null; fullName = "Awa"; vi.stubEnv("PAYMENT_CAPTURE_ON_CONFIRM", "1"); });
+  it("fr : paragraphes séparés, délai dynamique, sans nom du créateur", async () => {
+    locale = "fr";
+    await notifySubOrder("EXPIRED", "s1");
+    const [, , lines, html] = send.mock.calls[0] as unknown as [string, string, string[], string];
+    expect(lines[1]).toMatch(/^Nous sommes désolés de vous informer que votre commande a été automatiquement annulée, car le créateur ne l'a pas confirmée dans le délai imparti de \d+ heures\.$/);
+    expect(lines[2]).toMatch(/^Aucun montant/);
+    expect(lines.slice(0, 3).join(" ")).not.toContain("Atelier Kora");
+    expect(html).toContain("automatiquement annulée");
+  });
+  it("en : version anglaise", async () => {
+    locale = "en";
+    await notifySubOrder("EXPIRED", "s1");
+    const [, , lines] = send.mock.calls[0] as unknown as [string, string, string[], string];
+    expect(lines[1]).toMatch(/^We are sorry to inform you that your order has been automatically cancelled, because the creator did not confirm it within the allotted \d+ hours\.$/);
+    expect(lines[2]).toMatch(/^No amount/);
+  });
+  it("salutation sans prénom : « Bonjour, » / « Hello, »", async () => {
+    fullName = "";
+    locale = "fr";
+    await notifySubOrder("REFUSED", "s1");
+    expect((send.mock.calls[0] as unknown as [string, string, string[]])[2][0]).toBe("Bonjour,");
+    send.mockClear();
+    locale = "en";
+    await notifySubOrder("REFUSED", "s1");
+    expect((send.mock.calls[0] as unknown as [string, string, string[]])[2][0]).toBe("Hello,");
+  });
 });

@@ -25,7 +25,7 @@ export function buildOrderEmail(o: OrderEmailInput) {
   const shops = (o.shops?.length ? o.shops.join(fr ? " et " : " and ") : fr ? "le créateur" : "the creator");
   const t = fr
     ? {
-        subject: "Votre commande est transmise",
+        subject: `Votre commande ${o.number} est transmise`,
         hello: `Bonjour ${o.fullName},`,
         intro: `Votre commande a été transmise à ${shops}, qui dispose de ${hours} heures pour ${hold ? "la confirmer" : "l'accepter"}.`,
         view: "Voir ma commande",
@@ -40,7 +40,7 @@ export function buildOrderEmail(o: OrderEmailInput) {
         bye: "Merci de votre confiance.",
       }
     : {
-        subject: "Your order has been sent",
+        subject: `Your order ${o.number} has been sent`,
         hello: `Hello ${o.fullName},`,
         intro: `Your order has been sent to ${shops}, who has up to ${hours} hours to ${hold ? "confirm it" : "accept it"}.`,
         view: "View my order",

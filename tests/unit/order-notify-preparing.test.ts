@@ -32,7 +32,7 @@ describe("e-mail client « en préparation »", () => {
     expect(send).toHaveBeenCalledTimes(1);
     const [to, subject, lines, html] = send.mock.calls[0] as unknown as [string, string, string[], string];
     expect(to).toBe("a@b.fr");
-    expect(subject).toContain("pièce est en préparation");
+    expect(subject).toMatch(/^Votre commande \S+ est en préparation$/);
     expect(lines.join(" ")).toContain("Atelier Kora");
     expect(lines.join(" ")).toContain("1 × Bague");
     expect(html).toContain("en préparation");

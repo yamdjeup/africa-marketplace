@@ -33,6 +33,7 @@ describe("e-mails transactionnels", () => {
         items: [{ name: "Robe", quantity: 1, unitPriceCents: 120000 }], totalCents: 120000,
         shipping: { lines: ["1 rue Test"], phone: "", editUrl: "https://epomta.com/e" },
       });
+      expect(m.subject).toContain("AM-T1");
       expect(m.html).toContain(locale === "fr" ? "Voir ma commande" : "View my order");
       expect(m.html).toContain("/account/orders/AM-T1");
       expect(m.html).not.toMatch(/>\s*(Modifier l'adresse|Edit address)\s*</);

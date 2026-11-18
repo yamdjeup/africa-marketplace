@@ -97,6 +97,11 @@ export async function notifySubOrder(event: SubEvent, subOrderId: string) {
     };
     const m = msgs[event];
     if (!m || !o.email) return;
+    const n = sub.number;
+    const subjects: Partial<Record<SubEvent, string>> = fr
+      ? { ACCEPTED: `Votre commande ${n} est confirmée`, PREPARING: `Votre commande ${n} est en préparation`, SHIPPED: `Votre commande ${n} est en route`, DELIVERED: `Votre commande ${n} est arrivée` }
+      : { ACCEPTED: `Your order ${n} is confirmed`, PREPARING: `Your order ${n} is being prepared`, SHIPPED: `Your order ${n} is on its way`, DELIVERED: `Your order ${n} has arrived` };
+    const subject = subjects[event] ?? m[0];
     const loc = fr ? "fr" : "en";
     const link = o.userId ? `${base}/${loc}/account/orders/${o.number}` : `${base}/${loc}/checkout/confirmation/${o.number}?t=${o.editToken ?? ""}`;
     const first = o.fullName.trim().split(/\s+/)[0];
@@ -120,7 +125,7 @@ export async function notifySubOrder(event: SubEvent, subOrderId: string) {
       notice: sold,
       address: event === "SHIPPED" || event === "DELIVERED" ? { title: fr ? "Adresse de livraison" : "Delivery address", lines: [o.fullName, o.address, `${o.postalCode} ${o.city}`.trim(), o.country, ...(o.phone ? [`${fr ? "Téléphone" : "Phone"} : ${o.phone}`] : [])] } : undefined,
     });
-    await safeSend(o.email, m[0], [hello, ...(parcelNote ? [parcelNote] : []), m[1], list, sold, link, ...(trackUrl && (event === "SHIPPED" || event === "DELIVERED") ? [`${fr ? "Suivre mon colis" : "Track my parcel"} : ${trackUrl}`] : [])], html);
+    await safeSend(o.email, subject, [hello, ...(parcelNote ? [parcelNote] : []), m[1], list, sold, link, ...(trackUrl && (event === "SHIPPED" || event === "DELIVERED") ? [`${fr ? "Suivre mon colis" : "Track my parcel"} : ${trackUrl}`] : [])], html);
   } catch (e) {
     console.warn("[order-notify]", (e as Error).message);
   }

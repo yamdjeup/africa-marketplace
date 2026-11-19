@@ -1,5 +1,6 @@
 import { tr, lazy, getLang } from "./region";
 import { useEffect, useState } from "react";
+import { Dropdown } from "./dropdown";
 import { ActivityIndicator, Alert, Image, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { authed } from "./api";
 import { API_URL } from "./config";
@@ -119,11 +120,7 @@ function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: numbe
         <View style={{ gap: 6, marginTop: 4 }}>
           <Text style={s.mut}>{tr("Les frais de livraison ne sont pas remboursés.", "Delivery fees are not refunded.")}</Text>
           <Text style={s.bold}>{tr("Pourquoi souhaitez-vous retourner cet article ? *", "Why do you want to return this item? *")}</Text>
-          {reasons.map((rr) => (
-            <Pressable key={rr.id} onPress={() => { setReasonId(rr.id); setMsg(""); }} style={{ paddingVertical: 8 }}>
-              <Text style={{ color: reasonId === rr.id ? "#1c3060" : "#6b5d52", fontWeight: reasonId === rr.id ? "700" : "400" }}>{reasonId === rr.id ? "● " : "○ "}{getLang() === "en" ? rr.en : rr.fr}</Text>
-            </Pressable>
-          ))}
+          <Dropdown value={reasonId} placeholder={tr("Sélectionnez un motif", "Select a reason")} options={reasons.map((rr) => ({ id: rr.id, label: getLang() === "en" ? rr.en : rr.fr }))} onChange={(v) => { setReasonId(v); setMsg(""); }} />
           <Text style={s.bold}>{tr("Informations complémentaires (facultatif)", "Additional information (optional)")}</Text>
           <TextInput value={reason} onChangeText={(v) => { setReason(v); setMsg(""); }} multiline maxLength={900} style={s.input} placeholderTextColor="#6b5d52" selectionColor="#1c3060" />
           <Pressable disabled={busy || photos.length >= 5} onPress={pick}><Text style={s.link}>{needsPhotos ? tr(`Ajouter des photos (${photos.length}/5, obligatoire)`, `Add photos (${photos.length}/5, required)`) : tr(`Ajouter des photos (${photos.length}/5, facultatif)`, `Add photos (${photos.length}/5, optional)`)}</Text></Pressable>

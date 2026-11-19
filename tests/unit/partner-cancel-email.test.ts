@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { buildPartnerCancelEmail } from "@/lib/partner-cancel-email";
 
 describe("e-mail d'annulation au partenaire", () => {
@@ -11,5 +11,6 @@ describe("e-mail d'annulation au partenaire", () => {
   it("expiration 48 h : message automatique", () => {
     const e = buildPartnerCancelEmail({ shop: "Mimi", number: "AM-1-1", reason: "", kind: "EXPIRED", url: "u", amount: "50,00 €" });
     expect(e.html).toContain("48 h");
+    expect(buildPartnerCancelEmail({ shop: "Mimi", number: "AM-1-1", reason: "", kind: "EXPIRED", url: "u", amount: "1 €", hours: 24 }).html).toContain("24 h");
   });
 });

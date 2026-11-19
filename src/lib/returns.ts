@@ -29,13 +29,20 @@ export function returnEligibility(sub: { status: string; deliveredAt: Date | nul
   return "ok";
 }
 
-export type RequestResult = { ok: true; id: string } | { ok: false; error: Eligibility | "forbidden" | "reason" | "photos" };
+export type RequestResult = { ok: true; id: string } | { ok: false; error: Eligibility | "forbidden" | "reason" | "photos" | "photos_required" };
 
 /** Demande de retour : propriétaire vérifié, colis livré, dans les 14 jours, une seule demande par colis. */
-export async function requestReturn(db: PrismaClient, userId: string, subOrderId: string, reason: string, now = new Date(), photoIds: string[] = []): Promise<RequestResult> {
-  const text = reason.trim().slice(0, 1000);
-  if (text.length < 3) return { ok: false, error: "reason" };
+export async function requestReturn(db: PrismaClient, userId: string, subOrderId: string, reason: string, now = new Date(), photoIds: string[] = [], reasonId?: string | null): Promise<RequestResult> {
+  let text = reason.trim().slice(0, 1000);
   const ids = [...new Set(photoIds)];
+  let chosen: { id: string; fr: string; requiresPhotos: boolean } | null = null;
+  if (reasonId) {
+    chosen = await db.returnReason.findFirst({ where: { id: reasonId, active: true } });
+    if (!chosen) return { ok: false, error: "reason" };
+    text = text ? `${chosen.fr} — ${text}`.slice(0, 1000) : chosen.fr;
+    if (chosen.requiresPhotos && ids.length === 0) return { ok: false, error: "photos_required" };
+  }
+  if (text.length < 3) return { ok: false, error: "reason" };
   if (ids.length > 5) return { ok: false, error: "photos" };
   const sub = await db.subOrder.findUnique({ where: { id: subOrderId }, include: { order: { select: { userId: true } } } });
   if (!sub || sub.order.userId !== userId) return { ok: false, error: "forbidden" };
@@ -43,7 +50,7 @@ export async function requestReturn(db: PrismaClient, userId: string, subOrderId
   const eligibility = returnEligibility(sub, existing > 0, now);
   if (eligibility !== "ok") return { ok: false, error: eligibility };
   if (ids.length && (await db.mediaFile.count({ where: { id: { in: ids }, ownerUserId: userId, isPrivate: true } })) !== ids.length) return { ok: false, error: "photos" };
-  const created = await db.returnRequest.create({ data: { subOrderId, userId, reason: text, photoIds: ids.join(",") } });
+  const created = await db.returnRequest.create({ data: { subOrderId, userId, reason: text, reasonId: chosen?.id ?? null, photoIds: ids.join(",") } });
   return { ok: true, id: created.id };
 }
 

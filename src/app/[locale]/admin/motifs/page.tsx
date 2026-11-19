@@ -2,6 +2,8 @@ import { db } from "@/lib/db";
 import type { Locale } from "@/lib/i18n";
 import { listReasons, type ReasonKind } from "@/lib/refusal-reasons";
 import { tr } from "@/lib/tr";
+import { DraftForm } from "./draft-form";
+import { ConfigTabs } from "../config-tabs";
 import { addReasonAction, deleteReasonsAction, moveReasonAction, saveReasonsAction, toggleReasonsAction } from "../motifs-actions";
 
 export const metadata = { title: "Motifs de refus", robots: { index: false } };
@@ -25,18 +27,19 @@ export default async function AdminReasons({ params, searchParams }: { params: P
   const err = sp.error ? errors[sp.error] : null;
   return (
     <>
-      <h1 className="font-heading text-3xl text-primary">{tr(locale, "Motifs de refus", "Refusal reasons")}</h1>
+      <ConfigTabs locale={locale} current="motifs" />
+      <h2 className="text-2xl font-semibold text-primary">{tr(locale, "Motifs de refus", "Refusal reasons")}</h2>
       <p className="text-sm text-muted-foreground">{tr(locale, "Code = libellé de la liste déroulante du créateur. Mail = phrase insérée dans l'e-mail au client. Désactiver : le motif n'est plus proposé pour les futurs refus, l'existant est inchangé. Supprimer : impossible si une commande ou un retour l'utilise.", "Code = label in the creator's dropdown. Mail = sentence inserted in the customer e-mail. Disable: the reason is no longer offered for future refusals, existing ones are unchanged. Delete: not possible if an order or return uses it.")}</p>
       {sp.ok && <p role="status" className="rounded-md border border-green-300 bg-green-50 p-3 text-sm">{tr(locale, "Enregistré.", "Saved.")}</p>}
       {err && <p role="alert" className="rounded-md border border-red-300 bg-red-50 p-3 text-sm">{tr(locale, err[0], err[1])}</p>}
       {groups.map((g, gi) => (
         <section key={g.kind} className="space-y-3">
           <h2 className="text-xl font-semibold">{g.title}</h2>
-          <form className="space-y-2">
+          <DraftForm id={g.kind} requireSelection noSelectionMessage={tr(locale, "Sélectionnez au moins une ligne.", "Select at least one row.")} className="space-y-2">
             <div className="flex flex-wrap gap-2">
-              <button className={btn} type="submit" formAction={saveReasonsAction}>{tr(locale, "Enregistrer", "Save")}</button>
-              <button className={btn} type="submit" formAction={toggleReasonsAction}>{tr(locale, "Désactiver / réactiver", "Disable / enable")}</button>
-              <button className={btn} type="submit" formAction={deleteReasonsAction}>{tr(locale, "Supprimer", "Delete")}</button>
+              <button className={btn} type="submit" formAction={saveReasonsAction} data-needs-selection="" data-clears-draft="">{tr(locale, "Enregistrer", "Save")}</button>
+              <button className={btn} type="submit" formAction={toggleReasonsAction} data-needs-selection="">{tr(locale, "Désactiver / réactiver", "Disable / enable")}</button>
+              <button className={btn} type="submit" formAction={deleteReasonsAction} data-needs-selection="">{tr(locale, "Supprimer", "Delete")}</button>
             </div>
             <div className="overflow-x-auto rounded-lg border">
               <table className="w-full text-left">
@@ -65,15 +68,15 @@ export default async function AdminReasons({ params, searchParams }: { params: P
                 </tbody>
               </table>
             </div>
-          </form>
-          <form action={addReasonAction} className="grid gap-2 rounded-lg border border-dashed p-3 sm:grid-cols-2">
+          </DraftForm>
+          <DraftForm id={g.kind+"-add"} action={addReasonAction} className="grid gap-2 rounded-lg border border-dashed p-3 sm:grid-cols-2">
             <input type="hidden" name="kind" value={g.kind} />
             <label className="block text-sm">Code FR<input name="fr" required minLength={3} maxLength={200} className={cell} /></label>
             <label className="block text-sm">Code EN<input name="en" required minLength={3} maxLength={200} className={cell} /></label>
             <label className="block text-sm">Mail FR<input name="mailFr" required minLength={3} maxLength={300} className={cell} /></label>
             <label className="block text-sm">Mail EN<input name="mailEn" required minLength={3} maxLength={300} className={cell} /></label>
-            <div className="sm:col-span-2"><button className={btn} type="submit">{tr(locale, "Ajouter un motif", "Add a reason")}</button></div>
-          </form>
+            <div className="sm:col-span-2"><button className={btn} type="submit" data-clears-draft="">{tr(locale, "Ajouter un motif", "Add a reason")}</button></div>
+          </DraftForm>
         </section>
       ))}
     </>

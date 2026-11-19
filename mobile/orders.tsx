@@ -17,7 +17,7 @@ type Order = {
   parcels: Parcel[];
 };
 type Parcel = {
-  id: string; number: string; status: string; statusLabel: string; shop: { name: string; country: string } | null;
+  id: string; number: string; status: string; statusLabel: string; confirmHours?: number; shop: { name: string; country: string } | null;
   items: { name: string; size: string | null; quantity: number; unitPriceCents: number; image: string | null }[];
   timeline: { key: string; label: { fr: string; en: string }; at: string | null; reached: boolean }[];
   carrier: string; trackingNumber: string; trackingUrl: string | null; shippedAt: string | null; deliveredAt: string | null;
@@ -27,6 +27,13 @@ type Parcel = {
 function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: number; token: string; reload: () => void }) {
   const [reason, setReason] = useState("");
   const [photos, setPhotos] = useState<string[]>([]);
+  const [reasons, setReasons] = useState<{ id: string; fr: string; en: string; requiresPhotos: boolean }[]>([]);
+  const [reasonId, setReasonId] = useState("");
+  const needsPhotos = !!reasons.find((x) => x.id === reasonId)?.requiresPhotos;
+  useEffect(() => {
+    if (!p.canReturn) return;
+    authed<{ reasons?: { id: string; fr: string; en: string; requiresPhotos: boolean }[] }>(token, "GET", "/api/v1/config").then((r) => { if (r.ok && Array.isArray(r.data?.reasons)) setReasons(r.data.reasons); });
+  }, [p.canReturn]);
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
   const [rCarrier, setRCarrier] = useState("");
@@ -61,10 +68,13 @@ function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: numbe
     setPhotos((x) => [...x, ...ids]);
   };
   const ask = async () => {
-    setBusy(true); setMsg("");
-    const r = await authed<{ error?: string }>(token, "POST", "/api/v1/orders/return", { id: p.id, reason, photos });
+    setMsg("");
+    if (reasons.length && !reasonId) { setMsg(tr("Merci de choisir un motif de retour.", "Please choose a return reason.")); return; }
+    if (needsPhotos && photos.length === 0) { setMsg(tr("Des photos sont obligatoires pour ce motif.", "Photos are required for this reason.")); return; }
+    setBusy(true);
+    const r = await authed<{ error?: string }>(token, "POST", "/api/v1/orders/return", { id: p.id, reason, photos, reasonId: reasonId || undefined });
     setBusy(false);
-    if (r.ok) { setMsg(""); reload(); } else setMsg(r.data?.error === "reason" ? tr("Merci d’indiquer le motif du retour (3 caractères minimum).", "Please give the reason for the return (3 characters minimum).") : tr("Retour impossible pour ce colis.", "A return is not possible for this parcel."));
+    if (r.ok) { setMsg(""); reload(); } else setMsg(r.data?.error === "photos_required" ? tr("Des photos sont obligatoires pour ce motif.", "Photos are required for this reason.") : r.data?.error === "reason" ? tr("Merci de choisir un motif de retour.", "Please choose a return reason.") : tr("Retour impossible pour ce colis.", "A return is not possible for this parcel."));
   };
   const shipReturn = async () => {
     setBusy(true); setMsg("");
@@ -83,7 +93,7 @@ function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: numbe
           <View style={{ flex: 1 }}><Text style={s.bold}>{it.name}</Text>{it.size ? <Text style={s.mut}>{tr("Taille", "Size")} {it.size}</Text> : null}<Text style={s.mut}>{tr("Qté", "Qty")} {it.quantity}</Text><Text style={s.bold}>{eur(it.unitPriceCents * it.quantity)}</Text></View>
         </View>
       ))}
-      {p.status === "PENDING" && <Text style={s.mut}>{tr("En attente de la réponse de la boutique (48 h maximum).", "Waiting for the shop's reply (48 h maximum).")}</Text>}
+      {p.status === "PENDING" && <Text style={s.mut}>{tr(`En attente de la réponse de la boutique (${p.confirmHours ?? 24} h maximum).`, `Waiting for the shop's reply (${p.confirmHours ?? 24} h maximum).`)}</Text>}
       {p.shippedAt && <Text style={s.mut}>{tr("Expédiée le", "Shipped on")} {date(p.shippedAt)}{p.carrier ? ` · ${p.carrier}` : ""}{p.trackingNumber ? ` · ${p.trackingNumber}` : ""}</Text>}
       {p.trackingUrl && <Pressable onPress={() => Linking.openURL(p.trackingUrl!)}><Text style={s.link}>{tr("Suivre mon colis", "Track my parcel")}</Text></Pressable>}
       {p.deliveredAt && <Text style={s.mut}>{tr("Livrée le", "Delivered on")} {date(p.deliveredAt)}</Text>}
@@ -108,9 +118,15 @@ function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: numbe
       {p.canReturn && (
         <View style={{ gap: 6, marginTop: 4 }}>
           <Text style={s.mut}>{tr("Les frais de livraison ne sont pas remboursés.", "Delivery fees are not refunded.")}</Text>
-          <Text style={s.bold}>{tr("Motif du retour", "Return reason")}</Text>
-          <TextInput value={reason} onChangeText={(v) => { setReason(v); setMsg(""); }} multiline maxLength={1000} style={s.input} placeholderTextColor="#6b5d52" selectionColor="#1c3060" />
-          <Pressable disabled={busy || photos.length >= 5} onPress={pick}><Text style={s.link}>{tr(`Ajouter des photos (${photos.length}/5, facultatif)`, `Add photos (${photos.length}/5, optional)`)}</Text></Pressable>
+          <Text style={s.bold}>{tr("Pourquoi souhaitez-vous retourner cet article ? *", "Why do you want to return this item? *")}</Text>
+          {reasons.map((rr) => (
+            <Pressable key={rr.id} onPress={() => { setReasonId(rr.id); setMsg(""); }} style={{ paddingVertical: 8 }}>
+              <Text style={{ color: reasonId === rr.id ? "#1c3060" : "#6b5d52", fontWeight: reasonId === rr.id ? "700" : "400" }}>{reasonId === rr.id ? "● " : "○ "}{getLang() === "en" ? rr.en : rr.fr}</Text>
+            </Pressable>
+          ))}
+          <Text style={s.bold}>{tr("Informations complémentaires (facultatif)", "Additional information (optional)")}</Text>
+          <TextInput value={reason} onChangeText={(v) => { setReason(v); setMsg(""); }} multiline maxLength={900} style={s.input} placeholderTextColor="#6b5d52" selectionColor="#1c3060" />
+          <Pressable disabled={busy || photos.length >= 5} onPress={pick}><Text style={s.link}>{needsPhotos ? tr(`Ajouter des photos (${photos.length}/5, obligatoire)`, `Add photos (${photos.length}/5, required)`) : tr(`Ajouter des photos (${photos.length}/5, facultatif)`, `Add photos (${photos.length}/5, optional)`)}</Text></Pressable>
           <Pressable disabled={busy} onPress={ask}><Text style={s.link}>{tr("Demander un retour", "Request a return")}</Text></Pressable>
         </View>
       )}

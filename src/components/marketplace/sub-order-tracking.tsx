@@ -4,6 +4,7 @@ import { CancelSubOrderButton } from "@/components/marketplace/cancel-sub-order-
 import { ReturnShippedForm } from "@/components/marketplace/return-shipped-form";
 import { ReturnRequestForm } from "@/components/marketplace/return-request-form";
 import { db } from "@/lib/db";
+import { creatorWindowHours } from "@/lib/payment-mode";
 import { returnEligibility, returnLabel, showShippedNotice } from "@/lib/returns";
 import type { Locale } from "@/lib/i18n";
 import { subLabel } from "@/lib/suborders";
@@ -39,7 +40,7 @@ export async function SubOrderTracking({ orderId, locale, canCancel = false }: {
                 <li key={i.id}>{i.quantity} × <Link href={`/${locale}/produits/${i.productSlug}`} className="underline underline-offset-4">{i.name}</Link>{i.size ? ` (${i.size})` : ""}</li>
               ))}
             </ul>
-            {s.status === "PENDING" && <p className="text-xs text-muted-foreground">{tr(locale, "En attente de la réponse de la boutique (48 h maximum).", "Waiting for the shop's reply (48 h maximum).")}</p>}
+            {s.status === "PENDING" && <p className="text-xs text-muted-foreground">{tr(locale, `En attente de la réponse de la boutique (${creatorWindowHours()} h maximum).`, `Waiting for the shop's reply (${creatorWindowHours()} h maximum).`)}</p>}
             {s.trackingNumber && <p>{tr(locale, "Expédiée le", "Shipped on")} {s.shippedAt ? fmt.format(s.shippedAt) : ""} — {carrierLabel(s.carrier, locale === "fr")} · {tr(locale, "suivi", "tracking")} {cleanTrackingNumber(s.trackingNumber)}</p>}
             {s.trackingNumber && trackingUrl(s.carrier, s.trackingNumber) && <p><a href={trackingUrl(s.carrier, s.trackingNumber)!} target="_blank" rel="noopener noreferrer" className="font-medium underline">{tr(locale, "Suivre mon colis", "Track my parcel")}</a></p>}
             {s.deliveredAt && <p>{tr(locale, "Livrée le", "Delivered on")} {fmt.format(s.deliveredAt)}</p>}

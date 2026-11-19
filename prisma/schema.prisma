@@ -363,6 +363,26 @@ model RefusalReason {
   @@index([kind, active, position])
 }
 
+/// Motifs de retour proposés au client (FR/EN) ; requiresPhotos = photos obligatoires
+model ReturnReason {
+  id             String  @id @default(cuid())
+  fr             String
+  en             String
+  requiresPhotos Boolean @default(false)
+  position       Int     @default(0)
+  active         Boolean @default(true)
+
+  @@index([active, position])
+}
+
+/// Transporteurs proposés aux créateurs à l'expédition
+model Carrier {
+  id       String  @id @default(cuid())
+  name     String  @unique
+  position Int     @default(0)
+  active   Boolean @default(true)
+}
+
 model SubOrder {
   id             String    @id @default(cuid())
   orderId        String
@@ -409,6 +429,8 @@ model ReturnRequest {
   subOrder    SubOrder  @relation(fields: [subOrderId], references: [id], onDelete: Cascade)
   userId      String
   reason      String
+  /// Motif choisi dans la liste (ReturnReason) ; null pour les anciennes demandes
+  reasonId    String?
   photoIds    String    @default("")
   /// Contrôle par le créateur : date de réception, état (OK | DAMAGED) et commentaire
   partnerReceivedAt DateTime?

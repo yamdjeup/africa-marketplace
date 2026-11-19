@@ -77,6 +77,8 @@ function OrderDetail({ token, id, onBack }: { token: string; id: string; onBack:
   const [decision, setDecision] = useState("ACCEPTED");
   const [dnote, setDnote] = useState("");
   const [note, setNote] = useState("");
+  const [carriers, setCarriers] = useState<string[]>(CARRIERS);
+  useEffect(() => { authed<{ carriers?: string[] }>(token, "GET", "/api/v1/config").then((r) => { if (r.ok && Array.isArray(r.data?.carriers) && r.data.carriers.length) setCarriers(r.data.carriers); }); }, []);
   const load = () => authed<Detail>(token, "GET", `/api/v1/supplier/orders/${id}`).then((r) => r.ok && setD(r.data));
   useEffect(() => { load(); }, [id]);
   useEffect(() => {
@@ -145,7 +147,7 @@ function OrderDetail({ token, id, onBack }: { token: string; id: string; onBack:
         <View style={{ marginTop: 16, gap: 10 }}>
           {d.status === "ACCEPTED" ? btn(tr("Marquer en préparation", "Mark as preparing"), () => act({ action: "prepare" }), true) : null}
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-            {[...CARRIERS, "__other"].map((c) => (
+            {[...carriers, "__other"].map((c) => (
               <Pressable key={c} onPress={() => setCarrier(c)} style={[st.chip, carrier === c && st.chipOn]}><Text style={{ color: carrier === c ? "#fff" : "#221812" }}>{c === "__other" ? tr("Autre", "Other") : c}</Text></Pressable>
             ))}
           </View>

@@ -10,10 +10,11 @@ export async function requestReturnAction(formData: FormData) {
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) return;
-  const files = formData.getAll("photos").filter((f): f is File => f instanceof File);
+  const reasonId = String(formData.get("reasonId") ?? "");
+  const files = formData.getAll("photos").filter((f): f is File => f instanceof File && f.size > 0);
   const stored = await storeReturnPhotos(userId, files);
   if (!stored.ok) return;
-  await requestReturnForUser(userId, session.user?.email, String(formData.get("id") ?? ""), String(formData.get("reason") ?? ""), stored.ids);
+  await requestReturnForUser(userId, session.user?.email, String(formData.get("id") ?? ""), String(formData.get("reason") ?? ""), stored.ids, reasonId || null);
   revalidatePath("/", "layout");
 }
 

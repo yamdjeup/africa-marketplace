@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { CARRIERS, cleanTrackingNumber } from "@/lib/tracking";
+import { activeCarrierNames } from "@/lib/config-lists";
 import { formatPhone } from "@/lib/phone";
 import { Pill, inputCls } from "@/components/fournisseur/parts";
 import { db } from "@/lib/db";
@@ -44,7 +45,7 @@ export default async function PartnerOrder({ params, searchParams }: { params: P
   const items = await db.orderItem.findMany({ where: { subOrderId: sub.id } });
   const st = subLabel(sub.status);
   const ret = await db.returnRequest.findFirst({ where: { subOrderId: sub.id } });
-  const [orderReasons, returnReasons] = await Promise.all([listReasons(db, "ORDER"), listReasons(db, "RETURN")]);
+  const [orderReasons, returnReasons, carrierNames] = await Promise.all([listReasons(db, "ORDER"), listReasons(db, "RETURN"), activeCarrierNames(db, CARRIERS)]);
   const o = sub.order;
   const fmt = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "fr-FR", { timeZone: "Europe/Paris", dateStyle: "long", timeStyle: "short" });
   const eur = (c: number) => new Intl.NumberFormat(locale === "en" ? "en-GB" : "fr-FR", { style: "currency", currency: "EUR" }).format(c / 100);
@@ -115,7 +116,7 @@ export default async function PartnerOrder({ params, searchParams }: { params: P
             {hidden}
             <label className="block text-sm">{tr(locale, "Transporteur", "Carrier")}
               <select name="carrier" required className={inputCls} defaultValue="UPS">
-                {CARRIERS.map((c) => <option key={c} value={c}>{c}</option>)}
+                {carrierNames.map((c) => <option key={c} value={c}>{c}</option>)}
                 <option value="__other">{tr(locale, "Autre", "Other")}</option>
               </select>
             </label>

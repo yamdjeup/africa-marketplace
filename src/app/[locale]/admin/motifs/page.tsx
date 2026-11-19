@@ -3,6 +3,7 @@ import type { Locale } from "@/lib/i18n";
 import { listReasons, type ReasonKind } from "@/lib/refusal-reasons";
 import { tr } from "@/lib/tr";
 import { DraftForm } from "./draft-form";
+import { ConfigTabs } from "../config-tabs";
 import { addReasonAction, deleteReasonsAction, moveReasonAction, saveReasonsAction, toggleReasonsAction } from "../motifs-actions";
 
 export const metadata = { title: "Motifs de refus", robots: { index: false } };
@@ -26,7 +27,8 @@ export default async function AdminReasons({ params, searchParams }: { params: P
   const err = sp.error ? errors[sp.error] : null;
   return (
     <>
-      <h1 className="font-heading text-3xl text-primary">{tr(locale, "Motifs de refus", "Refusal reasons")}</h1>
+      <ConfigTabs locale={locale} current="motifs" />
+      <h2 className="text-2xl font-semibold text-primary">{tr(locale, "Motifs de refus", "Refusal reasons")}</h2>
       <p className="text-sm text-muted-foreground">{tr(locale, "Code = libellé de la liste déroulante du créateur. Mail = phrase insérée dans l'e-mail au client. Désactiver : le motif n'est plus proposé pour les futurs refus, l'existant est inchangé. Supprimer : impossible si une commande ou un retour l'utilise.", "Code = label in the creator's dropdown. Mail = sentence inserted in the customer e-mail. Disable: the reason is no longer offered for future refusals, existing ones are unchanged. Delete: not possible if an order or return uses it.")}</p>
       {sp.ok && <p role="status" className="rounded-md border border-green-300 bg-green-50 p-3 text-sm">{tr(locale, "Enregistré.", "Saved.")}</p>}
       {err && <p role="alert" className="rounded-md border border-red-300 bg-red-50 p-3 text-sm">{tr(locale, err[0], err[1])}</p>}

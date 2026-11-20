@@ -1,12 +1,14 @@
 import React, { useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Text, TextInput, View } from "react-native";
 
 export type DropdownOption = { id: string; label: string };
 
 // Collapsed field with a chevron; opens the option list on touch, closes on choice.
-export function Dropdown({ value, options, onChange, placeholder }: { value: string; options: DropdownOption[]; onChange: (id: string) => void; placeholder: string }) {
+export function Dropdown({ value, options, onChange, placeholder, filter, searchPlaceholder }: { value: string; options: DropdownOption[]; onChange: (id: string) => void; placeholder: string; filter?: (q: string) => DropdownOption[]; searchPlaceholder?: string }) {
   const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
   const current = options.find((o) => o.id === value);
+  const shown = filter ? filter(q) : options;
   return (
     <View>
       <Pressable accessibilityRole="button" onPress={() => setOpen((x) => !x)} style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderWidth: 1, borderColor: "#c9bfb4", borderRadius: 6, paddingHorizontal: 10, paddingVertical: 12, backgroundColor: "#fff" }}>
@@ -15,8 +17,9 @@ export function Dropdown({ value, options, onChange, placeholder }: { value: str
       </Pressable>
       {open && (
         <View style={{ borderWidth: 1, borderColor: "#c9bfb4", borderTopWidth: 0, borderRadius: 6, backgroundColor: "#fff" }}>
-          {options.map((o) => (
-            <Pressable key={o.id} onPress={() => { onChange(o.id); setOpen(false); }} style={{ paddingHorizontal: 10, paddingVertical: 12, borderTopWidth: 1, borderColor: "#eee" }}>
+          {filter && <TextInput value={q} onChangeText={setQ} autoFocus placeholder={searchPlaceholder} placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={{ paddingHorizontal: 10, paddingVertical: 10, color: "#1c1c1c" }} />}
+          {shown.map((o) => (
+            <Pressable key={o.id} onPress={() => { onChange(o.id); setQ(""); setOpen(false); }} style={{ paddingHorizontal: 10, paddingVertical: 12, borderTopWidth: 1, borderColor: "#eee" }}>
               <Text style={{ fontWeight: o.id === value ? "700" : "400", color: "#1c1c1c" }}>{o.label}</Text>
             </Pressable>
           ))}

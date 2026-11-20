@@ -1,6 +1,8 @@
 import { tr, lazy, getLang } from "./region";
 import { useEffect, useState } from "react";
 import { Dropdown } from "./dropdown";
+import { buildCarrierOptions, filterCarriers } from "./carriers";
+const CARRIER_OPTIONS = buildCarrierOptions();
 import { ActivityIndicator, Alert, Image, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { authed } from "./api";
 import { API_URL } from "./config";
@@ -110,7 +112,7 @@ function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: numbe
         <View style={{ gap: 6, marginTop: 4 }}>
           <Text style={s.mut}>{tr("Renvoyez la pièce au créateur, puis confirmez l’expédition.", "Send the piece back to the creator, then confirm the shipment.")}</Text>
           <Text style={s.bold}>{tr("Transporteur", "Carrier")}</Text>
-          <TextInput value={rCarrier} onChangeText={setRCarrier} maxLength={60} style={s.input} placeholderTextColor="#6b5d52" selectionColor="#1c3060" />
+          <Dropdown value={rCarrier} options={CARRIER_OPTIONS} onChange={setRCarrier} placeholder={tr("Sélectionnez un transporteur", "Select a carrier")} filter={(q) => filterCarriers(CARRIER_OPTIONS, q)} searchPlaceholder={tr("Tapez pour filtrer…", "Type to filter…")} />
           <Text style={s.bold}>{tr("Numéro de suivi", "Tracking number")}</Text>
           <TextInput value={rTracking} onChangeText={setRTracking} maxLength={60} autoCapitalize="characters" style={s.input} placeholderTextColor="#6b5d52" selectionColor="#1c3060" />
           <Pressable disabled={busy} onPress={shipReturn}><Text style={s.link}>{tr("Confirmer l’expédition du retour", "Confirm return shipment")}</Text></Pressable>

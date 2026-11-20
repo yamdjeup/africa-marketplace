@@ -106,7 +106,7 @@ function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: numbe
           {refunded ? tr(`Vous serez remboursé de ${eur(p.subtotalCents)} sur votre moyen de paiement sous 5 à 10 jours ouvrés.`, `You will be refunded ${eur(p.subtotalCents)} to your payment method within 5 to 10 working days.`) : p.refundStatus === "FAILED" ? tr("Nous revenons vers vous au sujet de votre remboursement.", "We will get back to you about your refund.") : tr("Commande annulée.", "Order cancelled.")}
         </Text>
       )}
-      {p.canCancel && <Pressable disabled={busy} onPress={cancel}><Text style={s.link}>{tr("Annuler ma commande", "Cancel my order")}</Text></Pressable>}
+      {p.canCancel && <Pressable disabled={busy} onPress={cancel} style={s.ctaOutline} accessibilityRole="button"><Text style={s.ctaOutlineText}>{tr("Annuler ma commande", "Cancel my order")}</Text></Pressable>}
       {p.returnStatus && <Text style={s.bold}>{RET[p.returnStatus] ?? tr(p.returnStatus, p.returnStatusEn ?? p.returnStatus)}</Text>}
       {p.canShipReturn && (
         <View style={{ gap: 6, marginTop: 4 }}>
@@ -115,7 +115,7 @@ function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: numbe
           <Dropdown value={rCarrier} options={CARRIER_OPTIONS} onChange={setRCarrier} placeholder={tr("Sélectionnez un transporteur", "Select a carrier")} filter={(q) => filterCarriers(CARRIER_OPTIONS, q)} searchPlaceholder={tr("Tapez pour filtrer…", "Type to filter…")} />
           <Text style={s.bold}>{tr("Numéro de suivi", "Tracking number")}</Text>
           <TextInput value={rTracking} onChangeText={setRTracking} maxLength={60} autoCapitalize="characters" style={s.input} placeholderTextColor="#6b5d52" selectionColor="#1c3060" />
-          <Pressable disabled={busy} onPress={shipReturn}><Text style={s.link}>{tr("Confirmer l’expédition du retour", "Confirm return shipment")}</Text></Pressable>
+          <Pressable disabled={busy} onPress={shipReturn} style={s.cta} accessibilityRole="button"><Text style={s.ctaText}>{tr("Confirmer l’expédition du retour", "Confirm return shipment")}</Text></Pressable>
         </View>
       )}
       {p.canReturn && (
@@ -150,7 +150,7 @@ function EditAddress({ o, token, reload }: { o: Order; token: string; reload: ()
   const [first, ...rest] = o.address.fullName.split(" ");
   const [form, setForm] = useState<AddressForm>({ ...EMPTY_FORM, firstName: first, lastName: rest.join(" "), country: o.address.country, line1: o.address.line1, houseNumber: o.address.houseNumber ?? "", box: o.address.box, line2: o.address.line2, postalCode: o.address.postalCode, city: o.address.city, phone: o.address.phone });
   if (!o.canEditAddress) return null;
-  if (!open) return <Pressable onPress={() => setOpen(true)}><Text style={s.link}>{tr("Modifier l'adresse de livraison", "Change delivery address")}</Text></Pressable>;
+  if (!open) return <Pressable onPress={() => setOpen(true)} style={s.ctaOutline} accessibilityRole="button"><Text style={s.ctaOutlineText}>{tr("Modifier l'adresse de livraison", "Change delivery address")}</Text></Pressable>;
   const save = async () => {
     setBusy(true); setMsg("");
     const r = await authed<{ error?: string }>(token, "POST", "/api/v1/orders/address", { number: o.number, ...form });
@@ -162,7 +162,7 @@ function EditAddress({ o, token, reload }: { o: Order; token: string; reload: ()
       <AddressFields form={form} setForm={setForm} />
       {msg ? <Text style={{ color: "#b00020" }}>{msg}</Text> : null}
       <Pressable disabled={busy} onPress={save} style={{ backgroundColor: "#221812", padding: 14, alignItems: "center" }}>{busy ? <ActivityIndicator color="#fff" /> : <Text style={{ color: "#fff", fontWeight: "700" }}>{tr("Enregistrer l'adresse", "Save address")}</Text>}</Pressable>
-      <Pressable onPress={() => setOpen(false)}><Text style={s.link}>{tr("Annuler", "Cancel")}</Text></Pressable>
+      <Pressable onPress={() => setOpen(false)} style={s.ctaOutline} accessibilityRole="button"><Text style={s.ctaOutlineText}>{tr("Annuler", "Cancel")}</Text></Pressable>
     </View>
   );
 }

@@ -1,3 +1,4 @@
+import { Btn } from "./button";
 import { tr } from "./region";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { ActivityIndicator, FlatList, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
@@ -122,8 +123,8 @@ export function ShopScreen<P extends Item>({ initialCategory, renderItem, onOpen
 
   const header = (
     <View>
-      <View style={{ flexDirection: "row", gap: 20, paddingHorizontal: 16, paddingTop: 12 }}><Pressable onPress={() => setCatsOpen(true)} accessibilityRole="button"><Text style={{ color: "#221812", textDecorationLine: "underline", fontWeight: "700" }}>{tr("Catégories", "Categories")}</Text></Pressable>
-      <Pressable onPress={() => setArtistsOpen(true)} accessibilityRole="button"><Text style={{ color: "#221812", textDecorationLine: "underline", fontWeight: "700" }}>{tr("Tous les artistes", "All artists")}</Text></Pressable></View>
+      <View style={{ flexDirection: "row", gap: 20, paddingHorizontal: 16, paddingTop: 12 }}><Btn small onPress={() => setCatsOpen(true)}>{tr("Catégories", "Categories")}</Btn>
+      <Btn small onPress={() => setArtistsOpen(true)}>{tr("Tous les artistes", "All artists")}</Btn></View>
       {catsOpen && <CategoriesScreen onClose={() => setCatsOpen(false)} onApply={(a) => setV({ ...EMPTY, ...a })} />}
       {artistsOpen && <ArtistsScreen onClose={() => setArtistsOpen(false)} onOpenCreator={(s) => { setArtistsOpen(false); onOpenCreator(s); }} />}
       <View style={{ padding: 16, paddingBottom: 8 }}>
@@ -248,7 +249,7 @@ function RefineSheet({ initial, baseOptions, total, onClose, onApply }: { initia
     <View style={st.sheet}>
       <View style={st.sheetTop}>
         <Pressable onPress={onClose} accessibilityLabel={tr("Fermer", "Close")} hitSlop={10}><Text style={{ fontSize: 24, color: "#221812" }}>✕</Text></Pressable>
-        <Pressable onPress={() => { setCount(null); setV(EMPTY); }}><Text style={{ textDecorationLine: "underline", color: "#221812" }}>{tr("Tout effacer", "Clear all")}</Text></Pressable>
+        <Btn small onPress={() => { setCount(null); setV(EMPTY); }}>{tr("Tout effacer", "Clear all")}</Btn>
       </View>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
         <TextInput value={v.q} onChangeText={(t) => set("q", t)} placeholder={tr("Rechercher une création", "Search for a piece")} placeholderTextColor="#8a7d70" style={st.input} />

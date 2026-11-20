@@ -1,4 +1,5 @@
 import { tr, lazy } from "./region";
+import { Btn } from "./button";
 import { useEffect, useRef, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { authed } from "./api";
@@ -106,7 +107,7 @@ export function AddressesScreen({ token, onBack }: { token: string; onBack: () =
         <AddressFields form={form} setForm={setForm} />
         {msg ? <Text style={s.msg}>{msg}</Text> : null}
         <Pressable style={s.cta} onPress={save}><Text style={s.ctaText}>{tr("Enregistrer", "Save")}</Text></Pressable>
-        <Pressable style={{ marginTop: 12 }} onPress={() => { setForm(null); setEditId(null); setMsg(null); }}><Text style={s.link}>{tr("Annuler", "Cancel")}</Text></Pressable>
+        <Btn  style={{ marginTop: 12 }} onPress={() => { setForm(null); setEditId(null); setMsg(null); }}>{tr("Annuler", "Cancel")}</Btn>
       </ScrollView>
     );
   }
@@ -123,9 +124,9 @@ export function AddressesScreen({ token, onBack }: { token: string; onBack: () =
           <Text>{a.postalCode} {a.city}, {a.country}</Text>
           <Text style={s.mut}>{a.phone}</Text>
           <View style={{ flexDirection: "row", gap: 16, marginTop: 8, flexWrap: "wrap" }}>
-            <Pressable hitSlop={8} onPress={() => { setEditId(a.id); setForm({ firstName: a.firstName, lastName: a.lastName, country: a.country, houseNumber: a.houseNumber, box: a.box ?? "", line2: a.line2 ?? "", line1: a.line1, postalCode: a.postalCode, city: a.city, phone: a.phone }); }}><Text style={s.link}>{tr("Modifier", "Edit")}</Text></Pressable>
-            {!a.isDefault && <Pressable hitSlop={8} onPress={() => act("PATCH", "/api/v1/addresses", { id: a.id })}><Text style={s.link}>{tr("Par défaut", "Default")}</Text></Pressable>}
-            <Pressable hitSlop={8} onPress={() => Alert.alert(tr("Supprimer cette adresse ?", "Delete this address?"), "", [{ text: tr("Annuler", "Cancel") }, { text: tr("Supprimer", "Delete"), style: "destructive", onPress: () => act("Delete", `/api/v1/addresses?id=${encodeURIComponent(a.id)}`) }])}><Text style={s.link}>{tr("Supprimer", "Delete")}</Text></Pressable>
+            <Btn small hitSlop={8} onPress={() => { setEditId(a.id); setForm({ firstName: a.firstName, lastName: a.lastName, country: a.country, houseNumber: a.houseNumber, box: a.box ?? "", line2: a.line2 ?? "", line1: a.line1, postalCode: a.postalCode, city: a.city, phone: a.phone }); }}>{tr("Modifier", "Edit")}</Btn>
+            {!a.isDefault && <Btn small hitSlop={8} onPress={() => act("PATCH", "/api/v1/addresses", { id: a.id })}>{tr("Par défaut", "Default")}</Btn>}
+            <Btn small hitSlop={8} onPress={() => Alert.alert(tr("Supprimer cette adresse ?", "Delete this address?"), "", [{ text: tr("Annuler", "Cancel") }, { text: tr("Supprimer", "Delete"), style: "destructive", onPress: () => act("Delete", `/api/v1/addresses?id=${encodeURIComponent(a.id)}`) }])}>{tr("Supprimer", "Delete")}</Btn>
           </View>
         </View>
       ))}

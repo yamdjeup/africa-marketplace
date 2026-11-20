@@ -12,9 +12,11 @@ type Lbl = { fr: string; en: string };
 type Sub = { id: string; number: string; status: string; statusLabel: Lbl; createdAt: string; customer: string; subtotalCents: number; acceptBy: string | null };
 
 const TABS: { v: string; fr: string; en: string }[] = [
-  { v: "todo", fr: tr("À traiter", "To process"), en: "To handle" },
+  { v: "todo", fr: tr("À traiter", "To handle"), en: "To handle" },
   { v: "PENDING", fr: tr("À accepter", "To accept"), en: "To accept" },
+  { v: "ship", fr: tr("À expédier", "To ship"), en: "To ship" },
   { v: "SHIPPED", fr: tr("Expédiées", "Shipped"), en: "Shipped" },
+  { v: "done", fr: tr("Clôturées", "Closed"), en: "Closed" },
   { v: "all", fr: "Toutes", en: "All" },
 ];
 

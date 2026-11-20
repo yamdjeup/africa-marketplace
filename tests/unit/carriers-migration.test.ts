@@ -16,3 +16,7 @@ describe('liste API (table admin)', () => { it('construit les options depuis des
 
 import { sortCarriers } from '../../src/lib/config-lists';
 describe('web: populaires en tete', () => { it('ordonne UPS DHL FedEx Colissimo Chronopost puis le reste', () => { expect(sortCarriers(['Zed','Colissimo','dhl','UPS']).slice(0,3)).toEqual(['UPS','dhl','Colissimo']); }); });
+
+import { SUPPLIER_TAB_STATUSES } from '../../src/lib/mobile-supplier';
+import { partnerSubOrdersWhere } from '../../src/lib/admin-list';
+describe('onglets commandes app = site', () => { it('memes statuts', () => { for (const k of ['todo','PENDING','ship','SHIPPED','done']) { const w = partnerSubOrdersWhere({ st: k } as never, 's') as { AND: { status?: { in: string[] } }[] }; expect(w.AND.find((a) => a.status)?.status?.in).toEqual(SUPPLIER_TAB_STATUSES[k]); } }); });

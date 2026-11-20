@@ -5,6 +5,8 @@ import { tr, useLang } from "./region";
 import * as ImagePicker from "expo-image-picker";
 import { WorkForm, uploadPhoto } from "./work-form";
 import { API_URL } from "./config";
+import { Dropdown } from "./dropdown";
+import { buildCarrierOptions, filterCarriers, OTHER_CARRIER } from "./carriers";
 
 type Lbl = { fr: string; en: string };
 type Sub = { id: string; number: string; status: string; statusLabel: Lbl; createdAt: string; customer: string; subtotalCents: number; acceptBy: string | null };
@@ -78,6 +80,7 @@ function OrderDetail({ token, id, onBack }: { token: string; id: string; onBack:
   const [dnote, setDnote] = useState("");
   const [note, setNote] = useState("");
   const [carriers, setCarriers] = useState<string[]>(CARRIERS);
+  const carrierOptions = React.useMemo(() => buildCarrierOptions(carriers.map((n) => ["", n] as [string, string])), [carriers]);
   useEffect(() => { authed<{ carriers?: string[] }>(token, "GET", "/api/v1/config").then((r) => { if (r.ok && Array.isArray(r.data?.carriers) && r.data.carriers.length) setCarriers(r.data.carriers); }); }, []);
   const load = () => authed<Detail>(token, "GET", `/api/v1/supplier/orders/${id}`).then((r) => r.ok && setD(r.data));
   useEffect(() => { load(); }, [id]);
@@ -146,14 +149,10 @@ function OrderDetail({ token, id, onBack }: { token: string; id: string; onBack:
       {d.status === "ACCEPTED" || d.status === "PREPARING" ? (
         <View style={{ marginTop: 16, gap: 10 }}>
           {d.status === "ACCEPTED" ? btn(tr("Marquer en préparation", "Mark as preparing"), () => act({ action: "prepare" }), true) : null}
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-            {[...carriers, "__other"].map((c) => (
-              <Pressable key={c} onPress={() => setCarrier(c)} style={[st.chip, carrier === c && st.chipOn]}><Text style={{ color: carrier === c ? "#fff" : "#221812" }}>{c === "__other" ? tr("Autre", "Other") : c}</Text></Pressable>
-            ))}
-          </View>
-          {carrier === "__other" ? <TextInput value={other} onChangeText={setOther} placeholder={tr("Autre transporteur", "Other carrier")} placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={st.input} /> : null}
+          <Dropdown value={carrier} options={carrierOptions} onChange={setCarrier} placeholder={tr("Sélectionnez un transporteur", "Select a carrier")} filter={(q) => filterCarriers(carrierOptions, q)} searchPlaceholder={tr("Tapez pour filtrer…", "Type to filter…")} />
+          {carrier === OTHER_CARRIER ? <TextInput value={other} onChangeText={setOther} placeholder={tr("Autre transporteur", "Other carrier")} placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={st.input} /> : null}
           <TextInput value={tracking} onChangeText={setTracking} placeholder={tr("Numéro de suivi", "Tracking number")} placeholderTextColor="#6b5d52" selectionColor="#1c3060" autoCapitalize="characters" style={st.input} />
-          {btn(tr("Marquer expédiée", "Mark as shipped"), () => act({ action: "ship", carrier: carrier === "__other" ? other : carrier, tracking }))}
+          {btn(tr("Marquer expédiée", "Mark as shipped"), () => act({ action: "ship", carrier: carrier === OTHER_CARRIER ? other : carrier, tracking }))}
         </View>
       ) : null}
       {d.status === "SHIPPED" ? (

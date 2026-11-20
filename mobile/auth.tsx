@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { Btn } from "./button";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import { GoogleSignin, statusCodes } from "@react-native-google-signin/google-signin";
@@ -193,10 +194,10 @@ export function AccountScreen({ auth, onOpenSite, more }: { auth: Auth; onOpenSi
       </Pressable>
       {mode !== "forgot" && GOOGLE_ANDROID && GOOGLE_WEB ? <GoogleButton auth={auth} onError={setMsg} /> : null}
       <View style={{ marginTop: 16, gap: 12 }}>
-        {mode !== "login" && <Pressable onPress={() => { setMode("login"); setMsg(null); }}><Text style={s.link}>{tr("J’ai déjà un compte", "I already have an account")}</Text></Pressable>}
-        {mode !== "register" && <Pressable onPress={() => { setMode("register"); setMsg(null); }}><Text style={s.link}>{tr("Créer un compte", "Create an account")}</Text></Pressable>}
-        {mode === "login" && <Pressable onPress={() => { setMode("forgot"); setMsg(null); }}><Text style={s.link}>{tr("Mot de passe oublié ?", "Forgot your password?")}</Text></Pressable>}
-        <Pressable onPress={() => setSupport(true)}><Text style={s.link}>{tr("Besoin d’aide ?", "Need help?")}</Text></Pressable>
+        {mode !== "login" && <Btn  onPress={() => { setMode("login"); setMsg(null); }}>{tr("J’ai déjà un compte", "I already have an account")}</Btn>}
+        {mode !== "register" && <Btn  onPress={() => { setMode("register"); setMsg(null); }}>{tr("Créer un compte", "Create an account")}</Btn>}
+        {mode === "login" && <Btn  onPress={() => { setMode("forgot"); setMsg(null); }}>{tr("Mot de passe oublié ?", "Forgot your password?")}</Btn>}
+        <Btn  onPress={() => setSupport(true)}>{tr("Besoin d’aide ?", "Need help?")}</Btn>
       </View>
       {more}
     </ScrollView>

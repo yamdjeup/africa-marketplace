@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Btn } from "./button";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
@@ -98,8 +99,8 @@ export function PartnerApplyScreen({ token, onBack }: { token: string; onBack: (
           <Text style={s.label}>{tr("Lien vers votre portfolio ou réseau social (facultatif si vous joignez des photos)", "Link to your portfolio or social profile (optional if you attach photos)")}</Text>
           <TextInput style={s.input} value={f.portfolioUrl} onChangeText={(v) => setF({ ...f, portfolioUrl: v })} autoCapitalize="none" keyboardType="url" placeholder="https://" maxLength={300} placeholderTextColor="#6b5d52" selectionColor="#1c3060" />
           <Text style={s.label}>{tr("Photos de vos créations (5 maximum)", "Photos of your creations (5 maximum)")}</Text>
-          {files.map((x) => <View key={x.id} style={s.fileRow}><Text style={{ flex: 1, color: "#221812" }} numberOfLines={1}>{x.name}</Text><Pressable onPress={() => removePhoto(x.id)}><Text style={s.link}>{tr("Retirer", "Remove")}</Text></Pressable></View>)}
-          {files.length < 5 ? <Pressable disabled={busy} onPress={addPhoto}><Text style={[s.link, { marginVertical: 8 }]}>{tr("+ Ajouter une photo", "+ Add a photo")}</Text></Pressable> : null}
+          {files.map((x) => <View key={x.id} style={s.fileRow}><Text style={{ flex: 1, color: "#221812" }} numberOfLines={1}>{x.name}</Text><Btn small onPress={() => removePhoto(x.id)}>{tr("Retirer", "Remove")}</Btn></View>)}
+          {files.length < 5 ? <Btn  disabled={busy} onPress={addPhoto}>{tr("+ Ajouter une photo", "+ Add a photo")}</Btn> : null}
           <Text style={s.label}>{tr("Présentez-vous et votre travail", "Tell us about you and your work")}</Text>
           <TextInput style={[s.input, { height: 120, textAlignVertical: "top", paddingTop: 10 }]} multiline value={f.about} onChangeText={(v) => setF({ ...f, about: v })} maxLength={3000} placeholderTextColor="#6b5d52" selectionColor="#1c3060" />
           {msg ? <Text style={s.err}>{msg}</Text> : null}

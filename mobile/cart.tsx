@@ -1,4 +1,5 @@
 import { ApproxPrice, tr, lazy } from "./region";
+import { Btn } from "./button";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { initPaymentSheet, presentPaymentSheet } from "@stripe/stripe-react-native";
@@ -202,7 +203,7 @@ export function CartScreen({ lines, token, onNeedLogin, onPaid, onQty, onRemove,
                 <Pressable style={s.qty} hitSlop={6} onPress={() => onQty(l.slug, l.size ?? null, l.quantity - 1)}><Text style={s.qtyText}>−</Text></Pressable>
                 <Text>{l.quantity}</Text>
                 <Pressable style={s.qty} hitSlop={6} onPress={() => onQty(l.slug, l.size ?? null, Math.min(l.maxQuantity, l.quantity + 1))}><Text style={s.qtyText}>+</Text></Pressable>
-                <Pressable hitSlop={8} onPress={() => onRemove(l.slug, l.size ?? null)}><Text style={s.link}>{tr("Retirer", "Remove")}</Text></Pressable>
+                <Btn small hitSlop={8} onPress={() => onRemove(l.slug, l.size ?? null)}>{tr("Retirer", "Remove")}</Btn>
               </View>
             </View>
           </View>

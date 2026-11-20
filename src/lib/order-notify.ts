@@ -12,6 +12,8 @@ import { carrierLabel, cleanTrackingNumber, trackingUrl } from "@/lib/tracking";
 import { releaseExpiredHolds } from "@/lib/checkout-hold";
 import { sweepSubOrders, sweepPrepReminders, sweepClosed } from "@/lib/suborders";
 import { settleSubRefund } from "@/lib/refund";
+import { pollTracking } from "@/lib/tracking-events";
+import { getTrackingProvider } from "@/lib/tracking-provider";
 
 export type SubEvent = "NEW" | "REMINDER" | "ESCALATION" | "PREP_REMINDER" | "PREP_ESCALATION" | "ACCEPTED" | "PREPARING" | "REFUSED" | "EXPIRED" | "CANCELLED" | "PARTNER_CANCELLED" | "PARTNER_EXPIRED" | "SHIPPED" | "DELIVERED" | "CLOSED";
 
@@ -150,4 +152,18 @@ export async function runSubOrderSweep() {
   }
   for (const s of await sweepClosed(db)) await notifySubOrder("CLOSED", s.id);
   return { prepLate: late.length, reminded: r.reminded.length, escalated: r.escalated.length, expired: r.expired.length };
+}
+
+/** Rattrapage 17TRACK (cron) : livraisons / retours reçus manqués par le webhook, avec les mêmes e-mails. */
+export async function runTrackingPoll() {
+  const done = await pollTracking(db, getTrackingProvider());
+  for (const r of done) {
+    if (!r.subOrderId) continue;
+    if (r.outcome === "delivered") await notifySubOrder("DELIVERED", r.subOrderId);
+    else {
+      const { sendReturnMail } = await import("@/lib/return-email");
+      await sendReturnMail(r.subOrderId, "received");
+    }
+  }
+  return done.length;
 }

@@ -26,6 +26,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "signature" }, { status: 400 });
   }
   const r = await applyTrackingUpdate(db, update);
+  console.log("[17track] webhook", update.number, update.status, r.outcome);
   if (r.subOrderId) {
     if (r.outcome === "delivered") await notifySubOrder("DELIVERED", r.subOrderId);
     else await sendReturnMail(r.subOrderId, "received");

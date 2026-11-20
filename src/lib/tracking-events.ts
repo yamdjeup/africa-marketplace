@@ -1,6 +1,6 @@
 import type { PrismaClient } from "@prisma/client";
 import { deliverSub } from "@/lib/suborders";
-import type { TrackingUpdate } from "@/lib/tracking-provider";
+import { carrierCodeFor, type TrackingProvider, type TrackingUpdate } from "@/lib/tracking-provider";
 
 export type TrackingOutcome = "delivered" | "return-received" | "ignored";
 
@@ -18,4 +18,28 @@ export async function applyTrackingUpdate(db: PrismaClient, u: TrackingUpdate, n
     return n.count === 1 ? { outcome: "return-received", subOrderId: ret.subOrderId } : { outcome: "ignored" };
   }
   return { outcome: "ignored" };
+}
+
+const BATCH = 40;
+
+/** Rattrapage si le webhook est manqué : relit le suivi des colis expédiés non livrés et des retours expédiés non reçus (lots de 40). */
+export async function pollTracking(db: PrismaClient, provider: TrackingProvider | null, now = new Date()): Promise<{ outcome: TrackingOutcome; subOrderId?: string }[]> {
+  if (!provider) return [];
+  const [subs, rets] = await Promise.all([
+    db.subOrder.findMany({ where: { status: "SHIPPED", trackingNumber: { not: "" } }, select: { trackingNumber: true, carrier: true }, take: 400 }),
+    db.returnRequest.findMany({ where: { status: "ACCEPTED", returnShippedAt: { not: null }, returnTracking: { not: null } }, select: { returnTracking: true, returnCarrier: true }, take: 400 }),
+  ]);
+  const items = [
+    ...subs.map((s) => ({ number: s.trackingNumber as string, carrierCode: carrierCodeFor(s.carrier ?? "") })),
+    ...rets.map((r) => ({ number: r.returnTracking as string, carrierCode: carrierCodeFor(r.returnCarrier ?? "") })),
+  ];
+  const results: { outcome: TrackingOutcome; subOrderId?: string }[] = [];
+  for (let i = 0; i < items.length; i += BATCH) {
+    for (const u of await provider.getInfo(items.slice(i, i + BATCH))) {
+      if (!u.delivered) continue;
+      const r = await applyTrackingUpdate(db, u, now);
+      if (r.outcome !== "ignored") results.push(r);
+    }
+  }
+  return results;
 }

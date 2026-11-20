@@ -130,9 +130,11 @@ export type PartnerCondition = "OK" | "DAMAGED";
 export async function markReturnReceivedByPartner(db: PrismaClient, subOrderId: string, supplierId: string, condition: PartnerCondition, note: string, now = new Date()) {
   const text = note.trim();
   if (condition === "DAMAGED" && text.length < 3) return "note" as const;
-  const ret = await db.returnRequest.findFirst({ where: { subOrderId, status: "ACCEPTED", subOrder: { supplierId } }, select: { id: true } });
+  // « reçu » sans état (détecté par 17TRACK ou saisi par l'administration) reste à contrôler par le créateur.
+  const open = { OR: [{ status: "ACCEPTED" }, { status: "RECEIVED", condition: null, partnerDecision: null }] };
+  const ret = await db.returnRequest.findFirst({ where: { subOrderId, ...open, subOrder: { supplierId } }, select: { id: true, partnerReceivedAt: true } });
   if (!ret) return "state" as const;
-  const n = await db.returnRequest.updateMany({ where: { id: ret.id, status: "ACCEPTED" }, data: { status: "RECEIVED", partnerReceivedAt: now, condition, conditionNote: text || null } });
+  const n = await db.returnRequest.updateMany({ where: { id: ret.id, ...open }, data: { status: "RECEIVED", partnerReceivedAt: ret.partnerReceivedAt ?? now, condition, conditionNote: text || null } });
   return n.count === 1 ? ("ok" as const) : ("state" as const);
 }
 
@@ -142,7 +144,7 @@ export type PartnerDecision = "ACCEPTED" | "REFUSED";
 export async function partnerDecideReturn(db: PrismaClient, subOrderId: string, supplierId: string, decision: PartnerDecision, note: string, now = new Date(), reasonId: string | null = null) {
   const text = note.trim().slice(0, 500);
   if (decision === "REFUSED" && !reasonId) return "note" as const;
-  const ret = await db.returnRequest.findFirst({ where: { subOrderId, status: "RECEIVED", partnerDecision: null, subOrder: { supplierId } }, select: { id: true } });
+  const ret = await db.returnRequest.findFirst({ where: { subOrderId, status: "RECEIVED", condition: { not: null }, partnerDecision: null, subOrder: { supplierId } }, select: { id: true } });
   if (!ret) return "state" as const;
   const n = await db.returnRequest.updateMany({ where: { id: ret.id, status: "RECEIVED", partnerDecision: null }, data: { partnerDecision: decision, partnerDecisionNote: text || null, partnerDecidedAt: now, partnerReasonId: decision === "REFUSED" ? reasonId : null } });
   return n.count === 1 ? ("ok" as const) : ("state" as const);

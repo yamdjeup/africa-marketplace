@@ -11,10 +11,13 @@ export const metadata = { title: "Transporteurs", robots: { index: false } };
 const btn = "inline-flex min-h-11 items-center rounded-md border px-3 text-sm";
 const cell = "w-full min-w-48 rounded-md border bg-background px-2 py-1 text-sm";
 
-export default async function AdminCarriers({ params, searchParams }: { params: Promise<{ locale: Locale }>; searchParams: Promise<{ ok?: string; error?: string }> }) {
+export default async function AdminCarriers({ params, searchParams }: { params: Promise<{ locale: Locale }>; searchParams: Promise<{ ok?: string; error?: string; q?: string }> }) {
   const { locale } = await params;
   const sp = await searchParams;
-  const rows = await listCarriers(db, false);
+  const q = (sp.q ?? "").trim();
+  const all = await listCarriers(db, false);
+  const matches = q ? all.filter((r) => r.name.toLowerCase().includes(q.toLowerCase())) : all;
+  const rows = matches.slice(0, 200);
   const errors: Record<string, [string, string]> = {
     invalid: ["Nom obligatoire (2 caractères minimum).", "Name required (2 characters minimum)."],
     exists: ["Ce transporteur existe déjà.", "This carrier already exists."],
@@ -29,6 +32,11 @@ export default async function AdminCarriers({ params, searchParams }: { params: 
       <p className="text-sm text-muted-foreground">{tr(locale, "Liste proposée aux créateurs à l'expédition (« Autre » reste toujours disponible). Désactiver : n'est plus proposé, les colis existants sont inchangés. Supprimer : impossible si un colis l'utilise.", "List offered to creators when shipping (“Other” is always available). Disable: no longer offered, existing parcels unchanged. Delete: not possible if a parcel uses it.")}</p>
       {sp.ok && <p role="status" className="rounded-md border border-green-300 bg-green-50 p-3 text-sm">{tr(locale, "Enregistré.", "Saved.")}</p>}
       {err && <p role="alert" className="rounded-md border border-red-300 bg-red-50 p-3 text-sm">{tr(locale, err[0], err[1])}</p>}
+      <form method="get" className="flex flex-wrap items-end gap-2">
+        <label className="block text-sm">{tr(locale, "Rechercher", "Search")}<input name="q" defaultValue={q} className={cell} /></label>
+        <button className={btn} type="submit">{tr(locale, "Filtrer", "Filter")}</button>
+        <span className="text-xs text-muted-foreground">{matches.length} / {all.length}{matches.length > rows.length ? tr(locale, " — 200 premiers affichés, affinez la recherche", " — first 200 shown, refine the search") : ""}</span>
+      </form>
       <DraftForm id="CARRIERS" requireSelection noSelectionMessage={tr(locale, "Sélectionnez au moins une ligne.", "Select at least one row.")} className="space-y-2">
         <div className="flex flex-wrap gap-2">
           <button className={btn} type="submit" formAction={saveCarriersAction} data-needs-selection="" data-clears-draft="">{tr(locale, "Enregistrer", "Save")}</button>

@@ -30,12 +30,13 @@ type Parcel = {
 function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: number; token: string; reload: () => void }) {
   const [reason, setReason] = useState("");
   const [photos, setPhotos] = useState<string[]>([]);
+  const [carrierOpts, setCarrierOpts] = useState(CARRIER_OPTIONS);
   const [reasons, setReasons] = useState<{ id: string; fr: string; en: string; requiresPhotos: boolean }[]>([]);
   const [reasonId, setReasonId] = useState("");
   const needsPhotos = !!reasons.find((x) => x.id === reasonId)?.requiresPhotos;
   useEffect(() => {
     if (!p.canReturn) return;
-    authed<{ reasons?: { id: string; fr: string; en: string; requiresPhotos: boolean }[] }>(token, "GET", "/api/v1/config").then((r) => { if (r.ok && Array.isArray(r.data?.reasons)) setReasons(r.data.reasons); });
+    authed<{ reasons?: { id: string; fr: string; en: string; requiresPhotos: boolean }[]; carriers?: string[] }>(token, "GET", "/api/v1/config").then((r) => { if (r.ok && Array.isArray(r.data?.reasons)) setReasons(r.data.reasons); if (r.ok && Array.isArray(r.data?.carriers) && r.data.carriers.length) setCarrierOpts(buildCarrierOptions(r.data.carriers.map((n) => ["", n] as [string, string]))); });
   }, [p.canReturn]);
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
@@ -112,7 +113,7 @@ function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: numbe
         <View style={{ gap: 6, marginTop: 4 }}>
           <Text style={s.mut}>{tr("Renvoyez la pièce au créateur, puis confirmez l’expédition.", "Send the piece back to the creator, then confirm the shipment.")}</Text>
           <Text style={s.bold}>{tr("Transporteur", "Carrier")}</Text>
-          <Dropdown value={rCarrier} options={CARRIER_OPTIONS} onChange={setRCarrier} placeholder={tr("Sélectionnez un transporteur", "Select a carrier")} filter={(q) => filterCarriers(CARRIER_OPTIONS, q)} searchPlaceholder={tr("Tapez pour filtrer…", "Type to filter…")} />
+          <Dropdown value={rCarrier} options={carrierOpts} onChange={setRCarrier} placeholder={tr("Sélectionnez un transporteur", "Select a carrier")} filter={(q) => filterCarriers(carrierOpts, q)} searchPlaceholder={tr("Tapez pour filtrer…", "Type to filter…")} />
           <Text style={s.bold}>{tr("Numéro de suivi", "Tracking number")}</Text>
           <TextInput value={rTracking} onChangeText={setRTracking} maxLength={60} autoCapitalize="characters" style={s.input} placeholderTextColor="#6b5d52" selectionColor="#1c3060" />
           <Pressable disabled={busy} onPress={shipReturn} style={s.cta} accessibilityRole="button"><Text style={s.ctaText}>{tr("Confirmer l’expédition du retour", "Confirm return shipment")}</Text></Pressable>

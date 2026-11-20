@@ -26,7 +26,7 @@ export async function partnerReturnList(db: PrismaClient, supplierId: string, sp
     receivedAt: r.partnerReceivedAt ? r.partnerReceivedAt.toISOString() : null,
     decideBy: r.partnerReceivedAt ? partnerCheckDeadline(r.partnerReceivedAt).toISOString() : null,
     decision: r.partnerDecision, decisionNote: r.partnerDecisionNote,
-    stage: r.status === "REFUNDED" ? "refunded" : r.status === "ACCEPTED" ? "incoming" : r.partnerDecision === "ACCEPTED" ? "accepted" : r.partnerDecision === "REFUSED" ? "refused" : "decide",
+    stage: r.status === "REFUNDED" ? "refunded" : (r.status === "ACCEPTED" || (r.status === "RECEIVED" && !r.condition && !r.partnerDecision)) ? "incoming" : r.partnerDecision === "ACCEPTED" ? "accepted" : r.partnerDecision === "REFUSED" ? "refused" : "decide",
   }));
   return { q, total, items, counts: { todo, accepted, refused, all } };
 }

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { timingSafeEqual } from "node:crypto";
-import { runSubOrderSweep } from "@/lib/order-notify";
+import { runSubOrderSweep, runTrackingPoll } from "@/lib/order-notify";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +11,7 @@ async function handle(req: Request) {
   const a = Buffer.from(secret ?? "");
   const b = Buffer.from(given);
   if (!secret || a.length !== b.length || !timingSafeEqual(a, b)) return new NextResponse("Unauthorized", { status: 401 });
-  return NextResponse.json(await runSubOrderSweep());
+  return NextResponse.json({ ...(await runSubOrderSweep()), tracking: await runTrackingPoll().catch(() => -1) });
 }
 
 export const GET = handle;

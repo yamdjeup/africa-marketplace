@@ -16,7 +16,14 @@ describe("contrôle du colis retour par le créateur", () => {
   it("refuse un colis qui n'est pas au créateur ou pas « accepté »", async () => {
     const { db, findFirst } = fakeDb(false);
     expect(await markReturnReceivedByPartner(db, "s1", "sup", "OK", "")).toBe("state");
-    expect(findFirst.mock.calls[0][0].where).toMatchObject({ status: "ACCEPTED", subOrder: { supplierId: "sup" } });
+    expect(findFirst.mock.calls[0][0].where).toMatchObject({ subOrder: { supplierId: "sup" }, OR: [{ status: "ACCEPTED" }, { status: "RECEIVED", condition: null, partnerDecision: null }] });
+  });
+  it("reçu automatiquement (17TRACK) sans état : le créateur peut encore contrôler, sans écraser la date de réception", async () => {
+    const { db, updateMany, findFirst } = fakeDb(true);
+    const auto = new Date("2026-11-16T09:00:00Z");
+    findFirst.mockResolvedValue({ id: "r1", partnerReceivedAt: auto });
+    expect(await markReturnReceivedByPartner(db, "s1", "sup", "OK", "", new Date("2026-11-17T10:00:00Z"))).toBe("ok");
+    expect(updateMany.mock.calls[0][0].data).toMatchObject({ condition: "OK", partnerReceivedAt: auto });
   });
   it("passe en reçu avec état et commentaire ; délai de 6 jours", async () => {
     const { db, updateMany } = fakeDb(true);

@@ -7,6 +7,8 @@ export type TrackingUpdate = { number: string; carrierCode: number | null; deliv
 export interface TrackingProvider {
   /** Enregistre un colis à suivre ; ne lève jamais, retourne false en cas d'échec. */
   register(number: string, carrierCode: number | null): Promise<boolean>;
+  /** Relit le statut de colis déjà enregistrés (rattrapage si le webhook est manqué) ; ne lève jamais. */
+  getInfo(items: { number: string; carrierCode: number | null }[]): Promise<TrackingUpdate[]>;
   /** Vérifie l'authenticité d'une notification ; null si invalide ou sans objet. */
   parseWebhook(rawBody: string, signature: string | null): TrackingUpdate | null;
 }
@@ -14,7 +16,7 @@ export interface TrackingProvider {
 /** Codes transporteurs 17TRACK (carriers.csv fourni) ; null = détection automatique par l'agrégateur. */
 export function carrierCodeFor(name: string): number | null {
   const n = name.trim().toLowerCase();
-  if (/dhl/.test(n)) return 100001;
+  if (/dhl\s*express/.test(n)) return 100001;
   if (/\bups\b/.test(n)) return 100002;
   if (/fedex/.test(n)) return 100003;
   if (/chronopost/.test(n)) return 100273;
@@ -33,13 +35,39 @@ export function createTrack17Provider(apiKey: string, f: typeof fetch = fetch): 
       try {
         const item: Record<string, unknown> = { number };
         if (carrierCode) item.carrier = carrierCode;
-        const res = await f(`${BASE}/register`, { method: "POST", headers: { "17token": apiKey, "Content-Type": "application/json" }, body: JSON.stringify([item]) });
-        if (!res.ok) return false;
-        const j = (await res.json()) as { code?: number; data?: { accepted?: unknown[] } };
-        return j.code === 0 && (j.data?.accepted?.length ?? 0) > 0;
+        const post = async (path: string, payload: unknown) => {
+          const res = await f(`${BASE}/${path}`, { method: "POST", headers: { "17token": apiKey, "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+          if (!res.ok) return null;
+          return (await res.json()) as { code?: number; data?: { accepted?: { number?: string; track_info?: { latest_status?: { status?: string } }; carrier?: number }[]; rejected?: { number?: string; error?: { code?: number; message?: string } }[] } };
+        };
+        const j = await post("register", [item]);
+        if (!j) return false;
+        if (j.code === 0 && (j.data?.accepted?.length ?? 0) > 0) return true;
+        const rej = j.data?.rejected?.[0]?.error;
+        console.error("[17track] register rejected", number, rej?.code, rej?.message);
+        // Déjà enregistré (souvent sous un autre code transporteur) : on corrige le transporteur.
+        if (rej?.code === -18019901 && carrierCode) {
+          const c = await post("changecarrier", [{ number, carrier_new: carrierCode }]);
+          const ok = c?.code === 0 && (c.data?.accepted?.length ?? 0) > 0;
+          if (!ok) console.error("[17track] changecarrier rejected", number, c?.data?.rejected?.[0]?.error?.code);
+          return ok;
+        }
+        return false;
       } catch (e) {
         console.error("[17track] register", e instanceof Error ? e.message : e);
         return false;
+      }
+    },
+    async getInfo(items) {
+      try {
+        const res = await f(`${BASE}/gettrackinfo`, { method: "POST", headers: { "17token": apiKey, "Content-Type": "application/json" }, body: JSON.stringify(items.map((i) => (i.carrierCode ? { number: i.number, carrier: i.carrierCode } : { number: i.number }))) });
+        if (!res.ok) return [];
+        const j = (await res.json()) as { data?: { accepted?: { number?: string; carrier?: number; track_info?: { latest_status?: { status?: string } } }[]; rejected?: { number?: string; error?: { code?: number } }[] } };
+        for (const r of j.data?.rejected ?? []) console.error("[17track] gettrackinfo rejected", r.number, r.error?.code);
+        return (j.data?.accepted ?? []).filter((a) => a.number).map((a) => { const status = a.track_info?.latest_status?.status ?? ""; return { number: a.number!, carrierCode: a.carrier ?? null, delivered: status === "Delivered", status }; });
+      } catch (e) {
+        console.error("[17track] gettrackinfo", e instanceof Error ? e.message : e);
+        return [];
       }
     },
     parseWebhook(rawBody, signature) {

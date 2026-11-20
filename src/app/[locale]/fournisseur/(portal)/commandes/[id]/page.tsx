@@ -134,7 +134,7 @@ export default async function PartnerOrder({ params, searchParams }: { params: P
         </section>
       )}
       {ret && <p className="rounded-md border p-3 text-sm"><strong>{returnLabel(ret)[locale === "en" ? "en" : "fr"]}</strong> · {tr(locale, "Motif du client : ", "Customer reason: ")}{ret.reason}<br />{parsePhotoIds(ret.photoIds).length > 0 && <span className="flex flex-wrap gap-2 pt-1">{parsePhotoIds(ret.photoIds).map((pid, i) => <a key={pid} href={`/api/media/${pid}`} target="_blank" rel="noreferrer" className="underline">{tr(locale, "Photo", "Photo")} {i + 1}</a>)}</span>}<span className="text-muted-foreground">{tr(locale, "L'administration rembourse après votre décision et arbitre les litiges.", "The administration refunds after your decision and arbitrates disputes.")}</span></p>}
-      {ret?.status === "ACCEPTED" && (
+      {(ret?.status === "ACCEPTED" || (ret?.status === "RECEIVED" && !ret.condition && !ret.partnerDecision)) && (
         <section className="space-y-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm">
           <p><strong>{tr(locale, "Colis en route vers vous", "Parcel on its way to you")}</strong> — {tr(locale, "le client vous renvoie ce colis. À réception, contrôlez-le et décidez sous 6 jours calendaires.", "the customer is sending this parcel back to you. On arrival, check it and decide within 6 calendar days.")}</p>
           {!ro && (
@@ -152,8 +152,8 @@ export default async function PartnerOrder({ params, searchParams }: { params: P
           )}
         </section>
       )}
-      {ret?.status === "RECEIVED" && ret.partnerReceivedAt && <p className="rounded-md border p-3 text-sm">{tr(locale, "Réception confirmée le ", "Receipt confirmed on ")}{fmt.format(ret.partnerReceivedAt)} — {ret.condition === "DAMAGED" ? tr(locale, "endommagé", "damaged") : tr(locale, "conforme", "as expected")}{ret.conditionNote ? ` : ${ret.conditionNote}` : ""}. {!ret.partnerDecision && <>{tr(locale, "Décision attendue avant le ", "Decision expected before ")}{fmt.format(partnerCheckDeadline(ret.partnerReceivedAt))}{tr(locale, " : acceptez ou refusez le retour ci-dessous.", ": accept or refuse the return below.")}</>}</p>}
-      {ret?.status === "RECEIVED" && !ret.partnerDecision && !ro && (
+      {ret?.status === "RECEIVED" && ret.condition && ret.partnerReceivedAt && <p className="rounded-md border p-3 text-sm">{tr(locale, "Réception confirmée le ", "Receipt confirmed on ")}{fmt.format(ret.partnerReceivedAt)} — {ret.condition === "DAMAGED" ? tr(locale, "endommagé", "damaged") : tr(locale, "conforme", "as expected")}{ret.conditionNote ? ` : ${ret.conditionNote}` : ""}. {!ret.partnerDecision && <>{tr(locale, "Décision attendue avant le ", "Decision expected before ")}{fmt.format(partnerCheckDeadline(ret.partnerReceivedAt))}{tr(locale, " : acceptez ou refusez le retour ci-dessous.", ": accept or refuse the return below.")}</>}</p>}
+      {ret?.status === "RECEIVED" && ret.condition && !ret.partnerDecision && !ro && (
         <section className="space-y-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm">
           <p><strong>{tr(locale, "Votre décision sur ce retour", "Your decision on this return")}</strong> — {tr(locale, "Accepté : l'administration est invitée à rembourser le client. Refusé : motif obligatoire ; l'administration arbitre le litige.", "Accepted: the administration is asked to refund the customer. Refused: a reason is required; the administration arbitrates the dispute.")}</p>
           <form action={returnDecideAction} className="grid gap-3 sm:grid-cols-2">

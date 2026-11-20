@@ -105,7 +105,7 @@ function OrderDetail({ token, id, onBack }: { token: string; id: string; onBack:
       <Text style={st.mut}>{tr(d.statusLabel.fr, d.statusLabel.en)}</Text>
       {d.return ? <View style={{ marginTop: 10, padding: 10, borderWidth: 1, borderColor: "#ded6c9", borderRadius: 6 }}><Text style={{ fontWeight: "600", color: "#221812" }}>{tr(d.return.label.fr, d.return.label.en)}</Text><Text style={st.mut}>{tr("Motif du client", "Customer reason")} : {d.return.reason}</Text><Text style={st.mut}>{tr("L’administration rembourse après votre décision et arbitre les litiges.", "The administration refunds after your decision and arbitrates disputes.")}</Text>
         {d.return.photoIds?.length ? <Text style={st.mut}>{d.return.photoIds.length} {tr("photo(s) jointe(s) — à consulter dans l’espace créateur du site.", "photo(s) attached — view them in the creator portal on the website.")}</Text> : null}
-        {d.return.status === "ACCEPTED" ? (
+        {d.return.status === "ACCEPTED" || (d.return.status === "RECEIVED" && !d.return.condition && !d.return.decision) ? (
           <View style={{ marginTop: 8, gap: 8 }}>
             <Text style={{ fontWeight: "600", color: "#221812" }}>{tr("Colis en route vers vous", "Parcel on its way to you")}</Text>
             <Text style={st.mut}>{tr("À réception, contrôlez-le et décidez sous 6 jours calendaires.", "On arrival, check it and decide within 6 calendar days.")}</Text>
@@ -114,7 +114,7 @@ function OrderDetail({ token, id, onBack }: { token: string; id: string; onBack:
             {btn(tr("Confirmer la réception", "Confirm receipt"), () => act({ action: "return_check", condition, note }))}
           </View>
         ) : null}
-        {d.return.status === "RECEIVED" && !d.return.decision ? (
+        {d.return.status === "RECEIVED" && d.return.condition && !d.return.decision ? (
           <View style={{ marginTop: 8, gap: 8 }}>
             <Text style={{ fontWeight: "600", color: "#221812" }}>{tr("Votre décision sur ce retour", "Your decision on this return")}</Text>
             <Select label={tr("Décision", "Decision")} value={decision} options={DECISIONS} onChange={setDecision} />

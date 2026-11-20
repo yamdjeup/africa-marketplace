@@ -10,3 +10,6 @@ describe("migration 0040 : transporteurs 17TRACK", () => {
     expect(sql).toContain("'c17_" + CARRIERS[0][0] + "'");
   });
 });
+
+import { buildCarrierOptions } from '../../mobile/carriers';
+describe('liste API (table admin)', () => { it('construit les options depuis des noms simples', () => { const o = buildCarrierOptions(['Zeta', 'DHL', 'Alpha'].map((n) => ['', n] as [string, string])); expect(o[0].label).toBe('DHL'); expect(o.at(-1)?.label).toBe('Autre'); expect(o.some((x) => x.label === 'Alpha')).toBe(true); }); });

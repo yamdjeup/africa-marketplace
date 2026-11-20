@@ -13,3 +13,6 @@ describe("migration 0040 : transporteurs 17TRACK", () => {
 
 import { buildCarrierOptions } from '../../mobile/carriers';
 describe('liste API (table admin)', () => { it('construit les options depuis des noms simples', () => { const o = buildCarrierOptions(['Zeta', 'DHL', 'Alpha'].map((n) => ['', n] as [string, string])); expect(o[0].label).toBe('DHL'); expect(o.at(-1)?.label).toBe('Autre'); expect(o.some((x) => x.label === 'Alpha')).toBe(true); }); });
+
+import { sortCarriers } from '../../src/lib/config-lists';
+describe('web: populaires en tete', () => { it('ordonne UPS DHL FedEx Colissimo Chronopost puis le reste', () => { expect(sortCarriers(['Zed','Colissimo','dhl','UPS']).slice(0,3)).toEqual(['UPS','dhl','Colissimo']); }); });

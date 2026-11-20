@@ -1,6 +1,8 @@
 import { tr, lazy, getLang } from "./region";
 import { useEffect, useState } from "react";
 import { Dropdown } from "./dropdown";
+import { buildCarrierOptions, filterCarriers } from "./carriers";
+const CARRIER_OPTIONS = buildCarrierOptions();
 import { ActivityIndicator, Alert, Image, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { authed } from "./api";
 import { API_URL } from "./config";
@@ -110,7 +112,7 @@ function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: numbe
         <View style={{ gap: 6, marginTop: 4 }}>
           <Text style={s.mut}>{tr("Renvoyez la pièce au créateur, puis confirmez l’expédition.", "Send the piece back to the creator, then confirm the shipment.")}</Text>
           <Text style={s.bold}>{tr("Transporteur", "Carrier")}</Text>
-          <TextInput value={rCarrier} onChangeText={setRCarrier} maxLength={60} style={s.input} placeholderTextColor="#6b5d52" selectionColor="#1c3060" />
+          <Dropdown value={rCarrier} options={CARRIER_OPTIONS} onChange={setRCarrier} placeholder={tr("Sélectionnez un transporteur", "Select a carrier")} filter={(q) => filterCarriers(CARRIER_OPTIONS, q)} searchPlaceholder={tr("Tapez pour filtrer…", "Type to filter…")} />
           <Text style={s.bold}>{tr("Numéro de suivi", "Tracking number")}</Text>
           <TextInput value={rTracking} onChangeText={setRTracking} maxLength={60} autoCapitalize="characters" style={s.input} placeholderTextColor="#6b5d52" selectionColor="#1c3060" />
           <Pressable disabled={busy} onPress={shipReturn}><Text style={s.link}>{tr("Confirmer l’expédition du retour", "Confirm return shipment")}</Text></Pressable>
@@ -123,8 +125,8 @@ function ParcelView({ p, i, n, token, reload }: { p: Parcel; i: number; n: numbe
           <Dropdown value={reasonId} placeholder={tr("Sélectionnez un motif", "Select a reason")} options={reasons.map((rr) => ({ id: rr.id, label: getLang() === "en" ? rr.en : rr.fr }))} onChange={(v) => { setReasonId(v); setMsg(""); }} />
           <Text style={s.bold}>{tr("Informations complémentaires (facultatif)", "Additional information (optional)")}</Text>
           <TextInput value={reason} onChangeText={(v) => { setReason(v); setMsg(""); }} multiline maxLength={900} style={s.input} placeholderTextColor="#6b5d52" selectionColor="#1c3060" />
-          <Pressable disabled={busy || photos.length >= 5} onPress={pick}><Text style={s.link}>{needsPhotos ? tr(`Ajouter des photos (${photos.length}/5, obligatoire)`, `Add photos (${photos.length}/5, required)`) : tr(`Ajouter des photos (${photos.length}/5, facultatif)`, `Add photos (${photos.length}/5, optional)`)}</Text></Pressable>
-          <Pressable disabled={busy} onPress={ask}><Text style={s.link}>{tr("Demander un retour", "Request a return")}</Text></Pressable>
+          <Pressable disabled={busy || photos.length >= 5} onPress={pick} style={s.ctaOutline} accessibilityRole="button"><Text style={s.ctaOutlineText}>{needsPhotos ? tr(`Ajouter des photos (${photos.length}/5, obligatoire)`, `Add photos (${photos.length}/5, required)`) : tr(`Ajouter des photos (${photos.length}/5, facultatif)`, `Add photos (${photos.length}/5, optional)`)}</Text></Pressable>
+          <Pressable disabled={busy} onPress={ask} style={s.cta} accessibilityRole="button"><Text style={s.ctaText}>{tr("Demander un retour", "Request a return")}</Text></Pressable>
         </View>
       )}
       {!!msg && <Text style={{ color: "#a33" }}>{msg}</Text>}
@@ -285,4 +287,8 @@ const s = StyleSheet.create({
   card: { borderTopWidth: 1, borderTopColor: "#f2eadd", paddingVertical: 12, gap: 2 },
   input: { borderWidth: 1, borderColor: "#ded6c9", backgroundColor: "#fff", color: "#221812", padding: 8, minHeight: 60, textAlignVertical: "top" },
   link: { textDecorationLine: "underline", fontSize: 15, color: "#221812" },
+  cta: { borderRadius: 8, backgroundColor: "#1c3060", height: 48, alignItems: "center", justifyContent: "center" },
+  ctaText: { color: "#fff", fontWeight: "700", fontSize: 15 },
+  ctaOutline: { borderRadius: 8, borderWidth: 1, borderColor: "#1c3060", height: 48, alignItems: "center", justifyContent: "center" },
+  ctaOutlineText: { color: "#1c3060", fontWeight: "700", fontSize: 15 },
 });

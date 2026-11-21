@@ -135,6 +135,7 @@ Pas de variable. Offre Standard ; epomta.com expire le 10/11/2027 (renouvellemen
 - Workflow `.github/workflows/sweep.yml` : `*/30 * * * *` + `workflow_dispatch`, appelle `GET $SWEEP_URL/api/orders/sweep` avec `Authorization: Bearer CRON_SECRET`. Le schedule ne tourne que sur la branche par défaut (`main`). Quota gratuit dépôt privé : 2000 min/mois (30 min ≈ 1440 min/mois).
 - `vercel.json` : cron quotidien `/api/orders/sweep` à 06:00 UTC (limite Hobby : 1 exécution/jour) ; `/api/alerts/run` à 07:00 UTC.
 - Poll 17TRACK à l'expédition : `notifyShipped` (`src/lib/order-notify.ts`) relit 17TRACK juste après l'expédition (colis déjà livré).
+- Mur mot de passe (`src/proxy.ts`, `PUBLIC_ALERTS`) : toute route appelée par une machine (cron Vercel, GitHub Actions, webhooks) doit y figurer, sinon 401 avant même le Bearer ; actuellement : `alerts/run`, `orders/sweep`, `stripe/webhook`, `webhooks/17track`. Corrigé le 21/11 (`orders/sweep` manquait : le cron Vercel et le workflow recevaient 401). Toute nouvelle route cron/webhook : l'ajouter dans `PUBLIC_ALERTS` (test `proxy-machine-routes.test.ts`, lit `vercel.json`).
 - Rotation de `CRON_SECRET` : 1) générer une nouvelle chaîne aléatoire ; 2) la saisir dans Vercel (Production, Preview, Preview/simu) ; 3) la mettre à jour dans le secret GitHub `CRON_SECRET` ; 4) Redeploy du Preview simu (et Production) ; 5) lancer le workflow à la main (`workflow_dispatch`) et vérifier le succès.
 
 ## 4. Secrets à régénérer

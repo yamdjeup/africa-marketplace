@@ -404,6 +404,9 @@ model SubOrder {
   reasonNote     String?
   /// E-mail « commande clôturée » envoyé
   closedMailSentAt DateTime?
+  /// E-mail d'avis (enquête de satisfaction) envoyé
+  reviewMailSentAt DateTime?
+  survey         SurveyResponse?
   capturedCents    Int       @default(0)
   reminderCount    Int       @default(0)
   carrier        String    @default("")
@@ -574,4 +577,57 @@ model TilaRateHit {
   createdAt DateTime @default(now())
 
   @@index([key, createdAt])
+}
+
+/// Enquête de satisfaction : réglages (une seule ligne, id "main").
+model SurveyConfig {
+  id        String  @id
+  enabled   Boolean @default(true)
+  /// Jours après la livraison avant l'e-mail d'avis
+  delayDays Int     @default(3)
+}
+
+/// Question d'enquête. Modifier une question crée une nouvelle version (même key) ; l'ancienne est archivée, ses réponses lui restent liées.
+/// type : TEXT | SELECT | STARS | SCORE10 ; options : JSON [{fr,en}] pour SELECT.
+model SurveyQuestion {
+  id       String @id @default(cuid())
+  key      String
+  version  Int    @default(1)
+  position Int    @default(0)
+  type     String
+  labelFr  String
+  labelEn  String
+  required Boolean @default(false)
+  options  String  @default("[]")
+  active   Boolean @default(true)
+  archived Boolean @default(false)
+  createdAt DateTime @default(now())
+  answers  SurveyAnswer[]
+
+  @@index([archived, active, position])
+}
+
+/// Une réponse par colis livré ; token = lien unique sans connexion.
+model SurveyResponse {
+  id          String    @id @default(cuid())
+  subOrderId  String    @unique
+  subOrder    SubOrder  @relation(fields: [subOrderId], references: [id], onDelete: Cascade)
+  token       String    @unique
+  locale      String    @default("fr")
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+  answers     SurveyAnswer[]
+
+  @@index([completedAt])
+}
+
+model SurveyAnswer {
+  id         String         @id @default(cuid())
+  responseId String
+  response   SurveyResponse @relation(fields: [responseId], references: [id], onDelete: Cascade)
+  questionId String
+  question   SurveyQuestion @relation(fields: [questionId], references: [id])
+  value      String
+
+  @@unique([responseId, questionId])
 }

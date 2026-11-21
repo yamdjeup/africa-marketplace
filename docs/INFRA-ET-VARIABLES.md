@@ -184,6 +184,12 @@ Redirect URI Google (et Facebook/Apple) ; endpoint webhook Stripe `https://epomt
 
 Statut : `[x]` fait, `[ ]` à faire. Seuls les points confirmés par le propriétaire sont cochés.
 
+### 3 quinquies. Enquête de satisfaction (« Rate your experience »)
+
+- Migration `0041_survey` (à appliquer avant le déploiement : `npm run db:deploy`) : tables `SurveyConfig`, `SurveyQuestion`, `SurveyResponse`, `SurveyAnswer`, colonne `SubOrder.reviewMailSentAt`, questions de départ.
+- Aucune variable d'environnement ni cron nouveau : le mail d'avis (J+3, délai réglable en admin) part via le sweep existant (`runSubOrderSweep`, GitHub Actions */30). Désactiver l'enquête en admin (Configuration > Enquête) : plus de mail d'avis, mail de clôture inchangé.
+- Page publique `/fr|en/avis/<jeton 48 hex>` ajoutée à `PUBLIC_ALERTS` (`src/proxy.ts`) : le jeton unique tient lieu d'authentification. Résultats et export CSV : admin uniquement.
+
 ### 3 ter. Séquence OTA (app Android, canal preview, runtime 1.0.0)
 
 `mobile/app.json` est commité avec : slug `afrique-marketplace`, owner `epomta-app`, `extra.eas.projectId` `6b0ae666-4795-4bfc-b96f-060673117e1f`, `updates.url` correspondante, package `com.epomta.app`. **Ne jamais** faire `git checkout -- mobile/app.json` ni changer le slug : `node scripts/check-mobile-config.mjs` échoue si l'un de ces champs change.

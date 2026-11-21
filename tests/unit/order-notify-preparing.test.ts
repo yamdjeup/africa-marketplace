@@ -5,6 +5,7 @@ const send = vi.fn(async () => true);
 vi.mock("@/lib/supplier-email", () => ({ safeSend: (...a: unknown[]) => (send as unknown as (...x: unknown[]) => unknown)(...a) }));
 vi.mock("@/lib/checkout-hold", () => ({ releaseExpiredHolds: async () => undefined }));
 vi.mock("@/lib/suborders", () => ({ sweepSubOrders: async () => ({ reminded: [], escalated: [], expired: [] }) }));
+vi.mock("@/lib/survey", () => ({ getSurveyConfig: async () => ({ enabled: false, delayDays: 3 }), hasAnswered: async () => false, ensureSurvey: async () => ({ token: "t" }), surveyUrl: () => "", claimReviewMails: async () => [], releaseReviewClaim: async () => undefined }));
 vi.mock("@/lib/refund", () => ({ settleSubRefund: async () => undefined }));
 
 let locale = "fr";

@@ -53,6 +53,7 @@ Légende : ✅ fait (vérifié dans le dépôt) · 🟡 partiel · ⬜ à faire 
 | 3.4 | Vercel Hobby vs Pro | ⬜ | Hobby : cron 1×/jour max, usage non commercial interdit → **Pro requis pour la vente réelle** |
 | 3.5 | Crons | ✅ | `vercel.json` quotidiens 06:00/07:00 UTC ; rattrapage `sweep.yml` toutes les 30 min (actif seulement sur `main`) ; poll à l'expédition `notifyShipped` |
 | 3.6 | E-mails : SPF, DKIM, DMARC sur le domaine d'envoi (Resend) | ❓ | Vérifier dans Resend + OVH |
+| 3.6 bis | Enquête de satisfaction : migration `0041_survey` appliquée en prod, lien d'avis testé depuis un vrai mail (domaine d'envoi vérifié, 3.6) | ⬜ | Voir INFRA §3 quinquies |
 | 3.7 | Sentry (site + app) | ⬜ | Voir 1.13 |
 | 3.8 | `robots`/indexation | 🟡 | `robots.ts` présent mais `X-Robots-Tag: noindex` global : à lever pour la prod publique |
 | 3.9 | Données : purge des données fictives, comptes de test (workflows `vidage-prod`/`vidage-preprod`) | 🟡 |

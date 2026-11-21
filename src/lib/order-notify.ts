@@ -11,11 +11,12 @@ import { partnerRecipient } from "@/lib/partner-recipient";
 import { carrierLabel, cleanTrackingNumber, trackingUrl } from "@/lib/tracking";
 import { releaseExpiredHolds } from "@/lib/checkout-hold";
 import { sweepSubOrders, sweepPrepReminders, sweepClosed, claimClosedAfterReturn, releaseClosedClaim } from "@/lib/suborders";
+import { ensureSurvey, getSurveyConfig, hasAnswered, surveyUrl, claimReviewMails, releaseReviewClaim } from "@/lib/survey";
 import { settleSubRefund } from "@/lib/refund";
 import { pollTracking } from "@/lib/tracking-events";
 import { getTrackingProvider } from "@/lib/tracking-provider";
 
-export type SubEvent = "NEW" | "REMINDER" | "ESCALATION" | "PREP_REMINDER" | "PREP_ESCALATION" | "ACCEPTED" | "PREPARING" | "REFUSED" | "EXPIRED" | "CANCELLED" | "PARTNER_CANCELLED" | "PARTNER_EXPIRED" | "SHIPPED" | "DELIVERED" | "CLOSED";
+export type SubEvent = "NEW" | "REMINDER" | "ESCALATION" | "PREP_REMINDER" | "PREP_ESCALATION" | "ACCEPTED" | "PREPARING" | "REFUSED" | "EXPIRED" | "CANCELLED" | "PARTNER_CANCELLED" | "PARTNER_EXPIRED" | "SHIPPED" | "DELIVERED" | "CLOSED" | "REVIEW";
 
 export const eur = (c: number, fr = true) => new Intl.NumberFormat(fr ? "fr-FR" : "en-GB", { style: "currency", currency: "EUR" }).format(c / 100);
 
@@ -96,14 +97,15 @@ export async function notifySubOrder(event: SubEvent, subOrderId: string): Promi
       SHIPPED: [fr ? "Votre pièce est en route" : "Your piece is on its way", fr ? `Bonne nouvelle, votre pièce est en route.${shipInfo.length ? ` Elle est confiée à ${shipInfo.join(", ")}.` : ""}` : `Good news, your piece is on its way.${shipInfo.length ? ` It has been handed to ${shipInfo.join(", ")}.` : ""}`],
       DELIVERED: [fr ? "Votre pièce est arrivée" : "Your piece has arrived", fr ? `Votre pièce est arrivée. Nous espérons qu'elle vous ravit. Vous disposez de ${RETURN_DAYS} jours pour un éventuel retour.` : `Your piece has arrived. We hope it delights you. You have ${RETURN_DAYS} days for a possible return.`],
       CLOSED: [fr ? "Votre commande est clôturée" : "Your order is closed", fr ? `Votre commande ${o.number} est désormais clôturée. Merci de votre confiance, nous espérons vous retrouver bientôt parmi nos créateurs.` : `Your order ${o.number} is now closed. Thank you for your trust, we hope to see you again soon among our creators.`],
+      REVIEW: [fr ? "Votre avis compte" : "We want to hear from you", fr ? `Votre commande ${o.number} est arrivée il y a quelques jours. Quelques questions seulement : votre avis nous aide à améliorer l'expérience, et à mieux accompagner les créateurs.` : `Your order ${o.number} arrived a few days ago. Just a few questions: your feedback helps us improve the experience and support our creators.`],
     };
     const m = msgs[event];
     if (!m || !o.email) return;
     const blocks = m[1].split("\n\n").map((x) => x.trim()).filter(Boolean);
     const n = sub.number;
     const subjects: Partial<Record<SubEvent, string>> = fr
-      ? { ACCEPTED: `Votre commande ${n} est confirmée`, PREPARING: `Votre commande ${n} est en préparation`, SHIPPED: `Votre commande ${n} est en route`, DELIVERED: `Votre commande ${n} est arrivée`, REFUSED: `Votre commande ${n} n'a pas pu être confirmée`, EXPIRED: `Votre commande ${n} n'a pas pu être confirmée`, CANCELLED: `Votre commande ${n} est annulée`, CLOSED: `Votre commande ${n} est clôturée` }
-      : { ACCEPTED: `Your order ${n} is confirmed`, PREPARING: `Your order ${n} is being prepared`, SHIPPED: `Your order ${n} is on its way`, DELIVERED: `Your order ${n} has arrived`, REFUSED: `Your order ${n} could not be confirmed`, EXPIRED: `Your order ${n} could not be confirmed`, CANCELLED: `Your order ${n} is cancelled`, CLOSED: `Your order ${n} is closed` };
+      ? { ACCEPTED: `Votre commande ${n} est confirmée`, PREPARING: `Votre commande ${n} est en préparation`, SHIPPED: `Votre commande ${n} est en route`, DELIVERED: `Votre commande ${n} est arrivée`, REFUSED: `Votre commande ${n} n'a pas pu être confirmée`, EXPIRED: `Votre commande ${n} n'a pas pu être confirmée`, CANCELLED: `Votre commande ${n} est annulée`, CLOSED: `Votre commande ${n} est clôturée`, REVIEW: `Votre avis sur la commande ${n}` }
+      : { ACCEPTED: `Your order ${n} is confirmed`, PREPARING: `Your order ${n} is being prepared`, SHIPPED: `Your order ${n} is on its way`, DELIVERED: `Your order ${n} has arrived`, REFUSED: `Your order ${n} could not be confirmed`, EXPIRED: `Your order ${n} could not be confirmed`, CANCELLED: `Your order ${n} is cancelled`, CLOSED: `Your order ${n} is closed`, REVIEW: `We want to hear from you — order ${n}` };
     const subject = subjects[event] ?? m[0];
     const loc = fr ? "fr" : "en";
     const link = o.userId ? `${base}/${loc}/account/orders/${o.number}` : `${base}/${loc}/checkout/confirmation/${o.number}?t=${o.editToken ?? ""}`;
@@ -114,6 +116,8 @@ export async function notifySubOrder(event: SubEvent, subOrderId: string): Promi
     const parcel = idx > 0 ? (fr ? `Colis ${idx} sur ${siblings.length}` : `Parcel ${idx} of ${siblings.length}`) : "";
     const parcelNote = parcel && (event === "SHIPPED" || event === "DELIVERED") ? parcel : "";
     const trackUrl = trackingUrl(sub.carrier, sub.trackingNumber);
+    const survey = event === "REVIEW" || event === "CLOSED" ? await surveyBlock(sub.id, loc, event === "REVIEW", base) : null;
+    if (event === "REVIEW" && !survey?.url) return;
     const prods = await db.product.findMany({ where: { slug: { in: items.map((i) => i.productSlug) } }, select: { slug: true, images: true } });
     const imgOf = new Map(prods.map((p) => [p.slug, absoluteImageUrl(p.images)]));
     const html = renderEmailHtml({
@@ -121,8 +125,9 @@ export async function notifySubOrder(event: SubEvent, subOrderId: string): Promi
       title: m[0],
       orderNumber: sub.number,
       accountUrl: o.userId ? link : undefined,
-      paragraphs: [hello, ...(parcelNote ? [`**${parcelNote}**`] : []), ...blocks],
-      cta: event === "DELIVERED" || event === "CLOSED" ? { label: fr ? "Voir ma commande" : "View my order", url: link } : { label: fr ? "Suivre ma commande" : "Track my order", url: link },
+      paragraphs: [hello, ...(parcelNote ? [`**${parcelNote}**`] : []), ...blocks, ...(survey?.thanks ? [fr ? "**Merci pour votre avis.**" : "**Thank you for your feedback.**"] : [])],
+      cta: survey?.url ? { label: fr ? "Donner mon avis" : "Rate my experience", url: survey.url } : event === "DELIVERED" || event === "CLOSED" ? { label: fr ? "Voir ma commande" : "View my order", url: link } : { label: fr ? "Suivre ma commande" : "Track my order", url: link },
+      secondaryCta: survey?.url ? { label: fr ? "Voir ma commande" : "View my order", url: link } : undefined,
       trackLink: trackUrl && (event === "SHIPPED" || event === "DELIVERED") ? { label: fr ? "Suivre mon colis" : "Track my parcel", url: trackUrl } : undefined,
       summary: { items: items.map((i) => ({ name: i.name, detail: `× ${i.quantity}${i.size ? ` · ${i.size}` : ""}`, priceLabel: eur(i.unitPriceCents * i.quantity, fr), image: imgOf.get(i.productSlug), url: `${siteUrl()}/${loc}/produits/${i.productSlug}` })), rows: [{ label: fr ? "Sous-total" : "Subtotal", value: eur(sub.subtotalCents, fr), bold: true }] },
       notice: sold,
@@ -136,6 +141,23 @@ export async function notifySubOrder(event: SubEvent, subOrderId: string): Promi
 }
 
 /** Envoie l'e-mail « clôturée » d'un colis déjà réclamé ; si l'envoi échoue, la réclamation est levée pour un nouvel essai. */
+/** Lien d'avis : REVIEW l'exige (enquête active) ; CLOSED l'ajoute si l'enquête est active et pas encore remplie. */
+async function surveyBlock(subId: string, loc: string, required: boolean, base: string): Promise<{ url?: string; thanks?: boolean } | null> {
+  const cfg = await getSurveyConfig(db);
+  if (!cfg.enabled) return required ? {} : null;
+  if (!required && (await hasAnswered(db, subId))) return { thanks: true };
+  const r = await ensureSurvey(db, subId, loc);
+  return { url: surveyUrl(base, loc, r.token) };
+}
+
+/** Envoie les mails d'avis dus (réservés avant envoi, libérés si l'envoi échoue). */
+export async function sendReviewMails() {
+  for (const s of await claimReviewMails(db)) {
+    const ok = await notifySubOrder("REVIEW", s.id).catch(() => false);
+    if (ok !== true) await releaseReviewClaim(db, s.id).catch(() => {});
+  }
+}
+
 export async function sendClaimedClosedMail(subOrderId: string, notify: typeof notifySubOrder = notifySubOrder) {
   const ok = await notify("CLOSED", subOrderId);
   if (ok !== true) await releaseClosedClaim(db, subOrderId).catch(() => {});
@@ -165,6 +187,7 @@ export async function runSubOrderSweep() {
     await notifySubOrder("PREP_ESCALATION", s.id);
   }
   for (const s of await sweepClosed(db)) await sendClaimedClosedMail(s.id);
+  await sendReviewMails();
   return { prepLate: late.length, reminded: r.reminded.length, escalated: r.escalated.length, expired: r.expired.length };
 }
 

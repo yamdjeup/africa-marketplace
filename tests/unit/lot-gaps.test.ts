@@ -39,3 +39,6 @@ describe("GET /api/v1/config", () => {
     expect(j).toEqual({ reasons: [{ id: "r", fr: "a", en: "b", requiresPhotos: true }], carriers: ["UPS"] });
   });
 });
+
+import { resolveCarrier } from '../../src/lib/tracking';
+describe('resolveCarrier', () => { it('Autre/Other/__other prennent le champ libre', () => { for (const r of ['Autre', 'Other', '__other']) expect(resolveCarrier(r, ' Zed ')).toBe('Zed'); expect(resolveCarrier(' UPS ', 'x')).toBe('UPS'); }); });

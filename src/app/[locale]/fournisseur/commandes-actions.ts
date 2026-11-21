@@ -1,6 +1,6 @@
 "use server";
 
-import { cleanTrackingNumber } from "@/lib/tracking";
+import { cleanTrackingNumber, resolveCarrier } from "@/lib/tracking";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
@@ -83,7 +83,7 @@ export async function prepareOrderAction(f: FormData) {
 export async function shipOrderAction(f: FormData) {
   const { id, supplierId, back, actor } = await ctxOf(f);
   const rawCarrier = s(f, "carrier", 80);
-  const carrier = ["__other", "Autre", "Other"].includes(rawCarrier) ? s(f, "carrierOther", 80) : rawCarrier;
+  const carrier = resolveCarrier(rawCarrier, s(f, "carrierOther", 80));
   const tracking = cleanTrackingNumber(s(f, "tracking", 80));
   if (!carrier || !tracking) redirect(back("?error=tracking"));
   let sub = null;

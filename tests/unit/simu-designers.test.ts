@@ -38,6 +38,7 @@ function fakeDb() {
   };
 }
 
+import { moveQuestion } from "../../src/lib/survey";
 describe("import créateurs d'illustration simu", () => {
   const list = JSON.parse(readFileSync("prisma/simu-designers.json", "utf8")) as SimuDesigner[];
 
@@ -135,5 +136,28 @@ describe("import créateurs d'illustration simu", () => {
     await importSimuDesigners(db, list);
     expect(await removeSimuDesigners(db)).toBe(150);
     expect([...db.rows.keys()]).toEqual(["real"]);
+  });
+});
+
+describe("enquête : flèches ↑ ↓", () => {
+  it("échange avec la voisine active en sautant les inactives, ordres identiques inclus", async () => {
+    const rows = [
+      { id: "a", position: 1, active: true, createdAt: 1 },
+      { id: "b", position: 1, active: false, createdAt: 2 },
+      { id: "c", position: 1, active: true, createdAt: 3 },
+    ];
+    const db = {
+      surveyQuestion: {
+        findMany: async () => [...rows].sort((x, y) => x.position - y.position || x.createdAt - y.createdAt),
+        update: async ({ where, data }: { where: { id: string }; data: { position: number } }) => {
+          rows.find((r) => r.id === where.id)!.position = data.position;
+        },
+      },
+    };
+    await moveQuestion(db as never, "c", "up");
+    const order = () => [...rows].sort((x, y) => x.position - y.position).map((r) => r.id);
+    expect(order()).toEqual(["c", "b", "a"]);
+    await moveQuestion(db as never, "c", "down");
+    expect(order()).toEqual(["a", "b", "c"]);
   });
 });

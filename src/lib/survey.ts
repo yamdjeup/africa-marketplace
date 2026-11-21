@@ -172,8 +172,12 @@ export async function duplicateQuestion(db: PrismaClient, id: string) {
 export async function moveQuestion(db: PrismaClient, id: string, dir: "up" | "down") {
   const list = await db.surveyQuestion.findMany({ where: { archived: false }, orderBy: [{ position: "asc" }, { createdAt: "asc" }] });
   const i = list.findIndex((q) => q.id === id);
-  const j = dir === "up" ? i - 1 : i + 1;
-  if (i < 0 || j < 0 || j >= list.length) return;
+  if (i < 0) return;
+  const step = dir === "up" ? -1 : 1;
+  let j = i + step;
+  // une question active saute les inactives : l'échange doit être visible dans l'aperçu
+  if (list[i].active) while (j >= 0 && j < list.length && !list[j].active) j += step;
+  if (j < 0 || j >= list.length) return;
   const order = list.map((q) => q.id);
   [order[i], order[j]] = [order[j], order[i]];
   for (let p = 0; p < order.length; p++) await db.surveyQuestion.update({ where: { id: order[p] }, data: { position: p + 1 } });

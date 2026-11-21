@@ -180,3 +180,13 @@ describe("enquete : boutons d'action", () => {
     expect(src).not.toContain("formAction=");
   });
 });
+
+describe("avis : en-tete sobre", () => {
+  it("plus d'aplat bleu, filet or et titre bilingue", () => {
+    const src = rfs("src/app/[locale]/avis/[token]/page.tsx", "utf8");
+    expect(src).not.toContain("bg-primary");
+    expect(src).toContain("bg-accent");
+    expect(src).toContain("Votre avis compte");
+    expect(src).toContain("Your opinion matters");
+  });
+});

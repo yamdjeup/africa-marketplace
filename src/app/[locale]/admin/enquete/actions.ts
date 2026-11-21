@@ -17,7 +17,8 @@ async function admin() {
 
 function back(r: string): never {
   revalidatePath(PATH);
-  redirect(`${PATH}?${r}`);
+  revalidatePath("/[locale]/admin/enquete", "page");
+  redirect(`${PATH}?${r}&t=${Date.now()}`);
 }
 
 function input(f: FormData, suffix = ""): QuestionInput {

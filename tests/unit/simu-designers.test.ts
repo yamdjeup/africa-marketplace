@@ -1,3 +1,4 @@
+import { setQuestionActive } from "@/lib/survey";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { canonCountry } from "../../src/lib/countries";
@@ -159,5 +160,15 @@ describe("enquête : flèches ↑ ↓", () => {
     expect(order()).toEqual(["c", "b", "a"]);
     await moveQuestion(db as never, "c", "down");
     expect(order()).toEqual(["a", "b", "c"]);
+  });
+});
+describe("enquete : activer/desactiver", () => {
+  it("setQuestionActive bascule active", async () => {
+    const row = { id: "q", active: false };
+    const db = { surveyQuestion: { updateMany: async ({ where, data }: { where: { id: string }; data: { active: boolean } }) => { if (where.id === row.id) row.active = data.active; } } };
+    await setQuestionActive(db as never, "q", true);
+    expect(row.active).toBe(true);
+    await setQuestionActive(db as never, "q", false);
+    expect(row.active).toBe(false);
   });
 });

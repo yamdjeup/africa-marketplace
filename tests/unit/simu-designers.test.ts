@@ -1,3 +1,4 @@
+import { readFileSync as rfs } from "node:fs";
 import { setQuestionActive } from "@/lib/survey";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -170,5 +171,12 @@ describe("enquete : activer/desactiver", () => {
     expect(row.active).toBe(true);
     await setQuestionActive(db as never, "q", false);
     expect(row.active).toBe(false);
+  });
+});
+
+describe("enquete : boutons d'action", () => {
+  it("aucun formAction imbrique (sinon la sauvegarde s'execute a la place)", () => {
+    const src = rfs("src/app/[locale]/admin/enquete/page.tsx", "utf8");
+    expect(src).not.toContain("formAction=");
   });
 });

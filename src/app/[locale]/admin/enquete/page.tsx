@@ -42,7 +42,7 @@ export default async function AdminSurvey({ params, searchParams }: { params: Pr
       <h3 className="text-lg font-semibold">{tr(locale, "Questions", "Questions")}</h3>
       <div className="space-y-3">
         {questions.map((q) => (
-          <form key={q.id} action={saveQuestionAction} className={`grid items-end gap-2 rounded-lg border p-3 sm:grid-cols-2 ${q.active ? "" : "bg-muted/40"}`}>
+          <div key={q.id}><form action={saveQuestionAction} className={`grid items-end gap-2 rounded-lg border p-3 sm:grid-cols-2 ${q.active ? "" : "bg-muted/40"}`}>
             <input type="hidden" name="id" value={q.id} />
             <label className="text-sm">FR<input name="labelFr" defaultValue={q.labelFr} className={cell} maxLength={300} /></label>
             <label className="text-sm">EN<input name="labelEn" defaultValue={q.labelEn} className={cell} maxLength={300} /></label>
@@ -52,12 +52,15 @@ export default async function AdminSurvey({ params, searchParams }: { params: Pr
             <div className="flex flex-wrap items-center gap-2 sm:col-span-2">
               <span className="text-xs text-muted-foreground">v{q.version} · {q.active ? tr(locale, "Active", "Active") : tr(locale, "Désactivée", "Disabled")}</span>
               <button className={btnPlain} type="submit">{tr(locale, "Enregistrer", "Save")}</button>
-              <button className={btnOutline} type="submit" formAction={toggleQuestionAction} name="to" value={q.active ? "0" : "1"}>{q.active ? tr(locale, "Désactiver", "Disable") : tr(locale, "Activer", "Enable")}</button>
-              <button className={btnOutline} type="submit" formAction={duplicateQuestionAction}>{tr(locale, "Dupliquer", "Duplicate")}</button>
-              <button className={btn} type="submit" formAction={moveQuestionAction} name="move" value={`${q.id}:up`} aria-label={tr(locale, "Monter", "Move up")}>↑</button>
-              <button className={btn} type="submit" formAction={moveQuestionAction} name="move" value={`${q.id}:down`} aria-label={tr(locale, "Descendre", "Move down")}>↓</button>
             </div>
           </form>
+          <div className="flex flex-wrap items-center gap-2 -mt-1 mb-1 px-3">
+            <form action={toggleQuestionAction}><input type="hidden" name="id" value={q.id} /><input type="hidden" name="to" value={q.active ? "0" : "1"} /><button className={btnOutline} type="submit">{q.active ? tr(locale, "Désactiver", "Disable") : tr(locale, "Activer", "Enable")}</button></form>
+            <form action={duplicateQuestionAction}><input type="hidden" name="id" value={q.id} /><button className={btnOutline} type="submit">{tr(locale, "Dupliquer", "Duplicate")}</button></form>
+            <form action={moveQuestionAction}><input type="hidden" name="move" value={`${q.id}:up`} /><button className={btn} type="submit" aria-label={tr(locale, "Monter", "Move up")}>↑</button></form>
+            <form action={moveQuestionAction}><input type="hidden" name="move" value={`${q.id}:down`} /><button className={btn} type="submit" aria-label={tr(locale, "Descendre", "Move down")}>↓</button></form>
+          </div>
+        </div>
         ))}
       </div>
 

@@ -23,5 +23,6 @@ describe("notifyReturnReceived", () => {
     await notifyReturnReceived("s1");
     const to = safeSend.mock.calls.map((c) => (c as unknown[])[0]);
     expect(to).toEqual(["client@example.test", "mimi@example.test"]);
+    expect(JSON.stringify(safeSend.mock.calls[1])).toContain("contrôle de conformité");
   });
 });

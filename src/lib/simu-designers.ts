@@ -36,7 +36,7 @@ const EPOMTA = {
 const SOURCE_TO_EPOMTA: Record<string, (keyof typeof EPOMTA)[]> = {
   clothing: ["couture-mode"],
   shoes: ["couture-mode"],
-  bags: ["couture-mode", "bijoux"],
+  bags: ["bijoux"],
   accessories: ["bijoux"],
   jewelry: ["bijoux"],
   textiles: ["textile-decoration"],

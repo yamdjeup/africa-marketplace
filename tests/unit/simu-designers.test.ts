@@ -74,6 +74,7 @@ describe("import créateurs d'illustration simu", () => {
 
   it("catégories sources mappées sur Epomta", () => {
     expect(mapSimuCategories(["clothing", "bags"]).slugs).toEqual(["couture-mode", "bijoux"]);
+    expect(mapSimuCategories(["bags"]).slugs).toEqual(["bijoux"]);
     expect(mapSimuCategories(["jewelry", "accessories", "shoes"]).fr).toBe("Couture et mode, Accessoires");
     expect(mapSimuCategories(["textiles"]).en).toBe("Textiles and home decor");
   });

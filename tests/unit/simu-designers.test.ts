@@ -18,10 +18,16 @@ function fakeDb() {
       async update({ where, data }: { where: { slug: string }; data: Record<string, unknown> }) {
         const cur = rows.get(where.slug)!;
         rows.delete(where.slug);
-        rows.set(data.slug as string, { ...cur, ...data });
+        rows.set((data.slug as string | undefined) ?? where.slug, { ...cur, ...data });
       },
       async upsert({ where, update, create }: { where: { slug: string }; update: Record<string, unknown>; create: Record<string, unknown> }) {
         rows.set(where.slug, rows.has(where.slug) ? { ...rows.get(where.slug), ...update } : create);
+      },
+      async findMany() {
+        return [...rows.values()].filter((r) => r.simuIllustration === false) as never;
+      },
+      async delete({ where }: { where: { slug: string } }) {
+        rows.delete(where.slug);
       },
       async deleteMany() {
         let count = 0;
@@ -109,11 +115,19 @@ describe("import créateurs d'illustration simu", () => {
     expect(hit).toHaveLength(1);
   });
 
-  it("collision : un créateur réel au même slug n'est jamais écrasé", async () => {
+  it("fusion : un profil réel (même slug ou même nom normalisé) est conservé et complété, doublon simu supprimé", async () => {
     const db = fakeDb();
-    db.rows.set("mina", { slug: "mina", simuIllustration: false, name: "réel" });
+    const d = list[0];
+    db.rows.set("ancien", { slug: "ancien", simuIllustration: false, name: d.name.toUpperCase(), bio: "ancienne bio", image: "old.jpg", privateEmail: "" });
+    db.rows.set(`simu-${d.slug}`, { slug: `simu-${d.slug}`, simuIllustration: true, name: d.name });
     await importSimuDesigners(db, list);
-    expect(db.rows.get("mina")!.name).toBe("réel");
+    const kept = db.rows.get("ancien")!;
+    expect(kept).toMatchObject({ simuIllustration: false, bio: "ancienne bio", image: "old.jpg", name: d.name, madeIn: d.madeIn });
+    expect(db.rows.has(`simu-${d.slug}`)).toBe(false);
+    expect(db.rows.has(d.slug)).toBe(false);
+    await importSimuDesigners(db, list);
+    expect(await removeSimuDesigners(db)).toBe(149);
+    expect(db.rows.has("ancien")).toBe(true);
   });
 
   it("--remove ne supprime que les profils d'illustration", async () => {

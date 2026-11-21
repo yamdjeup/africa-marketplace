@@ -3,11 +3,12 @@ import { sendEmail } from "@/lib/email";
 import { siteUrl } from "@/lib/alerts-core";
 
 
-export async function safeSend(to: string, subject: string, lines: string[], html?: string) {
+export async function safeSend(to: string, subject: string, lines: string[], html?: string): Promise<boolean> {
   try {
-    await sendEmail({ to, subject, text: lines.join("\n\n"), html: html ?? "" });
+    return (await sendEmail({ to, subject, text: lines.join("\n\n"), html: html ?? "" })) !== false;
   } catch (e) {
     console.warn("[supplier-email] envoi impossible :", (e as Error).message);
+    return false;
   }
 }
 

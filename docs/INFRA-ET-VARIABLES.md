@@ -196,7 +196,7 @@ Statut : `[x]` fait, `[ ]` à faire. Seuls les points confirmés par le proprié
 - Migration `0042_simu_designers` (9 colonnes additives sur `Creator`).
 - Import : définir `SIMU_DATABASE_URL` (base simu, jamais prod), puis `npm run db:simu-designers`. Retrait avant prod : `npm run db:simu-designers -- --remove`.
 - Données : `prisma/simu-designers.json` (150 profils, images distantes d'illustration ; site/e-mail/Instagram privés, non affichés). `madeIn` est affiché publiquement sur la fiche créateur (FR « Fabriqué en », EN « Made in »).
-- Variable locale uniquement (non Vercel) : `SIMU_DATABASE_URL`.
+- Lancement : GitHub > Actions > « Import designers simu » > Run workflow (action import ou remove). Secret GitHub requis : `SIMU_DATABASE_URL` (URL Postgres de la base simu, jamais prod ; le workflow refuse si égale à `PROD_DIRECT_URL`). Il applique aussi `prisma migrate deploy` sur simu (en prod/simu, `vercel-build` applique déjà les migrations au déploiement). Local : variable `SIMU_DATABASE_URL` (non Vercel).
 
 ### 3 ter. Séquence OTA (app Android, canal preview, runtime 1.0.0)
 

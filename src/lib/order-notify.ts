@@ -167,7 +167,7 @@ export async function runTrackingPoll() {
   }
   return done.length;
 }
-/** Expédition : mail « expédiée », puis relecture immédiate 17TRACK (colis déjà livré / déjà enregistré) pour ne pas attendre le cron. */
+/** ExpÃ©dition : mail Â« expÃ©diÃ©e Â», puis relecture immÃ©diate 17TRACK (colis dÃ©jÃ  livrÃ© / dÃ©jÃ  enregistrÃ©) pour ne pas attendre le cron. */
 export async function notifyShipped(subOrderId: string) {
   await notifySubOrder("SHIPPED", subOrderId);
   await runTrackingPoll().catch((e) => console.error("[17track] poll after ship", e instanceof Error ? e.message : e));

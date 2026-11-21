@@ -10,7 +10,7 @@ vi.mock("@/lib/tracking-provider", () => ({ getTrackingProvider: () => null }));
 vi.mock("@/lib/return-email", () => ({ sendReturnMail }));
 
 describe("runTrackingPoll", () => {
-  it("mail livré pour une livraison, mail retour reçu pour un retour, ignore sans sous-commande", async () => {
+  it("mail livrÃ© pour une livraison, mail retour reÃ§u pour un retour, ignore sans sous-commande", async () => {
     const mod = await import("../../src/lib/order-notify");
     const spy = vi.spyOn(fakeDb.subOrder, "findUnique");
     const n = await mod.runTrackingPoll();
@@ -22,7 +22,7 @@ describe("runTrackingPoll", () => {
 });
 
 describe("partnerDecideReturn", () => {
-  it("refuse tant que le colis n'a pas été contrôlé (condition null)", async () => {
+  it("refuse tant que le colis n'a pas Ã©tÃ© contrÃ´lÃ© (condition null)", async () => {
     const { partnerDecideReturn } = await import("../../src/lib/returns");
     const findFirst = vi.fn(async () => null);
     const db = { returnRequest: { findFirst } } as never;

@@ -24,5 +24,5 @@ export function trackingUrl(carrier: string, trackingNumber: string): string | n
   return b ? b[1](n) : null;
 }
 
-/** Transporteur choisi : « Autre » (ou __other) bascule sur le champ libre. */
+/** Transporteur choisi : Â« Autre Â» (ou __other) bascule sur le champ libre. */
 export function resolveCarrier(raw: string, other: string): string { return ["__other", "Autre", "Other"].includes(raw.trim()) ? other.trim() : raw.trim(); }

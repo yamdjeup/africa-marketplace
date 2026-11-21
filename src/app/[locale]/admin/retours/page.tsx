@@ -58,11 +58,11 @@ export default async function ReturnsAdmin({ params, searchParams }: { params: P
               {(r.status === "ACCEPTED" || r.status === "RECEIVED") && (
                 <div className="space-y-2">
                   {r.status === "ACCEPTED" && <form action={markReceivedAction}><input type="hidden" name="id" value={r.id} /><button className={buttonVariants({ className: "min-h-11" })}>{tr(locale, "Colis reçu (à la place du créateur)", "Parcel received (on behalf of creator)")}</button></form>}
-                  <form action={refundReturnAction} className="flex flex-wrap items-center gap-2">
+                  <form action={refundReturnAction} className="flex flex-wrap items-end gap-2">
                     <input type="hidden" name="id" value={r.id} />
                     <StockChoice en={locale === "en"} defaultChoice={r.condition === "OK" ? "restock" : r.condition === "DAMAGED" ? "exclude" : ""} defaultReason={r.conditionNote ?? ""} />
                     <button className={buttonVariants({ className: "min-h-11" })}>{tr(locale, "Rembourser (Stripe)", "Refund (Stripe)")}</button>
-                    <button name="manual" value="1" className={buttonVariants({ variant: "outline", className: "min-h-11" })}>{tr(locale, "Marquer remboursé (manuel)", "Mark refunded (manual)")}</button>
+                    <button name="manual" value="1" className={buttonVariants({ variant: "outline", className: "min-h-11 border-2 border-foreground/60" })}>{tr(locale, "Marquer remboursé (manuel)", "Mark refunded (manual)")}</button>
                   </form>
                   <p className="text-xs text-muted-foreground">{tr(locale, "Les frais de livraison ne sont pas remboursés.", "Delivery fees are not refunded.")}</p>
                 </div>

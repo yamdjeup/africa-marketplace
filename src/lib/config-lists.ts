@@ -66,6 +66,15 @@ export function sortCarriers(names: string[]): string[] {
   return [...head, ...names.filter((n) => !head.includes(n))];
 }
 
+export function paginateCarriers<T extends { name: string }>(all: T[], opts: { q?: string; page?: unknown; size?: unknown }) {
+  const q = (opts.q ?? "").trim();
+  const size = [50, 100].includes(Number(opts.size)) ? Number(opts.size) : 50;
+  const matches = q ? all.filter((r) => r.name.toLowerCase().includes(q.toLowerCase())) : all;
+  const pages = Math.max(1, Math.ceil(matches.length / size));
+  const page = Math.min(pages, Math.max(1, Math.floor(Number(opts.page)) || 1));
+  return { q, size, matches, pages, page, rows: matches.slice((page - 1) * size, page * size) };
+}
+
 export async function addCarrier(db: PrismaClient, name: string) {
   const n = clean(name, 60);
   if (n.length < 2) return "invalid" as const;

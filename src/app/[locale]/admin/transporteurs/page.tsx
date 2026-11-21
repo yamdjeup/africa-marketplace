@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import type { Locale } from "@/lib/i18n";
-import { listCarriers } from "@/lib/config-lists";
+import { listCarriers, paginateCarriers } from "@/lib/config-lists";
 import { tr } from "@/lib/tr";
 import { ConfigTabs } from "../config-tabs";
 import { DraftForm } from "../motifs/draft-form";
@@ -14,13 +14,8 @@ const cell = "w-full min-w-48 rounded-md border bg-background px-2 py-1 text-sm"
 export default async function AdminCarriers({ params, searchParams }: { params: Promise<{ locale: Locale }>; searchParams: Promise<{ ok?: string; error?: string; q?: string; page?: string; size?: string }> }) {
   const { locale } = await params;
   const sp = await searchParams;
-  const q = (sp.q ?? "").trim();
-  const size = [50, 100].includes(Number(sp.size)) ? Number(sp.size) : 50;
   const all = await listCarriers(db, false);
-  const matches = q ? all.filter((r) => r.name.toLowerCase().includes(q.toLowerCase())) : all;
-  const pages = Math.max(1, Math.ceil(matches.length / size));
-  const page = Math.min(pages, Math.max(1, Math.floor(Number(sp.page)) || 1));
-  const rows = matches.slice((page - 1) * size, page * size);
+  const { q, size, matches, pages, page, rows } = paginateCarriers(all, sp);
   const href = (p: number) => `?${new URLSearchParams({ ...(q ? { q } : {}), size: String(size), page: String(p) })}`;
   const pager = (
     <nav aria-label="Pagination" className="flex flex-wrap items-center gap-2 text-sm">

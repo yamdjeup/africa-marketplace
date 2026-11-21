@@ -155,6 +155,8 @@ export async function oneCreator(slug: string, locale: MobileLocale, origin: str
     slug: c.slug,
     name: c.name,
     specialty: c.specialty,
+    madeIn: c.madeIn,
+    countries: c.countries.map((k) => k.label),
     image: absolute(c.image, origin),
     bio: v && sentences.length > 1 ? sentences.slice(0, -1).join(" ") : c.bio,
     sourceUrl: c.sourceUrl.includes("g3a.org") ? c.sourceUrl : null,

@@ -3,11 +3,12 @@ import type { Locale } from "@/lib/i18n";
 import { tr } from "@/lib/tr";
 
 // Sous-onglets de l'onglet « Configuration » de l'administration.
-export function ConfigTabs({ locale, current }: { locale: Locale; current: "motifs" | "transporteurs" | "motifs-retour" }) {
+export function ConfigTabs({ locale, current }: { locale: Locale; current: "motifs" | "transporteurs" | "motifs-retour" | "enquete" }) {
   const tabs = [
     ["motifs", tr(locale, "Motifs de refus", "Refusal reasons")],
     ["transporteurs", tr(locale, "Transporteurs", "Carriers")],
     ["motifs-retour", tr(locale, "Motifs de retour", "Return reasons")],
+    ["enquete", tr(locale, "Enquête", "Survey")],
   ] as const;
   return (
     <div className="space-y-2">

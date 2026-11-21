@@ -18,7 +18,7 @@ const PUBLIC_PWA = /^\/(manifest\.webmanifest|icons\/[\w-]+\.png|sw\.js|debug-vi
 
 // /api/v1/* : app mobile, chaque route s'authentifie elle-même (Bearer) ou ne sert que le catalogue public.
 // Liens des e-mails d'alertes (désinscription), cron et webhook Stripe et photos /api/media/[id] (images des e-mails) : publics, protégés par jeton signé / CRON_SECRET / signature Stripe ; les médias privés se protègent eux-mêmes.
-const PUBLIC_ALERTS = /^\/(api\/(v1\/.+|alerts\/(run|unsubscribe)|orders\/sweep|tila|address\/(check|suggest)|push\/test|stripe\/webhook|webhooks\/17track|media\/[\w-]+)|tila-avatar\.jpeg|videos\/(posters\/)?[\w.-]+\.(mp4|jpg)|images\/(artworks|examples)\/[\w.-]+\.(jpg|jpeg|png|webp)|mediapipe\/(wasm|models)\/[\w.-]+|(fr|en)\/produits\/[\w-]+\/essayage|(fr|en)\/alertes\/desinscription)$/;
+const PUBLIC_ALERTS = /^\/(api\/(v1\/.+|alerts\/(run|unsubscribe)|orders\/sweep|tila|address\/(check|suggest)|push\/test|stripe\/webhook|webhooks\/17track|media\/[\w-]+)|tila-avatar\.jpeg|videos\/(posters\/)?[\w.-]+\.(mp4|jpg)|images\/(artworks|examples)\/[\w.-]+\.(jpg|jpeg|png|webp)|mediapipe\/(wasm|models)\/[\w.-]+|(fr|en)\/produits\/[\w-]+\/essayage|(fr|en)\/alertes\/desinscription|(fr|en)\/avis\/[a-f0-9]{48})$/;
 
 const htmlHeaders = { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex, nofollow" };
 

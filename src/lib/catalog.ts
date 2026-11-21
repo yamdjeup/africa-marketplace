@@ -49,6 +49,7 @@ export type ProductView = {
 };
 
 export type CreatorView = {
+  madeIn: string;
   slug: string;
   name: string;
   specialty: string;
@@ -120,6 +121,7 @@ export function toCreatorView(c: Creator, locale: Locale, cats: { slug: string; 
     bio: pick(locale, c.bio, c.bioEn),
     image: c.image,
     sourceUrl: c.sourceUrl,
+    madeIn: pick(locale, c.madeIn, c.madeInEn),
   };
 }
 

@@ -53,6 +53,11 @@ export default async function CreatorPage({ params }: Props) {
         <div className="space-y-2">
           <h1 className="font-heading text-3xl text-primary">{c.name}</h1>
           <p className="text-xs uppercase tracking-wide text-terracotta">{c.specialty}</p>
+          {c.madeIn && (
+            <p className="text-sm">
+              <span className="font-medium">{locale === "fr" ? "Fabriqué en" : "Made in"}</span> : {c.madeIn}
+            </p>
+          )}
           <p className="max-w-prose pt-2">{bio}</p>
           {c.sourceUrl.includes("g3a.org") && (
             <p className="text-xs text-muted-foreground">

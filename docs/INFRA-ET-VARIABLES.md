@@ -85,7 +85,8 @@ Pas de clé live. Compte Stripe « Epomta sandbox » : africamadolo@gmail.com.
 | `GOOGLE_TRANSLATE_API_KEY`, `DEEPL_API_KEY`, `DEEPL_API_URL`, `TRANSLATE_PROVIDER` | optionnel | Traduction automatique, si activée | Clés : oui | À compléter |
 
 Compte Google Cloud : africamadolo@gmail.com, projet `epomta-demo`. Client « Epomta web » : redirect URIs `epomta.com` et `www.epomta.com` ajoutées ; connexion Google testée OK sur epomta.com.
-
+
+
 ### Application mobile (Expo / EAS) et API `/api/v1`
 | Variable | Env. | Rôle | Sensible | Où la créer |
 |---|---|---|---|---|
@@ -183,20 +184,46 @@ Redirect URI Google (et Facebook/Apple) ; endpoint webhook Stripe `https://epomt
 ## 8. Sécurité
 
 Statut : `[x]` fait, `[ ]` à faire. Seuls les points confirmés par le propriétaire sont cochés.
-
-### 3 ter. Séquence OTA (app Android, canal preview, runtime 1.0.0)
-
-`mobile/app.json` est commité avec : slug `afrique-marketplace`, owner `epomta-app`, `extra.eas.projectId` `6b0ae666-4795-4bfc-b96f-060673117e1f`, `updates.url` correspondante, package `com.epomta.app`. **Ne jamais** faire `git checkout -- mobile/app.json` ni changer le slug : `node scripts/check-mobile-config.mjs` échoue si l'un de ces champs change.
-
-Dans cmd, depuis la racine du dépôt (une commande par ligne ; seul `EXPO_TOKEN` est un secret, à ne jamais commiter) :
-
-1. `set EXPO_TOKEN=<votre jeton>`
-2. `set EXPO_PUBLIC_API_URL=https://simu.epomta.com`
-3. `set EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID=<valeur de mobile/eas.json>` et `set EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=<valeur de mobile/eas.json>` (identifiants publics)
-4. `set EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY=<pk_test de mobile/eas.json>`
-5. `node scripts/check-mobile-config.mjs` (doit afficher « Config mobile OK »)
-6. `cd mobile`
-7. `npx eas-cli update --channel preview --platform android --message "<message>"`
+
+
+### 3 quinquies. Enquête de satisfaction (« Rate your experience »)
+
+- Migration `0041_survey` (à appliquer avant le déploiement : `npm run db:deploy`) : tables `SurveyConfig`, `SurveyQuestion`, `SurveyResponse`, `SurveyAnswer`, colonne `SubOrder.reviewMailSentAt`, questions de départ.
+- Aucune variable d'environnement ni cron nouveau : le mail d'avis (J+3, délai réglable en admin) part via le sweep existant (`runSubOrderSweep`, GitHub Actions */30). Désactiver l'enquête en admin (Configuration > Enquête) : plus de mail d'avis, mail de clôture inchangé.
+- Page publique `/fr|en/avis/<jeton 48 hex>` ajoutée à `PUBLIC_ALERTS` (`src/proxy.ts`) : le jeton unique tient lieu d'authentification. Résultats et export CSV : admin uniquement.
+
+### 3 sexies. Créateurs d'illustration (simu uniquement)
+- Migration `0042_simu_designers` (9 colonnes additives sur `Creator`).
+- Import : définir `SIMU_DATABASE_URL` (base simu, jamais prod), puis `npm run db:simu-designers`. Retrait avant prod : `npm run db:simu-designers -- --remove`.
+- Données : `prisma/simu-designers.json` (150 profils, images distantes d'illustration ; site/e-mail/Instagram privés, non affichés). `madeIn` est affiché publiquement sur la fiche créateur (FR « Fabriqué en », EN « Made in »).
+- Variable locale uniquement (non Vercel) : `SIMU_DATABASE_URL`.
+
+### 3 ter. Séquence OTA (app Android, canal preview, runtime 1.0.0)
+
+
+
+`mobile/app.json` est commité avec : slug `afrique-marketplace`, owner `epomta-app`, `extra.eas.projectId` `6b0ae666-4795-4bfc-b96f-060673117e1f`, `updates.url` correspondante, package `com.epomta.app`. **Ne jamais** faire `git checkout -- mobile/app.json` ni changer le slug : `node scripts/check-mobile-config.mjs` échoue si l'un de ces champs change.
+
+
+
+Dans cmd, depuis la racine du dépôt (une commande par ligne ; seul `EXPO_TOKEN` est un secret, à ne jamais commiter) :
+
+
+
+1. `set EXPO_TOKEN=<votre jeton>`
+
+2. `set EXPO_PUBLIC_API_URL=https://simu.epomta.com`
+
+3. `set EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID=<valeur de mobile/eas.json>` et `set EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=<valeur de mobile/eas.json>` (identifiants publics)
+
+4. `set EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY=<pk_test de mobile/eas.json>`
+
+5. `node scripts/check-mobile-config.mjs` (doit afficher « Config mobile OK »)
+
+6. `cd mobile`
+
+7. `npx eas-cli update --channel preview --platform android --message "<message>"`
+
 
 ### Comptes
 - [ ] Resend : passer de Free à Pro (20 $/mois) avant l'ouverture

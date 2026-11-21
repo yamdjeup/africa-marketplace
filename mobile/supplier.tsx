@@ -351,7 +351,7 @@ function ProfilePane({ token }: { token: string }) {
 type RetRow = { id: string; subOrderId: string; number: string; reason: string; createdAt: string; stage: string; decideBy: string | null };
 const RET_TABS = [{ v: "todo", fr: "À traiter", en: "To handle" }, { v: "accepted", fr: "Acceptés", en: "Accepted" }, { v: "refused", fr: "Refusés", en: "Refused" }, { v: "all", fr: "Tous", en: "All" }];
 const PERIODS = [{ v: "all", fr: "Toutes les dates", en: "All dates" }, { v: "today", fr: "Aujourd’hui", en: "Today" }, { v: "custom", fr: "Plage personnalisée", en: "Custom range" }];
-const STAGES: Record<string, [string, string]> = { incoming: ["Colis en route vers vous", "Parcel on its way to you"], decide: ["Décision à prendre", "Decision needed"], accepted: ["Accepté", "Accepted"], refused: ["Refusé", "Refused"], refunded: ["Remboursé", "Refunded"] };
+const STAGES: Record<string, [string, string]> = { incoming: ["Colis en route vers vous", "Parcel on its way to you"], check: ["Colis reçu — à contrôler", "Parcel received — to check"], decide: ["Décision à prendre", "Decision needed"], accepted: ["Accepté", "Accepted"], refused: ["Refusé", "Refused"], refunded: ["Remboursé", "Refunded"] };
 
 function ReturnsPane({ token, onOpen }: { token: string; onOpen: (id: string) => void }) {
   const [tab, setTab] = useState("todo");

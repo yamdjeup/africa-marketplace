@@ -25,6 +25,7 @@ export default async function PartnerReturns({ params, searchParams }: { params:
   const fmt = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "fr-FR", { timeZone: "Europe/Paris", dateStyle: "medium", timeStyle: "short" });
   const stage = (s: string) => ({
     incoming: tr(locale, "Colis en route vers vous", "Parcel on its way to you"),
+    check: tr(locale, "Colis reçu — à contrôler", "Parcel received — to check"),
     decide: tr(locale, "Décision à prendre", "Decision needed"),
     accepted: tr(locale, "Accepté", "Accepted"),
     refused: tr(locale, "Refusé", "Refused"),
@@ -46,7 +47,7 @@ export default async function PartnerReturns({ params, searchParams }: { params:
                   <span className="block text-xs text-muted-foreground">{fmt.format(new Date(r.createdAt))} · {r.reason}</span>
                   {r.stage === "decide" && r.decideBy && <span className="block text-xs text-amber-800">{tr(locale, "Décision avant le ", "Decide before ")}{fmt.format(new Date(r.decideBy))}</span>}
                 </span>
-                <Pill cls={r.stage === "refused" ? "bg-red-100 text-red-900" : r.stage === "incoming" || r.stage === "decide" ? "bg-amber-100 text-amber-900" : "bg-green-100 text-green-900"}>{stage(r.stage)}</Pill>
+                <Pill cls={r.stage === "refused" ? "bg-red-100 text-red-900" : r.stage === "incoming" || r.stage === "check" || r.stage === "decide" ? "bg-amber-100 text-amber-900" : "bg-green-100 text-green-900"}>{stage(r.stage)}</Pill>
               </Link>
             </li>
           ))}

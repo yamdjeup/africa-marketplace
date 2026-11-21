@@ -161,8 +161,8 @@ export async function runTrackingPoll() {
     if (!r.subOrderId) continue;
     if (r.outcome === "delivered") await notifySubOrder("DELIVERED", r.subOrderId);
     else {
-      const { sendReturnMail } = await import("@/lib/return-email");
-      await sendReturnMail(r.subOrderId, "received");
+      const { notifyReturnReceived } = await import("@/lib/return-email");
+      await notifyReturnReceived(r.subOrderId);
     }
   }
   return done.length;

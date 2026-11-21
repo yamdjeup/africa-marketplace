@@ -7,7 +7,8 @@ const fakeDb = { subOrder: { findUnique: vi.fn(async () => null) } };
 vi.mock("@/lib/db", () => ({ db: fakeDb }));
 vi.mock("@/lib/tracking-events", () => ({ pollTracking: vi.fn(async () => [{ subOrderId: "s1", outcome: "delivered" }, { subOrderId: "s2", outcome: "return-received" }, { subOrderId: null, outcome: "delivered" }]) }));
 vi.mock("@/lib/tracking-provider", () => ({ getTrackingProvider: () => null }));
-vi.mock("@/lib/return-email", () => ({ sendReturnMail }));
+const notifyReturnReceived = vi.fn(async () => {});
+vi.mock("@/lib/return-email", () => ({ sendReturnMail, notifyReturnReceived }));
 
 describe("runTrackingPoll", () => {
   it("mail livré pour une livraison, mail retour reçu pour un retour, ignore sans sous-commande", async () => {
@@ -15,7 +16,7 @@ describe("runTrackingPoll", () => {
     const spy = vi.spyOn(fakeDb.subOrder, "findUnique");
     const n = await mod.runTrackingPoll();
     expect(n).toBe(3);
-    expect(sendReturnMail).toHaveBeenCalledWith("s2", "received");
+    expect(notifyReturnReceived).toHaveBeenCalledWith("s2");
     expect(spy).toHaveBeenCalled();
     expect(notify).not.toHaveBeenCalled();
   });

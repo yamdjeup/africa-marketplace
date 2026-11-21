@@ -41,6 +41,11 @@ model Creator {
   privateWebsite   String @default("")
   privateEmail     String @default("")
   privateInstagram String @default("")
+  /// Profil cree par l admin (sans produit obligatoire) ; published=false : masque de la liste
+  profileOnly      Boolean @default(false)
+  published        Boolean @default(true)
+  /// Slugs de categories Epomta (separes par des virgules) pour les profils sans produit
+  categorySlugs    String  @default("")
   products    Product[]
 }
 

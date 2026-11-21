@@ -1,5 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { canonCountry } from "../../src/lib/countries";
+import { saveCreatorProfile } from "../../src/lib/creator-admin";
+import { simuCountries } from "../../src/lib/catalog";
 import { importSimuDesigners, mapSimuCategories, removeSimuDesigners, type SimuDesigner } from "../../src/lib/simu-designers";
 
 function fakeDb() {
@@ -77,6 +80,33 @@ describe("import créateurs d'illustration simu", () => {
     expect(mapSimuCategories(["bags"]).slugs).toEqual(["bijoux"]);
     expect(mapSimuCategories(["jewelry", "accessories", "shoes"]).fr).toBe("Couture et mode, Accessoires");
     expect(mapSimuCategories(["textiles"]).en).toBe("Textiles and home decor");
+  });
+
+  it("pays : une seule cle par pays quelles que soient les variantes", () => {
+    const keys = ["C\u00f4te d'Ivoire", "Cote d Ivoire", "Ivory Coast", "COTE D\u2019IVOIRE"].map((n) => canonCountry(n).key);
+    expect(new Set(keys)).toEqual(new Set(["cote-d-ivoire"]));
+    expect(canonCountry("Cameroon").key).toBe(canonCountry("Cameroun").key);
+    expect(simuCountries({ country: "Cameroun, Cameroun", countryEn: "Cameroon, Cameroon" }, "fr")).toHaveLength(1);
+  });
+
+  it("admin : creation de profil, non-admin refuse, filtre OU multi-pays", async () => {
+    const rows = new Map<string, Record<string, unknown>>();
+    const db = {
+      creator: {
+        findUnique: async ({ where }: { where: { slug: string } }) => (rows.get(where.slug) as never) ?? null,
+        upsert: async ({ where, create, update }: { where: { slug: string }; create: Record<string, unknown>; update: Record<string, unknown> }) => {
+          rows.set(where.slug, { ...(rows.get(where.slug) ?? create), ...update });
+        },
+      },
+    };
+    const input = { name: "Ama Test", countries: ["Ivory Coast", "Cameroun"], madeIn: "", madeInEn: "", categories: ["bijoux", "x"], specialty: "", specialtyEn: "", bio: "", bioEn: "", image: "", website: "w", email: "e", instagram: "i", published: true };
+    expect(await saveCreatorProfile(db, false, input)).toBe("forbidden");
+    expect(rows.size).toBe(0);
+    expect(await saveCreatorProfile(db, true, input)).toBe("created");
+    expect(rows.get("ama-test")).toMatchObject({ categorySlugs: "bijoux", countryEn: "Ivory Coast, Cameroon", profileOnly: true });
+    const sel = ["cameroun", "ghana"];
+    const hit = [{ countries: [{ key: "cameroun" }] }, { countries: [{ key: "togo" }] }].filter((a) => a.countries.some((k) => sel.includes(k.key)));
+    expect(hit).toHaveLength(1);
   });
 
   it("collision : un créateur réel au même slug n'est jamais écrasé", async () => {

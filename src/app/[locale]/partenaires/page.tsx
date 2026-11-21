@@ -17,7 +17,7 @@ export default async function CreatorsPage({
   searchParams,
 }: {
   params: Promise<{ locale: Locale }>;
-  searchParams: Promise<{ category?: string; country?: string }>;
+  searchParams: Promise<{ category?: string | string[]; country?: string | string[] }>;
 }) {
   const { locale } = await params;
   const sp = await searchParams;
@@ -25,43 +25,24 @@ export default async function CreatorsPage({
   const [all, cats] = await Promise.all([getCreators(locale), getCategories(locale)]);
 
   const catOptions = cats.filter((c) => all.some((a) => a.categories.includes(c.slug)));
-  const category = catOptions.some((c) => c.slug === sp.category) ? sp.category : undefined;
-  const inCat = category ? all.filter((a) => a.categories.includes(category)) : all;
+  const list = (v?: string | string[]) => (Array.isArray(v) ? v : v ? [v] : []);
+  const categories = list(sp.category).filter((k) => catOptions.some((c) => c.slug === k));
+  const inCat = categories.length ? all.filter((a) => a.categories.some((k) => categories.includes(k))) : all;
   const countryOptions = [...new Map(inCat.flatMap((a) => a.countries).map((k) => [k.key, k.label] as const)).entries()].sort((a, b) =>
     a[1].localeCompare(b[1], locale),
   );
-  const country = countryOptions.some(([k]) => k === sp.country) ? sp.country : undefined;
-  const creators = country ? inCat.filter((a) => a.countries.some((k) => k.key === country)) : inCat;
-  const active = Boolean(category || country);
+  const selected = list(sp.country).filter((k) => countryOptions.some(([o]) => o === k));
+  const creators = selected.length ? inCat.filter((a) => a.countries.some((k) => selected.includes(k.key))) : inCat;
+  const active = Boolean(categories.length || selected.length);
 
   const form = (
-    <form method="get" key={`${category}|${country}`} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:items-end">
-      <label className="space-y-1 text-xs font-medium">
-        {t.filterCategory}
-        <select name="category" defaultValue={category ?? ""} className={fieldClass}>
-          <option value="">{t.all}</option>
-          {catOptions.map((c) => (
-            <option key={c.slug} value={c.slug}>
-              {c.label}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="space-y-1 text-xs font-medium">
-        {t.filterCountry}
-        <select name="country" defaultValue={country ?? ""} className={fieldClass}>
-          <option value="">{t.allCountries}</option>
-          {countryOptions.map(([k, l]) => (
-            <option key={k} value={k}>
-              {l}
-            </option>
-          ))}
-        </select>
-      </label>
+    <form method="get" key={`${categories}|${selected}`} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:items-end">
+      <MultiFilter name="category" label={t.filterCategory} options={catOptions.map((c) => [c.slug, c.label] as const)} selected={categories} />
+      <MultiFilter name="country" label={t.filterCountry} options={countryOptions} selected={selected} />
       <Button type="submit" className="h-11">
         {t.apply}
       </Button>
-      <Link href={`/${locale}/partenaires`} className={buttonVariants({ variant: "ghost", className: "h-11" })}>
+      <Link href={`/${locale}/partenaires`} className={buttonVariants({ variant: "outline", className: "h-11" })}>
         {t.reset}
       </Link>
     </form>
@@ -94,5 +75,28 @@ export default async function CreatorsPage({
         ))}
       </ul>
     </div>
+  );
+}
+
+function MultiFilter({ name, label, options, selected }: { name: string; label: string; options: readonly (readonly [string, string])[]; selected: string[] }) {
+  return (
+    <details className="relative text-xs font-medium">
+      <summary className="flex h-11 cursor-pointer list-none items-center justify-between rounded-md border bg-background px-3 text-sm">
+        <span>
+          {label}
+          {selected.length ? ` (${selected.length})` : ""}
+        </span>
+        <span aria-hidden>▾</span>
+      </summary>
+      <fieldset className="absolute z-10 mt-1 max-h-64 w-full min-w-56 space-y-1 overflow-y-auto rounded-md border bg-background p-2 shadow-md">
+        <legend className="sr-only">{label}</legend>
+        {options.map(([k, l]) => (
+          <label key={k} className="flex min-h-9 items-center gap-2 text-sm font-normal">
+            <input type="checkbox" name={name} value={k} defaultChecked={selected.includes(k)} />
+            {l}
+          </label>
+        ))}
+      </fieldset>
+    </details>
   );
 }

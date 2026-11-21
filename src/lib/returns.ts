@@ -8,7 +8,7 @@ export type ReturnStatus = "REQUESTED" | "ACCEPTED" | "RECEIVED" | "REFUSED" | "
 
 export const RETURN_LABELS: Record<ReturnStatus, { fr: string; en: string }> = {
   REQUESTED: { fr: "Retour demandé", en: "Return requested" },
-  ACCEPTED: { fr: "Retour accepté", en: "Return accepted" },
+  ACCEPTED: { fr: "Retour autorisé", en: "Return authorised" },
   RECEIVED: { fr: "Colis reçu", en: "Parcel received" },
   REFUSED: { fr: "Retour refusé", en: "Return refused" },
   REFUNDED: { fr: "Remboursé", en: "Refunded" },

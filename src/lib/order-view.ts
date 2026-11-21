@@ -44,7 +44,7 @@ export function parcelTimeline(sub: SubIn, ret: RetIn, now = new Date()): Timeli
     if (refused) steps.push({ key: "ret-refused", label: { fr: "Retour refusé", en: "Return refused" }, at: iso(ret.decidedAt), reached: true });
     else {
       steps.push(
-        { key: "ret-accepted", label: { fr: "Retour accepté", en: "Return accepted" }, at: iso(ret.decidedAt), reached: ret.status !== "REQUESTED" },
+        { key: "ret-accepted", label: { fr: "Retour autorisé", en: "Return authorised" }, at: iso(ret.decidedAt), reached: ret.status !== "REQUESTED" },
         { key: "ret-shipped", label: { fr: "Retour expédié", en: "Return shipped" }, at: iso(ret.returnShippedAt), reached: !!ret.returnShippedAt || ret.status === "RECEIVED" || ret.status === "REFUNDED" },
         { key: "ret-received", label: { fr: "Colis réceptionné", en: "Parcel received" }, at: iso(ret.partnerReceivedAt), reached: ret.status === "RECEIVED" || ret.status === "REFUNDED" },
         { key: "ret-refunded", label: { fr: "Remboursé", en: "Refunded" }, at: iso(ret.refundedAt), reached: ret.status === "REFUNDED" },

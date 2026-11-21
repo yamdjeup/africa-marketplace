@@ -5,7 +5,7 @@ import { returnLabel, partnerCheckDeadline } from "@/lib/returns";
 export type PartnerReturnRow = {
   id: string; subOrderId: string; number: string; status: string; label: { fr: string; en: string }; reason: string; createdAt: string;
   condition: string | null; conditionNote: string | null; receivedAt: string | null; decideBy: string | null;
-  decision: string | null; decisionNote: string | null; stage: "incoming" | "decide" | "accepted" | "refused" | "refunded";
+  decision: string | null; decisionNote: string | null; stage: "incoming" | "check" | "decide" | "accepted" | "refused" | "refunded";
 };
 
 /** Liste des retours d'un créateur avec compteurs par sous-onglet (mêmes filtres de période que l'administration). */
@@ -26,7 +26,7 @@ export async function partnerReturnList(db: PrismaClient, supplierId: string, sp
     receivedAt: r.partnerReceivedAt ? r.partnerReceivedAt.toISOString() : null,
     decideBy: r.partnerReceivedAt ? partnerCheckDeadline(r.partnerReceivedAt).toISOString() : null,
     decision: r.partnerDecision, decisionNote: r.partnerDecisionNote,
-    stage: r.status === "REFUNDED" ? "refunded" : (r.status === "ACCEPTED" || (r.status === "RECEIVED" && !r.condition && !r.partnerDecision)) ? "incoming" : r.partnerDecision === "ACCEPTED" ? "accepted" : r.partnerDecision === "REFUSED" ? "refused" : "decide",
+    stage: r.status === "REFUNDED" ? "refunded" : r.status === "ACCEPTED" ? "incoming" : (r.status === "RECEIVED" && !r.condition && !r.partnerDecision) ? "check" : r.partnerDecision === "ACCEPTED" ? "accepted" : r.partnerDecision === "REFUSED" ? "refused" : "decide",
   }));
   return { q, total, items, counts: { todo, accepted, refused, all } };
 }

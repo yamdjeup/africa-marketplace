@@ -42,3 +42,5 @@ describe("GET /api/v1/config", () => {
 
 import { resolveCarrier } from '../../src/lib/tracking';
 describe('resolveCarrier', () => { it('Autre/Other/__other prennent le champ libre', () => { for (const r of ['Autre', 'Other', '__other']) expect(resolveCarrier(r, ' Zed ')).toBe('Zed'); expect(resolveCarrier(' UPS ', 'x')).toBe('UPS'); }); });
+
+describe('notifyShipped', () => { it('relit 17TRACK juste apres expedition, meme si le poll echoue', async () => { const mod = await import('../../src/lib/order-notify'); const te = await import('../../src/lib/tracking-events'); (te.pollTracking as unknown as ReturnType<typeof vi.fn>).mockClear(); await expect(mod.notifyShipped('s9')).resolves.toBeUndefined(); expect(te.pollTracking).toHaveBeenCalledTimes(1); (te.pollTracking as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('boom')); await expect(mod.notifyShipped('s9')).resolves.toBeUndefined(); }); });

@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import { notifySubOrder } from "@/lib/order-notify";
+import { notifyShipped, notifySubOrder } from "@/lib/order-notify";
 import { confirmSubOrder } from "@/lib/confirm-sub";
 import { settleSubRefund } from "@/lib/refund";
 import { acceptSub, deliverSub, prepareSub, refuseSub, shipSub } from "@/lib/suborders";
@@ -93,7 +93,7 @@ export async function shipOrderAction(f: FormData) {
     redirect(back("?error=stock"));
   }
   if (!sub) redirect(back("?error=state"));
-  await notifySubOrder("SHIPPED", id);
+  await notifyShipped(id);
   done(back("?ok=shipped"));
 }
 

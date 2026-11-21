@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { notifySubOrder } from "@/lib/order-notify";
+import { notifyShipped, notifySubOrder } from "@/lib/order-notify";
 import { confirmSubOrder } from "@/lib/confirm-sub";
 import { settleSubRefund } from "@/lib/refund";
 import { acceptSub, deliverSub, prepareSub, refuseSub, shipSub } from "@/lib/suborders";
@@ -80,7 +80,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         return NextResponse.json({ error: "stock" }, { status: 409 });
       }
       if (!sub) return state();
-      await notifySubOrder("SHIPPED", id);
+      await notifyShipped(id);
       break;
     }
     case "deliver": {

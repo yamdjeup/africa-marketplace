@@ -1,5 +1,6 @@
 import type { PrismaClient } from "@prisma/client";
 import { deliverSub } from "@/lib/suborders";
+import { receiveReturnParcel } from "@/lib/returns";
 import { carrierCodeFor, type TrackingProvider, type TrackingUpdate } from "@/lib/tracking-provider";
 
 export type TrackingOutcome = "delivered" | "return-received" | "ignored";
@@ -12,11 +13,8 @@ export async function applyTrackingUpdate(db: PrismaClient, u: TrackingUpdate, n
     const done = await deliverSub(db, sub.id, null);
     return done ? { outcome: "delivered", subOrderId: sub.id } : { outcome: "ignored" };
   }
-  const ret = await db.returnRequest.findFirst({ where: { returnTracking: u.number, status: "ACCEPTED", returnShippedAt: { not: null } }, select: { id: true, subOrderId: true } });
-  if (ret) {
-    const n = await db.returnRequest.updateMany({ where: { id: ret.id, status: "ACCEPTED" }, data: { status: "RECEIVED", partnerReceivedAt: now } });
-    return n.count === 1 ? { outcome: "return-received", subOrderId: ret.subOrderId } : { outcome: "ignored" };
-  }
+  const ret = await receiveReturnParcel(db, { returnTracking: u.number }, now);
+  if (ret) return { outcome: "return-received", subOrderId: ret.subOrderId };
   return { outcome: "ignored" };
 }
 

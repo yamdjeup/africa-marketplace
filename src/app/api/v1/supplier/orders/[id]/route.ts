@@ -9,7 +9,7 @@ import { subLabel } from "@/lib/suborders";
 import { cleanTrackingNumber } from "@/lib/tracking";
 import { sendReturnMail } from "@/lib/return-email";
 import { findActiveReason } from "@/lib/refusal-reasons";
-import { returnLabel, markReturnReceivedByPartner, partnerDecideReturn, partnerCheckDeadline } from "@/lib/returns";
+import { returnLabel, markReturnReceivedByPartner, partnerConfirmParcelArrived, partnerDecideReturn, partnerCheckDeadline } from "@/lib/returns";
 
 export const dynamic = "force-dynamic";
 
@@ -36,7 +36,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     trackingNumber: sub.trackingNumber ? cleanTrackingNumber(sub.trackingNumber) : null,
     reason: sub.reason,
     reasonNote: sub.reasonNote,
-    return: ret ? { status: ret.status as string, label: returnLabel(ret), reason: ret.reason, createdAt: ret.createdAt.toISOString(), photoIds: ret.photoIds ? ret.photoIds.split(",") : [], condition: ret.condition, conditionNote: ret.conditionNote, receivedAt: ret.partnerReceivedAt ? ret.partnerReceivedAt.toISOString() : null, decision: ret.partnerDecision, decisionNote: ret.partnerDecisionNote, decideBy: ret.partnerReceivedAt ? partnerCheckDeadline(ret.partnerReceivedAt).toISOString() : null } : null,
+    return: ret ? { status: ret.status as string, label: returnLabel(ret), reason: ret.reason, createdAt: ret.createdAt.toISOString(), photoIds: ret.photoIds ? ret.photoIds.split(",") : [], shipped: !!ret.returnShippedAt, condition: ret.condition, conditionNote: ret.conditionNote, receivedAt: ret.partnerReceivedAt ? ret.partnerReceivedAt.toISOString() : null, decision: ret.partnerDecision, decisionNote: ret.partnerDecisionNote, decideBy: ret.partnerReceivedAt ? partnerCheckDeadline(ret.partnerReceivedAt).toISOString() : null } : null,
     items: items.map((i) => ({ id: i.id, name: i.name, size: i.size, quantity: i.quantity, unitPriceCents: i.unitPriceCents })),
     shipTo: { fullName: o.fullName, address: o.address, postalCode: o.postalCode, city: o.city, country: o.country, phone: o.phone },
   });
@@ -91,7 +91,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     case "return_check": {
       const r = await markReturnReceivedByPartner(db, id, sup.id, b.condition === "DAMAGED" ? "DAMAGED" : "OK", str(b.note, 300));
       if (r === "note") return NextResponse.json({ error: "note" }, { status: 400 });
-      if (r !== "ok") return state();
+      if (r !== "ok" && r !== "checked") return state();
+      if (r === "ok") await sendReturnMail(id, "received");
+      break;
+    }
+    case "return_arrived": {
+      if ((await partnerConfirmParcelArrived(db, id, sup.id)) !== "ok") return state();
       await sendReturnMail(id, "received");
       break;
     }

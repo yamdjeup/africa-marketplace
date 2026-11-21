@@ -12,7 +12,8 @@ import { listReasons } from "@/lib/refusal-reasons";
 import { getPortalContext } from "@/lib/supplier";
 import { tr } from "@/lib/tr";
 import { parsePhotoIds } from "@/lib/return-photos";
-import { acceptOrderAction, deliverOrderAction, prepareOrderAction, refuseOrderAction, returnCheckAction, returnDecideAction, shipOrderAction } from "../../../commandes-actions";
+import { acceptOrderAction, deliverOrderAction, prepareOrderAction, refuseOrderAction, returnArrivedAction, returnCheckAction, returnDecideAction, shipOrderAction } from "../../../commandes-actions";
+import { ConfirmSubmit } from "@/components/fournisseur/confirm-submit";
 
 export const metadata = { title: "Commande", robots: { index: false } };
 
@@ -31,6 +32,7 @@ const OK: Record<string, [string, string]> = {
   shipped: ["Expédiée ; stock confirmé, client prévenu.", "Shipped; stock confirmed, customer notified."],
   delivered: ["Marquée livrée.", "Marked as delivered."],
   returnchecked: ["Réception enregistrée ; E póm ta’ rembourse le client.", "Receipt recorded; E póm ta’ will refund the customer."],
+  returnarrived: ["Réception du colis enregistrée : contrôlez maintenant son état.", "Parcel receipt recorded: now check its condition."],
 };
 
 export default async function PartnerOrder({ params, searchParams }: { params: Promise<{ locale: Locale; id: string }>; searchParams: Promise<{ ok?: string; error?: string }> }) {
@@ -138,7 +140,13 @@ export default async function PartnerOrder({ params, searchParams }: { params: P
       {(ret?.status === "ACCEPTED" || (ret?.status === "RECEIVED" && !ret.condition && !ret.partnerDecision)) && (
         <section className="space-y-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm">
           <p><strong>{tr(locale, "Colis en route vers vous", "Parcel on its way to you")}</strong> — {tr(locale, "le client vous renvoie ce colis. À réception, contrôlez-le et décidez sous 6 jours calendaires.", "the customer is sending this parcel back to you. On arrival, check it and decide within 6 calendar days.")}</p>
-          {!ro && (
+          {!ro && ret.status === "ACCEPTED" && ret.returnShippedAt && (
+            <form action={returnArrivedAction}>
+              {hidden}
+              <ConfirmSubmit className={btn} message={tr(locale, "Confirmer que vous avez bien reçu ce colis retour ? Le client sera prévenu.", "Confirm that you have received this returned parcel? The customer will be notified.")}>{tr(locale, "J'ai reçu le colis", "I received the parcel")}</ConfirmSubmit>
+            </form>
+          )}
+          {!ro && !(ret.status === "ACCEPTED" && ret.returnShippedAt) && (
             <form action={returnCheckAction} className="grid gap-3 sm:grid-cols-2">
               {hidden}
               <label className="block">{tr(locale, "État du colis reçu", "Condition of the parcel")}

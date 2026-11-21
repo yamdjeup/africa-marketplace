@@ -29,11 +29,11 @@ jobs:
           test -n "$SIMU_DATABASE_URL" || { echo "Secret SIMU_DATABASE_URL absent"; exit 1; }
           test "$SIMU_DATABASE_URL" != "$PROD_DATABASE_URL" || { echo "REFUS : SIMU_DATABASE_URL = production"; exit 1; }
       - run: npm ci
-      - name: Appliquer les migrations sur simu (idempotent)
+      - name: Générer le client PostgreSQL et appliquer les migrations sur simu (idempotent)
         env:
           DATABASE_URL: ${{ secrets.SIMU_DATABASE_URL }}
           DIRECT_URL: ${{ secrets.SIMU_DATABASE_URL }}
-        run: npx prisma migrate deploy
+        run: node scripts/db.mjs deploy
       - name: Importer les designers
         if: ${{ inputs.action == 'import' }}
         run: npm run db:simu-designers

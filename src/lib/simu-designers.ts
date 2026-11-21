@@ -18,9 +18,14 @@ export type SimuDesigner = {
   instagram: string;
 };
 
+type Real = { slug: string; name: string; country?: string; privateWebsite?: string; privateEmail?: string; privateInstagram?: string };
+const norm = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+
 type Db = {
   creator: {
     findUnique(args: { where: { slug: string } }): Promise<{ simuIllustration: boolean } | null>;
+    findMany(args: { where: { simuIllustration: false } }): Promise<Real[]>;
+    delete(args: { where: { slug: string } }): Promise<unknown>;
     update(args: { where: { slug: string }; data: Record<string, unknown> }): Promise<unknown>;
     upsert(args: { where: { slug: string }; update: Record<string, unknown>; create: Record<string, unknown> }): Promise<unknown>;
     deleteMany(args: { where: { simuIllustration: true } }): Promise<{ count: number }>;
@@ -48,14 +53,36 @@ export function mapSimuCategories(keys: string[]) {
 
 export async function importSimuDesigners(db: Db, list: SimuDesigner[]) {
   let skipped = 0;
+  const real = new Map(
+    (await db.creator.findMany({ where: { simuIllustration: false } })).map((r) => [norm(r.name ?? ""), r] as const),
+  );
+  const slugReal = (r: Real) => real.set(`slug:${r.slug}`, r);
+  for (const r of [...real.values()]) slugReal(r);
   for (const d of list) {
     const existing = await db.creator.findUnique({ where: { slug: d.slug } });
-    if (existing && !existing.simuIllustration) {
-      console.warn(`ignoré (slug déjà pris par un créateur réel) : ${d.slug}`);
+    const match = (existing && !existing.simuIllustration ? real.get(`slug:${d.slug}`) : undefined) ?? real.get(norm(d.name));
+    if (match) {
+      // Fusion : on garde le profil reel (slug, produits, bio, photo) et on ajoute nom, Fabrique en, pays et coordonnees privees vides.
+      const empty = (v?: string) => !v;
+      await db.creator.update({
+        where: { slug: match.slug },
+        data: {
+          name: d.name,
+          madeIn: d.madeIn,
+          madeInEn: d.madeInEn,
+          ...(empty(match.country) ? { country: d.country, countryEn: d.countryEn } : {}),
+          ...(empty(match.privateWebsite) ? { privateWebsite: d.website } : {}),
+          ...(empty(match.privateEmail) ? { privateEmail: d.email } : {}),
+          ...(empty(match.privateInstagram) ? { privateInstagram: d.instagram } : {}),
+        },
+      });
+      for (const dup of new Set([d.slug, `simu-${d.slug}`])) {
+        if (dup !== match.slug && (await db.creator.findUnique({ where: { slug: dup } }))?.simuIllustration) await db.creator.delete({ where: { slug: dup } });
+      }
+      console.warn(`fusionne dans le profil existant : ${d.slug} -> ${match.slug}`);
       skipped++;
       continue;
-    }
-    const legacy = `simu-${d.slug}`;
+    }    const legacy = `simu-${d.slug}`;
     const cat = mapSimuCategories(d.categories);
     const data = {
       name: d.name,

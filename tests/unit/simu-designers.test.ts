@@ -1,5 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { canonCountry } from "../../src/lib/countries";
+import { saveCreatorProfile } from "../../src/lib/creator-admin";
+import { simuCountries } from "../../src/lib/catalog";
 import { importSimuDesigners, mapSimuCategories, removeSimuDesigners, type SimuDesigner } from "../../src/lib/simu-designers";
 
 function fakeDb() {
@@ -15,10 +18,16 @@ function fakeDb() {
       async update({ where, data }: { where: { slug: string }; data: Record<string, unknown> }) {
         const cur = rows.get(where.slug)!;
         rows.delete(where.slug);
-        rows.set(data.slug as string, { ...cur, ...data });
+        rows.set((data.slug as string | undefined) ?? where.slug, { ...cur, ...data });
       },
       async upsert({ where, update, create }: { where: { slug: string }; update: Record<string, unknown>; create: Record<string, unknown> }) {
         rows.set(where.slug, rows.has(where.slug) ? { ...rows.get(where.slug), ...update } : create);
+      },
+      async findMany() {
+        return [...rows.values()].filter((r) => r.simuIllustration === false) as never;
+      },
+      async delete({ where }: { where: { slug: string } }) {
+        rows.delete(where.slug);
       },
       async deleteMany() {
         let count = 0;
@@ -79,11 +88,46 @@ describe("import créateurs d'illustration simu", () => {
     expect(mapSimuCategories(["textiles"]).en).toBe("Textiles and home decor");
   });
 
-  it("collision : un créateur réel au même slug n'est jamais écrasé", async () => {
+  it("pays : une seule cle par pays quelles que soient les variantes", () => {
+    const keys = ["C\u00f4te d'Ivoire", "Cote d Ivoire", "Ivory Coast", "COTE D\u2019IVOIRE"].map((n) => canonCountry(n).key);
+    expect(new Set(keys)).toEqual(new Set(["cote-d-ivoire"]));
+    expect(canonCountry("Cameroon").key).toBe(canonCountry("Cameroun").key);
+    expect(simuCountries({ country: "Cameroun, Cameroun", countryEn: "Cameroon, Cameroon" }, "fr")).toHaveLength(1);
+  });
+
+  it("admin : creation de profil, non-admin refuse, filtre OU multi-pays", async () => {
+    const rows = new Map<string, Record<string, unknown>>();
+    const db = {
+      creator: {
+        findUnique: async ({ where }: { where: { slug: string } }) => (rows.get(where.slug) as never) ?? null,
+        upsert: async ({ where, create, update }: { where: { slug: string }; create: Record<string, unknown>; update: Record<string, unknown> }) => {
+          rows.set(where.slug, { ...(rows.get(where.slug) ?? create), ...update });
+        },
+      },
+    };
+    const input = { name: "Ama Test", countries: ["Ivory Coast", "Cameroun"], madeIn: "", madeInEn: "", categories: ["bijoux", "x"], specialty: "", specialtyEn: "", bio: "", bioEn: "", image: "", website: "w", email: "e", instagram: "i", published: true };
+    expect(await saveCreatorProfile(db, false, input)).toBe("forbidden");
+    expect(rows.size).toBe(0);
+    expect(await saveCreatorProfile(db, true, input)).toBe("created");
+    expect(rows.get("ama-test")).toMatchObject({ categorySlugs: "bijoux", countryEn: "Ivory Coast, Cameroon", profileOnly: true });
+    const sel = ["cameroun", "ghana"];
+    const hit = [{ countries: [{ key: "cameroun" }] }, { countries: [{ key: "togo" }] }].filter((a) => a.countries.some((k) => sel.includes(k.key)));
+    expect(hit).toHaveLength(1);
+  });
+
+  it("fusion : un profil réel (même slug ou même nom normalisé) est conservé et complété, doublon simu supprimé", async () => {
     const db = fakeDb();
-    db.rows.set("mina", { slug: "mina", simuIllustration: false, name: "réel" });
+    const d = list[0];
+    db.rows.set("ancien", { slug: "ancien", simuIllustration: false, name: d.name.toUpperCase(), bio: "ancienne bio", image: "old.jpg", privateEmail: "" });
+    db.rows.set(`simu-${d.slug}`, { slug: `simu-${d.slug}`, simuIllustration: true, name: d.name });
     await importSimuDesigners(db, list);
-    expect(db.rows.get("mina")!.name).toBe("réel");
+    const kept = db.rows.get("ancien")!;
+    expect(kept).toMatchObject({ simuIllustration: false, bio: "ancienne bio", image: "old.jpg", name: d.name, madeIn: d.madeIn });
+    expect(db.rows.has(`simu-${d.slug}`)).toBe(false);
+    expect(db.rows.has(d.slug)).toBe(false);
+    await importSimuDesigners(db, list);
+    expect(await removeSimuDesigners(db)).toBe(149);
+    expect(db.rows.has("ancien")).toBe(true);
   });
 
   it("--remove ne supprime que les profils d'illustration", async () => {

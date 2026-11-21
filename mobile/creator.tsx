@@ -8,7 +8,7 @@ import { authed } from "./api";
 
 // Reprend src/app/[locale]/partenaires/[slug]/page.tsx (bio, vidéo « Rencontre avec », citation, « Ses créations ») ; textes de i18n.creator.
 type Product = { slug: string; name: string; creatorName: string; priceCents: number; images: string[]; stock?: number; soldOut?: boolean; isNew?: boolean; isExample?: boolean };
-type Creator = { slug: string; name: string; specialty: string; image: string; bio: string; sourceUrl: string | null; video: { src: string; poster: string; orientation: "portrait" | "landscape"; excerpt: string } | null; products: Product[] };
+type Creator = { slug: string; name: string; specialty: string; madeIn?: string; countries?: string[]; image: string; bio: string; sourceUrl: string | null; video: { src: string; poster: string; orientation: "portrait" | "landscape"; excerpt: string } | null; products: Product[] };
 const eur = (c: number) => `${(c / 100).toFixed(2).replace(".", ",")} €`;
 
 function Meet({ c }: { c: Creator }) {
@@ -42,6 +42,8 @@ export function CreatorScreen({ slug, onClose, onOpenSlug }: { slug: string; onC
               <Image source={{ uri: c.image }} style={st.avatar} />
               <Text style={st.h1}>{c.name}</Text>
               <Text style={st.spec}>{c.specialty}</Text>
+              {!!c.countries?.length && <Text style={st.p}>{c.countries.join(", ")}</Text>}
+              {!!c.madeIn && <Text style={st.p}>{tr("Fabriqué en", "Made in")} : {c.madeIn}</Text>}
               <Text style={st.p}>{c.bio}</Text>
               {c.sourceUrl && <Pressable onPress={() => Linking.openURL(c.sourceUrl!)}><Text style={st.link}>Lire l'article source sur g3a.org</Text></Pressable>}
             </View>

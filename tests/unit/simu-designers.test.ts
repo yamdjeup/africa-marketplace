@@ -37,6 +37,14 @@ describe("import créateurs d'illustration simu", () => {
     expect(list.some((d) => d.madeIn.includes("Royaume-Uni") && d.madeInEn.includes("United Kingdom"))).toBe(true);
   });
 
+  it("API/app : madeIn et pays exposés, jamais e-mail/site/Instagram", () => {
+    const api = readFileSync("src/lib/api-v1.ts", "utf8");
+    expect(api).toContain("madeIn: c.madeIn");
+    expect(api).toContain("c.countries.map");
+    expect(/privateEmail|privateWebsite|privateInstagram/.test(api + readFileSync("src/lib/catalog.ts", "utf8"))).toBe(false);
+    expect(readFileSync("mobile/creator.tsx", "utf8")).toContain("c.madeIn");
+  });
+
   it("idempotent : deux imports = aucun doublon, tous marqués simuIllustration", async () => {
     const db = fakeDb();
     await importSimuDesigners(db, list);

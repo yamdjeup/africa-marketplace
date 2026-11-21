@@ -11,8 +11,11 @@ export async function supplierFromRequest(req: Request) {
   return supplier && supplier.status === "ACTIVE" ? supplier : null;
 }
 
+export const SUPPLIER_TAB_STATUSES: Record<string, string[]> = { todo: ["PENDING", "ACCEPTED", "PREPARING"], PENDING: ["PENDING"], ship: ["ACCEPTED", "PREPARING"], SHIPPED: ["SHIPPED"], done: ["DELIVERED", "REFUSED", "EXPIRED", "CANCELLED"] };
+
 export async function supplierOrders(supplierId: string, status: string) {
-  const where = { supplierId, ...(status === "all" ? {} : status === "todo" ? { status: { in: ["PENDING", "ACCEPTED", "PREPARING"] as never[] } } : { status: status as never }) };
+  const list = SUPPLIER_TAB_STATUSES[status];
+  const where = { supplierId, ...(list ? { status: { in: list as never[] } } : status === "all" ? {} : { status: status as never }) };
   const subs = await db.subOrder.findMany({ where, include: { order: true }, orderBy: { createdAt: "desc" }, take: 50 });
   return subs.map((s) => ({
     id: s.id,

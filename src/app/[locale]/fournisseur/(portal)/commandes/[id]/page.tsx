@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { CARRIERS, cleanTrackingNumber } from "@/lib/tracking";
-import { activeCarrierNames } from "@/lib/config-lists";
+import { activeCarrierNames, sortCarriers } from "@/lib/config-lists";
 import { formatPhone } from "@/lib/phone";
 import { Pill, inputCls } from "@/components/fournisseur/parts";
 import { db } from "@/lib/db";
@@ -115,10 +115,11 @@ export default async function PartnerOrder({ params, searchParams }: { params: P
           <form action={shipOrderAction} className="grid gap-3 sm:grid-cols-2">
             {hidden}
             <label className="block text-sm">{tr(locale, "Transporteur", "Carrier")}
-              <select name="carrier" required className={inputCls} defaultValue="UPS">
-                {carrierNames.map((c) => <option key={c} value={c}>{c}</option>)}
-                <option value="__other">{tr(locale, "Autre", "Other")}</option>
-              </select>
+              <input name="carrier" required list="carrier-list" autoComplete="off" maxLength={80} defaultValue="UPS" placeholder={tr(locale, "Tapez pour filtrer…", "Type to filter…")} className={inputCls} />
+              <datalist id="carrier-list">
+                {sortCarriers(carrierNames).map((c) => <option key={c} value={c} />)}
+                <option value="Autre" />
+              </datalist>
             </label>
             <label className="block text-sm">{tr(locale, "Autre transporteur (si « Autre »)", "Other carrier (if “Other”)")}<input name="carrierOther" maxLength={80} className={inputCls} /></label>
             <label className="block text-sm">{tr(locale, "Numéro de suivi", "Tracking number")}<input name="tracking" required className={inputCls} /></label>

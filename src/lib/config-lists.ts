@@ -57,6 +57,15 @@ export async function activeCarrierNames(db: PrismaClient, fallback: readonly st
   return rows.length ? rows.map((r) => r.name) : [...fallback];
 }
 
+const POPULAR_CARRIERS = ["UPS", "DHL", "FedEx", "Colissimo", "Chronopost"];
+
+/** Populaires en tête (ordre fixe), puis le reste dans l'ordre reçu. */
+export function sortCarriers(names: string[]): string[] {
+  const low = (s: string) => s.toLowerCase();
+  const head = POPULAR_CARRIERS.map((p) => names.find((n) => low(n) === low(p))).filter((n): n is string => !!n);
+  return [...head, ...names.filter((n) => !head.includes(n))];
+}
+
 export async function addCarrier(db: PrismaClient, name: string) {
   const n = clean(name, 60);
   if (n.length < 2) return "invalid" as const;

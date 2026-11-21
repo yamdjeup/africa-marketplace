@@ -3,7 +3,9 @@ export type SimuDesigner = {
   slug: string;
   name: string;
   country: string;
+  countryEn: string;
   madeIn: string;
+  madeInEn: string;
   gender: string;
   specialty: string;
   specialtyEn: string;
@@ -35,7 +37,9 @@ export async function importSimuDesigners(db: Db, list: SimuDesigner[]) {
       sourceUrl: "",
       simuIllustration: true,
       country: d.country,
+      countryEn: d.countryEn,
       madeIn: d.madeIn,
+      madeInEn: d.madeInEn,
       gender: d.gender,
       privateWebsite: d.website,
       privateEmail: d.email,

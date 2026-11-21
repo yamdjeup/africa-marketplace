@@ -193,11 +193,10 @@ Statut : `[x]` fait, `[ ]` à faire. Seuls les points confirmés par le proprié
 - Page publique `/fr|en/avis/<jeton 48 hex>` ajoutée à `PUBLIC_ALERTS` (`src/proxy.ts`) : le jeton unique tient lieu d'authentification. Résultats et export CSV : admin uniquement.
 
 ### 3 sexies. Créateurs d'illustration (simu uniquement)
-- Migration  042_simu_designers (7 colonnes sur Creator, additives).
-- Import : définir SIMU_DATABASE_URL (base simu, jamais prod), puis 
-pm run db:simu-designers. Retrait avant prod : 
-pm run db:simu-designers -- --remove. Données : prisma/simu-designers.json (150 profils, images distantes marquées illustration, coordonnées privées non affichées).
-- Variable locale uniquement (non Vercel) : SIMU_DATABASE_URL.
+- Migration `0042_simu_designers` (9 colonnes additives sur `Creator`).
+- Import : définir `SIMU_DATABASE_URL` (base simu, jamais prod), puis `npm run db:simu-designers`. Retrait avant prod : `npm run db:simu-designers -- --remove`.
+- Données : `prisma/simu-designers.json` (150 profils, images distantes d'illustration ; site/e-mail/Instagram privés, non affichés). `madeIn` est affiché publiquement sur la fiche créateur (FR « Fabriqué en », EN « Made in »).
+- Variable locale uniquement (non Vercel) : `SIMU_DATABASE_URL`.
 
 ### 3 ter. Séquence OTA (app Android, canal preview, runtime 1.0.0)
 

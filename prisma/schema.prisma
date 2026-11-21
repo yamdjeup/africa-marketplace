@@ -34,6 +34,8 @@ model Creator {
   simuIllustration Boolean @default(false)
   country     String    @default("")
   madeIn      String    @default("")
+  madeInEn    String    @default("")
+  countryEn   String    @default("")
   gender      String    @default("")
   /// Coordonnées privées : jamais affichées publiquement
   privateWebsite   String @default("")

@@ -30,6 +30,13 @@ describe("import créateurs d'illustration simu", () => {
     expect(JSON.stringify(list.map((d) => d.bio))).not.toContain("?");
   });
 
+  it("pays et Made in FR/EN, multi-pays conservés", () => {
+    const y = list.find((d) => d.name.startsWith("Yoshita"))!;
+    expect(y.country).toBe("Kenya, France");
+    expect(y.madeIn).toBe("Nairobi, Kenya");
+    expect(list.some((d) => d.madeIn.includes("Royaume-Uni") && d.madeInEn.includes("United Kingdom"))).toBe(true);
+  });
+
   it("idempotent : deux imports = aucun doublon, tous marqués simuIllustration", async () => {
     const db = fakeDb();
     await importSimuDesigners(db, list);

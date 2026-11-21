@@ -95,6 +95,16 @@ export async function sweepClosed(db: PrismaClient, now = new Date()) {
   return out;
 }
 
+/** Réclamation unitaire de l'e-mail « clôturée » pour un colis livré dont le retour est remboursé/refusé. */
+export async function claimClosedAfterReturn(db: PrismaClient, id: string, now = new Date()) {
+  const n = await db.subOrder.updateMany({ where: { id, status: "DELIVERED", closedMailSentAt: null, returns: { some: { status: { in: ["REFUNDED", "REFUSED"] } } } }, data: { closedMailSentAt: now } });
+  return n.count === 1;
+}
+
+/** Annule la réclamation si l'envoi a échoué : le prochain sweep réessaie. */
+export async function releaseClosedClaim(db: PrismaClient, id: string) {
+  await db.subOrder.updateMany({ where: { id }, data: { closedMailSentAt: null } });
+}
 export const refuseSub = (db: PrismaClient, id: string, supplierId: string | null, reason: string, actor: Actor, reasonId: string | null = null, reasonNote: string | null = null) => closeAndRelease(db, id, supplierId, ["PENDING"], "REFUSED", reason, actor, reasonId, reasonNote);
 export const cancelSub = (db: PrismaClient, id: string, reason: string, actor: Actor) => closeAndRelease(db, id, null, ["PENDING", "ACCEPTED", "PREPARING"], "CANCELLED", reason, actor);
 

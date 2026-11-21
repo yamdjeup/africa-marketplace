@@ -6,6 +6,7 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { refundSubOrder } from "@/lib/refund";
 import { sendPartnerReturnMail, sendReturnMail } from "@/lib/return-email";
+import { closeMailAfterRefund } from "@/lib/order-notify";
 import { flushRestockSafe } from "@/lib/restock-flush";
 import { decideReturn, markReturnReceived, markReturnRefundedManually, parseStockChoice, refundReturn } from "@/lib/returns";
 import { isAdminEmail } from "@/lib/supplier";
@@ -22,6 +23,7 @@ async function notifyCustomer(returnId: string, kind: "accepted" | "received" | 
   if (ret) {
     await sendReturnMail(ret.subOrderId, kind, note);
     await sendPartnerReturnMail(ret.subOrderId, kind, note);
+    if (kind === "refunded") await closeMailAfterRefund(ret.subOrderId).catch(() => {});
   }
 }
 

@@ -10,7 +10,7 @@ import { buildPartnerCancelEmail } from "@/lib/partner-cancel-email";
 import { partnerRecipient } from "@/lib/partner-recipient";
 import { carrierLabel, cleanTrackingNumber, trackingUrl } from "@/lib/tracking";
 import { releaseExpiredHolds } from "@/lib/checkout-hold";
-import { sweepSubOrders, sweepPrepReminders, sweepClosed } from "@/lib/suborders";
+import { sweepSubOrders, sweepPrepReminders, sweepClosed, claimClosedAfterReturn, releaseClosedClaim } from "@/lib/suborders";
 import { settleSubRefund } from "@/lib/refund";
 import { pollTracking } from "@/lib/tracking-events";
 import { getTrackingProvider } from "@/lib/tracking-provider";
@@ -20,7 +20,7 @@ export type SubEvent = "NEW" | "REMINDER" | "ESCALATION" | "PREP_REMINDER" | "PR
 export const eur = (c: number, fr = true) => new Intl.NumberFormat(fr ? "fr-FR" : "en-GB", { style: "currency", currency: "EUR" }).format(c / 100);
 
 /** E-mails d'une sous-commande : partenaire (nouvelle commande, relance), admin (escalade), client (chaque changement d'état). */
-export async function notifySubOrder(event: SubEvent, subOrderId: string) {
+export async function notifySubOrder(event: SubEvent, subOrderId: string): Promise<boolean | void> {
   try {
     const sub = await db.subOrder.findUnique({ where: { id: subOrderId }, include: { order: true } });
     if (!sub) return;
@@ -128,10 +128,24 @@ export async function notifySubOrder(event: SubEvent, subOrderId: string) {
       notice: sold,
       address: event === "SHIPPED" || event === "DELIVERED" ? { title: fr ? "Adresse de livraison" : "Delivery address", lines: [o.fullName, o.address, `${o.postalCode} ${o.city}`.trim(), o.country, ...(o.phone ? [`${fr ? "Téléphone" : "Phone"} : ${o.phone}`] : [])] } : undefined,
     });
-    await safeSend(o.email, subject, [hello, ...(parcelNote ? [parcelNote] : []), ...blocks, list, sold, link, ...(trackUrl && (event === "SHIPPED" || event === "DELIVERED") ? [`${fr ? "Suivre mon colis" : "Track my parcel"} : ${trackUrl}`] : [])], html);
+    return await safeSend(o.email, subject, [hello, ...(parcelNote ? [parcelNote] : []), ...blocks, list, sold, link, ...(trackUrl && (event === "SHIPPED" || event === "DELIVERED") ? [`${fr ? "Suivre mon colis" : "Track my parcel"} : ${trackUrl}`] : [])], html);
   } catch (e) {
     console.warn("[order-notify]", (e as Error).message);
+    return false;
   }
+}
+
+/** Envoie l'e-mail « clôturée » d'un colis déjà réclamé ; si l'envoi échoue, la réclamation est levée pour un nouvel essai. */
+export async function sendClaimedClosedMail(subOrderId: string, notify: typeof notifySubOrder = notifySubOrder) {
+  const ok = await notify("CLOSED", subOrderId);
+  if (ok !== true) await releaseClosedClaim(db, subOrderId).catch(() => {});
+  return ok === true;
+}
+
+/** Clôture immédiate après un remboursement réussi (idempotent avec le sweep). */
+export async function closeMailAfterRefund(subOrderId: string, notify: typeof notifySubOrder = notifySubOrder) {
+  if (!(await claimClosedAfterReturn(db, subOrderId))) return false;
+  return sendClaimedClosedMail(subOrderId, notify);
 }
 
 /** Relances, escalades et expirations (appelé par le cron, au chargement des pages commandes et après chaque commande). */
@@ -150,7 +164,7 @@ export async function runSubOrderSweep() {
     await notifySubOrder("PREP_REMINDER", s.id);
     await notifySubOrder("PREP_ESCALATION", s.id);
   }
-  for (const s of await sweepClosed(db)) await notifySubOrder("CLOSED", s.id);
+  for (const s of await sweepClosed(db)) await sendClaimedClosedMail(s.id);
   return { prepLate: late.length, reminded: r.reminded.length, escalated: r.escalated.length, expired: r.expired.length };
 }
 

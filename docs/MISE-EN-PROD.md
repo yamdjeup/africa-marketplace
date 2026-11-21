@@ -54,7 +54,7 @@ Légende : ✅ fait (vérifié dans le dépôt) · 🟡 partiel · ⬜ à faire 
 | 3.5 | Crons | ✅ | `vercel.json` quotidiens 06:00/07:00 UTC ; rattrapage `sweep.yml` toutes les 30 min (actif seulement sur `main`) ; poll à l'expédition `notifyShipped` |
 | 3.6 | E-mails : SPF, DKIM, DMARC sur le domaine d'envoi (Resend) | ❓ | Vérifier dans Resend + OVH |
 | 3.6 bis | Enquête de satisfaction : migration `0041_survey` appliquée en prod, lien d'avis testé depuis un vrai mail (domaine d'envoi vérifié, 3.6) | ⬜ | Voir INFRA §3 quinquies |
-| 3.6 ter | Supprimer les créateurs/images d'illustration avant prod : `npm run db:simu-designers -- --remove` sur la base concernée (colonne `Creator.simuIllustration`) ; ne jamais importer sur la prod | ⬜ | Voir INFRA §3 sexies |
+| 3.6 ter | Supprimer les créateurs/images d'illustration avant prod : `npm run db:simu-designers -- --remove` (ou Actions › Import designers simu › remove, secret `SIMU_DATABASE_URL`) sur la base concernée (colonne `Creator.simuIllustration`) ; ne jamais importer sur la prod | ⬜ | Voir INFRA §3 sexies |
 | 3.7 | Sentry (site + app) | ⬜ | Voir 1.13 |
 | 3.8 | `robots`/indexation | 🟡 | `robots.ts` présent mais `X-Robots-Tag: noindex` global : à lever pour la prod publique |
 | 3.9 | Données : purge des données fictives, comptes de test (workflows `vidage-prod`/`vidage-preprod`) | 🟡 |

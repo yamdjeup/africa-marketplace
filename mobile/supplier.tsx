@@ -30,7 +30,7 @@ export function useIsSupplier(token: string | null) {
   return ok;
 }
 
-type Detail = { id: string; number: string; status: string; statusLabel: Lbl; createdAt: string; acceptBy: string | null; subtotalCents: number; carrier: string | null; trackingNumber: string | null; reason: string | null; reasonNote?: string | null; return?: { status: string; label: Lbl; reason: string; createdAt: string; photoIds?: string[]; condition?: string | null; conditionNote?: string | null; receivedAt?: string | null; decideBy?: string | null; decision?: string | null; decisionNote?: string | null } | null; items: { id: string; name: string; size: string | null; quantity: number; unitPriceCents: number }[]; shipTo: { fullName: string; address: string; postalCode: string; city: string; country: string; phone: string | null } };
+type Detail = { id: string; number: string; status: string; statusLabel: Lbl; createdAt: string; acceptBy: string | null; subtotalCents: number; carrier: string | null; trackingNumber: string | null; reason: string | null; reasonNote?: string | null; return?: { status: string; label: Lbl; reason: string; createdAt: string; photoIds?: string[]; shipped?: boolean; condition?: string | null; conditionNote?: string | null; receivedAt?: string | null; decideBy?: string | null; decision?: string | null; decisionNote?: string | null } | null; items: { id: string; name: string; size: string | null; quantity: number; unitPriceCents: number }[]; shipTo: { fullName: string; address: string; postalCode: string; city: string; country: string; phone: string | null } };
 const CARRIERS = ["UPS", "DHL", "Colissimo"];
 const ERRS: Record<string, [string, string]> = {
   state: ["Cette commande a changé d'état (déjà traitée ou expirée).", "This order changed state (already handled or expired)."],
@@ -114,9 +114,17 @@ function OrderDetail({ token, id, onBack }: { token: string; id: string; onBack:
           <View style={{ marginTop: 8, gap: 8 }}>
             <Text style={{ fontWeight: "600", color: "#221812" }}>{tr("Colis en route vers vous", "Parcel on its way to you")}</Text>
             <Text style={st.mut}>{tr("À réception, contrôlez-le et décidez sous 6 jours calendaires.", "On arrival, check it and decide within 6 calendar days.")}</Text>
-            <Select label={tr("État du colis reçu", "Condition of the parcel")} value={condition} options={CONDITIONS} onChange={setCondition} />
-            <TextInput value={note} onChangeText={setNote} placeholder={tr("Commentaire (obligatoire si endommagé)", "Comment (required if damaged)")} placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={st.input} />
-            {btn(tr("Confirmer la réception", "Confirm receipt"), () => act({ action: "return_check", condition, note }))}
+            {d.return.status === "ACCEPTED" && d.return.shipped ? (
+              <>
+                {btn(tr("J’ai reçu le colis", "I received the parcel"), () => Alert.alert(tr("Confirmer la réception ?", "Confirm receipt?"), tr("Le client sera prévenu que vous avez reçu son colis.", "The customer will be told you received the parcel."), [{ text: tr("Annuler", "Cancel") }, { text: tr("Confirmer", "Confirm"), onPress: () => act({ action: "return_arrived" }) }]))}
+              </>
+            ) : (
+              <>
+                <Select label={tr("État du colis reçu", "Condition of the parcel")} value={condition} options={CONDITIONS} onChange={setCondition} />
+                <TextInput value={note} onChangeText={setNote} placeholder={tr("Commentaire (obligatoire si endommagé)", "Comment (required if damaged)")} placeholderTextColor="#6b5d52" selectionColor="#1c3060" style={st.input} />
+                {btn(tr("Confirmer la réception", "Confirm receipt"), () => act({ action: "return_check", condition, note }))}
+              </>
+            )}
           </View>
         ) : null}
         {d.return.status === "RECEIVED" && d.return.condition && !d.return.decision ? (

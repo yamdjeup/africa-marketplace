@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@prisma/client";
+import type { Prisma, PrismaClient } from "@prisma/client";
 import { returnStock } from "./stock";
 import { registerTracking } from "./tracking-provider";
 
@@ -124,6 +124,19 @@ export async function markReturnReceived(db: PrismaClient, id: string) {
 
 export const PARTNER_CHECK_DAYS = 6;
 
+/** Réception du colis retour (une seule logique : 17TRACK et bouton « J'ai reçu le colis »). Uniquement depuis « accepté » avec retour expédié ; idempotent. */
+export async function receiveReturnParcel(db: PrismaClient, where: Prisma.ReturnRequestWhereInput, now = new Date()) {
+  const ret = await db.returnRequest.findFirst({ where: { ...where, status: "ACCEPTED", returnShippedAt: { not: null } }, select: { id: true, subOrderId: true } });
+  if (!ret) return null;
+  const n = await db.returnRequest.updateMany({ where: { id: ret.id, status: "ACCEPTED" }, data: { status: "RECEIVED", partnerReceivedAt: now } });
+  return n.count === 1 ? { id: ret.id, subOrderId: ret.subOrderId } : null;
+}
+
+/** Le créateur déclare avoir reçu le colis (suivi non remonté) : même transition que l'auto-réception 17TRACK, sur son propre colis. */
+export async function partnerConfirmParcelArrived(db: PrismaClient, subOrderId: string, supplierId: string, now = new Date()) {
+  return (await receiveReturnParcel(db, { subOrderId, subOrder: { supplierId } }, now)) ? ("ok" as const) : ("state" as const);
+}
+
 export type PartnerCondition = "OK" | "DAMAGED";
 
 /** Le créateur confirme la réception du colis retour et son état ; « endommagé » exige un commentaire (≥3 car.). Uniquement depuis « accepté », sur son propre colis. */
@@ -132,10 +145,12 @@ export async function markReturnReceivedByPartner(db: PrismaClient, subOrderId: 
   if (condition === "DAMAGED" && text.length < 3) return "note" as const;
   // « reçu » sans état (détecté par 17TRACK ou saisi par l'administration) reste à contrôler par le créateur.
   const open = { OR: [{ status: "ACCEPTED" }, { status: "RECEIVED", condition: null, partnerDecision: null }] };
-  const ret = await db.returnRequest.findFirst({ where: { subOrderId, ...open, subOrder: { supplierId } }, select: { id: true, partnerReceivedAt: true } });
+  const ret = await db.returnRequest.findFirst({ where: { subOrderId, ...open, subOrder: { supplierId } }, select: { id: true, status: true, partnerReceivedAt: true } });
   if (!ret) return "state" as const;
   const n = await db.returnRequest.updateMany({ where: { id: ret.id, ...open }, data: { status: "RECEIVED", partnerReceivedAt: ret.partnerReceivedAt ?? now, condition, conditionNote: text || null } });
-  return n.count === 1 ? ("ok" as const) : ("state" as const);
+  if (n.count !== 1) return "state" as const;
+  // « checked » : la réception était déjà enregistrée (17TRACK ou bouton), le client a déjà reçu le mail « reçu ».
+  return ret.status === "RECEIVED" ? ("checked" as const) : ("ok" as const);
 }
 
 export type PartnerDecision = "ACCEPTED" | "REFUSED";

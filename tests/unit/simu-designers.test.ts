@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { importSimuDesigners, removeSimuDesigners, type SimuDesigner } from "../../src/lib/simu-designers";
+import { importSimuDesigners, mapSimuCategories, removeSimuDesigners, type SimuDesigner } from "../../src/lib/simu-designers";
 
 function fakeDb() {
   const rows = new Map<string, Record<string, unknown>>();
@@ -70,6 +70,13 @@ describe("import créateurs d'illustration simu", () => {
     expect(db.rows.has("simu-mina")).toBe(false);
     expect(db.rows.has("mina")).toBe(true);
     expect([...db.rows.values()].filter((r) => r.simuIllustration === true)).toHaveLength(150);
+  });
+
+  it("catégories sources mappées sur Epomta", () => {
+    expect(mapSimuCategories(["clothing", "bags"]).slugs).toEqual(["couture-mode", "bijoux"]);
+    expect(mapSimuCategories(["bags"]).slugs).toEqual(["bijoux"]);
+    expect(mapSimuCategories(["jewelry", "accessories", "shoes"]).fr).toBe("Couture et mode, Accessoires");
+    expect(mapSimuCategories(["textiles"]).en).toBe("Textiles and home decor");
   });
 
   it("collision : un créateur réel au même slug n'est jamais écrasé", async () => {

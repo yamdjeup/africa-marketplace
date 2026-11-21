@@ -115,10 +115,17 @@ export function simuCountries(c: { country: string; countryEn: string }, locale:
   return en.map((e, i) => ({ key: e.toLowerCase().replace(/[^a-z]+/g, "-"), label: locale === "fr" ? (fr[i] ?? e) : e }));
 }
 
+/** Slugs Epomta déduits du libellé EN écrit à l'import (specialtyEn) pour les designers simu. */
+function simuCategorySlugs(specialtyEn: string) {
+  const map: Record<string, string> = { "Fashion and tailoring": "couture-mode", Accessories: "bijoux", "Textiles and home decor": "textile-decoration" };
+  return specialtyEn.split(", ").map((l) => map[l]).filter(Boolean);
+}
+
 export function toCreatorView(c: Creator, locale: Locale, cats: { slug: string; label: string }[] = []): CreatorView {
   const countries = CREATOR_COUNTRIES[c.slug]
     ? CREATOR_COUNTRIES[c.slug].map((k) => ({ key: k.key, label: pick(locale, k.fr, k.en) }))
     : simuCountries(c, locale);
+  const simuCats = c.simuIllustration && !cats.length ? simuCategorySlugs(c.specialtyEn) : [];
   const sorted = [...cats].sort((a, b) => CATEGORY_ORDER.indexOf(a.slug) - CATEGORY_ORDER.indexOf(b.slug));
   const type = sorted.length ? sorted.map((x) => x.label).join(", ") : pick(locale, c.specialty, c.specialtyEn);
   return {
@@ -126,7 +133,7 @@ export function toCreatorView(c: Creator, locale: Locale, cats: { slug: string; 
     name: c.name,
     specialty: type,
     countries,
-    categories: sorted.map((x) => x.slug),
+    categories: sorted.length ? sorted.map((x) => x.slug) : simuCats,
     bio: pick(locale, c.bio, c.bioEn),
     image: c.image,
     sourceUrl: c.sourceUrl,

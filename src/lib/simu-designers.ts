@@ -7,6 +7,7 @@ export type SimuDesigner = {
   madeIn: string;
   madeInEn: string;
   gender: string;
+  categories: string[];
   specialty: string;
   specialtyEn: string;
   bio: string;
@@ -26,6 +27,25 @@ type Db = {
   };
 };
 
+/** Catégories sources → catégories Epomta (slug, FR, EN), ordre stable, dédupliquées. */
+const EPOMTA = {
+  "couture-mode": ["Couture et mode", "Fashion and tailoring"],
+  bijoux: ["Accessoires", "Accessories"],
+  "textile-decoration": ["Textile et décoration", "Textiles and home decor"],
+} as const;
+const SOURCE_TO_EPOMTA: Record<string, (keyof typeof EPOMTA)[]> = {
+  clothing: ["couture-mode"],
+  shoes: ["couture-mode"],
+  bags: ["bijoux"],
+  accessories: ["bijoux"],
+  jewelry: ["bijoux"],
+  textiles: ["textile-decoration"],
+};
+export function mapSimuCategories(keys: string[]) {
+  const slugs = (Object.keys(EPOMTA) as (keyof typeof EPOMTA)[]).filter((s) => keys.some((k) => SOURCE_TO_EPOMTA[k]?.includes(s)));
+  return { slugs, fr: slugs.map((s) => EPOMTA[s][0]).join(", "), en: slugs.map((s) => EPOMTA[s][1]).join(", ") };
+}
+
 export async function importSimuDesigners(db: Db, list: SimuDesigner[]) {
   let skipped = 0;
   for (const d of list) {
@@ -36,12 +56,13 @@ export async function importSimuDesigners(db: Db, list: SimuDesigner[]) {
       continue;
     }
     const legacy = `simu-${d.slug}`;
+    const cat = mapSimuCategories(d.categories);
     const data = {
       name: d.name,
-      specialty: d.specialty,
-      specialtyEn: d.specialtyEn,
-      bio: d.bio,
-      bioEn: d.bioEn,
+      specialty: cat.fr || d.specialty,
+      specialtyEn: cat.en || d.specialtyEn,
+      bio: cat.fr ? d.bio.replace(/Univers : .*$/, `Univers : ${cat.fr.toLowerCase()}.`) : d.bio,
+      bioEn: cat.en ? d.bioEn.replace(/Universe: .*$/, `Universe: ${cat.en.toLowerCase()}.`) : d.bioEn,
       image: d.image,
       sourceUrl: "",
       simuIllustration: true,

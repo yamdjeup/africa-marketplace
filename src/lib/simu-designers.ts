@@ -19,14 +19,23 @@ export type SimuDesigner = {
 
 type Db = {
   creator: {
+    findUnique(args: { where: { slug: string } }): Promise<{ simuIllustration: boolean } | null>;
+    update(args: { where: { slug: string }; data: Record<string, unknown> }): Promise<unknown>;
     upsert(args: { where: { slug: string }; update: Record<string, unknown>; create: Record<string, unknown> }): Promise<unknown>;
     deleteMany(args: { where: { simuIllustration: true } }): Promise<{ count: number }>;
   };
 };
 
 export async function importSimuDesigners(db: Db, list: SimuDesigner[]) {
+  let skipped = 0;
   for (const d of list) {
-    if (!d.slug.startsWith("simu-")) throw new Error(`slug sans préfixe simu- : ${d.slug}`);
+    const existing = await db.creator.findUnique({ where: { slug: d.slug } });
+    if (existing && !existing.simuIllustration) {
+      console.warn(`ignoré (slug déjà pris par un créateur réel) : ${d.slug}`);
+      skipped++;
+      continue;
+    }
+    const legacy = `simu-${d.slug}`;
     const data = {
       name: d.name,
       specialty: d.specialty,
@@ -45,9 +54,13 @@ export async function importSimuDesigners(db: Db, list: SimuDesigner[]) {
       privateEmail: d.email,
       privateInstagram: d.instagram,
     };
+    if (!existing && (await db.creator.findUnique({ where: { slug: legacy } }))?.simuIllustration) {
+      await db.creator.update({ where: { slug: legacy }, data: { slug: d.slug, ...data } });
+      continue;
+    }
     await db.creator.upsert({ where: { slug: d.slug }, update: data, create: { slug: d.slug, ...data } });
   }
-  return list.length;
+  return list.length - skipped;
 }
 
 export async function removeSimuDesigners(db: Db) {

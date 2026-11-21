@@ -108,8 +108,17 @@ export function toProductView(p: ProductRow, locale: Locale): ProductView {
 
 const CATEGORY_ORDER = ["peinture", "sculpture", "photographie", "couture-mode", "bijoux", "textile-decoration"];
 
+/** Pays des profils d'illustration simu (champs country/countryEn, séparés par des virgules) ; clé = pays en anglais. */
+export function simuCountries(c: { country: string; countryEn: string }, locale: Locale) {
+  const fr = c.country.split(", ").filter(Boolean);
+  const en = c.countryEn.split(", ").filter(Boolean);
+  return en.map((e, i) => ({ key: e.toLowerCase().replace(/[^a-z]+/g, "-"), label: locale === "fr" ? (fr[i] ?? e) : e }));
+}
+
 export function toCreatorView(c: Creator, locale: Locale, cats: { slug: string; label: string }[] = []): CreatorView {
-  const countries = (CREATOR_COUNTRIES[c.slug] ?? []).map((k) => ({ key: k.key, label: pick(locale, k.fr, k.en) }));
+  const countries = CREATOR_COUNTRIES[c.slug]
+    ? CREATOR_COUNTRIES[c.slug].map((k) => ({ key: k.key, label: pick(locale, k.fr, k.en) }))
+    : simuCountries(c, locale);
   const sorted = [...cats].sort((a, b) => CATEGORY_ORDER.indexOf(a.slug) - CATEGORY_ORDER.indexOf(b.slug));
   const type = sorted.length ? sorted.map((x) => x.label).join(", ") : pick(locale, c.specialty, c.specialtyEn);
   return {
@@ -292,7 +301,7 @@ export async function getHeroProduct(locale: Locale) {
 
 export async function getCreators(locale: Locale, take?: number) {
   const [rows, cats] = await Promise.all([
-    db.creator.findMany({ where: { products: { some: live } }, orderBy: { name: "asc" }, take, include: { products: { where: live, select: { categorySlug: true } } } }),
+    db.creator.findMany({ where: { OR: [{ products: { some: live } }, { simuIllustration: true }] }, orderBy: { name: "asc" }, take, include: { products: { where: live, select: { categorySlug: true } } } }),
     getCategories(locale),
   ]);
   return rows.map((c) => toCreatorView(c, locale, creatorCats(c.products, cats)));

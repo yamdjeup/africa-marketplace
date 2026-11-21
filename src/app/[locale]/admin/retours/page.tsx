@@ -50,7 +50,7 @@ export default async function ReturnsAdmin({ params, searchParams }: { params: P
                 <form action={decideReturnAction} className="flex flex-wrap items-end gap-2">
                   <input type="hidden" name="id" value={r.id} />
                   <label className="text-xs">{tr(locale, "Note (facultatif)", "Note (optional)")}<input name="note" className={`${inputCls} w-64`} /></label>
-                  <button name="decision" value="ACCEPTED" className={buttonVariants({ className: "min-h-11" })}>{tr(locale, "Accepter", "Accept")}</button>
+                  <button name="decision" value="ACCEPTED" className={buttonVariants({ className: "min-h-11" })}>{tr(locale, "Autoriser", "Authorise")}</button>
                   <button name="decision" value="REFUSED" className={buttonVariants({ variant: "outline", className: "min-h-11" })}>{tr(locale, "Refuser", "Refuse")}</button>
                 </form>
               )}

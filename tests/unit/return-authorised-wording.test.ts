@@ -14,5 +14,7 @@ describe("vocabulaire retour autorisé", () => {
     expect(fr.html).toContain("Retour autorisé");
     expect(en.subject).toContain("return authorised");
     expect(RETURN_LABELS.ACCEPTED.fr).toBe("Retour autorisé");
+    const page = (await import("node:fs")).readFileSync("src/app/[locale]/admin/retours/page.tsx", "utf8");
+    expect(page).toContain('"Autoriser", "Authorise"');
   });
 });

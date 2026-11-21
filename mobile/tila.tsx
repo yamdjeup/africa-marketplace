@@ -46,23 +46,27 @@ export function TilaButton({ onOpenSlug }: { onOpenSlug: (slug: string) => void 
     }).catch(() => place(bounds.current.maxX, bounds.current.maxY));
   }, [W > 0 && H > 0]);
   useEffect(() => { if (W && H && cur.current.x >= 0) place(cur.current.x > W / 2 - size.w / 2 ? bounds.current.maxX : 12, clampY(cur.current.y)); }, [W, H, size.w, size.h]);
-  const pan = useMemo(() => PanResponder.create({
+  const live = useRef({ W, H, w: size.w });
+  live.current = { W, H, w: size.w };
+  const pan = useRef(PanResponder.create({
     onStartShouldSetPanResponder: () => true,
-    onMoveShouldSetPanResponder: () => false,
+    onStartShouldSetPanResponderCapture: () => true,
+    onMoveShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponderCapture: () => true,
     onPanResponderTerminationRequest: () => false,
     onPanResponderGrant: () => { pos.stopAnimation((v) => { cur.current = { x: v.x, y: v.y }; start.current = { x: v.x, y: v.y }; }); moved.current = false; },
     onPanResponderMove: (_e, g) => { if (Math.abs(g.dx) > 8 || Math.abs(g.dy) > 8) moved.current = true; pos.setValue({ x: Math.min(Math.max(start.current.x + g.dx, 12), bounds.current.maxX), y: clampY(start.current.y + g.dy) }); },
     onPanResponderRelease: (_e, g) => {
       if (!moved.current) { pos.setValue({ x: start.current.x, y: start.current.y }); return setOpen(true); }
       const nx = Math.min(Math.max(start.current.x + g.dx, 12), bounds.current.maxX);
-      const side = nx + size.w / 2 < W / 2 ? "left" : "right";
+      const side = nx + live.current.w / 2 < live.current.W / 2 ? "left" : "right";
       const x = side === "left" ? 12 : bounds.current.maxX;
       const y = clampY(start.current.y + g.dy);
       cur.current = { x, y };
       Animated.spring(pos, { toValue: { x, y }, useNativeDriver: false, bounciness: 4 }).start();
       AsyncStorage.setItem("tila.pos", JSON.stringify({ side, y })).catch(() => {});
     },
-  }), [W, H, size.w, size.h, insets.top, insets.bottom]);
+  })).current;
   const [open, setOpen] = useState(false);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [text, setText] = useState("");
@@ -93,7 +97,7 @@ export function TilaButton({ onOpenSlug }: { onOpenSlug: (slug: string) => void 
   return (
     <>
       <View pointerEvents="box-none" style={StyleSheet.absoluteFill} onLayout={(e) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
-        <Animated.View {...pan.panHandlers} onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })} accessibilityRole="button" accessibilityLabel={T.open} style={[st.fab, { left: pos.x, top: pos.y }]}>
+        <Animated.View {...pan.panHandlers} onLayout={(e) => { const { width: w, height: h } = e.nativeEvent.layout; setSize((s) => (s.w === w && s.h === h ? s : { w, h })); }} accessibilityRole="button" accessibilityLabel={T.open} style={[st.fab, { left: 0, top: 0, transform: [{ translateX: pos.x }, { translateY: pos.y }] }]}>
           <Image source={{ uri: AVATAR }} style={st.fabImg} />
           <View><Text style={st.fabName}>{T.name}</Text><Text style={st.fabBadge}>{T.badge}</Text></View>
         </Animated.View>

@@ -15,10 +15,11 @@ export default async function SurveyPage({ params }: { params: Promise<{ locale:
   const cfg = await getSurveyConfig(db);
   if (!resp || !cfg.enabled) notFound();
   const banner = (
-    <div className="bg-primary px-4 py-6 text-center text-primary-foreground">
-      <p className="font-heading text-2xl">E póm ta’</p>
-      <h1 className="mt-1 text-sm uppercase tracking-widest">{fr ? "Donnez votre avis" : "Rate your experience"}</h1>
-    </div>
+    <header className="px-6 pb-2 pt-8 text-center" data-testid="survey-header">
+      <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground">{fr ? "Votre avis compte" : "Your opinion matters"}</p>
+      <h1 className="mt-3 font-heading text-2xl leading-snug">{fr ? "Comment s’est passée votre expérience ?" : "How was your experience?"}</h1>
+      <div className="mx-auto mt-4 h-px w-10 bg-accent" />
+    </header>
   );
   if (resp.completedAt)
     return (

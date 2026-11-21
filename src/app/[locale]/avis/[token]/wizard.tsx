@@ -27,7 +27,8 @@ export function SurveyWizard({ token, locale, questions, initial }: { token: str
   if (done)
     return (
       <div className="space-y-4 py-10 text-center" role="status">
-        <h2 className="font-heading text-3xl text-primary">{t.thanksT}</h2>
+        <h2 className="font-heading text-3xl">{t.thanksT}</h2>
+        <div className="mx-auto h-px w-10 bg-accent" />
         <p className="text-muted-foreground">{t.thanksP}</p>
         <a href={`/${locale}`} className={btnOutline}>{t.home}</a>
       </div>
@@ -56,8 +57,8 @@ export function SurveyWizard({ token, locale, questions, initial }: { token: str
     <div className="space-y-6">
       <div>
         <p className="text-sm font-medium text-muted-foreground">{t.q} {i + 1} {t.of} {questions.length}</p>
-        <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuemin={0} aria-valuemax={questions.length} aria-valuenow={i + 1}>
-          <div className="h-full bg-primary transition-all" style={{ width: `${((i + 1) / questions.length) * 100}%` }} />
+        <div className="mt-2 h-0.5 w-full overflow-hidden bg-border" role="progressbar" aria-valuemin={0} aria-valuemax={questions.length} aria-valuenow={i + 1}>
+          <div className="h-full bg-accent transition-all" style={{ width: `${((i + 1) / questions.length) * 100}%` }} />
         </div>
       </div>
       <fieldset className="space-y-4">

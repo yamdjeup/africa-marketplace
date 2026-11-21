@@ -1,3 +1,4 @@
+import { readFileSync as rfs } from "node:fs";
 import { setQuestionActive } from "@/lib/survey";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -170,5 +171,22 @@ describe("enquete : activer/desactiver", () => {
     expect(row.active).toBe(true);
     await setQuestionActive(db as never, "q", false);
     expect(row.active).toBe(false);
+  });
+});
+
+describe("enquete : boutons d'action", () => {
+  it("aucun formAction imbrique (sinon la sauvegarde s'execute a la place)", () => {
+    const src = rfs("src/app/[locale]/admin/enquete/page.tsx", "utf8");
+    expect(src).not.toContain("formAction=");
+  });
+});
+
+describe("avis : en-tete sobre", () => {
+  it("plus d'aplat bleu, filet or et titre bilingue", () => {
+    const src = rfs("src/app/[locale]/avis/[token]/page.tsx", "utf8");
+    expect(src).not.toContain("bg-primary");
+    expect(src).toContain("bg-accent");
+    expect(src).toContain("Votre avis compte");
+    expect(src).toContain("Your opinion matters");
   });
 });

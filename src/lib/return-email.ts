@@ -114,6 +114,12 @@ export async function sendPartnerReturnMail(subOrderId: string, kind: ReturnMail
   }
 }
 
+/** Colis retour reçu : prévient le client ET le créateur (un seul point d'envoi pour 17TRACK et le bouton « J'ai reçu le colis »). */
+export async function notifyReturnReceived(subOrderId: string) {
+  await sendReturnMail(subOrderId, "received");
+  await sendPartnerReturnMail(subOrderId, "received");
+}
+
 /** Charge le colis et envoie l'e-mail au client ; n'échoue jamais. */
 export async function sendReturnMail(subOrderId: string, kind: CustomerReturnMailKind, note?: string, to?: string) {
   try {

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { notifySubOrder } from "@/lib/order-notify";
-import { sendReturnMail } from "@/lib/return-email";
+import { notifyReturnReceived } from "@/lib/return-email";
 import { applyTrackingUpdate } from "@/lib/tracking-events";
 import { getTrackingProvider } from "@/lib/tracking-provider";
 
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
   console.log("[17track] webhook", update.number, update.status, r.outcome);
   if (r.subOrderId) {
     if (r.outcome === "delivered") await notifySubOrder("DELIVERED", r.subOrderId);
-    else await sendReturnMail(r.subOrderId, "received");
+    else await notifyReturnReceived(r.subOrderId);
   }
   return NextResponse.json({ ok: true });
 }

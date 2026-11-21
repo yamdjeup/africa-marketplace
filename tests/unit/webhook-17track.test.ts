@@ -1,9 +1,9 @@
-﻿import { createHash } from "node:crypto";
+import { createHash } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/db", () => ({ db: {} }));
 vi.mock("@/lib/order-notify", () => ({ notifySubOrder: vi.fn() }));
-vi.mock("@/lib/return-email", () => ({ sendReturnMail: vi.fn() }));
+vi.mock("@/lib/return-email", () => ({ sendReturnMail: vi.fn(), notifyReturnReceived: vi.fn() }));
 vi.mock("@/lib/tracking-events", () => ({ applyTrackingUpdate: vi.fn().mockResolvedValue({ outcome: "ignored" }) }));
 
 const req = (body: string, sign?: string) => new Request("https://x/api/webhooks/17track", { method: "POST", body, headers: sign ? { sign } : {} });

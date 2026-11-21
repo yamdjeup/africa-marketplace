@@ -128,6 +128,15 @@ Pas de variable. Offre Standard ; epomta.com expire le 10/11/2027 (renouvellemen
 - Intégration (API V2.4, doc officielle) : enregistrement `POST https://api.17track.net/track/v2.4/register` (en-tête `17token`) à l'expédition du colis et à l'expédition du retour ; webhook `POST https://epomta.com/api/webhooks/17track` (colis V2.4, à saisir dans api.17track.net > Settings après déploiement). Signature vérifiée : en-tête `sign` = SHA-256 hex de « corps + / + clé API ». Statut `Delivered` : colis passé « Livré » (+ mail) ou retour passé « Reçu ». Limites officielles : 3 requêtes/s ; 1 quota par numéro suivi ; suivi stoppé 15 jours après livraison ou 30 jours sans événement ; 200 suivis gratuits uniques (comptes créés après le 07/01/2026), tarifs ultérieurs à vérifier au tableau de bord. Adaptateur remplaçable : `src/lib/tracking-provider.ts`.
 - `PAYMENT_CAPTURE_ON_CONFIRM` = `1` : autorisation Stripe à la commande, encaissement à la confirmation du créateur (24 h) ; absente ou autre valeur : ancien flux (48 h). Fen?tre d'autorisation carte Stripe : environ 7 jours par d?faut (couvre les 24 h). Le cron Vercel est quotidien : pour la pr?cision des relances/expiration, appeler `/api/orders/sweep` toutes les heures via un cron externe (en-t?te `Authorization: Bearer CRON_SECRET`).
 
+### 3 quater. Sweep des commandes (CRON_SECRET, GitHub Actions)
+
+- `CRON_SECRET` (Vercel) : Production + Preview + Preview/simu, nouvelle valeur le 21/11/2026, type Sensitive (non relisible après saisie). La même valeur est dans le secret GitHub `CRON_SECRET`. Aucune valeur n'est consignée ici.
+- Secrets GitHub Actions (Settings > Secrets and variables > Actions) : `SWEEP_URL` = `https://simu.epomta.com` (sans slash final) ; `CRON_SECRET` = même valeur que Vercel.
+- Workflow `.github/workflows/sweep.yml` : `*/30 * * * *` + `workflow_dispatch`, appelle `GET $SWEEP_URL/api/orders/sweep` avec `Authorization: Bearer CRON_SECRET`. Le schedule ne tourne que sur la branche par défaut (`main`). Quota gratuit dépôt privé : 2000 min/mois (30 min ≈ 1440 min/mois).
+- `vercel.json` : cron quotidien `/api/orders/sweep` à 06:00 UTC (limite Hobby : 1 exécution/jour) ; `/api/alerts/run` à 07:00 UTC.
+- Poll 17TRACK à l'expédition : `notifyShipped` (`src/lib/order-notify.ts`) relit 17TRACK juste après l'expédition (colis déjà livré).
+- Rotation de `CRON_SECRET` : 1) générer une nouvelle chaîne aléatoire ; 2) la saisir dans Vercel (Production, Preview, Preview/simu) ; 3) la mettre à jour dans le secret GitHub `CRON_SECRET` ; 4) Redeploy du Preview simu (et Production) ; 5) lancer le workflow à la main (`workflow_dispatch`) et vérifier le succès.
+
 ## 4. Secrets à régénérer
 
 - **Clé Stripe `sk_test_…`** (`STRIPE_SECRET_KEY`, `TEST_STRIPE_SECRET_KEY`) : à régénérer si elle a été exposée (Stripe > Roll key), puis mettre à jour Vercel et GitHub.

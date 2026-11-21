@@ -30,6 +30,15 @@ model Creator {
   image       String
   /// Article source de la biographie (G3A)
   sourceUrl   String
+  /// Profil d'illustration simu (image distante, aucun produit) : à supprimer avant la prod (npm run db:simu-designers -- --remove)
+  simuIllustration Boolean @default(false)
+  country     String    @default("")
+  madeIn      String    @default("")
+  gender      String    @default("")
+  /// Coordonnées privées : jamais affichées publiquement
+  privateWebsite   String @default("")
+  privateEmail     String @default("")
+  privateInstagram String @default("")
   products    Product[]
 }
 
